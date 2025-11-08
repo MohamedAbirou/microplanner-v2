@@ -1,0 +1,486 @@
+// MicroPlanner Database Schema
+// PostgreSQL with pgvector for AI embeddings
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ============================================
+// USER DOMAIN
+// ============================================
+
+model User {
+  id                String              @id @default(cuid())
+  clerkId           String              @unique
+  email             String              @unique
+  name              String?
+  avatar            String?
+  timezone          String              @default("UTC")
+
+  // Subscription
+  tier              SubscriptionTier    @default(FREE)
+  stripeCustomerId  String?             @unique
+  subscriptionId    String?
+  subscriptionStatus SubscriptionStatus @default(INACTIVE)
+
+  // Embedded preferences (denormalized for performance)
+  wakeTime          String              @default("07:00")
+  sleepTime         String              @default("23:00")
+  workStartTime     String              @default("09:00")
+  workEndTime       String              @default("17:00")
+  productivityPeaks String[]           @default([])
+  energyPattern     EnergyPattern?
+  blockedTimes      Json?               // [{day: "monday", start: "12:00", end: "13:00"}]
+
+  // Device tokens for push notifications
+  pushTokens        String[]           @default([])
+
+  // Metadata
+  onboardingCompleted Boolean          @default(false)
+  onboardingStep    Int                @default(0)
+  language          String             @default("en")
+
+  // Relations
+  goals             Goal[]
+  plans             WeeklyPlan[]
+  tasks             Task[]
+  calendarTokens    CalendarToken[]
+  aiMemory          AIMemory[]
+  referrals         Referral[]         @relation("ReferredBy")
+  referredUsers     Referral[]         @relation("Referrer")
+
+  // Timestamps
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  lastSeenAt        DateTime           @default(now())
+
+  @@index([email])
+  @@index([tier])
+  @@index([clerkId])
+}
+
+enum SubscriptionTier {
+  FREE
+  STARTER
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+enum EnergyPattern {
+  MORNING_PERSON
+  NIGHT_OWL
+  BALANCED
+}
+
+// ============================================
+// GOALS DOMAIN
+// ============================================
+
+model Goal {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Goal details
+  title            String
+  description      String?
+  emoji            String?      @default("🎯")
+  color            String?      @default("#3B82F6")
+
+  // Scheduling parameters
+  frequencyPerWeek Int          @default(3)
+  durationMinutes  Int          @default(60)
+  preferredTimes   String[]     @default([]) // ["morning", "evening"]
+  flexibilityScore Int          @default(5) // 1-10, how flexible scheduling is
+
+  // Priority & status
+  priority         Int          @default(5) // 1-10
+  isActive         Boolean      @default(true)
+  isPaused         Boolean      @default(false)
+  pausedUntil      DateTime?
+
+  // Analytics
+  completionRate   Float        @default(0) // 0-100
+  totalCompletions Int          @default(0)
+  totalScheduled   Int          @default(0)
+  currentStreak    Int          @default(0)
+  longestStreak    Int          @default(0)
+  lastCompletedAt  DateTime?
+
+  // Relations
+  tasks            Task[]
+
+  // Timestamps
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([userId, isActive])
+  @@index([userId, priority])
+}
+
+// ============================================
+// TASKS DOMAIN
+// ============================================
+
+model Task {
+  id                String       @id @default(cuid())
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId            String?
+  goal              Goal?        @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  planId            String?
+  plan              WeeklyPlan?  @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  // Task details
+  title             String
+  notes             String?
+
+  // Scheduling
+  scheduledDate     DateTime
+  startTime         String       // "09:00"
+  endTime           String       // "10:00"
+  durationMinutes   Int
+
+  // Status
+  isCompleted       Boolean      @default(false)
+  completedAt       DateTime?
+  isSkipped         Boolean      @default(false)
+  skippedReason     String?
+  skippedAt         DateTime?
+
+  // Source tracking
+  aiGenerated       Boolean      @default(true)
+  manuallyAdded     Boolean      @default(false)
+  manuallyMoved     Boolean      @default(false)
+  aiReasoning       String?      // Why AI scheduled at this time
+
+  // Calendar sync
+  calendarEventId   String?      @unique
+  calendarProvider  String?      // "google" | "outlook"
+  syncedAt          DateTime?
+  syncStatus        SyncStatus   @default(PENDING)
+  syncError         String?
+
+  // Offline support
+  localId           String?      @unique // Client-generated UUID
+  pendingSync       Boolean      @default(false)
+  offlineCreatedAt  DateTime?
+
+  // Timestamps
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([userId, scheduledDate])
+  @@index([goalId])
+  @@index([planId])
+  @@index([syncStatus])
+  @@index([localId])
+  @@index([isCompleted])
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  SYNCED
+  FAILED
+  CONFLICT
+}
+
+// ============================================
+// PLANS DOMAIN
+// ============================================
+
+model WeeklyPlan {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Plan timing
+  weekStartDate   DateTime     // Always Monday 00:00
+  weekEndDate     DateTime     // Always Sunday 23:59
+
+  // Plan data
+  planJson        Json         // Full structured plan
+  reasoning       Json?        // AI's reasoning for each task
+
+  // Status
+  status          PlanStatus   @default(DRAFT)
+  acceptedAt      DateTime?
+  appliedAt       DateTime?    // When synced to calendar
+  archivedAt      DateTime?
+
+  // AI metadata
+  aiModel         String?      // "gpt-4o-mini" | "gpt-4o" | "rule-based"
+  complexity      String?      // "simple" | "standard" | "complex"
+  generationTime  Float?       // seconds
+  generationCost  Float?       // USD cents
+  tokenUsage      Int?
+
+  // Quality metrics
+  qualityScore    Float?       // 0-100
+  userSatisfaction String?     // "accepted" | "edited" | "rejected" | "regenerated"
+  editCount       Int          @default(0)
+  regenerateCount Int          @default(0)
+
+  // Analytics
+  completionRate  Float        @default(0) // 0-100
+  totalTasks      Int          @default(0)
+  completedTasks  Int          @default(0)
+
+  // Relations
+  tasks           Task[]
+
+  // Timestamps
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([userId, weekStartDate])
+  @@index([status])
+  @@index([weekStartDate])
+}
+
+enum PlanStatus {
+  DRAFT
+  ACCEPTED
+  APPLIED
+  ARCHIVED
+}
+
+// ============================================
+// AI MEMORY DOMAIN (Post-MVP)
+// ============================================
+
+model AIMemory {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Memory details
+  memoryType      MemoryType
+  content         Json         // Flexible JSON structure
+
+  // Metadata
+  confidence      Float        @default(0.5) // 0-1
+  useCount        Int          @default(0)
+  lastUsedAt      DateTime?
+  source          String?      // Which plan/interaction created this
+
+  // Timestamps
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([userId, memoryType])
+  @@index([userId, confidence])
+}
+
+enum MemoryType {
+  TIME_PREFERENCE      // "User prefers gym at 7am"
+  COMPLETION_PATTERN   // "User completes 90% of morning tasks"
+  ENERGY_INSIGHT       // "Most productive on Tuesdays"
+  AVOIDANCE_PATTERN    // "User always skips evening workouts"
+  CONTEXT_PREFERENCE   // "User needs 2-hour focus blocks for coding"
+}
+
+// ============================================
+// CALENDAR DOMAIN
+// ============================================
+
+model CalendarToken {
+  id           String       @id @default(cuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Provider
+  provider     String       // "google" | "outlook" | "apple"
+
+  // OAuth tokens (encrypted at application level before storing)
+  accessToken  String       @db.Text
+  refreshToken String?      @db.Text
+  expiresAt    DateTime?
+
+  // Calendar metadata
+  calendarId   String?      // Primary calendar ID
+  calendarName String?
+  email        String?      // Calendar account email
+
+  // Sync state
+  lastSyncAt   DateTime?
+  syncEnabled  Boolean      @default(true)
+  syncErrors   Int          @default(0)
+  lastError    String?
+
+  // Timestamps
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([provider])
+}
+
+model SyncLog {
+  id              String       @id @default(cuid())
+  userId          String
+  planId          String?
+
+  // Sync details
+  syncType        String       // "full" | "partial" | "rollback"
+  tasksAttempted  Int
+  tasksSucceeded  Int
+  tasksFailed     Int
+
+  // Results
+  success         Boolean
+  errors          Json?        // Array of error objects
+  duration        Int          // milliseconds
+
+  // Timestamp
+  createdAt       DateTime     @default(now())
+
+  @@index([userId])
+  @@index([planId])
+  @@index([createdAt])
+}
+
+// ============================================
+// ANALYTICS DOMAIN
+// ============================================
+
+model AnalyticsEvent {
+  id         String       @id @default(cuid())
+  userId     String?
+  sessionId  String?
+
+  // Event details
+  event      String       // "plan_generated", "task_completed", etc.
+  properties Json?
+
+  // Context
+  platform   String?      // "ios" | "android" | "web"
+  appVersion String?
+  userTier   String?
+
+  // Timestamp
+  timestamp  DateTime     @default(now())
+
+  @@index([userId])
+  @@index([event])
+  @@index([timestamp])
+  @@index([platform])
+}
+
+model LLMUsage {
+  id             String       @id @default(cuid())
+  userId         String?
+  planId         String?
+
+  // LLM details
+  model          String       // "gpt-4o-mini" | "gpt-4o"
+  operation      String       // "plan_generation" | "chat"
+
+  // Token usage
+  inputTokens    Int
+  outputTokens   Int
+  totalTokens    Int
+  cost           Float        // USD cents
+
+  // Performance
+  latency        Float        // seconds
+  success        Boolean      @default(true)
+  errorMessage   String?
+
+  // Timestamp
+  timestamp      DateTime     @default(now())
+
+  @@index([userId])
+  @@index([model])
+  @@index([timestamp])
+}
+
+// ============================================
+// REFERRALS DOMAIN
+// ============================================
+
+model Referral {
+  id          String       @id @default(cuid())
+  referrerId  String
+  referrer    User         @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredId  String
+  referred    User         @relation("ReferredBy", fields: [referredId], references: [id], onDelete: Cascade)
+
+  // Status
+  status      ReferralStatus @default(PENDING)
+  rewardGranted Boolean    @default(false)
+
+  // Metadata
+  referralCode String?
+  source      String?      // "link" | "email" | "social"
+
+  // Timestamps
+  createdAt   DateTime     @default(now())
+  completedAt DateTime?
+
+  @@unique([referrerId, referredId])
+  @@index([referrerId])
+  @@index([referredId])
+  @@index([status])
+}
+
+enum ReferralStatus {
+  PENDING    // Signed up, not subscribed yet
+  ACTIVE     // Subscribed, both users get reward
+  EXPIRED    // Never subscribed
+}
+
+// ============================================
+// ADMIN & SYSTEM
+// ============================================
+
+model InviteCode {
+  id         String       @id @default(cuid())
+  code       String       @unique
+  maxUses    Int          @default(1)
+  usedCount  Int          @default(0)
+  createdBy  String?      // Admin user ID or null for system
+  expiresAt  DateTime?
+
+  // Metadata
+  source     String?      // "beta" | "referral" | "influencer"
+  notes      String?
+
+  // Timestamps
+  createdAt  DateTime     @default(now())
+
+  @@index([code])
+  @@index([expiresAt])
+}
+
+model SystemConfig {
+  id        String       @id @default(cuid())
+  key       String       @unique
+  value     Json
+
+  // Metadata
+  description String?
+  updatedBy String?
+
+  // Timestamps
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([key])
+}
