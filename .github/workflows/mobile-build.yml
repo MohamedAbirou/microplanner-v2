@@ -1,0 +1,130 @@
+name: Build Mobile Apps
+
+on:
+  push:
+    branches: ['main', 'develop']
+    paths:
+      - 'apps/mobile/**'
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - ios
+          - android
+          - all
+
+jobs:
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    if: |
+      github.event.inputs.platform == 'ios' ||
+      github.event.inputs.platform == 'all' ||
+      github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8.15.4
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: pnpm install --frozen-lockfile
+
+      - name: Build iOS app with EAS
+        working-directory: apps/mobile
+        run: |
+          echo "Building iOS app..."
+          # eas build --platform ios --non-interactive
+          echo "⏳ EAS Build configuration pending"
+
+  build-android:
+    name: Build Android App
+    runs-on: ubuntu-latest
+    if: |
+      github.event.inputs.platform == 'android' ||
+      github.event.inputs.platform == 'all' ||
+      github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8.15.4
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Android app with EAS
+        working-directory: apps/mobile
+        run: |
+          echo "Building Android app..."
+          # eas build --platform android --non-interactive
+          echo "⏳ EAS Build configuration pending"
+
+  publish-update:
+    name: Publish OTA Update
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8.15.4
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish OTA update
+        working-directory: apps/mobile
+        run: |
+          echo "Publishing OTA update..."
+          # eas update --branch production --message "Latest updates"
+          echo "⏳ EAS Update configuration pending"
