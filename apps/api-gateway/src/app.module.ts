@@ -19,6 +19,7 @@ import { BillingModule } from './modules/billing/billing.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { HealthModule } from './modules/health/health.module';
 import { EmailModule } from './modules/email/email.module';
+import { PremiumModule } from './modules/premium/premium.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { EmailModule } from './modules/email/email.module';
     CalendarModule,
     BillingModule,
     AnalyticsModule,
+    PremiumModule,
     HealthModule,
     EmailModule,
   ],

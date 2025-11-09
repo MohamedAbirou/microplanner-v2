@@ -56,6 +56,10 @@ model User {
   aiMemory          AIMemory[]
   referrals         Referral[]         @relation("ReferredBy")
   referredUsers     Referral[]         @relation("Referrer")
+  ownedTeams        Team[]             @relation("TeamOwner")
+  teamMemberships   TeamMember[]
+  sentInvitations   TeamInvitation[]
+  apiKeys           ApiKey[]
 
   // Timestamps
   createdAt         DateTime           @default(now())
@@ -71,6 +75,7 @@ enum SubscriptionTier {
   FREE
   STARTER
   PRO
+  PREMIUM
 }
 
 enum SubscriptionStatus {
@@ -513,4 +518,112 @@ model SystemConfig {
   updatedAt DateTime     @updatedAt
 
   @@index([key])
+}
+
+// ============================================
+// PREMIUM FEATURES
+// ============================================
+
+// Team Workspace (PREMIUM tier)
+model Team {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  owner       User           @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Team plan
+  plan        String         @default("premium") // "premium" | "enterprise"
+  maxMembers  Int            @default(10)
+  logoUrl     String?
+
+  // Settings
+  settings    Json           // TeamSettings object
+
+  // Relations
+  members     TeamMember[]
+  invitations TeamInvitation[]
+
+  // Timestamps
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([ownerId])
+  @@index([plan])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Member details
+  role      String   @default("member") // "owner" | "admin" | "member" | "viewer"
+  status    String   @default("active") // "active" | "invited" | "suspended"
+  invitedBy String?
+
+  // Timestamps
+  joinedAt  DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([status])
+}
+
+model TeamInvitation {
+  id         String    @id @default(cuid())
+  teamId     String
+  team       Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  email      String
+  role       String    @default("member")
+  invitedBy  String
+  inviter    User      @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
+  token      String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+
+  @@index([teamId])
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// API Access (PREMIUM tier)
+model ApiKey {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Key details
+  name        String
+  key         String    @unique // Hashed
+  keyPrefix   String    // First 8 chars for display
+
+  // Permissions
+  scopes      String[]  // Array of ApiScope
+  rateLimit   Int       @default(1000) // Requests per hour
+
+  // Usage tracking
+  usageCount  Int       @default(0)
+  lastUsedAt  DateTime?
+
+  // Status
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([key])
+  @@index([keyPrefix])
+  @@index([isActive])
+  @@index([expiresAt])
 }
