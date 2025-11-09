@@ -10,6 +10,7 @@ import { QueryPlansDto } from './dto/query-plans.dto';
 import { RuleBasedPlannerService } from './strategies/rule-based-planner.service';
 import { GPT4oMiniPlannerService } from './strategies/gpt-4o-mini-planner.service';
 import { EmailService } from '../email/email.service';
+import { CalendarService } from '../calendar/calendar.service';
 
 // Tier limits for plan generation per week
 const TIER_PLAN_LIMITS = {
@@ -38,6 +39,7 @@ export class PlansService {
     private ruleBasedPlanner: RuleBasedPlannerService,
     private gpt4oMiniPlanner: GPT4oMiniPlannerService,
     private emailService: EmailService,
+    private calendarService: CalendarService,
   ) {
     this.planningServiceUrl =
       this.configService.get('PLANNING_SERVICE_URL') || 'http://localhost:8000';
@@ -77,7 +79,16 @@ export class PlansService {
       timezone: user.timezone,
     };
 
-    // 5. Select planning strategy based on tier
+    // 5. Fetch existing calendar events for conflict detection
+    const calendarEvents = await this.calendarService.getEventsForPlanning(
+      userId,
+      weekStartDate,
+      weekEndDate,
+    );
+
+    this.logger.debug(`Fetched ${calendarEvents.length} calendar events for conflict detection`);
+
+    // 6. Select planning strategy based on tier
     let aiResponse: any;
     let planJson: any;
     let reasoning: string | null = null;
@@ -95,7 +106,7 @@ export class PlansService {
         user,
         goals,
         weekStartDate,
-        [], // TODO: Fetch existing calendar events for conflict detection
+        calendarEvents,
       );
 
       planJson = { tasks: result.tasks };
@@ -111,7 +122,7 @@ export class PlansService {
         user,
         goals,
         weekStartDate,
-        [], // TODO: Fetch existing calendar events for conflict detection
+        calendarEvents,
       );
 
       planJson = { tasks: result.tasks };
@@ -151,10 +162,10 @@ export class PlansService {
       qualityScore = this.calculateQualityScore(planJson, goals);
     }
 
-    // 6. Calculate generation metrics
+    // 7. Calculate generation metrics
     const generationTime = (Date.now() - startTime) / 1000; // seconds
 
-    // 7. Save plan to database
+    // 8. Save plan to database
     const plan = await this.prisma.weeklyPlan.create({
       data: {
         userId,
@@ -177,11 +188,13 @@ export class PlansService {
       `Plan generated successfully: ${plan.id} (${generationTime.toFixed(2)}s, $${(generationCost / 100).toFixed(4)})`
     );
 
-    // 8. Send email notification (async, non-blocking)
-    this.emailService.sendPlanReady(user, plan).catch((error) => {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
-    });
+    // 9. Send email notification (async, non-blocking)
+    if (user.planReadyNotification) {
+      this.emailService.sendPlanReady(user, plan).catch((error) => {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
+      });
+    }
 
     return plan;
   }

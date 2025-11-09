@@ -73,6 +73,55 @@ export class CalendarService {
   }
 
   /**
+   * Get calendar events for planning (conflict detection)
+   * Returns events in a simplified format for AI planners
+   */
+  async getEventsForPlanning(userId: string, startDate: Date, endDate: Date): Promise<Array<{
+    id: string;
+    title: string;
+    start: Date;
+    end: Date;
+    isAllDay: boolean;
+  }>> {
+    try {
+      const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
+      const calendar = google.calendar({ version: 'v3', auth: authClient });
+
+      const response = await calendar.events.list({
+        calendarId: 'primary',
+        timeMin: startDate.toISOString(),
+        timeMax: endDate.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+      });
+
+      const events = response.data.items || [];
+
+      this.logger.debug(`Fetched ${events.length} calendar events for planning (user ${userId})`);
+
+      return events
+        .filter(event => event.start && event.end) // Only events with valid times
+        .map(event => {
+          const isAllDay = !!event.start?.date; // All-day events use 'date' instead of 'dateTime'
+
+          return {
+            id: event.id || '',
+            title: event.summary || 'Untitled Event',
+            start: new Date(event.start?.dateTime || event.start?.date || ''),
+            end: new Date(event.end?.dateTime || event.end?.date || ''),
+            isAllDay,
+          };
+        });
+    } catch (error) {
+      // If calendar not connected or error, return empty array
+      // This allows planning to work even without calendar integration
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.debug(`No calendar events available for planning: ${errorMessage}`);
+      return [];
+    }
+  }
+
+  /**
    * Sync tasks to calendar with idempotency and conflict detection
    */
   async syncTasks(userId: string, syncTasksDto: SyncTasksDto): Promise<SyncResult> {

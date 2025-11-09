@@ -67,8 +67,9 @@ export class ReminderScheduler {
       for (const task of tasks) {
         try {
           // Check user notification preferences
-          // TODO: Add user preferences for email notifications to schema
-          // For now, send to all users
+          if (!task.user.emailNotifications || !task.user.taskReminderOneHourBefore) {
+            continue; // Skip if user has disabled notifications
+          }
 
           await this.emailService.sendTaskReminder(task, task.user, '1_hour_before');
           sent++;
@@ -135,8 +136,9 @@ export class ReminderScheduler {
       for (const task of tasks) {
         try {
           // Check user notification preferences
-          // TODO: Add user preferences for email notifications to schema
-          // For now, send to all users
+          if (!task.user.emailNotifications || !task.user.taskReminderOneDayBefore) {
+            continue; // Skip if user has disabled notifications
+          }
 
           await this.emailService.sendTaskReminder(task, task.user, '1_day_before');
           sent++;
@@ -195,8 +197,9 @@ export class ReminderScheduler {
       for (const user of users) {
         try {
           // Check user notification preferences
-          // TODO: Add user preferences for email notifications to schema
-          // For now, send to all users
+          if (!user.emailNotifications || !user.weeklySummaryEnabled) {
+            continue; // Skip if user has disabled weekly summaries
+          }
 
           // Gather weekly statistics
           const [goalsCreated, plansGenerated, tasksCompleted, totalTasks] =

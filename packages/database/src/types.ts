@@ -41,9 +41,17 @@ export interface User {
   sleepTime: string;
   workStartTime: string;
   workEndTime: string;
+  workDays: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
   productivityPeaks: string[];
   energyPattern: EnergyPattern | null;
   blockedTimes: any | null; // Json type
+
+  // Email notification preferences
+  emailNotifications: boolean;
+  taskReminderOneDayBefore: boolean;
+  taskReminderOneHourBefore: boolean;
+  weeklySummaryEnabled: boolean;
+  planReadyNotification: boolean;
 
   // Device tokens
   pushTokens: string[];
