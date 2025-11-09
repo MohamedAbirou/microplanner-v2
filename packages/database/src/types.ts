@@ -92,3 +92,51 @@ export interface Goal {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export enum PlanStatus {
+  DRAFT = 'DRAFT',
+  ACCEPTED = 'ACCEPTED',
+  APPLIED = 'APPLIED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export interface WeeklyPlan {
+  id: string;
+  userId: string;
+
+  // Plan timing
+  weekStartDate: Date;
+  weekEndDate: Date;
+
+  // Plan data
+  planJson: any; // Json type
+  reasoning: any | null; // Json type
+
+  // Status
+  status: PlanStatus;
+  acceptedAt: Date | null;
+  appliedAt: Date | null;
+  archivedAt: Date | null;
+
+  // AI metadata
+  aiModel: string | null;
+  complexity: string | null;
+  generationTime: number | null;
+  generationCost: number | null;
+  tokenUsage: number | null;
+
+  // Quality metrics
+  qualityScore: number | null;
+  userSatisfaction: string | null;
+  editCount: number;
+  regenerateCount: number;
+
+  // Analytics
+  completionRate: number;
+  totalTasks: number;
+  completedTasks: number;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+}

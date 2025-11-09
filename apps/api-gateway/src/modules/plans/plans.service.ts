@@ -1,8 +1,26 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import { firstValueFrom } from 'rxjs';
+import type { WeeklyPlan, User, Goal } from '@microplanner/database';
+import { PlanStatus, SubscriptionTier } from '@microplanner/database';
+import { GeneratePlanDto } from './dto/generate-plan.dto';
+import { QueryPlansDto } from './dto/query-plans.dto';
+
+// Tier limits for plan generation per week
+const TIER_PLAN_LIMITS = {
+  [SubscriptionTier.FREE]: 5,
+  [SubscriptionTier.STARTER]: 20,
+  [SubscriptionTier.PRO]: Infinity,
+};
+
+// Cost per 1000 tokens (in USD cents)
+const TOKEN_COSTS = {
+  'gpt-4o-mini': 0.015, // $0.15 per 1M tokens
+  'gpt-4o': 0.25, // $2.50 per 1M tokens
+  'rule-based': 0, // Free
+};
 
 @Injectable()
 export class PlansService {
@@ -18,18 +36,351 @@ export class PlansService {
       this.configService.get('PLANNING_SERVICE_URL') || 'http://localhost:8000';
   }
 
-  async generatePlan(data: any) {
+  /**
+   * Generate a new AI weekly plan
+   * Full orchestration: validate, fetch data, call AI, calculate quality, save
+   */
+  async generate(userId: string, generatePlanDto: GeneratePlanDto, user: User): Promise<WeeklyPlan> {
+    const startTime = Date.now();
+
+    // 1. Check tier limits
+    await this.checkWeeklyLimit(userId, user.tier);
+
+    // 2. Calculate week boundaries
+    const { weekStartDate, weekEndDate } = this.calculateWeekBoundaries(
+      generatePlanDto.weekStartDate
+    );
+
+    // 3. Fetch active goals
+    const goals = await this.fetchActiveGoals(userId, generatePlanDto.goalIds);
+
+    if (goals.length === 0) {
+      throw new BadRequestException('No active goals found. Please create goals first.');
+    }
+
+    // 4. Fetch user preferences
+    const preferences = {
+      wakeTime: user.wakeTime,
+      sleepTime: user.sleepTime,
+      workStartTime: user.workStartTime,
+      workEndTime: user.workEndTime,
+      productivityPeaks: user.productivityPeaks,
+      energyPattern: user.energyPattern,
+      blockedTimes: user.blockedTimes,
+      timezone: user.timezone,
+    };
+
+    // 5. Call Python Planning Service
+    this.logger.log(`Calling Planning Service for user ${userId}`);
+    const planningRequest = {
+      goals: goals.map(g => ({
+        id: g.id,
+        title: g.title,
+        frequencyPerWeek: g.frequencyPerWeek,
+        durationMinutes: g.durationMinutes,
+        preferredTimes: g.preferredTimes,
+        flexibilityScore: g.flexibilityScore,
+        priority: g.priority,
+      })),
+      preferences,
+      weekStartDate: weekStartDate.toISOString(),
+      weekEndDate: weekEndDate.toISOString(),
+    };
+
+    const aiResponse = await this.callPlanningService(planningRequest);
+
+    // 6. Calculate generation metrics
+    const generationTime = (Date.now() - startTime) / 1000; // seconds
+    const generationCost = this.calculateCost(aiResponse.model, aiResponse.tokenUsage);
+
+    // 7. Calculate quality score
+    const qualityScore = this.calculateQualityScore(aiResponse.plan, goals);
+
+    // 8. Save plan to database
+    const plan = await this.prisma.weeklyPlan.create({
+      data: {
+        userId,
+        weekStartDate,
+        weekEndDate,
+        planJson: aiResponse.plan,
+        reasoning: aiResponse.reasoning || null,
+        aiModel: aiResponse.model,
+        complexity: aiResponse.complexity,
+        generationTime,
+        generationCost,
+        tokenUsage: aiResponse.tokenUsage,
+        qualityScore,
+        totalTasks: aiResponse.plan.tasks?.length || 0,
+        status: PlanStatus.DRAFT,
+      },
+    });
+
+    this.logger.log(
+      `Plan generated successfully: ${plan.id} (${generationTime.toFixed(2)}s, $${(generationCost / 100).toFixed(4)})`
+    );
+
+    return plan;
+  }
+
+  /**
+   * Get current week's plan (most recent draft or accepted plan)
+   */
+  async getCurrentWeekPlan(userId: string): Promise<WeeklyPlan | null> {
+    const { weekStartDate, weekEndDate } = this.calculateWeekBoundaries();
+
+    const plan = await this.prisma.weeklyPlan.findFirst({
+      where: {
+        userId,
+        weekStartDate: { gte: weekStartDate },
+        weekEndDate: { lte: weekEndDate },
+        status: { in: [PlanStatus.DRAFT, PlanStatus.ACCEPTED, PlanStatus.APPLIED] },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return plan;
+  }
+
+  /**
+   * Get a single plan by ID
+   */
+  async findOne(planId: string, userId: string): Promise<WeeklyPlan> {
+    const plan = await this.prisma.weeklyPlan.findFirst({
+      where: { id: planId, userId },
+      include: {
+        tasks: {
+          orderBy: { scheduledDate: 'asc' },
+        },
+      },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Plan not found');
+    }
+
+    return plan;
+  }
+
+  /**
+   * Get plan history with pagination
+   */
+  async findAll(userId: string, query: QueryPlansDto): Promise<{ plans: WeeklyPlan[]; total: number; page: number; limit: number }> {
+    const { page = 1, limit = 20 } = query;
+    const skip = (page - 1) * limit;
+
+    const [plans, total] = await Promise.all([
+      this.prisma.weeklyPlan.findMany({
+        where: { userId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.weeklyPlan.count({ where: { userId } }),
+    ]);
+
+    return {
+      plans,
+      total,
+      page,
+      limit,
+    };
+  }
+
+  /**
+   * Accept a plan (user approved it)
+   */
+  async accept(planId: string, userId: string): Promise<WeeklyPlan> {
+    // Verify ownership
+    await this.findOne(planId, userId);
+
+    this.logger.log(`Plan ${planId} accepted by user ${userId}`);
+
+    return this.prisma.weeklyPlan.update({
+      where: { id: planId },
+      data: {
+        status: PlanStatus.ACCEPTED,
+        acceptedAt: new Date(),
+        userSatisfaction: 'accepted',
+      },
+    });
+  }
+
+  /**
+   * Regenerate a plan (create new version based on same week)
+   */
+  async regenerate(planId: string, userId: string, user: User): Promise<WeeklyPlan> {
+    // Get original plan
+    const originalPlan = await this.findOne(planId, userId);
+
+    // Increment regenerate count on original
+    await this.prisma.weeklyPlan.update({
+      where: { id: planId },
+      data: {
+        regenerateCount: { increment: 1 },
+        userSatisfaction: 'regenerated',
+      },
+    });
+
+    // Generate new plan for same week
+    const newPlan = await this.generate(
+      userId,
+      {
+        weekStartDate: originalPlan.weekStartDate.toISOString().split('T')[0],
+      },
+      user
+    );
+
+    this.logger.log(`Plan ${planId} regenerated as ${newPlan.id}`);
+
+    return newPlan;
+  }
+
+  /**
+   * Archive a plan (soft delete)
+   */
+  async archive(planId: string, userId: string): Promise<void> {
+    // Verify ownership
+    await this.findOne(planId, userId);
+
+    this.logger.log(`Archiving plan ${planId}`);
+
+    await this.prisma.weeklyPlan.update({
+      where: { id: planId },
+      data: {
+        status: PlanStatus.ARCHIVED,
+        archivedAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Check if user has reached weekly plan generation limit
+   */
+  private async checkWeeklyLimit(userId: string, userTier: SubscriptionTier): Promise<void> {
+    const limit = TIER_PLAN_LIMITS[userTier];
+    const { weekStartDate } = this.calculateWeekBoundaries();
+
+    const plansThisWeek = await this.prisma.weeklyPlan.count({
+      where: {
+        userId,
+        createdAt: { gte: weekStartDate },
+      },
+    });
+
+    if (plansThisWeek >= limit) {
+      throw new ForbiddenException(
+        `Your ${userTier} plan allows maximum ${limit} plan generations per week. Upgrade for more.`
+      );
+    }
+  }
+
+  /**
+   * Calculate week boundaries (Monday 00:00 to Sunday 23:59)
+   */
+  private calculateWeekBoundaries(weekStartInput?: string): { weekStartDate: Date; weekEndDate: Date } {
+    let weekStartDate: Date;
+
+    if (weekStartInput) {
+      weekStartDate = new Date(weekStartInput);
+    } else {
+      // Get current date
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Adjust to Monday
+      weekStartDate = new Date(now);
+      weekStartDate.setDate(now.getDate() + diff);
+    }
+
+    // Set to midnight
+    weekStartDate.setHours(0, 0, 0, 0);
+
+    // Calculate week end (Sunday 23:59)
+    const weekEndDate = new Date(weekStartDate);
+    weekEndDate.setDate(weekStartDate.getDate() + 6);
+    weekEndDate.setHours(23, 59, 59, 999);
+
+    return { weekStartDate, weekEndDate };
+  }
+
+  /**
+   * Fetch active goals for plan generation
+   */
+  private async fetchActiveGoals(userId: string, goalIds?: string[]): Promise<Goal[]> {
+    const where: any = {
+      userId,
+      isActive: true,
+      isPaused: false,
+    };
+
+    if (goalIds && goalIds.length > 0) {
+      where.id = { in: goalIds };
+    }
+
+    return this.prisma.goal.findMany({ where });
+  }
+
+  /**
+   * Call Python FastAPI Planning Service
+   */
+  private async callPlanningService(request: any): Promise<any> {
     try {
-      // Call Python FastAPI planning service
       const response = await firstValueFrom(
-        this.httpService.post(`${this.planningServiceUrl}/api/v1/plans/generate`, data)
+        this.httpService.post(`${this.planningServiceUrl}/api/v1/plans/generate`, request)
       );
 
       return response.data;
     } catch (error) {
       const err = error as Error;
-      this.logger.error(`Failed to generate plan: ${err.message}`);
-      throw error;
+      this.logger.error(`Planning Service error: ${err.message}`);
+      throw new BadRequestException('AI planning service unavailable. Please try again later.');
     }
+  }
+
+  /**
+   * Calculate LLM cost based on token usage
+   */
+  private calculateCost(model: string, tokenUsage: number): number {
+    const costPer1000 = TOKEN_COSTS[model as keyof typeof TOKEN_COSTS] || 0;
+    return (tokenUsage / 1000) * costPer1000;
+  }
+
+  /**
+   * Calculate quality score for a plan (0-100)
+   * Based on: task distribution, goal coverage, time utilization, etc.
+   */
+  private calculateQualityScore(plan: any, goals: Goal[]): number {
+    let score = 0;
+
+    // 1. Goal coverage (30 points): Are all goals included?
+    const coveredGoals = new Set(plan.tasks?.map((t: any) => t.goalId) || []);
+    const goalCoverage = (coveredGoals.size / goals.length) * 30;
+    score += goalCoverage;
+
+    // 2. Task distribution (25 points): Even distribution across week
+    const tasksByDay: Record<number, number> = {};
+    plan.tasks?.forEach((task: any) => {
+      const day = new Date(task.scheduledDate).getDay();
+      tasksByDay[day] = (tasksByDay[day] || 0) + 1;
+    });
+    const avgTasksPerDay = (plan.tasks?.length || 0) / 7;
+    const variance = Object.values(tasksByDay).reduce((sum, count) => {
+      return sum + Math.abs(count - avgTasksPerDay);
+    }, 0) / 7;
+    const distributionScore = Math.max(0, 25 - variance * 3);
+    score += distributionScore;
+
+    // 3. Time utilization (25 points): Reasonable daily workload
+    const dailyMinutes: number[] = Object.values(tasksByDay).map(count => count * 60);
+    const avgDailyMinutes = dailyMinutes.reduce((a, b) => a + b, 0) / dailyMinutes.length;
+    const reasonableLoad = avgDailyMinutes >= 30 && avgDailyMinutes <= 240; // 0.5-4 hours
+    const utilizationScore = reasonableLoad ? 25 : Math.max(0, 25 - Math.abs(avgDailyMinutes - 120) / 10);
+    score += utilizationScore;
+
+    // 4. Completeness (20 points): Has reasoning and all required fields
+    const hasReasoning = !!plan.reasoning;
+    const hasAllFields = plan.tasks?.every((t: any) => t.title && t.scheduledDate && t.goalId);
+    score += (hasReasoning ? 10 : 0) + (hasAllFields ? 10 : 0);
+
+    return Math.round(Math.min(100, score));
   }
 }
