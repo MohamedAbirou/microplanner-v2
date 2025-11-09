@@ -60,6 +60,7 @@ model User {
   teamMemberships   TeamMember[]
   sentInvitations   TeamInvitation[]
   apiKeys           ApiKey[]
+  schedulingLinks   SchedulingLink[]
 
   // Timestamps
   createdAt         DateTime           @default(now())
@@ -626,4 +627,93 @@ model ApiKey {
   @@index([keyPrefix])
   @@index([isActive])
   @@index([expiresAt])
+}
+
+// ============================================
+// SCHEDULING LINKS (PREMIUM FEATURE)
+// ============================================
+
+// Scheduling Link (Calendly-like)
+model SchedulingLink {
+  id                    String    @id @default(cuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Link details
+  name                  String
+  slug                  String    @unique
+  description           String?
+  duration              Int       // Minutes
+  bufferBefore          Int       @default(0)
+  bufferAfter           Int       @default(0)
+  meetingType           String    @default("one-on-one")
+  location              String?
+  color                 String    @default("#3B82F6")
+
+  // Settings
+  isActive              Boolean   @default(true)
+  isPublic              Boolean   @default(true)
+  requiresConfirmation  Boolean   @default(false)
+  maxBookingsPerDay     Int?
+  noticeTime            Int       @default(24) // Hours
+
+  // Availability & customization
+  availability          Json      // AvailabilitySettings
+  customQuestions       Json      @default("[]")
+  redirectUrl           String?
+  confirmationMessage   String?
+
+  // Stats
+  bookingCount          Int       @default(0)
+
+  // Relations
+  bookings              Booking[]
+
+  // Timestamps
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([slug])
+  @@index([isActive])
+  @@index([isPublic])
+}
+
+// Booking
+model Booking {
+  id                String         @id @default(cuid())
+  linkId            String
+  link              SchedulingLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  // Attendee details
+  attendeeName      String
+  attendeeEmail     String
+  attendeePhone     String?
+
+  // Booking time
+  startTime         DateTime
+  endTime           DateTime
+  timezone          String
+
+  // Status
+  status            String         @default("pending") // "pending" | "confirmed" | "canceled" | "completed"
+  canceledAt        DateTime?
+  cancelReason      String?
+
+  // Custom responses
+  customResponses   Json           @default("{}")
+
+  // Meeting details
+  meetingUrl        String?
+  calendarEventId   String?
+  reminderSent      Boolean        @default(false)
+
+  // Timestamps
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([linkId])
+  @@index([attendeeEmail])
+  @@index([startTime])
+  @@index([status])
 }
