@@ -57,3 +57,38 @@ export interface User {
   updatedAt: Date;
   lastSeenAt: Date;
 }
+
+export interface Goal {
+  id: string;
+  userId: string;
+
+  // Goal details
+  title: string;
+  description: string | null;
+  emoji: string | null;
+  color: string | null;
+
+  // Scheduling parameters
+  frequencyPerWeek: number;
+  durationMinutes: number;
+  preferredTimes: string[];
+  flexibilityScore: number;
+
+  // Priority & status
+  priority: number;
+  isActive: boolean;
+  isPaused: boolean;
+  pausedUntil: Date | null;
+
+  // Analytics
+  completionRate: number;
+  totalCompletions: number;
+  totalScheduled: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastCompletedAt: Date | null;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+}
