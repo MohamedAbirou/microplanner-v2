@@ -8,6 +8,8 @@ import { PlanStatus, SubscriptionTier } from '@microplanner/database';
 import { GeneratePlanDto } from './dto/generate-plan.dto';
 import { QueryPlansDto } from './dto/query-plans.dto';
 import { RuleBasedPlannerService } from './strategies/rule-based-planner.service';
+import { GPT4oMiniPlannerService } from './strategies/gpt-4o-mini-planner.service';
+import { EmailService } from '../email/email.service';
 
 // Tier limits for plan generation per week
 const TIER_PLAN_LIMITS = {
@@ -34,6 +36,8 @@ export class PlansService {
     private httpService: HttpService,
     private configService: ConfigService,
     private ruleBasedPlanner: RuleBasedPlannerService,
+    private gpt4oMiniPlanner: GPT4oMiniPlannerService,
+    private emailService: EmailService,
   ) {
     this.planningServiceUrl =
       this.configService.get('PLANNING_SERVICE_URL') || 'http://localhost:8000';
@@ -99,8 +103,26 @@ export class PlansService {
       aiModel = 'rule-based';
       qualityScore = result.qualityScore;
       generationCost = 0; // Free!
+    } else if (user.tier === SubscriptionTier.STARTER) {
+      // Use GPT-4o-mini for STARTER tier (cost-effective AI)
+      this.logger.log(`Using GPT-4o-mini planner for STARTER tier user ${userId}`);
+
+      const result = await this.gpt4oMiniPlanner.generatePlan(
+        user,
+        goals,
+        weekStartDate,
+        [], // TODO: Fetch existing calendar events for conflict detection
+      );
+
+      planJson = { tasks: result.tasks };
+      reasoning = result.reasoning || null;
+      aiModel = 'gpt-4o-mini';
+      qualityScore = result.qualityScore;
+      // Estimate token usage (roughly 2000 input + 2000 output per plan)
+      tokenUsage = 4000;
+      generationCost = this.calculateCost(aiModel, tokenUsage);
     } else {
-      // Use AI planning service for paid tiers (STARTER, PRO, PREMIUM)
+      // Use AI planning service for PRO/PREMIUM tiers (Claude Sonnet 3.5 or custom models)
       this.logger.log(`Calling AI Planning Service for ${user.tier} tier user ${userId}`);
 
       const planningRequest = {
@@ -154,6 +176,12 @@ export class PlansService {
     this.logger.log(
       `Plan generated successfully: ${plan.id} (${generationTime.toFixed(2)}s, $${(generationCost / 100).toFixed(4)})`
     );
+
+    // 8. Send email notification (async, non-blocking)
+    this.emailService.sendPlanReady(user, plan).catch((error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
+    });
 
     return plan;
   }

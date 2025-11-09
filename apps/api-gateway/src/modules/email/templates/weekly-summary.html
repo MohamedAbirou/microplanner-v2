@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Summary - MicroPlanner</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 24px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 8px 0 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+        .content {
+            padding: 32px 24px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #1a202c;
+            margin-bottom: 24px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .stat-card {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 500;
+        }
+        .progress-bar-container {
+            background-color: #e2e8f0;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 24px 0;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        .productivity-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 16px 0;
+        }
+        .productivity-high {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .productivity-medium {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .productivity-low {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+            margin: 32px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .goal-list {
+            margin: 16px 0;
+        }
+        .goal-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .goal-emoji {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+        .goal-info {
+            flex: 1;
+        }
+        .goal-title {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+        .goal-progress {
+            font-size: 12px;
+            color: #718096;
+        }
+        .recommendation-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 24px 0;
+        }
+        .recommendation-title {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        .recommendation-text {
+            color: #1e3a8a;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 24px;
+            text-align: center;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 24px;
+            text-align: center;
+            color: #718096;
+            font-size: 12px;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Weekly Summary</h1>
+            <p>{{weekRange}}</p>
+        </div>
+
+        <div class="content">
+            <p class="greeting">Hi {{userName}},</p>
+            <p style="color: #4a5568; line-height: 1.6;">
+                Here's how your week went! Let's review your progress and plan for the next week.
+            </p>
+
+            <!-- Statistics Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{goalsCreated}}</div>
+                    <div class="stat-label">Goals Created</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{plansGenerated}}</div>
+                    <div class="stat-label">Plans Generated</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{tasksCompleted}}</div>
+                    <div class="stat-label">Tasks Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{completionRate}}%</div>
+                    <div class="stat-label">Completion Rate</div>
+                </div>
+            </div>
+
+            <!-- Completion Progress -->
+            <div style="margin: 32px 0;">
+                <div class="progress-label">
+                    <span><strong>Weekly Progress</strong></span>
+                    <span>{{tasksCompleted}} / {{totalTasks}} tasks</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: {{completionRate}}%;"></div>
+                </div>
+            </div>
+
+            <!-- Productivity Level -->
+            <center>
+                <span class="productivity-badge productivity-{{productivity}}">
+                    {{#if isHighProductivity}}🔥 High Productivity{{/if}}
+                    {{#if isMediumProductivity}}⚡ Good Progress{{/if}}
+                    {{#if isLowProductivity}}💪 Keep Going{{/if}}
+                </span>
+            </center>
+
+            <!-- Top Goals -->
+            {{#if hasTopGoals}}
+            <h3 class="section-title">🎯 Top Performing Goals</h3>
+            <div class="goal-list">
+                {{#each topGoals}}
+                <div class="goal-item">
+                    <span class="goal-emoji">{{emoji}}</span>
+                    <div class="goal-info">
+                        <div class="goal-title">{{title}}</div>
+                        <div class="goal-progress">{{completionRate}}% completion rate · {{completions}} completed</div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+
+            <!-- Recommendation -->
+            <div class="recommendation-box">
+                <div class="recommendation-title">💡 Recommendation for Next Week</div>
+                <div class="recommendation-text">{{recommendation}}</div>
+            </div>
+
+            <!-- CTA -->
+            <center>
+                <a href="{{appUrl}}/plans/generate" class="cta-button">Generate Next Week's Plan</a>
+            </center>
+
+            <p style="margin-top: 32px; color: #718096; font-size: 14px; line-height: 1.6;">
+                Keep up the great work! Remember, consistency is key to achieving your goals.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                You're receiving this weekly summary because you have email notifications enabled.<br>
+                <a href="{{appUrl}}/settings/notifications">Manage notification preferences</a>
+            </p>
+            <p style="margin-top: 16px;">
+                <a href="{{appUrl}}">MicroPlanner</a> |
+                <a href="{{appUrl}}/analytics">View Full Analytics</a> |
+                <a href="mailto:support@microplanner.app">Support</a>
+            </p>
+            <p style="margin-top: 8px; color: #a0aec0;">
+                © 2025 MicroPlanner. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

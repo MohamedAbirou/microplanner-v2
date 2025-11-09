@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bull';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,6 +17,7 @@ import { CalendarModule } from './modules/calendar/calendar.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { HealthModule } from './modules/health/health.module';
+import { EmailModule } from './modules/email/email.module';
 
 @Module({
   imports: [
@@ -24,6 +26,9 @@ import { HealthModule } from './modules/health/health.module';
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
     }),
+
+    // Cron Jobs
+    ScheduleModule.forRoot(),
 
     // Rate limiting
     ThrottlerModule.forRootAsync({
@@ -62,6 +67,7 @@ import { HealthModule } from './modules/health/health.module';
     BillingModule,
     AnalyticsModule,
     HealthModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [
