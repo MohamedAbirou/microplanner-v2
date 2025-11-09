@@ -21,6 +21,7 @@ import { HealthModule } from './modules/health/health.module';
 import { EmailModule } from './modules/email/email.module';
 import { PremiumModule } from './modules/premium/premium.module';
 import { SchedulingModule } from './modules/scheduling/scheduling.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { SchedulingModule } from './modules/scheduling/scheduling.module';
     AnalyticsModule,
     PremiumModule,
     SchedulingModule,
+    IntegrationsModule,
     HealthModule,
     EmailModule,
   ],

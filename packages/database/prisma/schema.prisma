@@ -61,6 +61,8 @@ model User {
   sentInvitations   TeamInvitation[]
   apiKeys           ApiKey[]
   schedulingLinks   SchedulingLink[]
+  integrations      Integration[]
+  webhooks          Webhook[]
 
   // Timestamps
   createdAt         DateTime           @default(now())
@@ -716,4 +718,92 @@ model Booking {
   @@index([attendeeEmail])
   @@index([startTime])
   @@index([status])
+}
+
+// ==================== INTEGRATIONS ====================
+
+/**
+ * Third-party integrations (Slack, Zoom, Notion, etc.)
+ */
+model Integration {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Integration details
+  type          String   // slack, zoom, google-meet, notion, linear, github
+  name          String
+  isActive      Boolean  @default(true)
+
+  // Configuration
+  config        Json     @default("{}") // Type-specific configuration
+  credentials   Json     @default("{}") // Encrypted OAuth tokens
+  metadata      Json     @default("{}") // Additional data
+
+  // Sync tracking
+  lastSyncAt    DateTime?
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([isActive])
+}
+
+/**
+ * Webhooks for external event notifications
+ */
+model Webhook {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Webhook details
+  url             String
+  events          String[] // Array of event types
+  secret          String   // For signature verification
+  isActive        Boolean  @default(true)
+
+  // Delivery tracking
+  lastTriggeredAt DateTime?
+  failureCount    Int      @default(0)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deliveries      WebhookDelivery[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+/**
+ * Webhook delivery log
+ */
+model WebhookDelivery {
+  id            String   @id @default(cuid())
+  webhookId     String
+  webhook       Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  // Delivery details
+  event         String
+  payload       Json
+  status        String   // pending, success, failed
+  statusCode    Int?
+  responseBody  String?
+  error         String?
+
+  // Retry tracking
+  attempts      Int      @default(0)
+  lastAttemptAt DateTime?
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([status])
+  @@index([createdAt])
 }
