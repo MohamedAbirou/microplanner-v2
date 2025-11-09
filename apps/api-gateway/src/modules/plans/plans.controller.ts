@@ -1,8 +1,11 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PlansService } from './plans.service';
+import { PlanAutomationService } from './plan-automation.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequireSubscription } from '../auth/decorators/require-subscription.decorator';
 import type { User } from '@microplanner/database';
+import { SubscriptionTier } from '@microplanner/database';
 import { GeneratePlanDto } from './dto/generate-plan.dto';
 import { QueryPlansDto } from './dto/query-plans.dto';
 
@@ -10,7 +13,12 @@ import { QueryPlansDto } from './dto/query-plans.dto';
 @ApiBearerAuth()
 @Controller('plans')
 export class PlansController {
-  constructor(private readonly plansService: PlansService) {}
+  private readonly logger = new Logger(PlansController.name);
+
+  constructor(
+    private readonly plansService: PlansService,
+    private readonly planAutomationService: PlanAutomationService,
+  ) {}
 
   @Post('generate')
   @ApiOperation({ summary: 'Generate weekly AI plan' })
@@ -119,5 +127,68 @@ export class PlansController {
   async archive(@CurrentUser() user: User, @Param('id') id: string) {
     await this.plansService.archive(id, user.id);
     // No content response
+  }
+
+  /**
+   * POST /plans/automation/trigger
+   * Manually trigger weekly plan auto-regeneration (admin/testing)
+   */
+  @Post('automation/trigger')
+  @ApiOperation({ summary: 'Manually trigger weekly plan auto-regeneration (PRO/PREMIUM only)' })
+  @ApiResponse({ status: 200, description: 'Auto-regeneration triggered successfully' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async triggerAutomation(@CurrentUser() user: User) {
+    this.logger.log(`Manual automation trigger by user ${user.id}`);
+
+    const result = await this.planAutomationService.manualTrigger();
+
+    return {
+      message: 'Weekly plan auto-regeneration completed',
+      ...result,
+    };
+  }
+
+  /**
+   * GET /plans/automation/metrics
+   * Get automation metrics
+   */
+  @Get('automation/metrics')
+  @ApiOperation({ summary: 'Get plan automation metrics' })
+  @ApiResponse({ status: 200, description: 'Automation metrics retrieved' })
+  async getAutomationMetrics(@CurrentUser() user: User) {
+    const metrics = this.planAutomationService.getMetrics();
+
+    return {
+      message: 'Automation metrics retrieved',
+      metrics,
+    };
+  }
+
+  /**
+   * POST /plans/automation/generate-next-week
+   * Auto-generate plan for next week (PRO/PREMIUM users only)
+   */
+  @Post('automation/generate-next-week')
+  @ApiOperation({ summary: 'Auto-generate plan for next week (PRO/PREMIUM only)' })
+  @ApiResponse({ status: 201, description: 'Plan auto-generated for next week' })
+  @ApiResponse({ status: 400, description: 'Plan already exists or user not eligible' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async autoGenerateNextWeek(@CurrentUser() user: User) {
+    this.logger.log(`Auto-generating next week plan for user ${user.id}`);
+
+    const result = await this.planAutomationService.generateForUser(user.id);
+
+    if (!result.success) {
+      return {
+        message: result.error || 'Failed to auto-generate plan',
+        success: false,
+      };
+    }
+
+    return {
+      message: 'Plan auto-generated for next week',
+      success: true,
+      planId: result.planId,
+    };
   }
 }
