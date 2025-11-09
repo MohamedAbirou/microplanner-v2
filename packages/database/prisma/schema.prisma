@@ -63,6 +63,7 @@ model User {
   schedulingLinks   SchedulingLink[]
   integrations      Integration[]
   webhooks          Webhook[]
+  projects          Project[]
 
   // Timestamps
   createdAt         DateTime           @default(now())
@@ -104,6 +105,10 @@ model Goal {
   userId           String
   user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Project grouping (Phase 17)
+  projectId        String?
+  project          Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
   // Goal details
   title            String
   description      String?
@@ -139,6 +144,7 @@ model Goal {
 
   @@index([userId, isActive])
   @@index([userId, priority])
+  @@index([projectId])
 }
 
 // ============================================
@@ -154,9 +160,20 @@ model Task {
   planId            String?
   plan              WeeklyPlan?  @relation(fields: [planId], references: [id], onDelete: SetNull)
 
+  // Advanced task management (Phase 17)
+  parentTaskId      String?
+  parentTask        Task?        @relation("TaskSubtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks          Task[]       @relation("TaskSubtasks")
+  dependencies      TaskDependency[] @relation("DependentTask")
+  blockedBy         TaskDependency[] @relation("BlockingTask")
+  projectId         String?
+  project           Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
   // Task details
   title             String
   notes             String?
+  priority          Int          @default(2) // 1=High, 2=Medium, 3=Low
+  tags              String[]     @default([])
 
   // Scheduling
   scheduledDate     DateTime
@@ -170,6 +187,13 @@ model Task {
   isSkipped         Boolean      @default(false)
   skippedReason     String?
   skippedAt         DateTime?
+
+  // Time tracking (Phase 17)
+  actualStartTime   DateTime?    // When user actually started
+  actualEndTime     DateTime?    // When user actually finished
+  timeSpentMinutes  Int          @default(0) // Actual time tracked
+  isTimerRunning    Boolean      @default(false)
+  timerStartedAt    DateTime?
 
   // Source tracking
   aiGenerated       Boolean      @default(true)
@@ -199,6 +223,9 @@ model Task {
   @@index([syncStatus])
   @@index([localId])
   @@index([isCompleted])
+  @@index([parentTaskId])
+  @@index([projectId])
+  @@index([priority])
 }
 
 enum SyncStatus {
@@ -207,6 +234,68 @@ enum SyncStatus {
   SYNCED
   FAILED
   CONFLICT
+}
+
+// ==================== TASK DEPENDENCIES & PROJECTS (Phase 17) ====================
+
+/**
+ * Task dependencies (this task depends on another task)
+ */
+model TaskDependency {
+  id              String   @id @default(cuid())
+
+  // The task that is blocked
+  dependentTaskId String
+  dependentTask   Task     @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
+
+  // The task that must be completed first
+  blockingTaskId  String
+  blockingTask    Task     @relation("BlockingTask", fields: [blockingTaskId], references: [id], onDelete: Cascade)
+
+  // Dependency type
+  type            String   @default("finish-to-start") // finish-to-start, start-to-start, finish-to-finish
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+
+  @@unique([dependentTaskId, blockingTaskId])
+  @@index([dependentTaskId])
+  @@index([blockingTaskId])
+}
+
+/**
+ * Projects (grouping tasks into projects)
+ */
+model Project {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Project details
+  name            String
+  description     String?
+  color           String   @default("#3B82F6")
+  icon            String?
+
+  // Status
+  isArchived      Boolean  @default(false)
+  archivedAt      DateTime?
+
+  // Dates
+  startDate       DateTime?
+  targetDate      DateTime?
+  completedAt     DateTime?
+
+  // Relations
+  tasks           Task[]
+  goals           Goal[]
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isArchived])
 }
 
 // ============================================
