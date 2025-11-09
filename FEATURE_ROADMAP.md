@@ -115,6 +115,10 @@ export class RuleBasedPlannerService {
 **What to Build**:
 - Email service integration (Resend or SendGrid)
 - Task reminder emails (1 day before, 1 hour before)
+- Open AI API integration.
+- Replace rule based with GPT-4o-mini for Starter users
+- Prompt engineering for GPT-4o-mini's style
+- Cost tracking for GPT API calls
 - Weekly summary emails
 - Email templates
 - User preference toggles
@@ -166,7 +170,7 @@ EMAIL_FROM=MicroPlanner <noreply@microplanner.app>
 
 **What to Build**:
 - Anthropic API integration
-- Replace GPT-4o with Claude Sonnet 3.5 for PRO+ users
+- Replace GPT-4o-mini with Claude Sonnet 3.5 for PRO+ users
 - Prompt engineering for Claude's style
 - Cost tracking for Claude API calls
 
@@ -686,7 +690,7 @@ https://microplanner.app/book/john-doe/30min
 
 ---
 
-#### **15.4 Multi-Calendar Support (Outlook/Office365)**
+#### **15.4 Multi-Calendar Support (Outlook/Office365/Apple)**
 **Priority**: P1 (HIGH - Enterprise requirement)
 **Estimated Time**: 1 week
 
@@ -925,7 +929,7 @@ export class OfflineSyncService {
 
 ### **Q1 2025: Critical Features (Weeks 1-12)**
 - Week 1-2: FREE tier rule-based planner
-- Week 2-3: Email reminders (STARTER)
+- Week 2-3: GPT-4o-mini + Email reminders (STARTER)
 - Week 3-4: Claude Sonnet 3.5 (PRO)
 - Week 5-6: AI learning & patterns (PRO)
 - Week 6-7: Weekly auto-regen (PRO)
@@ -938,7 +942,7 @@ export class OfflineSyncService {
 - Week 13-14: Recurring tasks/habits
 - Week 14-15: Focus time blocks
 - Week 16-17: Scheduling links (Calendly alternative)
-- Week 18-19: Outlook/Office365 integration
+- Week 18-19: Outlook/Office365/Apple integration
 - Week 19-20: Slack integration
 - Week 21-22: Asana/Jira integrations
 - Week 23-24: Notion integration
@@ -961,7 +965,7 @@ export class OfflineSyncService {
 
 ### **P0 - CRITICAL (Must Have for Launch)**
 1. FREE tier: Rule-based planner
-2. STARTER tier: Email reminders
+2. STARTER tier: GPT-4o-mini planner + Email reminders
 3. PRO tier: Claude Sonnet 3.5
 4. PRO tier: AI learning
 5. PREMIUM tier: Team workspace
@@ -976,7 +980,7 @@ export class OfflineSyncService {
 3. Weekly auto-regeneration
 4. Custom AI personas
 5. Scheduling links
-6. Outlook/Office365 integration
+6. Outlook/Office365/Apple integration
 7. Offline mode
 
 ### **P2 - MEDIUM (Nice to Have)**
@@ -1010,7 +1014,7 @@ export class OfflineSyncService {
 
 | Service | Monthly Cost |
 |---------|-------------|
-| Fly.io (API + AI service) | $20-50 |
+| Fly.io or Railway (depends which is cheapest) (API + AI service) | $20-50 |
 | Neon Database (Pro tier) | $19 |
 | OpenAI API (GPT-4o-mini) | $50-200 |
 | Anthropic API (Claude) | $100-500 |
