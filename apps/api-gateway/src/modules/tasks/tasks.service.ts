@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { GoalsService } from '../goals/goals.service';
+import { PatternRecognitionService } from '../analytics/pattern-recognition.service';
 import type { Task } from '@microplanner/database';
 import { SyncStatus } from '@microplanner/database';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -15,7 +16,8 @@ export class TasksService {
 
   constructor(
     private prisma: PrismaService,
-    private goalsService: GoalsService
+    private goalsService: GoalsService,
+    private patternRecognitionService: PatternRecognitionService,
   ) {}
 
   /**
@@ -212,6 +214,15 @@ export class TasksService {
     // Update plan completion rate if task is linked to a plan
     if (task.planId) {
       await this.updatePlanCompletion(task.planId);
+    }
+
+    // Record completion event for AI learning (PRO/PREMIUM users)
+    try {
+      await this.patternRecognitionService.recordCompletionEvent(taskId);
+      this.logger.debug(`Recorded completion event for task ${taskId}`);
+    } catch (error) {
+      // Don't fail the completion if pattern recording fails
+      this.logger.warn(`Failed to record completion event: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
     return updatedTask;

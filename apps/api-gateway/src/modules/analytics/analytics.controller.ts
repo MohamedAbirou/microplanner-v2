@@ -1,15 +1,23 @@
-import { Controller, Post, Get, Body, Query } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
+import { PatternRecognitionService } from './pattern-recognition.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequireSubscription } from '../auth/decorators/require-subscription.decorator';
 import type { User } from '@microplanner/database';
+import { SubscriptionTier } from '@microplanner/database';
 import { TrackEventDto } from './dto/track-event.dto';
 
 @ApiTags('analytics')
 @ApiBearerAuth()
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  private readonly logger = new Logger(AnalyticsController.name);
+
+  constructor(
+    private readonly analyticsService: AnalyticsService,
+    private readonly patternRecognitionService: PatternRecognitionService,
+  ) {}
 
   @Post('events')
   @ApiOperation({ summary: 'Track an analytics event' })
@@ -74,5 +82,60 @@ export class AnalyticsController {
       message: 'Analytics aggregation completed',
       ...result,
     };
+  }
+
+  /**
+   * GET /analytics/patterns
+   * Get AI-learned patterns and insights (PRO/PREMIUM only)
+   */
+  @Get('patterns')
+  @ApiOperation({ summary: 'Get AI-learned pattern insights (PRO/PREMIUM)' })
+  @ApiResponse({ status: 200, description: 'Pattern insights retrieved successfully' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async getPatterns(@CurrentUser() user: User) {
+    this.logger.log(`Fetching patterns for user ${user.id}`);
+
+    // Try cached insights first
+    let insights = await this.patternRecognitionService.getCachedInsights(user.id);
+
+    // If no cache or stale (> 7 days), analyze fresh
+    if (!insights || this.isStale(insights.lastUpdated)) {
+      const result = await this.patternRecognitionService.analyzeUserPatterns(user.id);
+      insights = result.insights;
+    }
+
+    return {
+      message: 'Pattern insights retrieved successfully',
+      insights,
+      tier: user.tier,
+    };
+  }
+
+  /**
+   * POST /analytics/patterns/refresh
+   * Force refresh pattern analysis (PRO/PREMIUM only)
+   */
+  @Post('patterns/refresh')
+  @ApiOperation({ summary: 'Force refresh pattern analysis (PRO/PREMIUM)' })
+  @ApiResponse({ status: 200, description: 'Pattern analysis refreshed successfully' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async refreshPatterns(@CurrentUser() user: User) {
+    this.logger.log(`Refreshing patterns for user ${user.id}`);
+
+    const result = await this.patternRecognitionService.analyzeUserPatterns(user.id);
+
+    return {
+      message: 'Pattern analysis refreshed successfully',
+      ...result,
+    };
+  }
+
+  /**
+   * Check if insights are stale (> 7 days old)
+   */
+  private isStale(lastUpdated: Date): boolean {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return new Date(lastUpdated) < sevenDaysAgo;
   }
 }

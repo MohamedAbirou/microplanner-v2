@@ -56,6 +56,9 @@ export interface User {
   // Device tokens
   pushTokens: string[];
 
+  // AI Learning (PRO/PREMIUM feature)
+  patternInsights: any | null; // JSON type - stores UserPatternInsights
+
   // Metadata
   onboardingCompleted: boolean;
   onboardingStep: number;

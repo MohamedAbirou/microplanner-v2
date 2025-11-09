@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ClerkAuthGuard } from './modules/auth/guards/clerk-auth.guard';
+import { SubscriptionGuard } from './modules/auth/guards/subscription.guard';
 import { UsersModule } from './modules/users/users.module';
 import { GoalsModule } from './modules/goals/goals.module';
 import { PlansModule } from './modules/plans/plans.module';
@@ -76,6 +77,11 @@ import { EmailModule } from './modules/email/email.module';
     {
       provide: APP_GUARD,
       useClass: ClerkAuthGuard,
+    },
+    // Global subscription tier guard - enforces @RequireSubscription() decorator
+    {
+      provide: APP_GUARD,
+      useClass: SubscriptionGuard,
     },
   ],
 })

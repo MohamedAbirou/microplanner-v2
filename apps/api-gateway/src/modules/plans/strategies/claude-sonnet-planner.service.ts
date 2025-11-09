@@ -9,6 +9,8 @@ import {
   CalendarEvent,
   PlanMetadata,
 } from './planning-strategy.interface';
+import { PatternRecognitionService } from '../../analytics/pattern-recognition.service';
+import type { UserPatternInsights } from '../../analytics/types/pattern-insights.types';
 
 /**
  * Claude Sonnet 3.5 AI Planner Service
@@ -29,7 +31,10 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
   private readonly anthropic: Anthropic | null;
   private readonly serviceEnabled: boolean;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private patternRecognitionService: PatternRecognitionService,
+  ) {
     const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
 
     if (!apiKey) {
@@ -39,7 +44,7 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
     } else {
       this.anthropic = new Anthropic({ apiKey });
       this.serviceEnabled = true;
-      this.logger.log('✓ Claude Sonnet 3.5 planner initialized');
+      this.logger.log('✓ Claude Sonnet 3.5 planner initialized with AI learning');
     }
   }
 
@@ -62,8 +67,19 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
       // Validate inputs
       this.validateInputs(user, goals, weekStart);
 
-      // Build prompt
-      const prompt = this.buildPrompt(user, goals, weekStart, existingEvents);
+      // Fetch learned patterns for PRO/PREMIUM users
+      let insights: UserPatternInsights | null = null;
+      try {
+        insights = await this.patternRecognitionService.getCachedInsights(user.id);
+        if (insights && insights.confidenceScore > 50) {
+          this.logger.log(`Using learned patterns for user ${user.id} (confidence: ${insights.confidenceScore}%)`);
+        }
+      } catch (error) {
+        this.logger.warn(`Failed to fetch pattern insights: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+
+      // Build prompt with learned patterns
+      const prompt = this.buildPrompt(user, goals, weekStart, existingEvents, insights);
 
       // Call Anthropic API
       this.logger.debug('Calling Claude Sonnet 3.5 for plan generation...');
@@ -143,6 +159,7 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
     goals: Goal[],
     weekStart: Date,
     existingEvents: CalendarEvent[],
+    insights: UserPatternInsights | null = null,
   ): string {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
@@ -187,6 +204,35 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
       ? user.productivityPeaks.join(', ')
       : 'Not specified';
 
+    // Format learned patterns (if available with sufficient confidence)
+    let learnedPatternsSection = '';
+    if (insights && insights.confidenceScore > 50) {
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+      learnedPatternsSection = `\n\n**AI-Learned User Patterns (${insights.confidenceScore}% confidence, based on ${insights.totalTasksAnalyzed} tasks):**
+- **Best Completion Hours:** ${insights.bestCompletionHours.map(h => `${h}:00`).join(', ')} - User completes tasks most successfully during these hours
+- **Worst Completion Hours:** ${insights.worstCompletionHours.map(h => `${h}:00`).join(', ')} - Avoid scheduling important tasks during these times
+- **Most Productive Days:** ${insights.mostProductiveDays.map(d => dayNames[d]).join(', ')}
+- **Least Productive Days:** ${insights.leastProductiveDays.map(d => dayNames[d]).join(', ')}
+- **Morning Person Score:** ${insights.morningPersonScore}/100 (${insights.morningPersonScore > 50 ? 'Strong morning preference' : insights.morningPersonScore < -50 ? 'Strong evening preference' : 'Balanced throughout day'})
+- **Evening Person Score:** ${insights.eveningPersonScore}/100
+- **Optimal Session Length:** ${insights.optimalSessionLength} minutes
+- **Average Tasks Per Day:** ${insights.averageTasksPerDay.toFixed(1)}
+- **Current Streak:** ${insights.streakDays} days
+- **Prefers Buffer Time:** ${insights.prefersBufferTime ? 'Yes - leave gaps between tasks' : 'No - can schedule back-to-back'}
+- **Prefers Task Clustering:** ${insights.prefersTaskClustering ? 'Yes - batch similar tasks together' : 'No - distribute tasks throughout day'}`;
+
+      // Add goal-specific patterns if available
+      if (insights.goalCompletionPatterns.length > 0) {
+        learnedPatternsSection += '\n\n**Goal-Specific Learned Patterns:**';
+        for (const pattern of insights.goalCompletionPatterns.slice(0, 5)) {
+          learnedPatternsSection += `\n- "${pattern.goalTitle}": Best at ${pattern.bestTimes.join(', ')} on ${pattern.bestDays.map(d => dayNames[d]).join(', ')} (${pattern.averageCompletionRate.toFixed(0)}% completion rate)`;
+        }
+      }
+
+      learnedPatternsSection += '\n\n**IMPORTANT:** Use these learned patterns to make MORE INTELLIGENT scheduling decisions. This data reflects the user\'s actual historical behavior and should HEAVILY influence your task placement.';
+    }
+
     return `You are an expert productivity planner creating a personalized weekly schedule.
 
 **User Profile:**
@@ -203,7 +249,7 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
 ${goalsText}
 
 **Existing Calendar Commitments:**
-${eventsText}
+${eventsText}${learnedPatternsSection}
 
 **Your Task:**
 Create an optimal weekly plan that:

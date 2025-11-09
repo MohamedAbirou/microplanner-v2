@@ -7,9 +7,10 @@ import { GPT4oMiniPlannerService } from './strategies/gpt-4o-mini-planner.servic
 import { ClaudeSonnetPlannerService } from './strategies/claude-sonnet-planner.service';
 import { EmailModule } from '../email/email.module';
 import { CalendarModule } from '../calendar/calendar.module';
+import { AnalyticsModule } from '../analytics/analytics.module';
 
 @Module({
-  imports: [HttpModule, EmailModule, CalendarModule],
+  imports: [HttpModule, EmailModule, CalendarModule, AnalyticsModule],
   controllers: [PlansController],
   providers: [
     PlansService,

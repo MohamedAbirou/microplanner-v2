@@ -33,6 +33,7 @@ describe('UsersController', () => {
     weeklySummaryEnabled: true,
     planReadyNotification: true,
     pushTokens: [],
+    patternInsights: null,
     onboardingCompleted: false,
     onboardingStep: 0,
     language: 'en',

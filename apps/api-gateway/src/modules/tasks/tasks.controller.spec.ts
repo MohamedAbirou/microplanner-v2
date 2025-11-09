@@ -43,6 +43,7 @@ describe('TasksController', () => {
     weeklySummaryEnabled: true,
     planReadyNotification: true,
     pushTokens: [],
+    patternInsights: null,
     onboardingCompleted: true,
     onboardingStep: 5,
     language: 'en',
