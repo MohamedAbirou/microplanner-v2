@@ -27,7 +27,8 @@ export class PlansService {
 
       return response.data;
     } catch (error) {
-      this.logger.error(`Failed to generate plan: ${error.message}`);
+      const err = error as Error;
+      this.logger.error(`Failed to generate plan: ${err.message}`);
       throw error;
     }
   }

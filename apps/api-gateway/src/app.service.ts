@@ -26,7 +26,7 @@ export class AppService {
           database: 'disconnected',
           api: 'running',
         },
-        error: error.message,
+        error: (error as Error).message,
       };
     }
   }

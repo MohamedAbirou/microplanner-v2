@@ -15,4 +15,12 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-export * from '@prisma/client';
+// Re-export PrismaClient class so it can be used in other packages
+export { PrismaClient } from '@prisma/client';
+
+// Export Prisma client types when available
+// Temporarily export our own types until Prisma client is generated
+export * from './types';
+
+// Uncomment when Prisma client is generated:
+// export * from '@prisma/client';
