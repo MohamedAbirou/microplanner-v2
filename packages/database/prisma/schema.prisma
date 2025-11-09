@@ -50,6 +50,7 @@ model User {
   // Relations
   goals             Goal[]
   plans             WeeklyPlan[]
+  planTemplates     PlanTemplate[]
   tasks             Task[]
   calendarTokens    CalendarToken[]
   aiMemory          AIMemory[]
@@ -258,6 +259,35 @@ enum PlanStatus {
   ACCEPTED
   APPLIED
   ARCHIVED
+}
+
+// Plan Templates (PRO/PREMIUM feature)
+model PlanTemplate {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Template metadata
+  name                String
+  description         String?
+  category            String   @default("custom")
+  isPublic            Boolean  @default(false)
+  isDefault           Boolean  @default(false)
+  usageCount          Int      @default(0)
+  tags                String[] @default([])
+
+  // Template data
+  tasks               Json     // Array of TemplateTask objects
+  estimatedTotalHours Float    @default(0)
+  tasksPerDay         Json     // Record<dayOfWeek, taskCount>
+
+  // Timestamps
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isPublic])
+  @@index([category])
 }
 
 // ============================================

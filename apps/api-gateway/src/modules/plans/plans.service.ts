@@ -193,6 +193,83 @@ export class PlansService {
   }
 
   /**
+   * Generate plan from template
+   * Creates a WeeklyPlan with tasks from template
+   */
+  async generateFromTemplate(
+    userId: string,
+    weekStartDate: string,
+    tasks: Array<{
+      title: string;
+      notes: string | null;
+      scheduledDate: Date;
+      startTime: string;
+      endTime: string;
+      durationMinutes: number;
+      goalId: string | null;
+    }>,
+    user: User,
+  ): Promise<WeeklyPlan> {
+    const startTime = Date.now();
+
+    // Calculate week boundaries
+    const { weekStartDate: weekStart, weekEndDate: weekEnd } = this.calculateWeekBoundaries(weekStartDate);
+
+    // Create plan
+    const plan = await this.prisma.weeklyPlan.create({
+      data: {
+        userId,
+        weekStartDate: weekStart,
+        weekEndDate: weekEnd,
+        planJson: { tasks },
+        reasoning: 'Generated from user template',
+        aiModel: 'template',
+        complexity: 'simple',
+        generationTime: (Date.now() - startTime) / 1000,
+        generationCost: 0, // Templates are free
+        tokenUsage: 0,
+        qualityScore: 85, // Default quality for templates
+        totalTasks: tasks.length,
+        status: PlanStatus.DRAFT,
+      },
+    });
+
+    // Create individual task entries
+    await Promise.all(
+      tasks.map((task) =>
+        this.prisma.task.create({
+          data: {
+            userId,
+            goalId: task.goalId,
+            planId: plan.id,
+            title: task.title,
+            notes: task.notes,
+            scheduledDate: task.scheduledDate,
+            startTime: task.startTime,
+            endTime: task.endTime,
+            durationMinutes: task.durationMinutes,
+            aiGenerated: false, // Template-based, not AI-generated
+            manuallyAdded: false,
+            syncStatus: 'PENDING',
+          },
+        }),
+      ),
+    );
+
+    this.logger.log(`Plan generated from template: ${plan.id} with ${tasks.length} tasks`);
+
+    // Send email notification (async, non-blocking)
+    if (user.planReadyNotification) {
+      this.emailService.sendPlanReady(user, plan).catch((error) => {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
+      });
+    }
+
+    return plan;
+  }
+
+  /**
    * Get current week's plan (most recent draft or accepted plan)
    */
   async getCurrentWeekPlan(userId: string): Promise<WeeklyPlan | null> {

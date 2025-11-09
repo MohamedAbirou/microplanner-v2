@@ -2,12 +2,19 @@ import { Controller, Post, Get, Put, Delete, Body, Param, Query, HttpCode, HttpS
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PlansService } from './plans.service';
 import { PlanAutomationService } from './plan-automation.service';
+import { PlanTemplatesService } from './plan-templates.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequireSubscription } from '../auth/decorators/require-subscription.decorator';
 import type { User } from '@microplanner/database';
 import { SubscriptionTier } from '@microplanner/database';
 import { GeneratePlanDto } from './dto/generate-plan.dto';
 import { QueryPlansDto } from './dto/query-plans.dto';
+import {
+  CreateTemplateDto,
+  UpdateTemplateDto,
+  QueryTemplatesDto,
+  GenerateFromTemplateDto
+} from './types/plan-template.types';
 
 @ApiTags('plans')
 @ApiBearerAuth()
@@ -18,6 +25,7 @@ export class PlansController {
   constructor(
     private readonly plansService: PlansService,
     private readonly planAutomationService: PlanAutomationService,
+    private readonly planTemplatesService: PlanTemplatesService,
   ) {}
 
   @Post('generate')
@@ -189,6 +197,211 @@ export class PlansController {
       message: 'Plan auto-generated for next week',
       success: true,
       planId: result.planId,
+    };
+  }
+
+  // ==================== PLAN TEMPLATES (PRO/PREMIUM) ====================
+
+  /**
+   * POST /plans/templates
+   * Create a new plan template
+   */
+  @Post('templates')
+  @ApiOperation({ summary: 'Create a new plan template (PRO/PREMIUM only)' })
+  @ApiResponse({ status: 201, description: 'Template created successfully' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async createTemplate(@CurrentUser() user: User, @Body() createDto: CreateTemplateDto) {
+    this.logger.log(`Creating template "${createDto.name}" for user ${user.id}`);
+
+    const template = await this.planTemplatesService.create(user.id, createDto, user.tier);
+
+    return {
+      message: 'Template created successfully',
+      template,
+    };
+  }
+
+  /**
+   * POST /plans/:id/save-as-template
+   * Create template from existing plan
+   */
+  @Post(':id/save-as-template')
+  @ApiOperation({ summary: 'Save plan as template (PRO/PREMIUM only)' })
+  @ApiResponse({ status: 201, description: 'Template created from plan' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async saveAsTemplate(
+    @CurrentUser() user: User,
+    @Param('id') planId: string,
+    @Body() body: { name: string; description?: string },
+  ) {
+    this.logger.log(`Saving plan ${planId} as template for user ${user.id}`);
+
+    const template = await this.planTemplatesService.createFromPlan(
+      user.id,
+      planId,
+      body.name,
+      body.description,
+    );
+
+    return {
+      message: 'Plan saved as template successfully',
+      template,
+    };
+  }
+
+  /**
+   * GET /plans/templates
+   * Get all templates (user's + public)
+   */
+  @Get('templates')
+  @ApiOperation({ summary: 'Get all plan templates' })
+  @ApiResponse({ status: 200, description: 'Templates retrieved successfully' })
+  async getTemplates(@CurrentUser() user: User, @Query() query: QueryTemplatesDto) {
+    const result = await this.planTemplatesService.findAll(user.id, query);
+
+    return {
+      message: 'Templates retrieved successfully',
+      ...result,
+    };
+  }
+
+  /**
+   * GET /plans/templates/stats
+   * Get template statistics
+   */
+  @Get('templates/stats')
+  @ApiOperation({ summary: 'Get template statistics' })
+  @ApiResponse({ status: 200, description: 'Template statistics retrieved' })
+  async getTemplateStats(@CurrentUser() user: User) {
+    const stats = await this.planTemplatesService.getStats(user.id);
+
+    return {
+      message: 'Template statistics retrieved',
+      stats,
+    };
+  }
+
+  /**
+   * GET /plans/templates/default
+   * Get user's default template
+   */
+  @Get('templates/default')
+  @ApiOperation({ summary: 'Get default template' })
+  @ApiResponse({ status: 200, description: 'Default template retrieved' })
+  async getDefaultTemplate(@CurrentUser() user: User) {
+    const template = await this.planTemplatesService.getDefault(user.id);
+
+    if (!template) {
+      return {
+        message: 'No default template set',
+        template: null,
+      };
+    }
+
+    return {
+      message: 'Default template retrieved',
+      template,
+    };
+  }
+
+  /**
+   * GET /plans/templates/:id
+   * Get single template by ID
+   */
+  @Get('templates/:id')
+  @ApiOperation({ summary: 'Get template by ID' })
+  @ApiResponse({ status: 200, description: 'Template retrieved successfully' })
+  async getTemplate(@CurrentUser() user: User, @Param('id') templateId: string) {
+    const template = await this.planTemplatesService.findOne(templateId, user.id);
+
+    return {
+      message: 'Template retrieved successfully',
+      template,
+    };
+  }
+
+  /**
+   * PUT /plans/templates/:id
+   * Update a template
+   */
+  @Put('templates/:id')
+  @ApiOperation({ summary: 'Update template' })
+  @ApiResponse({ status: 200, description: 'Template updated successfully' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async updateTemplate(
+    @CurrentUser() user: User,
+    @Param('id') templateId: string,
+    @Body() updateDto: UpdateTemplateDto,
+  ) {
+    this.logger.log(`Updating template ${templateId}`);
+
+    const template = await this.planTemplatesService.update(templateId, user.id, updateDto);
+
+    return {
+      message: 'Template updated successfully',
+      template,
+    };
+  }
+
+  /**
+   * PUT /plans/templates/:id/set-default
+   * Set template as default
+   */
+  @Put('templates/:id/set-default')
+  @ApiOperation({ summary: 'Set template as default' })
+  @ApiResponse({ status: 200, description: 'Template set as default' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async setDefaultTemplate(@CurrentUser() user: User, @Param('id') templateId: string) {
+    const template = await this.planTemplatesService.setDefault(templateId, user.id);
+
+    return {
+      message: 'Template set as default',
+      template,
+    };
+  }
+
+  /**
+   * DELETE /plans/templates/:id
+   * Delete a template
+   */
+  @Delete('templates/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete template' })
+  @ApiResponse({ status: 204, description: 'Template deleted successfully' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async deleteTemplate(@CurrentUser() user: User, @Param('id') templateId: string) {
+    await this.planTemplatesService.delete(templateId, user.id);
+    // No content response
+  }
+
+  /**
+   * POST /plans/generate-from-template
+   * Generate plan from template
+   */
+  @Post('generate-from-template')
+  @ApiOperation({ summary: 'Generate plan from template (PRO/PREMIUM only)' })
+  @ApiResponse({ status: 201, description: 'Plan generated from template successfully' })
+  @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
+  async generateFromTemplate(@CurrentUser() user: User, @Body() generateDto: GenerateFromTemplateDto) {
+    this.logger.log(`Generating plan from template ${generateDto.templateId} for user ${user.id}`);
+
+    // Generate tasks from template
+    const tasks = await this.planTemplatesService.generateTasksFromTemplate(
+      generateDto.templateId,
+      user.id,
+      generateDto,
+    );
+
+    // Create plan with generated tasks (using PlansService to save to database)
+    const plan = await this.plansService.generateFromTemplate(user.id, generateDto.weekStartDate, tasks, user);
+
+    return {
+      message: 'Plan generated from template successfully',
+      plan,
+      metrics: {
+        totalTasks: tasks.length,
+        templateId: generateDto.templateId,
+      },
     };
   }
 }
