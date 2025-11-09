@@ -140,3 +140,57 @@ export interface WeeklyPlan {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export enum SyncStatus {
+  PENDING = 'PENDING',
+  SYNCING = 'SYNCING',
+  SYNCED = 'SYNCED',
+  FAILED = 'FAILED',
+  CONFLICT = 'CONFLICT',
+}
+
+export interface Task {
+  id: string;
+  userId: string;
+  goalId: string | null;
+  planId: string | null;
+
+  // Task details
+  title: string;
+  notes: string | null;
+
+  // Scheduling
+  scheduledDate: Date;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+
+  // Status
+  isCompleted: boolean;
+  completedAt: Date | null;
+  isSkipped: boolean;
+  skippedReason: string | null;
+  skippedAt: Date | null;
+
+  // Source tracking
+  aiGenerated: boolean;
+  manuallyAdded: boolean;
+  manuallyMoved: boolean;
+  aiReasoning: string | null;
+
+  // Calendar sync
+  calendarEventId: string | null;
+  calendarProvider: string | null;
+  syncedAt: Date | null;
+  syncStatus: SyncStatus;
+  syncError: string | null;
+
+  // Offline support
+  localId: string | null;
+  pendingSync: boolean;
+  offlineCreatedAt: Date | null;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+}
