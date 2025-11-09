@@ -242,3 +242,45 @@ export interface SyncLog {
   // Timestamp
   createdAt: Date;
 }
+
+export interface AnalyticsEvent {
+  id: string;
+  userId: string | null;
+  sessionId: string | null;
+
+  // Event details
+  event: string;
+  properties: any | null;
+
+  // Context
+  platform: string | null;
+  appVersion: string | null;
+  userTier: string | null;
+
+  // Timestamp
+  timestamp: Date;
+}
+
+export interface LLMUsage {
+  id: string;
+  userId: string | null;
+  planId: string | null;
+
+  // LLM details
+  model: string;
+  operation: string;
+
+  // Token usage
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  cost: number;
+
+  // Performance
+  latency: number;
+  success: boolean;
+  errorMessage: string | null;
+
+  // Timestamp
+  timestamp: Date;
+}
