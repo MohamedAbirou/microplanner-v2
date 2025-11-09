@@ -65,6 +65,19 @@ model User {
   webhooks          Webhook[]
   projects          Project[]
 
+  // Productivity & Work-Life Balance (Phase 18)
+  workHours              WorkHours?
+  focusTimeBlocks        FocusTimeBlock[]
+  noMeetingDays          NoMeetingDay[]
+  priorityHours          PriorityHours?
+  calendarDefense        CalendarDefense?
+  smart1on1s             Smart1on1[]
+  travelTimes            TravelTime[]
+  kanbanBoards           KanbanBoard[]
+  productivityScores     ProductivityScore[]
+  smartNotifications     SmartNotification[]
+  notificationPreferences NotificationPreferences?
+
   // Timestamps
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -289,6 +302,7 @@ model Project {
   // Relations
   tasks           Task[]
   goals           Goal[]
+  kanbanBoards    KanbanBoard[]
 
   // Timestamps
   createdAt       DateTime @default(now())
@@ -895,4 +909,294 @@ model WebhookDelivery {
   @@index([webhookId])
   @@index([status])
   @@index([createdAt])
+}
+
+// ==================== PRODUCTIVITY & WORK-LIFE BALANCE (Phase 18) ====================
+
+/**
+ * Work hours configuration
+ */
+model WorkHours {
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  timezone                String   @default("UTC")
+
+  // Weekly schedule (stored as JSON for flexibility)
+  schedule                Json     // { monday: {...}, tuesday: {...}, etc. }
+
+  // Work-life balance rules
+  enforceWorkHours        Boolean  @default(true)
+  maxMeetingsPerDay       Int?
+  maxMeetingHoursPerDay   Int?
+  maxConsecutiveMeetings  Int?
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/**
+ * Focus time blocks
+ */
+model FocusTimeBlock {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title               String
+  frequency           String   // daily, weekdays, weekly, custom
+  daysOfWeek          Int[]    // [1,2,3,4,5] for weekdays
+  startTime           String?  // "09:00" or null if autoSchedule
+  durationMinutes     Int
+
+  priority            Int      @default(5)
+  protected           Boolean  @default(true)
+  isActive            Boolean  @default(true)
+  autoSchedule        Boolean  @default(false)
+  preferredTimeSlots  String[] @default([])
+
+  color               String   @default("#3B82F6")
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+/**
+ * No-meeting days
+ */
+model NoMeetingDay {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dayOfWeek       Int      // 0=Sunday, 1=Monday, etc.
+  isActive        Boolean  @default(true)
+  allowExceptions Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, dayOfWeek])
+  @@index([userId])
+}
+
+/**
+ * Priority hours
+ */
+model PriorityHours {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  timeSlots             Json     // Array of { dayOfWeek, startTime, endTime, priority }
+  prioritizeFocusTime   Boolean  @default(true)
+  prioritizeTasks       Boolean  @default(true)
+  deprioritizeMeetings  Boolean  @default(true)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/**
+ * Calendar defense rules
+ */
+model CalendarDefense {
+  id                            String   @id @default(cuid())
+  userId                        String   @unique
+  user                          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  autoAcceptDuringOpenHours     Boolean  @default(false)
+  autoDeclineDuringFocusTime    Boolean  @default(true)
+  autoDeclineOutsideWorkHours   Boolean  @default(true)
+  autoDeclineDoubleBookings     Boolean  @default(true)
+
+  requireMinimumNotice          Boolean  @default(true)
+  minimumNoticeHours            Int      @default(24)
+
+  requireBufferBetweenMeetings  Boolean  @default(true)
+  bufferMinutes                 Int      @default(15)
+
+  suggestShorterMeetings        Boolean  @default(true)
+  defaultMeetingDuration        Int      @default(30)
+
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/**
+ * Smart 1:1 scheduling
+ */
+model Smart1on1 {
+  id                      String    @id @default(cuid())
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  personName              String
+  personEmail             String
+  frequency               String    // weekly, biweekly, monthly
+  durationMinutes         Int       @default(30)
+
+  autoSchedule            Boolean   @default(true)
+  autoRescheduleOnConflict Boolean  @default(true)
+  preferredDays           Int[]     @default([])
+  preferredTimes          String[]  @default([])
+
+  isActive                Boolean   @default(true)
+  lastScheduledDate       DateTime?
+  nextScheduledDate       DateTime?
+
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+/**
+ * Travel time entries
+ */
+model TravelTime {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fromEventId       String
+  toEventId         String
+  estimatedMinutes  Int
+  method            String   // driving, walking, transit, auto
+
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+  @@index([fromEventId])
+  @@index([toEventId])
+}
+
+/**
+ * Kanban boards
+ */
+model KanbanBoard {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  name        String
+  description String?
+  isDefault   Boolean        @default(false)
+
+  columns     KanbanColumn[]
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+/**
+ * Kanban columns
+ */
+model KanbanColumn {
+  id       String      @id @default(cuid())
+  boardId  String
+  board    KanbanBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  name     String
+  order    Int
+  color    String      @default("#3B82F6")
+  taskIds  String[]    @default([])
+
+  @@index([boardId])
+}
+
+/**
+ * Productivity scores (daily)
+ */
+model ProductivityScore {
+  id                      String   @id @default(cuid())
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date                    DateTime
+
+  overallScore            Int      // 0-100
+  focusTimeScore          Int
+  taskCompletionScore     Int
+  meetingEfficiencyScore  Int
+  workLifeBalanceScore    Int
+
+  totalFocusMinutes       Int
+  totalMeetingMinutes     Int
+  totalTaskMinutes        Int
+  totalBreakMinutes       Int
+
+  insights                String[]
+  recommendations         String[]
+
+  createdAt               DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+/**
+ * Smart notifications
+ */
+model SmartNotification {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type       String   // NotificationType enum
+  title      String
+  message    String
+  priority   String   @default("medium") // low, medium, high, urgent
+  actionUrl  String?
+  isRead     Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+/**
+ * Notification preferences
+ */
+model NotificationPreferences {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  emailEnabled          Boolean  @default(true)
+  pushEnabled           Boolean  @default(true)
+  smsEnabled            Boolean  @default(false)
+
+  overbookedAlerts      Boolean  @default(true)
+  breakReminders        Boolean  @default(true)
+  focusTimeAlerts       Boolean  @default(true)
+  upcomingMeetingAlerts Boolean  @default(true)
+  taskDueAlerts         Boolean  @default(true)
+  weeklySummary         Boolean  @default(true)
+
+  quietHoursStart       String   @default("22:00")
+  quietHoursEnd         String   @default("08:00")
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
 }

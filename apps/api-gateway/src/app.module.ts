@@ -22,6 +22,7 @@ import { EmailModule } from './modules/email/email.module';
 import { PremiumModule } from './modules/premium/premium.module';
 import { SchedulingModule } from './modules/scheduling/scheduling.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { ProductivityModule } from './modules/productivity/productivity.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
     PremiumModule,
     SchedulingModule,
     IntegrationsModule,
+    ProductivityModule,
     HealthModule,
     EmailModule,
   ],
