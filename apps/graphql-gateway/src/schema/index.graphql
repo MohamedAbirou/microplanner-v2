@@ -1,0 +1,53 @@
+# Main GraphQL Schema for MicroPlanner
+
+# Base types (extended in other files)
+type Query {
+  _empty: String
+}
+
+type Mutation {
+  _empty: String
+}
+
+type Subscription {
+  _empty: String
+}
+
+# User type
+type User {
+  id: ID!
+  clerkId: String!
+  email: String!
+  name: String!
+  avatar: String
+  timezone: String!
+  tier: SubscriptionTier!
+
+  # Relations
+  goals: [Goal!]!
+  tasks: [Task!]!
+  projects: [Project!]!
+
+  # Settings
+  workHours: WorkHours
+  focusTimeBlocks: [FocusTimeBlock!]!
+
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+extend type Query {
+  # Get current user
+  me: User!
+
+  # Get user by ID (admin only)
+  user(id: ID!): User
+}
+
+# Subscription tier
+enum SubscriptionTier {
+  FREE
+  STARTER
+  PRO
+  PREMIUM
+}

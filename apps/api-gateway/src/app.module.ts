@@ -23,6 +23,7 @@ import { PremiumModule } from './modules/premium/premium.module';
 import { SchedulingModule } from './modules/scheduling/scheduling.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ProductivityModule } from './modules/productivity/productivity.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -61,6 +62,9 @@ import { ProductivityModule } from './modules/productivity/productivity.module';
 
     // Database
     DatabaseModule,
+
+    // Redis (Global module for caching, rate limiting, pub/sub)
+    RedisModule,
 
     // Feature Modules
     AuthModule,

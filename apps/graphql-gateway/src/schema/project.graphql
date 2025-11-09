@@ -1,0 +1,114 @@
+# Project types
+
+type Project {
+  id: ID!
+  userId: ID!
+  name: String!
+  description: String
+  color: String!
+  icon: String
+
+  # Status
+  isArchived: Boolean!
+  archivedAt: DateTime
+
+  # Dates
+  startDate: DateTime
+  targetDate: DateTime
+  completedAt: DateTime
+
+  # Relations
+  tasks: [Task!]!
+  goals: [Goal!]!
+  kanbanBoards: [KanbanBoard!]!
+
+  # Stats
+  taskCount: Int!
+  completedTaskCount: Int!
+  progressPercentage: Float!
+
+  # Timestamps
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ProjectWithStats {
+  id: ID!
+  name: String!
+  description: String
+  color: String!
+  taskCount: Int!
+  completedTaskCount: Int!
+  totalEstimatedMinutes: Int!
+  totalTrackedMinutes: Int!
+  progressPercentage: Float!
+  goalCount: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# Queries
+extend type Query {
+  # Get single project
+  project(id: ID!): Project
+
+  # Get projects
+  projects(
+    includeArchived: Boolean
+    orderBy: ProjectOrderBy
+  ): [Project!]!
+
+  # Get project with stats
+  projectWithStats(id: ID!): ProjectWithStats!
+}
+
+# Mutations
+extend type Mutation {
+  # Create project
+  createProject(input: CreateProjectInput!): Project!
+
+  # Update project
+  updateProject(id: ID!, input: UpdateProjectInput!): Project!
+
+  # Delete project
+  deleteProject(id: ID!): Boolean!
+
+  # Archive/Unarchive project
+  archiveProject(id: ID!): Project!
+  unarchiveProject(id: ID!): Project!
+}
+
+# Subscriptions
+extend type Subscription {
+  projectUpdated(userId: ID!): Project!
+}
+
+# Inputs
+input CreateProjectInput {
+  name: String!
+  description: String
+  color: String
+  icon: String
+  startDate: DateTime
+  targetDate: DateTime
+}
+
+input UpdateProjectInput {
+  name: String
+  description: String
+  color: String
+  icon: String
+  isArchived: Boolean
+  startDate: DateTime
+  targetDate: DateTime
+  completedAt: DateTime
+}
+
+# Enums
+enum ProjectOrderBy {
+  NAME_ASC
+  NAME_DESC
+  CREATED_DESC
+  CREATED_ASC
+  PROGRESS_DESC
+}

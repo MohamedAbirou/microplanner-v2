@@ -1,0 +1,147 @@
+# Goal types
+
+type Goal {
+  id: ID!
+  userId: ID!
+  title: String!
+  description: String
+  emoji: String
+  color: String
+
+  # Scheduling parameters
+  frequencyPerWeek: Int!
+  durationMinutes: Int!
+  preferredTimes: [String!]!
+  flexibilityScore: Int!
+
+  # Priority & status
+  priority: Int!
+  isActive: Boolean!
+  isPaused: Boolean!
+  pausedUntil: DateTime
+
+  # Analytics
+  completionRate: Float!
+  totalCompletions: Int!
+  totalScheduled: Int!
+  currentStreak: Int!
+  longestStreak: Int!
+  lastCompletedAt: DateTime
+
+  # Relations
+  tasks: [Task!]!
+  project: Project
+
+  # Timestamps
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type GoalAnalytics {
+  goalId: ID!
+  completionRate: Float!
+  totalCompletions: Int!
+  averageDuration: Float!
+  bestTimeOfDay: String
+  weeklyProgress: [WeeklyProgress!]!
+  streakData: StreakData!
+}
+
+type WeeklyProgress {
+  week: String!
+  scheduled: Int!
+  completed: Int!
+  completionRate: Float!
+}
+
+type StreakData {
+  currentStreak: Int!
+  longestStreak: Int!
+  streakHistory: [StreakEntry!]!
+}
+
+type StreakEntry {
+  date: DateTime!
+  completed: Boolean!
+}
+
+# Queries
+extend type Query {
+  # Get single goal
+  goal(id: ID!): Goal
+
+  # Get all goals
+  goals(
+    isActive: Boolean
+    isPaused: Boolean
+    orderBy: GoalOrderBy
+    skip: Int
+    take: Int
+  ): [Goal!]!
+
+  # Goal analytics
+  goalAnalytics(id: ID!): GoalAnalytics!
+}
+
+# Mutations
+extend type Mutation {
+  # Create goal
+  createGoal(input: CreateGoalInput!): Goal!
+
+  # Update goal
+  updateGoal(id: ID!, input: UpdateGoalInput!): Goal!
+
+  # Delete goal
+  deleteGoal(id: ID!): Boolean!
+
+  # Pause/Resume goal
+  pauseGoal(id: ID!, until: DateTime): Goal!
+  resumeGoal(id: ID!): Goal!
+}
+
+# Subscriptions
+extend type Subscription {
+  # Real-time goal updates
+  goalUpdated(userId: ID!): Goal!
+  goalCreated(userId: ID!): Goal!
+  goalDeleted(userId: ID!): ID!
+}
+
+# Inputs
+input CreateGoalInput {
+  title: String!
+  description: String
+  emoji: String
+  color: String
+  frequencyPerWeek: Int!
+  durationMinutes: Int!
+  preferredTimes: [String!]
+  flexibilityScore: Int
+  priority: Int
+  projectId: ID
+}
+
+input UpdateGoalInput {
+  title: String
+  description: String
+  emoji: String
+  color: String
+  frequencyPerWeek: Int
+  durationMinutes: Int
+  preferredTimes: [String!]
+  flexibilityScore: Int
+  priority: Int
+  isActive: Boolean
+  isPaused: Boolean
+  projectId: ID
+}
+
+# Enums
+enum GoalOrderBy {
+  PRIORITY_DESC
+  PRIORITY_ASC
+  CREATED_DESC
+  CREATED_ASC
+  COMPLETION_RATE_DESC
+  COMPLETION_RATE_ASC
+}

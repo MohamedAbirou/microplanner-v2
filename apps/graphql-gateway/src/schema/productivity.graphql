@@ -1,0 +1,252 @@
+# Productivity types
+
+type WorkHours {
+  id: ID!
+  userId: ID!
+  timezone: String!
+  schedule: JSON!
+  enforceWorkHours: Boolean!
+  maxMeetingsPerDay: Int
+  maxMeetingHoursPerDay: Int
+  maxConsecutiveMeetings: Int
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type FocusTimeBlock {
+  id: ID!
+  userId: ID!
+  title: String!
+  frequency: String!
+  daysOfWeek: [Int!]!
+  startTime: String
+  durationMinutes: Int!
+  priority: Int!
+  protected: Boolean!
+  isActive: Boolean!
+  autoSchedule: Boolean!
+  preferredTimeSlots: [String!]!
+  color: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type NoMeetingDay {
+  id: ID!
+  userId: ID!
+  dayOfWeek: Int!
+  isActive: Boolean!
+  allowExceptions: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type PriorityHours {
+  id: ID!
+  userId: ID!
+  timeSlots: JSON!
+  prioritizeFocusTime: Boolean!
+  prioritizeTasks: Boolean!
+  deprioritizeMeetings: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CalendarDefense {
+  id: ID!
+  userId: ID!
+  autoAcceptDuringOpenHours: Boolean!
+  autoDeclineDuringFocusTime: Boolean!
+  autoDeclineOutsideWorkHours: Boolean!
+  autoDeclineDoubleBookings: Boolean!
+  requireMinimumNotice: Boolean!
+  minimumNoticeHours: Int!
+  requireBufferBetweenMeetings: Boolean!
+  bufferMinutes: Int!
+  suggestShorterMeetings: Boolean!
+  defaultMeetingDuration: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ProductivityScore {
+  id: ID!
+  userId: ID!
+  date: DateTime!
+  overallScore: Int!
+  focusTimeScore: Int!
+  taskCompletionScore: Int!
+  meetingEfficiencyScore: Int!
+  workLifeBalanceScore: Int!
+  totalFocusMinutes: Int!
+  totalMeetingMinutes: Int!
+  totalTaskMinutes: Int!
+  totalBreakMinutes: Int!
+  insights: [String!]!
+  recommendations: [String!]!
+  createdAt: DateTime!
+}
+
+type KanbanBoard {
+  id: ID!
+  userId: ID!
+  projectId: ID
+  name: String!
+  description: String
+  isDefault: Boolean!
+  columns: [KanbanColumn!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type KanbanColumn {
+  id: ID!
+  boardId: ID!
+  name: String!
+  order: Int!
+  color: String!
+  taskIds: [ID!]!
+}
+
+# Queries
+extend type Query {
+  # Work hours
+  workHours: WorkHours
+
+  # Focus time
+  focusTimeBlocks: [FocusTimeBlock!]!
+  focusTimeBlock(id: ID!): FocusTimeBlock
+
+  # No-meeting days
+  noMeetingDays: [NoMeetingDay!]!
+
+  # Priority hours
+  priorityHours: PriorityHours
+
+  # Calendar defense
+  calendarDefense: CalendarDefense
+
+  # Productivity scores
+  productivityScore(date: DateTime!): ProductivityScore
+  productivityScores(startDate: DateTime!, endDate: DateTime!): [ProductivityScore!]!
+
+  # Kanban boards
+  kanbanBoards(projectId: ID): [KanbanBoard!]!
+  kanbanBoard(id: ID!): KanbanBoard
+}
+
+# Mutations
+extend type Mutation {
+  # Work hours
+  updateWorkHours(input: UpdateWorkHoursInput!): WorkHours!
+
+  # Focus time
+  createFocusTimeBlock(input: CreateFocusTimeBlockInput!): FocusTimeBlock!
+  updateFocusTimeBlock(id: ID!, input: UpdateFocusTimeBlockInput!): FocusTimeBlock!
+  deleteFocusTimeBlock(id: ID!): Boolean!
+
+  # No-meeting days
+  createNoMeetingDay(input: CreateNoMeetingDayInput!): NoMeetingDay!
+  deleteNoMeetingDay(id: ID!): Boolean!
+
+  # Priority hours
+  updatePriorityHours(input: UpdatePriorityHoursInput!): PriorityHours!
+
+  # Calendar defense
+  updateCalendarDefense(input: UpdateCalendarDefenseInput!): CalendarDefense!
+
+  # Productivity scores
+  calculateProductivityScore(date: DateTime!): ProductivityScore!
+
+  # Kanban boards
+  createKanbanBoard(input: CreateKanbanBoardInput!): KanbanBoard!
+  updateKanbanBoard(id: ID!, input: UpdateKanbanBoardInput!): KanbanBoard!
+  deleteKanbanBoard(id: ID!): Boolean!
+  moveTaskInKanban(input: MoveTaskInKanbanInput!): Boolean!
+}
+
+# Inputs
+input UpdateWorkHoursInput {
+  timezone: String
+  schedule: JSON
+  enforceWorkHours: Boolean
+  maxMeetingsPerDay: Int
+  maxMeetingHoursPerDay: Int
+  maxConsecutiveMeetings: Int
+}
+
+input CreateFocusTimeBlockInput {
+  title: String!
+  frequency: String!
+  daysOfWeek: [Int!]
+  startTime: String
+  durationMinutes: Int!
+  priority: Int
+  protected: Boolean
+  autoSchedule: Boolean
+  preferredTimeSlots: [String!]
+  color: String
+}
+
+input UpdateFocusTimeBlockInput {
+  title: String
+  frequency: String
+  daysOfWeek: [Int!]
+  startTime: String
+  durationMinutes: Int
+  priority: Int
+  protected: Boolean
+  isActive: Boolean
+  autoSchedule: Boolean
+  preferredTimeSlots: [String!]
+  color: String
+}
+
+input CreateNoMeetingDayInput {
+  dayOfWeek: Int!
+  allowExceptions: Boolean
+}
+
+input UpdatePriorityHoursInput {
+  timeSlots: JSON
+  prioritizeFocusTime: Boolean
+  prioritizeTasks: Boolean
+  deprioritizeMeetings: Boolean
+}
+
+input UpdateCalendarDefenseInput {
+  autoAcceptDuringOpenHours: Boolean
+  autoDeclineDuringFocusTime: Boolean
+  autoDeclineOutsideWorkHours: Boolean
+  autoDeclineDoubleBookings: Boolean
+  requireMinimumNotice: Boolean
+  minimumNoticeHours: Int
+  requireBufferBetweenMeetings: Boolean
+  bufferMinutes: Int
+  suggestShorterMeetings: Boolean
+  defaultMeetingDuration: Int
+}
+
+input CreateKanbanBoardInput {
+  projectId: ID
+  name: String!
+  description: String
+  columns: [KanbanColumnInput!]
+}
+
+input UpdateKanbanBoardInput {
+  name: String
+  description: String
+}
+
+input KanbanColumnInput {
+  name: String!
+  color: String!
+}
+
+input MoveTaskInKanbanInput {
+  taskId: ID!
+  fromColumnId: ID!
+  toColumnId: ID!
+  newOrder: Int!
+}

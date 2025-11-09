@@ -1,0 +1,210 @@
+# Task types
+
+type Task {
+  id: ID!
+  userId: ID!
+  goalId: ID
+  planId: ID
+  parentTaskId: ID
+  projectId: ID
+
+  # Task details
+  title: String!
+  notes: String
+  priority: Int!
+  tags: [String!]!
+
+  # Scheduling
+  scheduledDate: DateTime!
+  startTime: String!
+  endTime: String!
+  durationMinutes: Int!
+
+  # Status
+  isCompleted: Boolean!
+  completedAt: DateTime
+  isSkipped: Boolean!
+  skippedReason: String
+  skippedAt: DateTime
+
+  # Time tracking
+  actualStartTime: DateTime
+  actualEndTime: DateTime
+  timeSpentMinutes: Int!
+  isTimerRunning: Boolean!
+  timerStartedAt: DateTime
+
+  # Source tracking
+  aiGenerated: Boolean!
+  manuallyAdded: Boolean!
+  aiReasoning: String
+
+  # Relations
+  goal: Goal
+  project: Project
+  parentTask: Task
+  subtasks: [Task!]!
+  dependencies: [TaskDependency!]!
+  blockedBy: [TaskDependency!]!
+
+  # Timestamps
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TaskDependency {
+  id: ID!
+  dependentTaskId: ID!
+  blockingTaskId: ID!
+  type: DependencyType!
+  dependentTask: Task!
+  blockingTask: Task!
+  createdAt: DateTime!
+}
+
+type TimeEntry {
+  taskId: ID!
+  actualStartTime: DateTime
+  actualEndTime: DateTime
+  timeSpentMinutes: Int!
+  isTimerRunning: Boolean!
+  timerStartedAt: DateTime
+}
+
+# Queries
+extend type Query {
+  # Get single task
+  task(id: ID!): Task
+
+  # Get tasks
+  tasks(
+    goalId: ID
+    projectId: ID
+    scheduledDate: DateTime
+    isCompleted: Boolean
+    orderBy: TaskOrderBy
+    skip: Int
+    take: Int
+  ): [Task!]!
+
+  # Get task with dependencies
+  taskWithDependencies(id: ID!): TaskWithDependencies!
+
+  # Get subtasks
+  subtasks(parentTaskId: ID!): [Task!]!
+}
+
+# Mutations
+extend type Mutation {
+  # Create task
+  createTask(input: CreateTaskInput!): Task!
+
+  # Update task
+  updateTask(id: ID!, input: UpdateTaskInput!): Task!
+
+  # Delete task
+  deleteTask(id: ID!): Boolean!
+
+  # Complete task
+  completeTask(id: ID!): Task!
+
+  # Skip task
+  skipTask(id: ID!, reason: String): Task!
+
+  # Create subtask
+  createSubtask(input: CreateSubtaskInput!): Task!
+
+  # Create dependency
+  createTaskDependency(input: CreateTaskDependencyInput!): TaskDependency!
+
+  # Delete dependency
+  deleteTaskDependency(id: ID!): Boolean!
+
+  # Time tracking
+  startTimer(taskId: ID!): TimeEntry!
+  stopTimer(taskId: ID!): TimeEntry!
+  logTime(taskId: ID!, minutes: Int!, date: DateTime): TimeEntry!
+}
+
+# Subscriptions
+extend type Subscription {
+  taskUpdated(userId: ID!): Task!
+  taskCreated(userId: ID!): Task!
+  taskDeleted(userId: ID!): ID!
+  timerStarted(userId: ID!): TimeEntry!
+  timerStopped(userId: ID!): TimeEntry!
+}
+
+# Additional types
+type TaskWithDependencies {
+  id: ID!
+  title: String!
+  isCompleted: Boolean!
+  scheduledDate: DateTime!
+  blockingTasks: [TaskInfo!]!
+  dependentTasks: [TaskInfo!]!
+  isBlocked: Boolean!
+  canStart: Boolean!
+}
+
+type TaskInfo {
+  id: ID!
+  title: String!
+  isCompleted: Boolean!
+}
+
+# Inputs
+input CreateTaskInput {
+  goalId: ID
+  projectId: ID
+  title: String!
+  notes: String
+  priority: Int
+  tags: [String!]
+  scheduledDate: DateTime!
+  startTime: String!
+  endTime: String!
+  durationMinutes: Int!
+}
+
+input UpdateTaskInput {
+  title: String
+  notes: String
+  priority: Int
+  tags: [String!]
+  scheduledDate: DateTime
+  startTime: String
+  endTime: String
+  durationMinutes: Int
+  isCompleted: Boolean
+  projectId: ID
+}
+
+input CreateSubtaskInput {
+  parentTaskId: ID!
+  title: String!
+  durationMinutes: Int
+  scheduledDate: DateTime
+}
+
+input CreateTaskDependencyInput {
+  dependentTaskId: ID!
+  blockingTaskId: ID!
+  type: DependencyType
+}
+
+# Enums
+enum TaskOrderBy {
+  SCHEDULED_DATE_ASC
+  SCHEDULED_DATE_DESC
+  PRIORITY_DESC
+  PRIORITY_ASC
+  CREATED_DESC
+  CREATED_ASC
+}
+
+enum DependencyType {
+  FINISH_TO_START
+  START_TO_START
+  FINISH_TO_FINISH
+}
