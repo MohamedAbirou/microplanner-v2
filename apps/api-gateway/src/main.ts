@@ -4,6 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import compression from 'compression';
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { AppModule } from './app.module';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
@@ -11,6 +13,25 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
+  // Initialize Sentry (before any other code)
+  const sentryDsn = process.env.SENTRY_DSN;
+  if (sentryDsn) {
+    Sentry.init({
+      dsn: sentryDsn,
+      environment: process.env.NODE_ENV || 'development',
+      integrations: [
+        nodeProfilingIntegration(),
+      ],
+      // Performance Monitoring
+      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0, // 10% in production, 100% in dev
+      // Profiling
+      profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    });
+    console.log('✓ Sentry error tracking initialized');
+  } else {
+    console.log('⚠ Sentry DSN not configured, error tracking disabled');
+  }
+
   // Winston logger configuration
   const logger = WinstonModule.createLogger({
     transports: [
@@ -37,15 +58,36 @@ async function bootstrap() {
   app.use(compression());
 
   // CORS configuration
+  const allowedOrigins = [
+    'http://localhost:3000', // Next.js web app (dev)
+    'http://localhost:3001', // Next.js web app (dev)
+    'http://localhost:19006', // Expo web (dev)
+    'exp://localhost:19000', // Expo mobile (dev)
+  ];
+
+  // Add production URLs if in production
+  if (configService.get('NODE_ENV') === 'production') {
+    const appUrl = configService.get<string>('APP_URL');
+    if (appUrl) {
+      allowedOrigins.push(appUrl);
+    }
+  }
+
   app.enableCors({
-    origin: [
-      'http://localhost:3000', // Next.js web app
-      'http://localhost:19006', // Expo web
-      'exp://localhost:19000', // Expo mobile
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        logger.warn(`CORS blocked request from origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'stripe-signature'],
   });
 
   // API versioning
@@ -81,6 +123,7 @@ async function bootstrap() {
     .setDescription('Mobile-first AI weekly planner API')
     .setVersion('1.0')
     .addBearerAuth()
+    .addTag('health', 'Health check endpoints')
     .addTag('auth', 'Authentication endpoints')
     .addTag('users', 'User management')
     .addTag('goals', 'Goal management')
@@ -88,6 +131,7 @@ async function bootstrap() {
     .addTag('tasks', 'Task management')
     .addTag('calendar', 'Calendar integration')
     .addTag('billing', 'Subscription and billing')
+    .addTag('analytics', 'Analytics and insights')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

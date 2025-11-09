@@ -15,6 +15,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     CalendarModule,
     BillingModule,
     AnalyticsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [

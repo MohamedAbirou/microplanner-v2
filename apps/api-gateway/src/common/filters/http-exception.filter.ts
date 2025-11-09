@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import * as Sentry from '@sentry/node';
 
 /**
  * Global HTTP Exception Filter
@@ -60,6 +61,23 @@ export class HttpExceptionFilter implements ExceptionFilter {
         `HTTP ${status} Error: ${JSON.stringify(errorLog)}`,
         exception instanceof Error ? exception.stack : undefined
       );
+
+      // Capture in Sentry (only for 5xx errors)
+      if (exception instanceof Error) {
+        Sentry.captureException(exception, {
+          contexts: {
+            http: {
+              method: request.method,
+              url: request.url,
+              status_code: status,
+            },
+          },
+          tags: {
+            endpoint: request.url,
+            method: request.method,
+          },
+        });
+      }
     } else {
       this.logger.warn(`HTTP ${status} Warning: ${JSON.stringify(errorLog)}`);
     }
