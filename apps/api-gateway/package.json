@@ -17,6 +17,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0",
     "@microplanner/config": "workspace:*",
     "@microplanner/database": "workspace:*",
     "@microplanner/types": "workspace:*",

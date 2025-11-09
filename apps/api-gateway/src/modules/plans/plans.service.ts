@@ -9,6 +9,7 @@ import { GeneratePlanDto } from './dto/generate-plan.dto';
 import { QueryPlansDto } from './dto/query-plans.dto';
 import { RuleBasedPlannerService } from './strategies/rule-based-planner.service';
 import { GPT4oMiniPlannerService } from './strategies/gpt-4o-mini-planner.service';
+import { ClaudeSonnetPlannerService } from './strategies/claude-sonnet-planner.service';
 import { EmailService } from '../email/email.service';
 import { CalendarService } from '../calendar/calendar.service';
 
@@ -22,9 +23,10 @@ const TIER_PLAN_LIMITS = {
 
 // Cost per 1000 tokens (in USD cents)
 const TOKEN_COSTS = {
-  'gpt-4o-mini': 0.015, // $0.15 per 1M tokens
-  'gpt-4o': 0.25, // $2.50 per 1M tokens
   'rule-based': 0, // Free
+  'gpt-4o-mini': 0.015, // $0.15 per 1M tokens (avg input+output)
+  'claude-sonnet-3.5': 0.09, // $3 per 1M input, $15 per 1M output (avg ~$9 per 1M)
+  'gpt-4o': 0.25, // $2.50 per 1M tokens
 };
 
 @Injectable()
@@ -38,6 +40,7 @@ export class PlansService {
     private configService: ConfigService,
     private ruleBasedPlanner: RuleBasedPlannerService,
     private gpt4oMiniPlanner: GPT4oMiniPlannerService,
+    private claudeSonnetPlanner: ClaudeSonnetPlannerService,
     private emailService: EmailService,
     private calendarService: CalendarService,
   ) {
@@ -133,33 +136,23 @@ export class PlansService {
       tokenUsage = 4000;
       generationCost = this.calculateCost(aiModel, tokenUsage);
     } else {
-      // Use AI planning service for PRO/PREMIUM tiers (Claude Sonnet 3.5 or custom models)
-      this.logger.log(`Calling AI Planning Service for ${user.tier} tier user ${userId}`);
+      // Use Claude Sonnet 3.5 for PRO/PREMIUM tiers (advanced AI)
+      this.logger.log(`Using Claude Sonnet 3.5 planner for ${user.tier} tier user ${userId}`);
 
-      const planningRequest = {
-        goals: goals.map(g => ({
-          id: g.id,
-          title: g.title,
-          frequencyPerWeek: g.frequencyPerWeek,
-          durationMinutes: g.durationMinutes,
-          preferredTimes: g.preferredTimes,
-          flexibilityScore: g.flexibilityScore,
-          priority: g.priority,
-        })),
-        preferences,
-        weekStartDate: weekStartDate.toISOString(),
-        weekEndDate: weekEndDate.toISOString(),
-      };
+      const result = await this.claudeSonnetPlanner.generatePlan(
+        user,
+        goals,
+        weekStartDate,
+        calendarEvents,
+      );
 
-      aiResponse = await this.callPlanningService(planningRequest);
-
-      planJson = aiResponse.plan;
-      reasoning = aiResponse.reasoning || null;
-      aiModel = aiResponse.model;
-      tokenUsage = aiResponse.tokenUsage;
-      complexity = aiResponse.complexity;
+      planJson = { tasks: result.tasks };
+      reasoning = result.reasoning || null;
+      aiModel = 'claude-sonnet-3.5';
+      qualityScore = result.qualityScore;
+      // Estimate token usage (roughly 3000 input + 5000 output per plan)
+      tokenUsage = 8000;
       generationCost = this.calculateCost(aiModel, tokenUsage);
-      qualityScore = this.calculateQualityScore(planJson, goals);
     }
 
     // 7. Calculate generation metrics

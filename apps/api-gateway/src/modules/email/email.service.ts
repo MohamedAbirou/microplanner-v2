@@ -316,6 +316,7 @@ export class EmailService {
       'gpt-4o-mini': 'GPT-4o Mini',
       'gpt-4o': 'GPT-4o',
       'claude-sonnet-3.5': 'Claude Sonnet 3.5',
+      'claude-sonnet-4-20250514': 'Claude Sonnet 4',
     };
 
     return modelMap[model] || model;
