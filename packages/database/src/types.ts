@@ -194,3 +194,51 @@ export interface Task {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface CalendarToken {
+  id: string;
+  userId: string;
+
+  // Provider
+  provider: string;
+
+  // OAuth tokens (encrypted)
+  accessToken: string;
+  refreshToken: string | null;
+  expiresAt: Date | null;
+
+  // Calendar metadata
+  calendarId: string | null;
+  calendarName: string | null;
+  email: string | null;
+
+  // Sync state
+  lastSyncAt: Date | null;
+  syncEnabled: boolean;
+  syncErrors: number;
+  lastError: string | null;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SyncLog {
+  id: string;
+  userId: string;
+  planId: string | null;
+
+  // Sync details
+  syncType: string;
+  tasksAttempted: number;
+  tasksSucceeded: number;
+  tasksFailed: number;
+
+  // Results
+  success: boolean;
+  errors: any | null;
+  duration: number;
+
+  // Timestamp
+  createdAt: Date;
+}

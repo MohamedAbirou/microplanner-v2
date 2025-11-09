@@ -1,14 +1,129 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Delete, Query, Body, Redirect, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CalendarService } from './calendar.service';
+import { GoogleOAuthService } from './services/google-oauth.service';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { User } from '@microplanner/database';
+import { SyncTasksDto } from './dto/sync-tasks.dto';
 
 @ApiTags('calendar')
+@ApiBearerAuth()
 @Controller('calendar')
 export class CalendarController {
-  constructor(private readonly calendarService: CalendarService) {}
+  constructor(
+    private readonly calendarService: CalendarService,
+    private readonly googleOAuthService: GoogleOAuthService,
+  ) {}
 
-  @Get()
-  findAll() {
-    return { message: 'Calendar endpoint - Coming soon' };
+  @Get('oauth/google')
+  @ApiOperation({ summary: 'Initiate Google Calendar OAuth flow' })
+  @ApiResponse({ status: 200, description: 'Returns OAuth URL' })
+  async initiateGoogleOAuth(@CurrentUser() user: User) {
+    const authUrl = this.googleOAuthService.generateAuthUrl(user.id);
+
+    return {
+      message: 'Please visit the auth URL to connect your Google Calendar',
+      authUrl,
+    };
+  }
+
+  @Get('oauth/google/callback')
+  @ApiOperation({ summary: 'Handle Google OAuth callback' })
+  @ApiResponse({ status: 200, description: 'Calendar connected successfully' })
+  @ApiResponse({ status: 401, description: 'OAuth authorization failed' })
+  @ApiQuery({ name: 'code', required: true, type: String })
+  @ApiQuery({ name: 'state', required: true, type: String })
+  async googleOAuthCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @CurrentUser() user: User,
+  ) {
+    if (!code || !state) {
+      throw new BadRequestException('Missing code or state parameter');
+    }
+
+    const token = await this.googleOAuthService.handleCallback(code, state, user.id);
+
+    return {
+      message: 'Google Calendar connected successfully',
+      calendar: {
+        email: token.email,
+        calendarName: token.calendarName,
+        provider: token.provider,
+        connectedAt: token.createdAt,
+      },
+    };
+  }
+
+  @Get('events')
+  @ApiOperation({ summary: 'Get calendar events for a date range' })
+  @ApiResponse({ status: 200, description: 'Calendar events retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'No calendar connected' })
+  @ApiQuery({ name: 'startDate', required: true, type: String, description: 'Start date (YYYY-MM-DD)' })
+  @ApiQuery({ name: 'endDate', required: true, type: String, description: 'End date (YYYY-MM-DD)' })
+  async getEvents(
+    @CurrentUser() user: User,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    if (!startDate || !endDate) {
+      throw new BadRequestException('startDate and endDate are required');
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new BadRequestException('Invalid date format. Use YYYY-MM-DD');
+    }
+
+    const result = await this.calendarService.getEvents(user.id, start, end);
+
+    return {
+      message: 'Calendar events retrieved successfully',
+      ...result,
+    };
+  }
+
+  @Post('sync')
+  @ApiOperation({ summary: 'Sync tasks to Google Calendar' })
+  @ApiResponse({ status: 200, description: 'Tasks synced successfully' })
+  @ApiResponse({ status: 400, description: 'No tasks to sync or validation failed' })
+  @ApiResponse({ status: 401, description: 'No calendar connected' })
+  async syncTasks(@CurrentUser() user: User, @Body() syncTasksDto: SyncTasksDto) {
+    const result = await this.calendarService.syncTasks(user.id, syncTasksDto);
+
+    const message =
+      result.failed === 0 && result.skipped === 0
+        ? `Successfully synced ${result.success} tasks`
+        : `Synced ${result.success} tasks, ${result.failed} failed, ${result.skipped} skipped due to conflicts`;
+
+    return {
+      message,
+      ...result,
+    };
+  }
+
+  @Get('status')
+  @ApiOperation({ summary: 'Get calendar sync status' })
+  @ApiResponse({ status: 200, description: 'Sync status retrieved successfully' })
+  async getSyncStatus(@CurrentUser() user: User) {
+    const status = await this.calendarService.getSyncStatus(user.id);
+
+    return {
+      message: status.connected ? 'Calendar connected' : 'No calendar connected',
+      ...status,
+    };
+  }
+
+  @Delete('disconnect')
+  @ApiOperation({ summary: 'Disconnect Google Calendar' })
+  @ApiResponse({ status: 200, description: 'Calendar disconnected successfully' })
+  async disconnect(@CurrentUser() user: User) {
+    await this.googleOAuthService.disconnect(user.id);
+
+    return {
+      message: 'Google Calendar disconnected successfully',
+    };
   }
 }
