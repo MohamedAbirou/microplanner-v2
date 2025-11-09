@@ -27,6 +27,8 @@
 
 #### **Critical Tier Features (MUST HAVE)**
 - [ ] FREE tier: Rule-based planner (no LLM)
+- [ ] STARTER tier: GPT-4o-mini integration
+- [ ] STARTER tier: Calendar sync
 - [ ] STARTER tier: Email reminders
 - [ ] PRO tier: Claude Sonnet 3.5 integration
 - [ ] PRO tier: AI learning & pattern recognition
@@ -106,7 +108,7 @@ export class RuleBasedPlannerService {
 
 ---
 
-#### **13.2 STARTER Tier: Email Reminders**
+#### **13.2 STARTER Tier: GPT-4o-mini planner + Email Reminders**
 **Priority**: P0 (CRITICAL - Promised in STARTER tier)
 **Estimated Time**: 2-3 days
 
