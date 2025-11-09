@@ -5,6 +5,7 @@ export enum SubscriptionTier {
   FREE = 'FREE',
   STARTER = 'STARTER',
   PRO = 'PRO',
+  PREMIUM = 'PREMIUM',
 }
 
 export enum SubscriptionStatus {
