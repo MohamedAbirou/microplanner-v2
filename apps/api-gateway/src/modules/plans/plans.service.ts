@@ -7,12 +7,14 @@ import type { WeeklyPlan, User, Goal } from '@microplanner/database';
 import { PlanStatus, SubscriptionTier } from '@microplanner/database';
 import { GeneratePlanDto } from './dto/generate-plan.dto';
 import { QueryPlansDto } from './dto/query-plans.dto';
+import { RuleBasedPlannerService } from './strategies/rule-based-planner.service';
 
 // Tier limits for plan generation per week
 const TIER_PLAN_LIMITS = {
   [SubscriptionTier.FREE]: 5,
   [SubscriptionTier.STARTER]: 20,
   [SubscriptionTier.PRO]: Infinity,
+  [SubscriptionTier.PREMIUM]: Infinity,
 };
 
 // Cost per 1000 tokens (in USD cents)
@@ -30,7 +32,8 @@ export class PlansService {
   constructor(
     private prisma: PrismaService,
     private httpService: HttpService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private ruleBasedPlanner: RuleBasedPlannerService,
   ) {
     this.planningServiceUrl =
       this.configService.get('PLANNING_SERVICE_URL') || 'http://localhost:8000';
@@ -70,47 +73,80 @@ export class PlansService {
       timezone: user.timezone,
     };
 
-    // 5. Call Python Planning Service
-    this.logger.log(`Calling Planning Service for user ${userId}`);
-    const planningRequest = {
-      goals: goals.map(g => ({
-        id: g.id,
-        title: g.title,
-        frequencyPerWeek: g.frequencyPerWeek,
-        durationMinutes: g.durationMinutes,
-        preferredTimes: g.preferredTimes,
-        flexibilityScore: g.flexibilityScore,
-        priority: g.priority,
-      })),
-      preferences,
-      weekStartDate: weekStartDate.toISOString(),
-      weekEndDate: weekEndDate.toISOString(),
-    };
+    // 5. Select planning strategy based on tier
+    let aiResponse: any;
+    let planJson: any;
+    let reasoning: string | null = null;
+    let aiModel: string;
+    let tokenUsage = 0;
+    let complexity = 'simple';
+    let qualityScore = 0;
+    let generationCost = 0;
 
-    const aiResponse = await this.callPlanningService(planningRequest);
+    if (user.tier === SubscriptionTier.FREE) {
+      // Use rule-based planner for FREE tier (no LLM costs)
+      this.logger.log(`Using rule-based planner for FREE tier user ${userId}`);
+
+      const result = await this.ruleBasedPlanner.generatePlan(
+        user,
+        goals,
+        weekStartDate,
+        [], // TODO: Fetch existing calendar events for conflict detection
+      );
+
+      planJson = { tasks: result.tasks };
+      reasoning = null; // No AI reasoning for rule-based
+      aiModel = 'rule-based';
+      qualityScore = result.qualityScore;
+      generationCost = 0; // Free!
+    } else {
+      // Use AI planning service for paid tiers (STARTER, PRO, PREMIUM)
+      this.logger.log(`Calling AI Planning Service for ${user.tier} tier user ${userId}`);
+
+      const planningRequest = {
+        goals: goals.map(g => ({
+          id: g.id,
+          title: g.title,
+          frequencyPerWeek: g.frequencyPerWeek,
+          durationMinutes: g.durationMinutes,
+          preferredTimes: g.preferredTimes,
+          flexibilityScore: g.flexibilityScore,
+          priority: g.priority,
+        })),
+        preferences,
+        weekStartDate: weekStartDate.toISOString(),
+        weekEndDate: weekEndDate.toISOString(),
+      };
+
+      aiResponse = await this.callPlanningService(planningRequest);
+
+      planJson = aiResponse.plan;
+      reasoning = aiResponse.reasoning || null;
+      aiModel = aiResponse.model;
+      tokenUsage = aiResponse.tokenUsage;
+      complexity = aiResponse.complexity;
+      generationCost = this.calculateCost(aiModel, tokenUsage);
+      qualityScore = this.calculateQualityScore(planJson, goals);
+    }
 
     // 6. Calculate generation metrics
     const generationTime = (Date.now() - startTime) / 1000; // seconds
-    const generationCost = this.calculateCost(aiResponse.model, aiResponse.tokenUsage);
 
-    // 7. Calculate quality score
-    const qualityScore = this.calculateQualityScore(aiResponse.plan, goals);
-
-    // 8. Save plan to database
+    // 7. Save plan to database
     const plan = await this.prisma.weeklyPlan.create({
       data: {
         userId,
         weekStartDate,
         weekEndDate,
-        planJson: aiResponse.plan,
-        reasoning: aiResponse.reasoning || null,
-        aiModel: aiResponse.model,
-        complexity: aiResponse.complexity,
+        planJson,
+        reasoning,
+        aiModel,
+        complexity,
         generationTime,
         generationCost,
-        tokenUsage: aiResponse.tokenUsage,
+        tokenUsage,
         qualityScore,
-        totalTasks: aiResponse.plan.tasks?.length || 0,
+        totalTasks: planJson.tasks?.length || 0,
         status: PlanStatus.DRAFT,
       },
     });
