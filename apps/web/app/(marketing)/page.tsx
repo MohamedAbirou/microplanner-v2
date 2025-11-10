@@ -1,5 +1,6 @@
 import { WaitlistForm } from '@/components/marketing/waitlist-form';
 import { Check, ChevronDown, Linkedin, PlayCircle, Sparkles, Twitter } from 'lucide-react';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
@@ -9,36 +10,36 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             {/* Logo */}
-            <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-brand rounded-md flex items-center justify-center shadow-glow">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <span className="text-xl font-bold">MicroPlanner</span>
-            </div>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
               <a
                 href="#features"
-                className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors"
+                className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors duration-150"
               >
                 Features
               </a>
               <a
                 href="#how-it-works"
-                className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors"
+                className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors duration-150"
               >
                 How It Works
               </a>
               <a
                 href="#pricing"
-                className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors"
+                className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors duration-150"
               >
                 Pricing
               </a>
               <a
                 href="#testimonials"
-                className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors"
+                className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors duration-150"
               >
                 Testimonials
               </a>
@@ -46,12 +47,18 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <div className="flex items-center gap-3">
-              <button className="hidden sm:block px-4 py-2 text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors">
+              <Link
+                href="/sign-in"
+                className="hidden sm:block px-4 py-2 text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors duration-150"
+              >
                 Sign In
-              </button>
-              <button className="px-6 py-2.5 bg-gradient-brand text-white font-semibold rounded-lg hover:shadow-glow transition-all hover:scale-105">
+              </Link>
+              <Link
+                href="/sign-up"
+                className="px-6 py-2.5 bg-gradient-brand text-white font-semibold rounded-lg hover:shadow-glow-brand transition-all duration-250 hover:scale-105"
+              >
                 Get Started Free
-              </button>
+              </Link>
             </div>
           </div>
         </div>

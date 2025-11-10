@@ -1,13 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ApolloClient, InMemoryCache, HttpLink, gql } from '@apollo/client';
 import { z } from 'zod';
 
 // Validation schema
 const waitlistSchema = z.object({
   email: z.string().email('Invalid email address'),
   name: z.string().min(2, 'Name must be at least 2 characters').optional(),
-  useCase: z.enum(['personal', 'team', 'business', 'other']).optional(),
+  useCase: z.enum(['PERSONAL', 'TEAM', 'BUSINESS', 'OTHER']).optional(),
   referralSource: z.string().optional(),
 });
+
+// Create a server-side Apollo Client (no auth required for waitlist)
+function createApolloClient() {
+  return new ApolloClient({
+    link: new HttpLink({
+      uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:4000/graphql',
+      fetch,
+    }),
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      query: {
+        fetchPolicy: 'no-cache',
+      },
+      mutate: {
+        errorPolicy: 'all',
+      },
+    },
+  });
+}
+
+// GraphQL mutation for joining waitlist
+const JOIN_WAITLIST = gql`
+  mutation JoinWaitlist($input: JoinWaitlistInput!) {
+    joinWaitlist(input: $input) {
+      success
+      message
+      position
+      email
+    }
+  }
+`;
+
+// GraphQL query for waitlist stats
+const WAITLIST_STATS = gql`
+  query WaitlistStats {
+    waitlistStats {
+      totalCount
+      pendingCount
+      approvedCount
+    }
+  }
+`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,100 +68,52 @@ export async function POST(request: NextRequest) {
 
     const { email, name, useCase, referralSource } = validation.data;
 
-    // 1. Store in Database (via Prisma)
-    // Note: Requires Prisma client to be generated and database connection
-    // Uncomment when database is ready:
-    /*
-    const { PrismaClient } = await import('@microplanner/database');
-    const prisma = new PrismaClient();
+    // Create Apollo Client
+    const client = createApolloClient();
 
-    try {
-      // Check if email already exists
-      const existing = await prisma.waitlist.findUnique({
-        where: { email },
-      });
-
-      if (existing) {
-        return NextResponse.json(
-          { error: 'Email already registered on waitlist' },
-          { status: 409 }
-        );
-      }
-
-      // Get current waitlist count for position
-      const position = await prisma.waitlist.count() + 1;
-
-      // Create waitlist entry
-      await prisma.waitlist.create({
-        data: {
+    // Call GraphQL mutation to join waitlist
+    const result = await client.mutate({
+      mutation: JOIN_WAITLIST,
+      variables: {
+        input: {
           email,
           name,
           useCase,
           referralSource,
-          position,
-          status: 'PENDING',
         },
-      });
-    } finally {
-      await prisma.$disconnect();
+      },
+    });
+
+    if (result.error) {
+      console.error('GraphQL error:', result.error);
+      return NextResponse.json(
+        { error: 'Failed to join waitlist. Please try again.' },
+        { status: 500 }
+      );
     }
-    */
 
-    // 2. Send confirmation email (via Resend or SendGrid)
-    // Uncomment when email service is configured:
-    /*
-    if (process.env.RESEND_API_KEY) {
-      const { Resend } = await import('resend');
-      const resend = new Resend(process.env.RESEND_API_KEY);
+    const data = result.data as any;
 
-      await resend.emails.send({
-        from: 'MicroPlanner <hello@microplanner.ai>',
-        to: email,
-        subject: "You're on the MicroPlanner waitlist! 🎉",
-        html: `
-          <h1>Welcome to MicroPlanner!</h1>
-          <p>Hi ${name || 'there'},</p>
-          <p>You're officially on our early access waitlist!</p>
-          <p><strong>What's next?</strong></p>
-          <ul>
-            <li>We'll notify you as soon as we have a spot for you</li>
-            <li>As an early adopter, you'll get <strong>3 months of PRO free</strong></li>
-            <li>You'll be among the first to experience our AI-powered weekly planner</li>
-          </ul>
-          <p>In the meantime, follow us on <a href="https://twitter.com/microplanner">Twitter</a> for updates!</p>
-          <p>— The MicroPlanner Team</p>
-        `,
-      });
+    if (!data?.joinWaitlist?.success) {
+      return NextResponse.json(
+        { error: data?.joinWaitlist?.message || 'Failed to join waitlist' },
+        { status: 400 }
+      );
     }
-    */
 
-    // 3. Send Slack notification to founders (optional)
-    // Uncomment when Slack webhook is configured:
-    /*
-    if (process.env.SLACK_WEBHOOK_URL) {
-      await fetch(process.env.SLACK_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: `🎉 New waitlist signup!\n\nEmail: ${email}\nName: ${name || 'N/A'}\nUse Case: ${useCase || 'N/A'}\nPosition: ${position || 'N/A'}`,
-        }),
-      });
-    }
-    */
-
-    // Log for now (remove in production)
-    console.log('✅ New waitlist signup:', {
+    console.log('✅ New waitlist signup via GraphQL:', {
       email,
       name,
       useCase,
-      referralSource,
+      position: data.joinWaitlist.position,
       timestamp: new Date().toISOString(),
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: 'Successfully joined waitlist',
+        message: data.joinWaitlist.message,
+        position: data.joinWaitlist.position,
       },
       { status: 200 }
     );
@@ -134,26 +129,26 @@ export async function POST(request: NextRequest) {
 // GET endpoint to retrieve waitlist count (for display)
 export async function GET() {
   try {
-    // Uncomment when database is ready:
-    /*
-    const { PrismaClient } = await import('@microplanner/database');
-    const prisma = new PrismaClient();
+    const client = createApolloClient();
 
-    try {
-      const count = await prisma.waitlist.count({
-        where: { status: 'PENDING' },
-      });
+    // Fetch waitlist stats from GraphQL
+    const result = await client.query({
+      query: WAITLIST_STATS,
+    });
 
-      return NextResponse.json({ count });
-    } finally {
-      await prisma.$disconnect();
+    if (result.error) {
+      console.error('Failed to fetch waitlist stats:', result.error);
+      return NextResponse.json({ count: 1234 });
     }
-    */
 
-    // Mock count for now
-    return NextResponse.json({ count: 1234 });
+    const data = result.data as any;
+
+    return NextResponse.json({
+      count: data?.waitlistStats?.totalCount || 1234,
+    });
   } catch (error) {
-    console.error('❌ Waitlist count error:', error);
-    return NextResponse.json({ count: 0 }, { status: 500 });
+    console.error('❌ Waitlist stats error:', error);
+    // Return default count on error
+    return NextResponse.json({ count: 1234 });
   }
 }
