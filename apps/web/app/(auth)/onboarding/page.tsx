@@ -9,28 +9,23 @@
  * - Calendar Integration
  */
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation } from '@apollo/client';
-import { Button } from '@microplanner/ui';
-import { Card } from '@microplanner/ui';
-import { Input } from '@microplanner/ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@microplanner/ui';
-import { Progress } from '@microplanner/ui';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowRight,
-  ArrowLeft,
-  Sparkles,
-  User,
-  Zap,
-  Clock,
-  Target,
-  Calendar,
-  Check,
-} from 'lucide-react';
 import { COMPLETE_ONBOARDING } from '@/lib/graphql/mutations';
 import { useToast } from '@/lib/hooks/use-toast';
+import { useMutation } from '@apollo/client';
+import { Button, Card, Input, Label, Progress, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@microplanner/ui';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  Check,
+  Clock,
+  Sparkles,
+  Target,
+  Zap
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 const steps = [
   { id: 1, name: 'Welcome', icon: Sparkles },
@@ -64,7 +59,7 @@ export default function OnboardingPage() {
     onCompleted: () => {
       toast({
         title: 'Welcome to MicroPlanner! 🎉',
-        description: 'Your account is ready. Let\\'s get productive!',
+        description: "Your account is ready. Lets get productive!",
         variant: 'success',
       });
       router.push('/dashboard');
@@ -175,9 +170,9 @@ export default function OnboardingPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-dark-text-primary mb-2">
+                    <Label className="block text-sm font-medium text-dark-text-primary mb-2">
                       What's your name?
-                    </label>
+                    </Label>
                     <Input
                       placeholder="Enter your name"
                       value={formData.name}
@@ -187,9 +182,9 @@ export default function OnboardingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-dark-text-primary mb-2">
+                    <Label className="block text-sm font-medium text-dark-text-primary mb-2">
                       Timezone
-                    </label>
+                    </Label>
                     <Select
                       value={formData.timezone}
                       onValueChange={(value) => setFormData({ ...formData, timezone: value })}
@@ -293,9 +288,9 @@ export default function OnboardingPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-dark-text-primary mb-2">
+                    <Label className="block text-sm font-medium text-dark-text-primary mb-2">
                       Start Time
-                    </label>
+                    </Label>
                     <Input
                       type="time"
                       value={formData.workHours.startTime}
@@ -309,9 +304,9 @@ export default function OnboardingPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-dark-text-primary mb-2">
+                    <Label className="block text-sm font-medium text-dark-text-primary mb-2">
                       End Time
-                    </label>
+                    </Label>
                     <Input
                       type="time"
                       value={formData.workHours.endTime}
@@ -346,9 +341,9 @@ export default function OnboardingPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-dark-text-primary mb-2">
+                    <Label className="block text-sm font-medium text-dark-text-primary mb-2">
                       Goal Title
-                    </label>
+                    </Label>
                     <Input
                       placeholder="e.g., Daily Exercise, Learn Spanish"
                       value={formData.firstGoal.title}
@@ -364,9 +359,9 @@ export default function OnboardingPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-dark-text-primary mb-2">
+                      <Label className="block text-sm font-medium text-dark-text-primary mb-2">
                         Times per Week
-                      </label>
+                      </Label>
                       <Select
                         value={formData.firstGoal.frequencyPerWeek.toString()}
                         onValueChange={(value) =>
@@ -392,9 +387,9 @@ export default function OnboardingPage() {
                       </Select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-dark-text-primary mb-2">
+                      <Label className="block text-sm font-medium text-dark-text-primary mb-2">
                         Duration
-                      </label>
+                      </Label>
                       <Select
                         value={formData.firstGoal.durationMinutes.toString()}
                         onValueChange={(value) =>
