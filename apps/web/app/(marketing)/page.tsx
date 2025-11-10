@@ -93,7 +93,7 @@ export default function HomePage() {
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6 animate-slide-up leading-tight">
               You tell it your goals.
               <br />
-              <span className="bg-gradient-brand bg-clip-text text-transparent">It builds your week.</span>
+              <span className="text-gradient">It builds your week.</span>
             </h1>
 
             {/* Subheadline */}
@@ -131,162 +131,49 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Hero Image / Product Screenshot */}
+          {/* Demo Video Section */}
           <div className="mt-20 animate-scale-in" style={{ animationDelay: '400ms' }}>
-            <div className="relative max-w-6xl mx-auto">
+            <div className="relative max-w-5xl mx-auto">
               {/* Glow effect behind */}
               <div className="absolute inset-0 bg-gradient-brand opacity-20 blur-3xl" />
 
-              {/* Mock dashboard screenshot */}
+              {/* Video Container */}
               <div className="relative bg-dark-bg-secondary rounded-3xl border border-dark-border-primary overflow-hidden shadow-2xl">
-                <div className="bg-dark-bg-tertiary px-6 py-4 border-b border-dark-border-secondary flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                {/* Video Header Bar */}
+                <div className="bg-dark-bg-tertiary px-6 py-4 border-b border-dark-border-secondary flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                  </div>
+                  <div className="text-sm text-dark-text-tertiary font-medium">30-Second Demo Tutorial</div>
                 </div>
-                <div className="p-8">
-                  <div className="grid grid-cols-7 gap-2 mb-4">
-                    {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day) => (
-                      <div key={day} className="text-center text-xs text-dark-text-tertiary font-semibold">
-                        {day}
-                      </div>
-                    ))}
+
+                {/* Video Embed Area */}
+                <div className="relative aspect-video bg-dark-bg-primary">
+                  {/* Placeholder until real video is added */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+                    <div className="w-20 h-20 bg-gradient-brand rounded-2xl flex items-center justify-center mb-6 shadow-glow animate-pulse">
+                      <PlayCircle className="w-12 h-12 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3">See MicroPlanner in Action</h3>
+                    <p className="text-dark-text-secondary text-center max-w-md">
+                      Watch how easy it is to go from goals to a perfect weekly plan in just 30 seconds
+                    </p>
                   </div>
-                  <div className="grid grid-cols-7 gap-2">
-                    {/* Monday */}
-                    <div className="space-y-1">
-                      <div className="bg-blue-500/20 border-l-2 border-blue-500 rounded p-2 text-xs">
-                        <div className="text-blue-400 font-medium">🏋️ Gym</div>
-                      </div>
-                      <div className="bg-green-500/20 border-l-2 border-green-500 rounded p-2 text-xs">
-                        <div className="text-green-400 font-medium">📚 Read</div>
-                      </div>
-                    </div>
-                    {/* Tuesday */}
-                    <div className="space-y-1">
-                      <div className="bg-purple-500/20 border-l-2 border-purple-500 rounded p-2 text-xs">
-                        <div className="text-purple-400 font-medium">💻 Code</div>
-                      </div>
-                    </div>
-                    {/* Wednesday */}
-                    <div className="space-y-1">
-                      <div className="bg-blue-500/20 border-l-2 border-blue-500 rounded p-2 text-xs">
-                        <div className="text-blue-400 font-medium">🏋️ Gym</div>
-                      </div>
-                      <div className="bg-green-500/20 border-l-2 border-green-500 rounded p-2 text-xs">
-                        <div className="text-green-400 font-medium">📚 Read</div>
-                      </div>
-                    </div>
-                    {/* Thursday */}
-                    <div className="space-y-1">
-                      <div className="bg-purple-500/20 border-l-2 border-purple-500 rounded p-2 text-xs">
-                        <div className="text-purple-400 font-medium">💻 Code</div>
-                      </div>
-                    </div>
-                    {/* Friday */}
-                    <div className="space-y-1">
-                      <div className="bg-blue-500/20 border-l-2 border-blue-500 rounded p-2 text-xs">
-                        <div className="text-blue-400 font-medium">🏋️ Gym</div>
-                      </div>
-                      <div className="bg-green-500/20 border-l-2 border-green-500 rounded p-2 text-xs">
-                        <div className="text-green-400 font-medium">📚 Read</div>
-                      </div>
-                    </div>
-                    {/* Saturday */}
-                    <div className="space-y-1">
-                      <div className="bg-purple-500/20 border-l-2 border-purple-500 rounded p-2 text-xs">
-                        <div className="text-purple-400 font-medium">💻 Code</div>
-                      </div>
-                    </div>
-                    {/* Sunday */}
-                    <div className="space-y-1">
-                      <div className="bg-green-500/20 border-l-2 border-green-500 rounded p-2 text-xs">
-                        <div className="text-green-400 font-medium">📚 Read</div>
-                      </div>
-                    </div>
-                  </div>
+
+                  {/* When you have a video URL, replace the placeholder above with: */}
+                  {/*
+                  <iframe
+                    className="w-full h-full"
+                    src="YOUR_VIDEO_URL_HERE"
+                    title="MicroPlanner Demo Tutorial"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                  */}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof */}
-      <section className="py-12 px-6 border-y border-dark-border-primary/50 bg-dark-bg-secondary/30">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-center text-sm text-dark-text-tertiary mb-8">Trusted by productivity enthusiasts worldwide</p>
-          <div className="flex flex-wrap items-center justify-center gap-12 opacity-50">
-            <div className="text-2xl font-bold text-dark-text-tertiary">1,247+ Users</div>
-            <div className="text-2xl font-bold text-dark-text-tertiary">18,392 Plans Generated</div>
-            <div className="text-2xl font-bold text-dark-text-tertiary">4.9★ Rating</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Problem Section */}
-      <section className="py-24 px-6 bg-dark-bg-primary">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Planning shouldn&apos;t take <span className="bg-gradient-brand bg-clip-text text-transparent">hours</span>
-            </h2>
-            <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
-              Most people spend 2+ hours every week playing calendar Tetris. Your time is too valuable for that.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Old Way */}
-            <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-8">
-              <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center mb-6">
-                <XCircle className="w-6 h-6 text-red-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-red-400">The Old Way</h3>
-              <ul className="space-y-3 text-dark-text-secondary">
-                <li className="flex items-start gap-2">
-                  <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <span>Spend hours manually planning your week</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <span>Goals never make it to your calendar</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <span>Forget to schedule important tasks</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <span>Always reactive, never proactive</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* MicroPlanner Way */}
-            <div className="bg-green-500/5 border border-green-500/20 rounded-2xl p-8">
-              <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center mb-6">
-                <CheckCircle className="w-6 h-6 text-green-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-green-400">The MicroPlanner Way</h3>
-              <ul className="space-y-3 text-dark-text-secondary">
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span>Perfect week generated in 30 seconds</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span>Goals automatically become calendar blocks</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span>AI learns your preferences over time</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span>Stay ahead with proactive planning</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
@@ -297,8 +184,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              From goals to <span className="bg-gradient-brand bg-clip-text text-transparent">schedule</span> in 3
-              steps
+              From goals to <span className="text-gradient">schedule</span> in 3 steps
             </h2>
             <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
               It&apos;s so simple, you&apos;ll wonder why you didn&apos;t start sooner
@@ -368,8 +254,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Everything you need to <span className="bg-gradient-brand bg-clip-text text-transparent">stay on
-                track</span>
+              Everything you need to <span className="text-gradient">stay on track</span>
             </h2>
             <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
               Powerful features that make planning effortless
@@ -485,8 +370,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Loved by <span className="bg-gradient-brand bg-clip-text text-transparent">productivity
-                enthusiasts</span>
+              Loved by <span className="text-gradient">productivity enthusiasts</span>
             </h2>
             <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
               See what our users are saying
@@ -568,7 +452,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Simple, <span className="bg-gradient-brand bg-clip-text text-transparent">transparent</span> pricing
+              Simple, <span className="text-gradient">transparent</span> pricing
             </h2>
             <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
               Start free, upgrade when you need more
@@ -748,39 +632,6 @@ export default function HomePage() {
               </summary>
               <p className="mt-4 text-dark-text-secondary">
                 Yes. We take security seriously. All calendar tokens are encrypted at rest, we&apos;re GDPR compliant, and your data is never used to train public AI models. You can export or delete your data at any time.
-              </p>
-            </details>
-
-            {/* FAQ Item 4 */}
-            <details className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-lg p-6 cursor-pointer group hover:border-dark-border-secondary">
-              <summary className="font-semibold text-lg flex justify-between items-center">
-                Which calendar apps do you support?
-                <ChevronDown className="w-5 h-5 text-dark-text-tertiary group-open:rotate-180 transition-transform" />
-              </summary>
-              <p className="mt-4 text-dark-text-secondary">
-                Currently we support Google Calendar with bi-directional sync. Apple Calendar and Outlook support are coming in the next few months. You can also export plans as ICS files for any calendar app.
-              </p>
-            </details>
-
-            {/* FAQ Item 5 */}
-            <details className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-lg p-6 cursor-pointer group hover:border-dark-border-secondary">
-              <summary className="font-semibold text-lg flex justify-between items-center">
-                Can I cancel my subscription anytime?
-                <ChevronDown className="w-5 h-5 text-dark-text-tertiary group-open:rotate-180 transition-transform" />
-              </summary>
-              <p className="mt-4 text-dark-text-secondary">
-                Yes. You can cancel your subscription with one click from your account settings. There are no cancellation fees, and you&apos;ll continue to have access until the end of your billing period.
-              </p>
-            </details>
-
-            {/* FAQ Item 6 */}
-            <details className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-lg p-6 cursor-pointer group hover:border-dark-border-secondary">
-              <summary className="font-semibold text-lg flex justify-between items-center">
-                What if the AI schedules something at a bad time?
-                <ChevronDown className="w-5 h-5 text-dark-text-tertiary group-open:rotate-180 transition-transform" />
-              </summary>
-              <p className="mt-4 text-dark-text-secondary">
-                The AI learns from your feedback! If you reject or edit plans, it remembers your preferences for future schedules. You can also set &quot;blocked times&quot; to prevent scheduling during specific periods.
               </p>
             </details>
           </div>
