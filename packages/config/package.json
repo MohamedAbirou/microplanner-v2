@@ -8,6 +8,7 @@
   "exports": {
     "./eslint": "./eslint.config.js",
     "./tailwind": "./tailwind.config.js",
+    "./tailwind.config": "./tailwind.config.js",
     "./typescript": "./tsconfig.base.json"
   },
   "scripts": {
