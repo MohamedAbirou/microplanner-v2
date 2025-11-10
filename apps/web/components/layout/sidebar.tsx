@@ -12,7 +12,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserButton } from '@clerk/nextjs';
 import {
-  LayoutDashboard,
   Target,
   CheckSquare,
   Calendar,
@@ -21,15 +20,16 @@ import {
   Settings,
   CreditCard,
   Zap,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@microplanner/ui';
 import { Badge } from '@microplanner/ui';
 
 const navigation = [
   {
-    name: 'Dashboard',
+    name: 'Calendar',
     href: '/dashboard',
-    icon: LayoutDashboard,
+    icon: Calendar,
   },
   {
     name: 'Goals',
@@ -44,7 +44,7 @@ const navigation = [
   {
     name: 'Plans',
     href: '/plans',
-    icon: Calendar,
+    icon: Zap,
     badge: 'AI',
   },
   {
@@ -53,8 +53,8 @@ const navigation = [
     icon: FolderKanban,
   },
   {
-    name: 'Analytics',
-    href: '/analytics',
+    name: 'Insights',
+    href: '/insights',
     icon: BarChart3,
   },
 ];
@@ -81,7 +81,7 @@ export function Sidebar() {
       <div className="flex h-14 items-center px-4 border-b border-dark-border-primary">
         <Link href="/dashboard" className="flex items-center gap-2 group">
           <div className="w-7 h-7 bg-gradient-brand rounded-lg flex items-center justify-center shadow-glow-brand group-hover:shadow-glow-blue transition-shadow duration-250">
-            <Zap className="w-4 h-4 text-white" />
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
           <span className="text-base font-bold font-display text-gradient">
             MicroPlanner
