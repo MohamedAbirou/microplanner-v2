@@ -4,6 +4,25 @@
  */
 
 // ============================================
+// BRAND & DESIGN TOKENS
+// ============================================
+
+export * from '../brand';
+
+// ============================================
+// APP CONFIGURATION
+// ============================================
+
+export const config = {
+  appName: 'MicroPlanner',
+  appDescription: 'AI-powered weekly planning that adapts to you',
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+  graphqlUrl: process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:4000/graphql',
+  graphqlWsUrl: process.env.NEXT_PUBLIC_GRAPHQL_WS_URL || 'ws://localhost:4000/graphql',
+} as const;
+
+// ============================================
 // TIER LIMITS
 // ============================================
 
