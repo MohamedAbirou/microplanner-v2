@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "jsx": "preserve",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "paths": {
+      "@microplanner/ui": ["../../packages/ui/src/index.ts"],
+      "@microplanner/ui/*": ["../../packages/ui/src/*"],
+      "@microplanner/utils": ["../../packages/utils/src/index.ts"],
+      "@microplanner/utils/*": ["../../packages/utils/src/*"],
+      "@microplanner/config": ["../../packages/config/src/index.ts"],
+      "@microplanner/types": ["../../packages/types/src/index.ts"],
+      "@microplanner/database": ["../../packages/database/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", ".next", "out"]
+}
