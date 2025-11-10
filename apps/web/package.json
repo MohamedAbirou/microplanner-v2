@@ -45,6 +45,7 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.66.0",
     "recharts": "^3.3.0",
+    "svix": "^1.81.0",
     "tailwind-merge": "^2.2.0",
     "zod": "^4.1.12",
     "zustand": "^4.5.0"

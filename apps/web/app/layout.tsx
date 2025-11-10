@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import React from 'react';
 import './globals.css';
 import { Providers } from './providers';
+import { Toaster } from '@/components/ui/toaster';
 
 // Inter font for headings
 const inter = Inter({
@@ -126,6 +127,7 @@ export default function RootLayout({
           suppressHydrationWarning
         >
           <Providers>{children}</Providers>
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
