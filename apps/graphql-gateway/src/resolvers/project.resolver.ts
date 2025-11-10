@@ -15,7 +15,7 @@ export const projectResolvers = {
       return dataSources.projectsAPI.getProjects(user.userId, args);
     },
 
-    projectStats: async (_: any, { id }: { id: string }, { dataSources, user }: any) => {
+    projectWithStats: async (_: any, { id }: { id: string }, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.projectsAPI.getProjectStats(id, user.userId);
     },

@@ -36,10 +36,11 @@ export const productivityResolvers = {
     },
 
     // ==================== SMART 1:1 ====================
-    smart1on1s: async (_: any, __: any, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.productivityAPI.getSmart1on1s(user.userId);
-    },
+    // Commented out until schema is defined
+    // smart1on1s: async (_: any, __: any, { dataSources, user }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    //   return dataSources.productivityAPI.getSmart1on1s(user.userId);
+    // },
 
     // ==================== KANBAN BOARDS ====================
     kanbanBoards: async (_: any, { projectId }: any, { dataSources, user }: any) => {
@@ -68,15 +69,16 @@ export const productivityResolvers = {
     },
 
     // ==================== NOTIFICATIONS ====================
-    notifications: async (_: any, { unreadOnly }: { unreadOnly?: boolean }, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.productivityAPI.getNotifications(user.userId, unreadOnly);
-    },
+    // Commented out until schema is defined
+    // notifications: async (_: any, { unreadOnly }: { unreadOnly?: boolean }, { dataSources, user }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    //   return dataSources.productivityAPI.getNotifications(user.userId, unreadOnly);
+    // },
 
-    notificationPreferences: async (_: any, __: any, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.productivityAPI.getNotificationPreferences(user.userId);
-    },
+    // notificationPreferences: async (_: any, __: any, { dataSources, user }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    //   return dataSources.productivityAPI.getNotificationPreferences(user.userId);
+    // },
   },
 
   Mutation: {
@@ -92,7 +94,7 @@ export const productivityResolvers = {
     },
 
     // ==================== FOCUS TIME ====================
-    createFocusTime: async (_: any, { input }: any, { dataSources, user, pubsub }: any) => {
+    createFocusTimeBlock: async (_: any, { input }: any, { dataSources, user, pubsub }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
       const focusTime = await dataSources.productivityAPI.createFocusTime(user.userId, input);
@@ -102,7 +104,7 @@ export const productivityResolvers = {
       return focusTime;
     },
 
-    updateFocusTime: async (_: any, { id, input }: any, { dataSources, user, pubsub }: any) => {
+    updateFocusTimeBlock: async (_: any, { id, input }: any, { dataSources, user, pubsub }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
       const focusTime = await dataSources.productivityAPI.updateFocusTime(id, user.userId, input);
@@ -112,7 +114,7 @@ export const productivityResolvers = {
       return focusTime;
     },
 
-    deleteFocusTime: async (_: any, { id }: { id: string }, { dataSources, user, pubsub }: any) => {
+    deleteFocusTimeBlock: async (_: any, { id }: { id: string }, { dataSources, user, pubsub }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
       await dataSources.productivityAPI.deleteFocusTime(id, user.userId);
@@ -166,35 +168,36 @@ export const productivityResolvers = {
     },
 
     // ==================== SMART 1:1 ====================
-    createSmart1on1: async (_: any, { input }: any, { dataSources, user, pubsub }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    // Commented out until schema is defined
+    // createSmart1on1: async (_: any, { input }: any, { dataSources, user, pubsub }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
-      const smart1on1 = await dataSources.productivityAPI.createSmart1on1(user.userId, input);
+    //   const smart1on1 = await dataSources.productivityAPI.createSmart1on1(user.userId, input);
 
-      await pubsub.publish(`SMART_1ON1_CREATED_${user.userId}`, { smart1on1Created: smart1on1 });
+    //   await pubsub.publish(`SMART_1ON1_CREATED_${user.userId}`, { smart1on1Created: smart1on1 });
 
-      return smart1on1;
-    },
+    //   return smart1on1;
+    // },
 
-    updateSmart1on1: async (_: any, { id, input }: any, { dataSources, user, pubsub }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    // updateSmart1on1: async (_: any, { id, input }: any, { dataSources, user, pubsub }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
-      const smart1on1 = await dataSources.productivityAPI.updateSmart1on1(id, user.userId, input);
+    //   const smart1on1 = await dataSources.productivityAPI.updateSmart1on1(id, user.userId, input);
 
-      await pubsub.publish(`SMART_1ON1_UPDATED_${user.userId}`, { smart1on1Updated: smart1on1 });
+    //   await pubsub.publish(`SMART_1ON1_UPDATED_${user.userId}`, { smart1on1Updated: smart1on1 });
 
-      return smart1on1;
-    },
+    //   return smart1on1;
+    // },
 
-    deleteSmart1on1: async (_: any, { id }: { id: string }, { dataSources, user, pubsub }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    // deleteSmart1on1: async (_: any, { id }: { id: string }, { dataSources, user, pubsub }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
-      await dataSources.productivityAPI.deleteSmart1on1(id, user.userId);
+    //   await dataSources.productivityAPI.deleteSmart1on1(id, user.userId);
 
-      await pubsub.publish(`SMART_1ON1_DELETED_${user.userId}`, { smart1on1Deleted: { id } });
+    //   await pubsub.publish(`SMART_1ON1_DELETED_${user.userId}`, { smart1on1Deleted: { id } });
 
-      return true;
-    },
+    //   return true;
+    // },
 
     // ==================== TRAVEL TIME ====================
     calculateTravelTime: async (_: any, { input }: any, { dataSources, user }: any) => {
@@ -246,25 +249,26 @@ export const productivityResolvers = {
     },
 
     // ==================== NOTIFICATIONS ====================
-    markNotificationAsRead: async (_: any, { id }: { id: string }, { dataSources, user, pubsub }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    // Commented out until schema is defined
+    // markNotificationAsRead: async (_: any, { id }: { id: string }, { dataSources, user, pubsub }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
-      await dataSources.productivityAPI.markNotificationAsRead(id, user.userId);
+    //   await dataSources.productivityAPI.markNotificationAsRead(id, user.userId);
 
-      await pubsub.publish(`NOTIFICATION_READ_${user.userId}`, { notificationRead: { id } });
+    //   await pubsub.publish(`NOTIFICATION_READ_${user.userId}`, { notificationRead: { id } });
 
-      return true;
-    },
+    //   return true;
+    // },
 
-    updateNotificationPreferences: async (_: any, { input }: any, { dataSources, user, pubsub }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    // updateNotificationPreferences: async (_: any, { input }: any, { dataSources, user, pubsub }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
-      const prefs = await dataSources.productivityAPI.updateNotificationPreferences(user.userId, input);
+    //   const prefs = await dataSources.productivityAPI.updateNotificationPreferences(user.userId, input);
 
-      await pubsub.publish(`NOTIFICATION_PREFS_UPDATED_${user.userId}`, { notificationPreferencesUpdated: prefs });
+    //   await pubsub.publish(`NOTIFICATION_PREFS_UPDATED_${user.userId}`, { notificationPreferencesUpdated: prefs });
 
-      return prefs;
-    },
+    //   return prefs;
+    // },
   },
 
   Subscription: {
@@ -300,12 +304,13 @@ export const productivityResolvers = {
     },
 
     // Notifications (Real-time)
-    notificationReceived: {
-      subscribe: (_: any, __: any, { pubsub, user }: any) => {
-        if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-        return pubsub.asyncIterator(`NOTIFICATION_RECEIVED_${user.userId}`);
-      },
-    },
+    // Commented out until schema is defined
+    // notificationReceived: {
+    //   subscribe: (_: any, __: any, { pubsub, user }: any) => {
+    //     if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    //     return pubsub.asyncIterator(`NOTIFICATION_RECEIVED_${user.userId}`);
+    //   },
+    // },
   },
 
   KanbanBoard: {

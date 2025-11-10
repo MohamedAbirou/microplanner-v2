@@ -87,6 +87,15 @@ extend type Query {
     take: Int
   ): [Task!]!
 
+  # Get tasks by project
+  tasksByProject(projectId: ID!): [Task!]!
+
+  # Get tasks by goal
+  tasksByGoal(goalId: ID!): [Task!]!
+
+  # Search tasks
+  searchTasks(query: String!): [Task!]!
+
   # Get task with dependencies
   taskWithDependencies(id: ID!): TaskWithDependencies!
 
@@ -107,6 +116,9 @@ extend type Mutation {
 
   # Complete task
   completeTask(id: ID!): Task!
+
+  # Uncomplete task
+  uncompleteTask(id: ID!): Task!
 
   # Skip task
   skipTask(id: ID!, reason: String): Task!

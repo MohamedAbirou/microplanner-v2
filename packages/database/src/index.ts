@@ -20,7 +20,8 @@ export { PrismaClient } from '@prisma/client';
 
 // Export Prisma client types when available
 // Temporarily export our own types until Prisma client is generated
-export * from './types';
+// Commented out due to module resolution issues - types are available from @prisma/client
+// export * from './types';
 
-// Uncomment when Prisma client is generated:
-// export * from '@prisma/client';
+// Export Prisma types from generated client
+export type * from '@prisma/client';
