@@ -1,31 +1,27 @@
 'use client';
 
+import WaitlistForm from '@/components/marketing/waitlist-form';
 /**
  * Professional Landing Page
  * GOAL: Make users say "WOW, WTF, THAT'S INSANE!"
  * Beat ReclaimAI with superior UX and features showcase
  */
 
-import Link from 'next/link';
-import { Button } from '@microplanner/ui';
-import { Card } from '@microplanner/ui';
-import { Badge } from '@microplanner/ui';
+import { Badge, Button, Card } from '@microplanner/ui';
+import { motion } from 'framer-motion';
 import {
-  Sparkles,
-  Zap,
-  Target,
-  Calendar,
-  Brain,
-  TrendingUp,
-  Users,
-  Shield,
   ArrowRight,
+  BarChart3,
+  Brain,
+  Calendar,
   Check,
   Clock,
-  BarChart3,
   FolderKanban,
+  Sparkles,
+  Target,
+  Zap
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 const features = [
   {
@@ -89,9 +85,18 @@ export default function LandingPage() {
     <div className="relative">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 via-dark-bg-primary to-accent-900/20" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(37,99,235,0.1),transparent_50%)]" />
+        {/* Background Effects */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute top-0 left-1/4 w-96 h-96 bg-primary-600/30 rounded-full blur-3xl animate-pulse"
+            style={{ animationDuration: '6s' }}
+          />
+          <div
+            className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent-600/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDuration: '6s', animationDelay: '2s' }}
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:72px_72px]" />
+        </div>
 
         <div className="relative mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:py-40">
           <motion.div
@@ -253,22 +258,24 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 bg-gradient-to-br from-primary-900/20 to-accent-900/20">
+      <section className="py-10 bg-dark-bg-secondary/50">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to <span className="text-gradient">10x Your Productivity</span>?
           </h2>
-          <p className="text-lg text-dark-text-secondary mb-8">
-            Join thousands of professionals who plan smarter, not harder
-          </p>
-          <Link href="/sign-up">
-            <Button size="lg" className="text-base px-12 shadow-glow-brand hover:shadow-glow-blue">
-              Get Started Free
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
+          {/* CTA Form */}
+            <div className="max-w-md mx-auto animate-scale-in">
+              <div className="bg-dark-bg-primary/50 rounded-lg shadow-2xl p-6 border">
+                <h3 className="font-semibold text-lg mb-4">Join the waitlist</h3>
+                <WaitlistForm />
+                <p className="text-xs text-muted-foreground mt-3 text-center">
+                  Join 1,247 people on the waitlist. We&apos;re launching in 2 weeks.
+                </p>
+              </div>
+            </div>
           <p className="mt-4 text-sm text-dark-text-tertiary">
-            14-day free trial • No credit card required
+            <Check className="w-4 h-4 inline text-success mr-1" />
+              Free 14-day trial · No credit card required · Cancel anytime
           </p>
         </div>
       </section>

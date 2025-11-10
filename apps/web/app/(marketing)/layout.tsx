@@ -7,11 +7,10 @@
  * - Smooth animations
  */
 
-import Link from 'next/link';
 import { Button } from '@microplanner/ui';
-import { Sparkles, Menu, X } from 'lucide-react';
+import { Menu, Sparkles, X } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
-import { cn } from '@microplanner/ui';
 
 const navigation = {
   products: [
@@ -168,7 +167,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       </header>
 
       {/* Main Content */}
-      <main className="pt-14">{children}</main>
+      <main className="pt-4">{children}</main>
 
       {/* Comprehensive Footer like ReclaimAI */}
       <footer className="border-t border-dark-border-primary bg-dark-bg-secondary mt-24">
