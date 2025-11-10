@@ -1,0 +1,11 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow sensitive pages
+Disallow: /dashboard
+Disallow: /api
+Disallow: /settings
+
+# Sitemap
+Sitemap: https://microplanner.app/sitemap.xml

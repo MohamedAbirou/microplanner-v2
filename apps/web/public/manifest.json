@@ -1,0 +1,19 @@
+{
+  "name": "MicroPlanner - AI-Powered Weekly Planning",
+  "short_name": "MicroPlanner",
+  "description": "AI-powered weekly planning that adapts to you",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/logo-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business", "lifestyle"],
+  "orientation": "portrait-primary"
+}
