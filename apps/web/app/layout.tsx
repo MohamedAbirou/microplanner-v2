@@ -115,9 +115,7 @@ export default function RootLayout({
     >
       <html
         lang="en"
-        className="dark"
         suppressHydrationWarning
-        style={{ colorScheme: 'dark' }}
       >
         <head>
           <link rel="icon" href="/brand/logo-icon.svg" type="image/svg+xml" />

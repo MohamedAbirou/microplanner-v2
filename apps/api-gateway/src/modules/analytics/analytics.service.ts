@@ -3,7 +3,7 @@ import { PrismaService } from '../../database/prisma.service';
 import type { AnalyticsEvent, LLMUsage } from '@microplanner/database';
 import { TrackEventDto } from './dto/track-event.dto';
 
-interface UserMetrics {
+export interface UserMetrics {
   totalGoals: number;
   totalPlans: number;
   totalTasks: number;
@@ -14,7 +14,7 @@ interface UserMetrics {
   avgTaskCompletionRate: number;
 }
 
-interface WeeklyInsights {
+export interface WeeklyInsights {
   weekStartDate: Date;
   weekEndDate: Date;
   goalsCreated: number;
