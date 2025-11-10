@@ -1,0 +1,94 @@
+# Dashboard types for overview and stats
+
+type DashboardStats {
+  activeGoalsCount: Int!
+  tasksTodayCount: Int!
+  tasksCompletedToday: Int!
+  completionRate: Float!
+  weeklyPlansCount: Int!
+  productivityScore: Int
+  currentStreak: Int!
+}
+
+type UpcomingTask {
+  id: ID!
+  title: String!
+  dueDate: DateTime!
+  priority: Int!
+  goalId: ID
+  goalTitle: String
+  goalEmoji: String
+  estimatedDuration: Int
+  isCompleted: Boolean!
+}
+
+type RecentActivity {
+  id: ID!
+  type: ActivityType!
+  title: String!
+  description: String
+  timestamp: DateTime!
+  metadata: ActivityMetadata
+}
+
+type ActivityMetadata {
+  goalId: ID
+  goalTitle: String
+  taskId: ID
+  taskTitle: String
+  emoji: String
+  color: String
+}
+
+type WeekOverview {
+  date: DateTime!
+  dayOfWeek: Int!
+  tasksScheduled: Int!
+  tasksCompleted: Int!
+  totalDuration: Int!
+  productivity: Float!
+}
+
+type QuickAction {
+  id: ID!
+  title: String!
+  description: String!
+  icon: String!
+  action: String!
+  variant: QuickActionVariant!
+}
+
+# Enums
+enum ActivityType {
+  GOAL_CREATED
+  GOAL_COMPLETED
+  TASK_COMPLETED
+  PLAN_GENERATED
+  MILESTONE_REACHED
+  STREAK_ACHIEVED
+}
+
+enum QuickActionVariant {
+  PRIMARY
+  SECONDARY
+  SUCCESS
+  WARNING
+}
+
+# Queries
+extend type Query {
+  # Get dashboard overview stats
+  dashboardStats: DashboardStats!
+
+  # Get upcoming tasks (next 7 days)
+  upcomingTasks(limit: Int): [UpcomingTask!]!
+
+  # Get recent activity
+  recentActivity(limit: Int): [RecentActivity!]!
+
+  # Get week overview (7 days)
+  weekOverview(startDate: DateTime): [WeekOverview!]!
+
+  # Get quick actions based on user state
+  quickActions: [QuickAction!]!
+}

@@ -4,6 +4,7 @@ import { projectResolvers } from './project.resolver';
 import { productivityResolvers } from './productivity.resolver';
 import { userResolvers } from './user.resolver';
 import { waitlistResolvers } from './waitlist.resolver';
+import { dashboardResolvers } from './dashboard.resolver';
 
 /**
  * Merge all resolvers
@@ -16,6 +17,7 @@ export const resolvers = {
     ...productivityResolvers.Query,
     ...userResolvers.Query,
     ...waitlistResolvers.Query,
+    ...dashboardResolvers.Query,
   },
 
   Mutation: {
