@@ -11,7 +11,7 @@
 
 import { ApolloProvider } from '@/lib/apollo/provider';
 import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@microplanner/ui';
+import { Toaster } from 'sonner';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -27,7 +27,17 @@ export function Providers({ children }: ProvidersProps) {
     >
       <ApolloProvider>
         {children}
-        <Toaster />
+        <Toaster
+          theme="dark"
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#171717',
+              color: '#FAFAFA',
+              border: '1px solid #262626',
+            },
+          }}
+        />
       </ApolloProvider>
     </ThemeProvider>
   );

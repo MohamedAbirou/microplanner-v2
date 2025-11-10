@@ -8,7 +8,9 @@
   "exports": {
     "./eslint": "./eslint.config.js",
     "./tailwind": "./tailwind.config.js",
-    "./typescript": "./tsconfig.base.json"
+    "./tailwind.config": "./tailwind.config.js",
+    "./typescript": "./tsconfig.base.json",
+    "./tsconfig.base.json": "./tsconfig.base.json"
   },
   "scripts": {
     "type-check": "tsc --noEmit"
