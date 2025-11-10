@@ -50,14 +50,14 @@ export function Step2WorkHours({ data, updateData, onNext, onBack }: Step2Props)
       exit={{ opacity: 0, x: -20 }}
       className="w-full max-w-2xl mx-auto"
     >
-      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 md:p-12 shadow-2xl">
+      <div className="glass-card rounded-2xl p-8 md:p-12">
         {/* Header */}
         <div className="text-center mb-10">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', delay: 0.2 }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-6"
+            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-brand rounded-full mb-6"
           >
             <Calendar className="w-10 h-10 text-white" />
           </motion.div>
@@ -81,10 +81,10 @@ export function Step2WorkHours({ data, updateData, onNext, onBack }: Step2Props)
                   key={day.value}
                   onClick={() => toggleDay(day.value)}
                   className={`
-                    px-6 py-3 rounded-lg font-medium transition-all duration-200
+                    px-6 py-3 rounded-lg font-medium transition-all duration-250
                     ${
                       workDays.includes(day.value)
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
+                        ? 'bg-gradient-brand text-white shadow-glow-brand scale-105'
                         : 'bg-white/10 text-white/70 hover:bg-white/20'
                     }
                   `}
@@ -157,7 +157,7 @@ export function Step2WorkHours({ data, updateData, onNext, onBack }: Step2Props)
             <Button
               onClick={handleContinue}
               disabled={workDays.length === 0}
-              className="flex-1 h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg disabled:opacity-50"
+              className="btn-primary flex-1 h-12 text-lg"
             >
               Continue
             </Button>

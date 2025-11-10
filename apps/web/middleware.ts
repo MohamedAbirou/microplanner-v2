@@ -22,6 +22,33 @@ const isOnboardingRoute = createRouteMatcher(['/onboarding(.*)']);
 // Define dashboard routes
 const isDashboardRoute = createRouteMatcher(['/dashboard(.*)']);
 
+// Check if user has completed onboarding
+async function checkOnboardingStatus(userId: string): Promise<boolean> {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+    const response = await fetch(`${apiUrl}/user/onboarding/status?userId=${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Add timeout to prevent hanging
+      signal: AbortSignal.timeout(2000),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.completed === true;
+    }
+  } catch (error) {
+    console.warn('Unable to check onboarding status (endpoint may not exist yet):', error);
+  }
+
+  // Default to assuming onboarding is complete if we can't check
+  // This allows development to continue even if backend isn't ready
+  return true;
+}
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId, redirectToSignIn } = await auth();
 
@@ -36,19 +63,17 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   // Check if user has completed onboarding
-  // TODO: This will check the database via API call
-  // For now, we'll skip this check until we implement the backend integration
-  /*
   const hasCompletedOnboarding = await checkOnboardingStatus(userId);
 
-  if (!hasCompletedOnboarding && !isOnboardingRoute(req)) {
+  // Redirect to onboarding if not completed and trying to access dashboard
+  if (!hasCompletedOnboarding && isDashboardRoute(req)) {
     return NextResponse.redirect(new URL('/onboarding', req.url));
   }
 
+  // Redirect to dashboard if onboarding is complete and trying to access onboarding
   if (hasCompletedOnboarding && isOnboardingRoute(req)) {
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
-  */
 
   return NextResponse.next();
 });

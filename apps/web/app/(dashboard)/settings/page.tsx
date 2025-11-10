@@ -62,13 +62,13 @@ export default function SettingsPage() {
     <div className="space-y-8 max-w-4xl">
       <div>
         <h1 className="text-3xl font-bold text-white">Settings</h1>
-        <p className="text-neutral-400 mt-2">
+        <p className="text-dark-text-secondary mt-2">
           Manage your account settings and preferences.
         </p>
       </div>
 
       {/* Profile Settings */}
-      <Card className="p-6 bg-neutral-900/50 border-neutral-800">
+      <Card className="p-6 card">
         <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
           <Globe className="w-5 h-5" />
           Profile Settings
@@ -77,30 +77,30 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label htmlFor="firstName" className="text-neutral-300 mb-2 block">
+              <Label htmlFor="firstName" className="text-dark-text-primary mb-2 block">
                 First Name
               </Label>
               <Input
                 id="firstName"
                 defaultValue={user?.firstName || ''}
-                className="bg-neutral-800 border-neutral-700 text-white"
+                className="input text-white"
               />
             </div>
 
             <div>
-              <Label htmlFor="lastName" className="text-neutral-300 mb-2 block">
+              <Label htmlFor="lastName" className="text-dark-text-primary mb-2 block">
                 Last Name
               </Label>
               <Input
                 id="lastName"
                 defaultValue={user?.lastName || ''}
-                className="bg-neutral-800 border-neutral-700 text-white"
+                className="input text-white"
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="email" className="text-neutral-300 mb-2 block">
+            <Label htmlFor="email" className="text-dark-text-primary mb-2 block">
               Email Address
             </Label>
             <Input
@@ -108,20 +108,20 @@ export default function SettingsPage() {
               type="email"
               defaultValue={user?.primaryEmailAddress?.emailAddress || ''}
               disabled
-              className="bg-neutral-800 border-neutral-700 text-neutral-500"
+              className="input text-dark-text-tertiary"
             />
-            <p className="text-xs text-neutral-500 mt-1">
+            <p className="text-xs text-dark-text-tertiary mt-1">
               Email cannot be changed here. Use Clerk dashboard.
             </p>
           </div>
 
           <div>
-            <Label htmlFor="timezone" className="text-neutral-300 mb-2 block">
+            <Label htmlFor="timezone" className="text-dark-text-primary mb-2 block">
               Timezone
             </Label>
             <select
               id="timezone"
-              className="w-full h-10 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-md text-white"
+              className="w-full h-10 px-3 py-2 input text-white"
             >
               <option>America/New_York (ET)</option>
               <option>America/Chicago (CT)</option>
@@ -135,7 +135,7 @@ export default function SettingsPage() {
           <Button
             onClick={handleSave}
             disabled={isLoading}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            className="btn-primary"
           >
             <Save className="w-4 h-4 mr-2" />
             {isLoading ? 'Saving...' : 'Save Changes'}
@@ -144,7 +144,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Notifications */}
-      <Card className="p-6 bg-neutral-900/50 border-neutral-800">
+      <Card className="p-6 card">
         <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
           <Bell className="w-5 h-5" />
           Notification Preferences
@@ -154,49 +154,49 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white font-medium">Email Notifications</p>
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-dark-text-secondary">
                 Receive updates about your tasks and plans
               </p>
             </div>
             <input
               type="checkbox"
               defaultChecked
-              className="w-5 h-5 rounded bg-neutral-800 border-neutral-700"
+              className="w-5 h-5 rounded input"
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white font-medium">Weekly Summary</p>
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-dark-text-secondary">
                 Get a weekly summary of your progress
               </p>
             </div>
             <input
               type="checkbox"
               defaultChecked
-              className="w-5 h-5 rounded bg-neutral-800 border-neutral-700"
+              className="w-5 h-5 rounded input"
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white font-medium">Plan Reminders</p>
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-dark-text-secondary">
                 Remind me to generate my weekly plan
               </p>
             </div>
             <input
               type="checkbox"
               defaultChecked
-              className="w-5 h-5 rounded bg-neutral-800 border-neutral-700"
+              className="w-5 h-5 rounded input"
             />
           </div>
         </div>
       </Card>
 
       {/* Appearance */}
-      <Card className="p-6 bg-neutral-900/50 border-neutral-800">
+      <Card className="p-6 card">
         <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
           {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
           Appearance
@@ -204,14 +204,14 @@ export default function SettingsPage() {
 
         <div className="space-y-4">
           <div>
-            <Label className="text-neutral-300 mb-3 block">Theme</Label>
+            <Label className="text-dark-text-primary mb-3 block">Theme</Label>
             <div className="flex gap-3">
               <button
                 onClick={() => setTheme('light')}
                 className={`flex-1 p-4 rounded-lg border-2 transition-all ${
                   theme === 'light'
                     ? 'border-blue-600 bg-blue-600/10'
-                    : 'border-neutral-700 bg-neutral-800'
+                    : 'border-dark-border-primary input'
                 }`}
               >
                 <Sun className="w-6 h-6 mx-auto mb-2 text-white" />
@@ -222,7 +222,7 @@ export default function SettingsPage() {
                 className={`flex-1 p-4 rounded-lg border-2 transition-all ${
                   theme === 'dark'
                     ? 'border-blue-600 bg-blue-600/10'
-                    : 'border-neutral-700 bg-neutral-800'
+                    : 'border-dark-border-primary input'
                 }`}
               >
                 <Moon className="w-6 h-6 mx-auto mb-2 text-white" />
@@ -233,7 +233,7 @@ export default function SettingsPage() {
                 className={`flex-1 p-4 rounded-lg border-2 transition-all ${
                   theme === 'system'
                     ? 'border-blue-600 bg-blue-600/10'
-                    : 'border-neutral-700 bg-neutral-800'
+                    : 'border-dark-border-primary input'
                 }`}
               >
                 <Globe className="w-6 h-6 mx-auto mb-2 text-white" />
@@ -245,7 +245,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Data & Privacy (GDPR) */}
-      <Card className="p-6 bg-neutral-900/50 border-neutral-800">
+      <Card className="p-6 card">
         <h2 className="text-xl font-semibold text-white mb-6">
           Data & Privacy
         </h2>
@@ -254,25 +254,25 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white font-medium">Export Your Data</p>
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-dark-text-secondary">
                 Download all your data in JSON format
               </p>
             </div>
             <Button
               onClick={handleExportData}
               variant="outline"
-              className="border-neutral-700 text-white hover:bg-neutral-800"
+              className="border-dark-border-primary text-white hover:bg-neutral-800"
             >
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>
           </div>
 
-          <div className="border-t border-neutral-800 pt-4">
+          <div className="border-t border-dark-border-primary pt-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-400 font-medium">Delete Account</p>
-                <p className="text-sm text-neutral-400">
+                <p className="text-sm text-dark-text-secondary">
                   Permanently delete your account and all data
                 </p>
               </div>

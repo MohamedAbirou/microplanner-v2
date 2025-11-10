@@ -25,10 +25,10 @@ export function ProgressIndicator({ currentStep }: ProgressIndicatorProps) {
                   initial={{ scale: 0.8 }}
                   animate={{ scale: isCurrent ? 1.1 : 1 }}
                   className={`
-                    relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300
+                    relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-250
                     ${
                       isCompleted
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 border-transparent'
+                        ? 'bg-gradient-brand border-transparent'
                         : isCurrent
                           ? 'bg-white border-white shadow-lg'
                           : 'bg-white/10 border-white/30'
@@ -61,8 +61,8 @@ export function ProgressIndicator({ currentStep }: ProgressIndicatorProps) {
               {/* Connector Line */}
               {step < TOTAL_STEPS && (
                 <div
-                  className={`flex-1 h-0.5 mx-2 transition-all duration-300 ${
-                    isCompleted ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-white/20'
+                  className={`flex-1 h-0.5 mx-2 transition-all duration-250 ${
+                    isCompleted ? 'bg-gradient-brand' : 'bg-white/20'
                   }`}
                 />
               )}
