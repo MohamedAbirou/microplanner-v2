@@ -1,10 +1,10 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowRight, CheckCircle2, Mail, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Sparkles, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 const waitlistSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -67,7 +67,7 @@ export function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFormProps)
 
   if (isSuccess) {
     return (
-      <div className="flex items-center justify-center p-6 bg-gradient-to-r from-primary-600/20 to-accent-700/20 border border-primary-600/30 rounded-xl animate-fade-in">
+      <div className="flex items-center justify-center p-6 bg-gradient-to-r from-primary-600/20 to-accent-700/20 border border-primary-600/30 rounded-md animate-fade-in">
         <CheckCircle2 className="w-6 h-6 text-success mr-3" />
         <div>
           <p className="text-lg font-semibold text-dark-text-primary">
@@ -84,7 +84,7 @@ export function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFormProps)
   if (variant === 'hero') {
     return (
       <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-2xl mx-auto">
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3">
           <div className="flex-1">
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-text-tertiary" />
@@ -92,7 +92,7 @@ export function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFormProps)
                 {...register('email')}
                 type="email"
                 placeholder="Enter your email address"
-                className="w-full pl-12 pr-4 py-4 bg-dark-bg-secondary/70 backdrop-blur-xl border border-dark-border-primary rounded-xl text-dark-text-primary placeholder-dark-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent transition-all duration-250"
+                className="w-full pl-12 pr-4 py-2 bg-transparent backdrop-blur-xl border border-dark-border-primary rounded-md text-dark-text-primary placeholder-dark-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent transition-all duration-250"
                 disabled={isSubmitting}
               />
             </div>
@@ -103,7 +103,7 @@ export function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFormProps)
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-8 py-4 bg-gradient-brand text-white font-semibold rounded-xl shadow-glow-brand hover:shadow-glow-brand/80 active:scale-95 transition-all duration-250 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="px-8 py-2 bg-gradient-brand text-white font-semibold rounded-md shadow-glow-brand hover:shadow-glow-brand/80 active:scale-95 transition-all duration-250 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>
