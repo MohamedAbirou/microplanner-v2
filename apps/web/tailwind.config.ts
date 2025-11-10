@@ -1,5 +1,5 @@
+import { brand } from '@microplanner/config';
 import type { Config } from 'tailwindcss';
-import { brand } from '@microplanner/config/brand';
 
 const config: Config = {
   darkMode: ['class'],

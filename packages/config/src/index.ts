@@ -7,7 +7,7 @@
 // BRAND & DESIGN TOKENS
 // ============================================
 
-export * from '../brand';
+export * from './brand';
 
 // ============================================
 // APP CONFIGURATION

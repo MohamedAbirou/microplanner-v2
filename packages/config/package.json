@@ -7,7 +7,6 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./brand": "./brand.ts",
     "./eslint": "./eslint.config.js",
     "./tailwind": "./tailwind.config.js",
     "./tailwind.config": "./tailwind.config.js",
@@ -22,6 +21,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/node": "^24.10.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.56.0",
