@@ -13,6 +13,7 @@
 5. [Running the Project](#running-the-project)
 6. [Troubleshooting](#troubleshooting)
 7. [Development Workflow](#development-workflow)
+8. [Docker Setup](#docker-setup)
 
 ---
 
@@ -561,5 +562,49 @@ Now that your local environment is running:
 2. ✅ Test the email waitlist form
 3. ✅ Check the GraphQL playground at http://localhost:4000/graphql
 4. ✅ Start building Phase 1 features!
+
+**Happy coding! 💻**
+
+---
+
+## 🐳 Docker Setup
+
+Want to run everything in Docker instead? We've got you covered!
+
+### Quick Start with Docker
+
+```bash
+# Start all services (PostgreSQL, Redis, API, Planning Service, Web)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
+```
+
+### Docker Documentation
+
+For complete Docker setup instructions, troubleshooting, and best practices, see:
+
+**📖 [DOCKER_SETUP.md](./DOCKER_SETUP.md)**
+
+This guide includes:
+- ✅ All Docker errors fixed (Prisma generation, environment variables, etc.)
+- ✅ Step-by-step Docker Compose usage
+- ✅ Troubleshooting common Docker issues
+- ✅ Development workflows with Docker
+- ✅ Production deployment tips
+
+### Docker vs Local Development
+
+| Method | Pros | Cons | Best For |
+|--------|------|------|----------|
+| **Local (pnpm)** | Fast hot reload, easy debugging, native performance | Need to install all dependencies locally | Active development |
+| **Docker (databases only)** | Isolated DB, easy setup, consistent environment | Still need local Node/Python | **Recommended** |
+| **Docker (everything)** | Fully isolated, no local dependencies needed | Slower hot reload, harder debugging | Testing, CI/CD |
+
+**Recommended**: Use Docker for databases (postgres + redis) and run services locally with `pnpm dev` for the best development experience!
 
 **Happy coding! 💻**
