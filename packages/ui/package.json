@@ -1,20 +1,20 @@
 {
-  "name": "@microplanner/web",
+  "name": "@microplanner/ui",
   "version": "0.1.0",
   "private": true,
+  "description": "Shared UI components for MicroPlanner (Shadcn + Design System)",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./lib/*": "./src/lib/*.ts"
+  },
   "scripts": {
-    "dev": "next dev -p 3000",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint \"**/*.ts*\"",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@apollo/client": "^3.9.4",
-    "@clerk/nextjs": "^4.29.6",
-    "@microplanner/ui": "workspace:*",
-    "@microplanner/utils": "workspace:*",
-    "@microplanner/types": "workspace:*",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",
@@ -35,29 +35,18 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
-    "framer-motion": "^11.0.5",
-    "graphql": "^16.8.1",
-    "graphql-ws": "^5.14.3",
     "lucide-react": "^0.344.0",
-    "next": "15.0.3",
-    "next-themes": "^0.2.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "tailwind-merge": "^2.2.1",
-    "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.22.4",
-    "zustand": "^4.5.0"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@microplanner/config": "workspace:*",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "autoprefixer": "^10.0.1",
-    "eslint": "^8",
-    "eslint-config-next": "15.0.3",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "react": "^18.2.0",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }

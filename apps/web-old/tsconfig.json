@@ -1,5 +1,5 @@
 {
-  "extends": "@microplanner/config/tsconfig.base.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -19,17 +19,10 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@/components/*": ["./components/*"],
-      "@/lib/*": ["./lib/*"],
-      "@/app/*": ["./app/*"],
-      "@microplanner/ui": ["../../packages/ui/src/index.ts"],
-      "@microplanner/ui/*": ["../../packages/ui/src/*"],
-      "@microplanner/utils": ["../../packages/utils/src/index.ts"],
-      "@microplanner/utils/*": ["../../packages/utils/src/*"],
-      "@microplanner/types": ["../../packages/types/src/index.ts"]
+      "@microplanner/types": ["../../packages/types/src"],
+      "@microplanner/config": ["../../packages/config/src"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
