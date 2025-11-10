@@ -1,0 +1,58 @@
+# Node modules - will be installed in Docker
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+.next
+.turbo
+build
+out
+
+# Development files
+.env
+.env.local
+.env*.local
+*.log
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+coverage
+.nyc_output
+
+# Documentation
+*.md
+!README.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Prisma
+**/prisma/migrations/.migration_lock
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
