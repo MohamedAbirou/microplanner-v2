@@ -383,7 +383,7 @@
 
 .status-dot.online {
   @apply bg-success;
-  box-shadow: 0 0 0 2px theme('colors.success.dark');
+  box-shadow: 0 0 0 2px #059669;
 }
 
 .status-dot.offline {
@@ -392,5 +392,5 @@
 
 .status-dot.busy {
   @apply bg-warning;
-  box-shadow: 0 0 0 2px theme('colors.warning.dark');
+  box-shadow: 0 0 0 2px #D97706;
 }
