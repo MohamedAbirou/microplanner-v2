@@ -5,9 +5,7 @@
   "references": [
     { "path": "./packages/config" },
     { "path": "./packages/types" },
-    { "path": "./packages/database" },
-    { "path": "./packages/ui" },
-    { "path": "./packages/utils" },
+    { "path": "./packages/database"},
     { "path": "./apps/api-gateway" },
     { "path": "./apps/graphql-gateway" }
   ],
