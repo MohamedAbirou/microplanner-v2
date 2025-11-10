@@ -58,14 +58,14 @@ export function Step1Welcome({ data, updateData, onNext }: Step1Props) {
       exit={{ opacity: 0, y: -20 }}
       className="w-full max-w-2xl mx-auto"
     >
-      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 md:p-12 shadow-2xl">
+      <div className="glass-card rounded-2xl p-8 md:p-12">
         {/* Header */}
         <div className="text-center mb-10">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', delay: 0.2 }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-6"
+            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-brand rounded-full mb-6"
           >
             <Rocket className="w-10 h-10 text-white" />
           </motion.div>
@@ -130,7 +130,7 @@ export function Step1Welcome({ data, updateData, onNext }: Step1Props) {
           <Button
             onClick={handleContinue}
             disabled={!fullName || !timezone}
-            className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary w-full h-12 text-lg"
           >
             Continue
           </Button>

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Calendar, Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/lib/hooks/use-toast';
 import type { OnboardingData } from '@/lib/types/onboarding';
 
 interface Step5Props {
@@ -34,10 +35,15 @@ const CALENDAR_PROVIDERS = [
 ];
 
 export function Step5Calendar({ data, updateData, onComplete, onBack }: Step5Props) {
+  const { toast } = useToast();
+
   const handleConnectCalendar = (providerId: string) => {
-    // TODO: Implement calendar OAuth flow
-    console.log('Connecting to', providerId);
-    alert(`Calendar connection will be implemented in the backend integration phase. Provider: ${providerId}`);
+    const provider = CALENDAR_PROVIDERS.find((p) => p.id === providerId);
+
+    toast({
+      title: 'Coming Soon',
+      description: `Calendar integration for ${provider?.name} will be available in a future update. You can skip this step and connect later from Settings.`,
+    });
   };
 
   const handleSkip = () => {
@@ -56,14 +62,14 @@ export function Step5Calendar({ data, updateData, onComplete, onBack }: Step5Pro
       exit={{ opacity: 0, x: -20 }}
       className="w-full max-w-3xl mx-auto"
     >
-      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 md:p-12 shadow-2xl">
+      <div className="glass-card rounded-2xl p-8 md:p-12">
         {/* Header */}
         <div className="text-center mb-10">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', delay: 0.2 }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-6"
+            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-brand rounded-full mb-6"
           >
             <Calendar className="w-10 h-10 text-white" />
           </motion.div>
@@ -144,7 +150,7 @@ export function Step5Calendar({ data, updateData, onComplete, onBack }: Step5Pro
           </Button>
           <Button
             onClick={handleFinish}
-            className="flex-1 h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+            className="btn-primary flex-1 h-12 text-lg"
           >
             Finish Setup
           </Button>
