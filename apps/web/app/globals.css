@@ -137,7 +137,7 @@
   /* Firefox scrollbar */
   * {
     scrollbar-width: thin;
-    scrollbar-color: theme('colors.dark.bg.hover') theme('colors.dark.bg.secondary');
+    scrollbar-color: #404040 #171717;
   }
 
   /* ==================== SELECTION ==================== */
