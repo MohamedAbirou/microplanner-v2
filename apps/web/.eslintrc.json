@@ -1,3 +1,0 @@
-{
-  "extends": ["@microplanner/config/eslint", "next/core-web-vitals"]
-}
