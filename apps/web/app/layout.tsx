@@ -1,9 +1,9 @@
+import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
-import localFont from 'next/font/local';
-import { ClerkProvider } from '@clerk/nextjs';
-import { Providers } from './providers';
+import React from 'react';
 import './globals.css';
+import { Providers } from './providers';
 
 // Inter font for headings
 const inter = Inter({
