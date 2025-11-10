@@ -1,0 +1,396 @@
+/**
+ * MicroPlanner Global Styles
+ *
+ * SLEEK, PROFESSIONAL, TOP-TIER Design
+ * - Small, tight spacing (not big/zoomed in)
+ * - Perfect dark mode
+ * - Smooth animations
+ * - Production-grade quality
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ==================== ROOT VARIABLES ==================== */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 267 84% 81%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 217 91% 60%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 267 84% 56%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 240 5% 64.9%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 217 91% 60%;
+  }
+
+  /* ==================== BASE STYLES ==================== */
+  * {
+    @apply border-dark-border-primary;
+  }
+
+  html {
+    /* Smaller base font size for sleeker look */
+    font-size: 15px; /* Down from 16px - makes everything 6.25% smaller */
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (max-width: 768px) {
+    html {
+      font-size: 14px; /* Even smaller on mobile */
+    }
+  }
+
+  body {
+    @apply bg-dark-bg-primary text-dark-text-primary;
+    @apply font-sans;
+    @apply min-h-screen;
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+  }
+
+  /* ==================== TYPOGRAPHY ==================== */
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight;
+  }
+
+  h1 {
+    @apply text-2xl md:text-3xl; /* Smaller than before */
+    line-height: 1.2;
+  }
+
+  h2 {
+    @apply text-xl md:text-2xl;
+    line-height: 1.3;
+  }
+
+  h3 {
+    @apply text-lg md:text-xl;
+    line-height: 1.4;
+  }
+
+  h4 {
+    @apply text-base md:text-lg;
+    line-height: 1.4;
+  }
+
+  p {
+    @apply text-sm leading-relaxed;
+  }
+
+  small {
+    @apply text-xs;
+  }
+
+  /* ==================== SCROLLBAR ==================== */
+
+  /* Custom scrollbar for dark mode */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-bg-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-dark-bg-hover rounded-full;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-dark-border-secondary;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.dark.bg.hover') theme('colors.dark.bg.secondary');
+  }
+
+  /* ==================== SELECTION ==================== */
+
+  ::selection {
+    @apply bg-primary-500/20 text-primary-400;
+  }
+
+  ::-moz-selection {
+    @apply bg-primary-500/20 text-primary-400;
+  }
+}
+
+@layer components {
+  /* ==================== GLASS CARD EFFECT ==================== */
+
+  .glass-card {
+    @apply bg-dark-bg-secondary/50 backdrop-blur-xl;
+    @apply border border-dark-border-primary;
+    @apply rounded-lg;
+    @apply shadow-sm;
+  }
+
+  .glass-card-hover {
+    @apply glass-card;
+    @apply transition-all duration-250;
+    @apply hover:bg-dark-bg-secondary/70 hover:shadow-md;
+  }
+
+  /* ==================== GRADIENT TEXT ==================== */
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    @apply bg-gradient-brand;
+  }
+
+  /* ==================== BUTTONS (Custom Classes) ==================== */
+
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply rounded-lg font-medium;
+    @apply transition-all duration-250;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+    /* Smaller padding for sleeker look */
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-primary {
+    @apply btn-base;
+    @apply bg-gradient-brand text-white;
+    @apply shadow-glow-brand hover:shadow-glow-blue;
+    @apply active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply btn-base;
+    @apply bg-dark-bg-secondary text-dark-text-primary;
+    @apply border border-dark-border-primary;
+    @apply hover:bg-dark-bg-hover hover:border-dark-border-secondary;
+  }
+
+  .btn-ghost {
+    @apply btn-base;
+    @apply text-dark-text-secondary;
+    @apply hover:bg-dark-bg-hover hover:text-dark-text-primary;
+  }
+
+  /* ==================== INPUTS ==================== */
+
+  .input-base {
+    @apply flex h-9 w-full rounded-lg; /* h-9 instead of h-10 for sleeker look */
+    @apply border border-dark-border-primary bg-dark-bg-tertiary;
+    @apply px-3 py-1.5 text-sm; /* Smaller padding */
+    @apply text-dark-text-primary placeholder:text-dark-text-tertiary;
+    @apply transition-all duration-150;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* ==================== ANIMATIONS ==================== */
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      transparent 100%
+    );
+    background-size: 1000px 100%;
+  }
+
+  /* ==================== UTILITY CLASSES ==================== */
+
+  .container-tight {
+    @apply container mx-auto px-4 md:px-6 lg:px-8;
+    max-width: 1400px; /* Tighter max width */
+  }
+
+  .section-padding {
+    @apply py-12 md:py-16; /* Smaller than default */
+  }
+
+  .card-padding {
+    @apply p-4 md:p-5; /* Smaller card padding */
+  }
+
+  /* ==================== FOCUS STYLES ==================== */
+
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg-primary;
+  }
+
+  /* ==================== TRUNCATE ==================== */
+
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@layer utilities {
+  /* ==================== RESPONSIVE UTILITIES ==================== */
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* ==================== HIDE SCROLLBAR ==================== */
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ==================== GRADIENT BORDERS ==================== */
+
+  .border-gradient {
+    border-image: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%) 1;
+  }
+
+  /* ==================== SMOOTH TRANSITIONS ==================== */
+
+  .transition-smooth {
+    @apply transition-all duration-250 ease-out;
+  }
+
+  .transition-fast {
+    @apply transition-all duration-150 ease-out;
+  }
+
+  /* ==================== GLOW EFFECTS ==================== */
+
+  .glow-on-hover {
+    @apply transition-shadow duration-250;
+  }
+
+  .glow-on-hover:hover {
+    @apply shadow-glow-brand;
+  }
+
+  /* ==================== BACKDROP BLUR ==================== */
+
+  .backdrop-blur-glass {
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+  }
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+  body {
+    @apply bg-white text-black;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  body {
+    @apply border-2 border-dark-border-secondary;
+  }
+
+  button, input, select, textarea {
+    @apply border-2;
+  }
+}
+
+/* ==================== LOADING STATES ==================== */
+
+.loading-pulse {
+  @apply animate-pulse bg-dark-bg-tertiary;
+}
+
+.loading-spin {
+  @apply animate-spin;
+}
+
+/* ==================== STATUS INDICATORS ==================== */
+
+.status-dot {
+  @apply inline-block w-2 h-2 rounded-full;
+}
+
+.status-dot.online {
+  @apply bg-success;
+  box-shadow: 0 0 0 2px theme('colors.success.dark');
+}
+
+.status-dot.offline {
+  @apply bg-dark-text-tertiary;
+}
+
+.status-dot.busy {
+  @apply bg-warning;
+  box-shadow: 0 0 0 2px theme('colors.warning.dark');
+}
