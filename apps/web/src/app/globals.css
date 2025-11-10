@@ -104,11 +104,17 @@
     @apply border-border;
   }
 
+  html {
+    font-size: 16px; /* Base font size - prevents zoom issues */
+  }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-size: 0.9375rem; /* 15px - slightly smaller for better density */
+    line-height: 1.6;
   }
 
   h1,
