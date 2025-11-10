@@ -30,9 +30,9 @@ import { WaitlistForm } from '@/components/marketing/waitlist-form';
 
 export default function HomePage() {
   return (
-    <main className="bg-gray-950 text-white antialiased">
+    <main className="bg-dark-bg-primary text-dark-text-primary antialiased">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-950/80 backdrop-blur-xl border-b border-gray-800/50">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-bg-primary/80 backdrop-blur-xl border-b border-dark-border-primary/50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -45,23 +45,23 @@ export default function HomePage() {
 
             {/* Nav Links (Desktop) */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-gray-300 hover:text-white font-medium transition-colors">
+              <a href="#features" className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors">
                 Features
               </a>
-              <a href="#how-it-works" className="text-gray-300 hover:text-white font-medium transition-colors">
+              <a href="#how-it-works" className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors">
                 How It Works
               </a>
-              <a href="#pricing" className="text-gray-300 hover:text-white font-medium transition-colors">
+              <a href="#pricing" className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors">
                 Pricing
               </a>
-              <a href="#testimonials" className="text-gray-300 hover:text-white font-medium transition-colors">
+              <a href="#testimonials" className="text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors">
                 Testimonials
               </a>
             </div>
 
             {/* CTA Buttons */}
             <div className="flex items-center gap-3">
-              <button className="hidden sm:block px-4 py-2 text-gray-300 hover:text-white font-medium transition-colors">
+              <button className="hidden sm:block px-4 py-2 text-dark-text-secondary hover:text-dark-text-primary font-medium transition-colors">
                 Sign In
               </button>
               <button className="px-6 py-2.5 bg-gradient-brand text-white font-semibold rounded-lg hover:shadow-glow transition-all hover:scale-105">
@@ -97,7 +97,7 @@ export default function HomePage() {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-xl md:text-2xl text-gray-400 mb-10 max-w-3xl mx-auto animate-slide-up" style={{ animationDelay: '100ms' }}>
+            <p className="text-xl md:text-2xl text-dark-text-secondary mb-10 max-w-3xl mx-auto animate-slide-up" style={{ animationDelay: '100ms' }}>
               Stop spending hours on planning. MicroPlanner turns your goals into a perfectly balanced weekly
               schedule in 30 seconds using AI.
             </p>
@@ -108,14 +108,14 @@ export default function HomePage() {
                 Start Planning for Free
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="w-full sm:w-auto px-8 py-4 bg-gray-900 border border-gray-800 text-white text-lg font-semibold rounded-xl hover:border-gray-700 transition-all flex items-center justify-center gap-3">
+              <button className="w-full sm:w-auto px-8 py-4 bg-dark-bg-secondary border border-dark-border-primary text-white text-lg font-semibold rounded-xl hover:border-dark-border-secondary transition-all flex items-center justify-center gap-3">
                 <PlayCircle className="w-5 h-5" />
                 Watch Demo
               </button>
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-gray-500 animate-fade-in" style={{ animationDelay: '300ms' }}>
+            <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-dark-text-tertiary animate-fade-in" style={{ animationDelay: '300ms' }}>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-400" />
                 <span>Free forever plan</span>
@@ -138,8 +138,8 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-gradient-brand opacity-20 blur-3xl" />
 
               {/* Mock dashboard screenshot */}
-              <div className="relative bg-gray-900 rounded-3xl border border-gray-800 overflow-hidden shadow-2xl">
-                <div className="bg-gray-800 px-6 py-4 border-b border-gray-700 flex items-center gap-2">
+              <div className="relative bg-dark-bg-secondary rounded-3xl border border-dark-border-primary overflow-hidden shadow-2xl">
+                <div className="bg-dark-bg-tertiary px-6 py-4 border-b border-dark-border-secondary flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-red-500" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
                   <div className="w-3 h-3 rounded-full bg-green-500" />
@@ -147,7 +147,7 @@ export default function HomePage() {
                 <div className="p-8">
                   <div className="grid grid-cols-7 gap-2 mb-4">
                     {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day) => (
-                      <div key={day} className="text-center text-xs text-gray-500 font-semibold">
+                      <div key={day} className="text-center text-xs text-dark-text-tertiary font-semibold">
                         {day}
                       </div>
                     ))}
@@ -213,25 +213,25 @@ export default function HomePage() {
       </section>
 
       {/* Social Proof */}
-      <section className="py-12 px-6 border-y border-gray-800/50 bg-gray-900/30">
+      <section className="py-12 px-6 border-y border-dark-border-primary/50 bg-dark-bg-secondary/30">
         <div className="max-w-7xl mx-auto">
-          <p className="text-center text-sm text-gray-500 mb-8">Trusted by productivity enthusiasts worldwide</p>
+          <p className="text-center text-sm text-dark-text-tertiary mb-8">Trusted by productivity enthusiasts worldwide</p>
           <div className="flex flex-wrap items-center justify-center gap-12 opacity-50">
-            <div className="text-2xl font-bold text-gray-600">1,247+ Users</div>
-            <div className="text-2xl font-bold text-gray-600">18,392 Plans Generated</div>
-            <div className="text-2xl font-bold text-gray-600">4.9★ Rating</div>
+            <div className="text-2xl font-bold text-dark-text-tertiary">1,247+ Users</div>
+            <div className="text-2xl font-bold text-dark-text-tertiary">18,392 Plans Generated</div>
+            <div className="text-2xl font-bold text-dark-text-tertiary">4.9★ Rating</div>
           </div>
         </div>
       </section>
 
       {/* Problem Section */}
-      <section className="py-24 px-6 bg-gray-950">
+      <section className="py-24 px-6 bg-dark-bg-primary">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Planning shouldn&apos;t take <span className="bg-gradient-brand bg-clip-text text-transparent">hours</span>
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
               Most people spend 2+ hours every week playing calendar Tetris. Your time is too valuable for that.
             </p>
           </div>
@@ -243,7 +243,7 @@ export default function HomePage() {
                 <XCircle className="w-6 h-6 text-red-400" />
               </div>
               <h3 className="text-xl font-bold mb-3 text-red-400">The Old Way</h3>
-              <ul className="space-y-3 text-gray-400">
+              <ul className="space-y-3 text-dark-text-secondary">
                 <li className="flex items-start gap-2">
                   <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                   <span>Spend hours manually planning your week</span>
@@ -269,7 +269,7 @@ export default function HomePage() {
                 <CheckCircle className="w-6 h-6 text-green-400" />
               </div>
               <h3 className="text-xl font-bold mb-3 text-green-400">The MicroPlanner Way</h3>
-              <ul className="space-y-3 text-gray-400">
+              <ul className="space-y-3 text-dark-text-secondary">
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                   <span>Perfect week generated in 30 seconds</span>
@@ -293,14 +293,14 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-24 px-6 bg-gray-900/50">
+      <section id="how-it-works" className="py-24 px-6 bg-dark-bg-secondary/50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               From goals to <span className="bg-gradient-brand bg-clip-text text-transparent">schedule</span> in 3
               steps
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
               It&apos;s so simple, you&apos;ll wonder why you didn&apos;t start sooner
             </p>
           </div>
@@ -311,16 +311,16 @@ export default function HomePage() {
               <div className="absolute top-0 left-0 w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center font-bold text-white text-xl shadow-glow">
                 1
               </div>
-              <div className="pt-16 bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-primary-500/50 transition-all">
+              <div className="pt-16 bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8 hover:border-primary-500/50 transition-all">
                 <div className="w-16 h-16 bg-primary-500/20 rounded-2xl flex items-center justify-center mb-6">
                   <Target className="w-8 h-8 text-primary-400" />
                 </div>
                 <h3 className="text-2xl font-bold mb-3">Add Your Goals</h3>
-                <p className="text-gray-400 mb-4">
+                <p className="text-dark-text-secondary mb-4">
                   Tell us what you want to achieve. &quot;Go to gym 3x/week&quot;, &quot;Read daily&quot;, &quot;Work on side project&quot;.
                   That&apos;s it.
                 </p>
-                <div className="bg-gray-800/50 rounded-lg p-3 text-sm text-gray-500">Takes ~1 minute</div>
+                <div className="bg-dark-bg-tertiary/50 rounded-lg p-3 text-sm text-dark-text-tertiary">Takes ~1 minute</div>
               </div>
             </div>
 
@@ -329,16 +329,16 @@ export default function HomePage() {
               <div className="absolute top-0 left-0 w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center font-bold text-white text-xl shadow-glow">
                 2
               </div>
-              <div className="pt-16 bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-primary-500/50 transition-all">
+              <div className="pt-16 bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8 hover:border-primary-500/50 transition-all">
                 <div className="w-16 h-16 bg-primary-500/20 rounded-2xl flex items-center justify-center mb-6">
                   <Sparkles className="w-8 h-8 text-primary-400" />
                 </div>
                 <h3 className="text-2xl font-bold mb-3">AI Generates Your Plan</h3>
-                <p className="text-gray-400 mb-4">
+                <p className="text-dark-text-secondary mb-4">
                   Our AI analyzes your calendar, energy patterns, and preferences to create a perfectly
                   balanced week.
                 </p>
-                <div className="bg-gray-800/50 rounded-lg p-3 text-sm text-gray-500">Takes ~30 seconds</div>
+                <div className="bg-dark-bg-tertiary/50 rounded-lg p-3 text-sm text-dark-text-tertiary">Takes ~30 seconds</div>
               </div>
             </div>
 
@@ -347,16 +347,16 @@ export default function HomePage() {
               <div className="absolute top-0 left-0 w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center font-bold text-white text-xl shadow-glow">
                 3
               </div>
-              <div className="pt-16 bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-primary-500/50 transition-all">
+              <div className="pt-16 bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8 hover:border-primary-500/50 transition-all">
                 <div className="w-16 h-16 bg-primary-500/20 rounded-2xl flex items-center justify-center mb-6">
                   <CheckCircle className="w-8 h-8 text-primary-400" />
                 </div>
                 <h3 className="text-2xl font-bold mb-3">Execute & Achieve</h3>
-                <p className="text-gray-400 mb-4">
+                <p className="text-dark-text-secondary mb-4">
                   Review, sync to your calendar with one click, and follow your plan. Watch your goals become
                   reality.
                 </p>
-                <div className="bg-gray-800/50 rounded-lg p-3 text-sm text-gray-500">40% more completion</div>
+                <div className="bg-dark-bg-tertiary/50 rounded-lg p-3 text-sm text-dark-text-tertiary">40% more completion</div>
               </div>
             </div>
           </div>
@@ -364,85 +364,85 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 px-6 bg-gray-950">
+      <section id="features" className="py-24 px-6 bg-dark-bg-primary">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Everything you need to <span className="bg-gradient-brand bg-clip-text text-transparent">stay on
                 track</span>
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
               Powerful features that make planning effortless
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
               <div className="w-14 h-14 bg-gradient-brand rounded-xl flex items-center justify-center mb-6 group-hover:shadow-glow transition-all">
                 <Brain className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3">AI-Powered Intelligence</h3>
-              <p className="text-gray-400">
+              <p className="text-dark-text-secondary">
                 Smart scheduling that learns your preferences, energy patterns, and constraints to create
                 optimal plans.
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
               <div className="w-14 h-14 bg-gradient-brand rounded-xl flex items-center justify-center mb-6 group-hover:shadow-glow transition-all">
                 <CalendarCheck className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3">Calendar Sync</h3>
-              <p className="text-gray-400">
+              <p className="text-dark-text-secondary">
                 Seamlessly integrates with Google Calendar. Apply your plan with one click, no manual entry
                 needed.
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
               <div className="w-14 h-14 bg-gradient-brand rounded-xl flex items-center justify-center mb-6 group-hover:shadow-glow transition-all">
                 <TrendingUp className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3">Smart Insights</h3>
-              <p className="text-gray-400">
+              <p className="text-dark-text-secondary">
                 Track your progress, see completion rates, and get AI-powered suggestions to improve your
                 planning.
               </p>
             </div>
 
             {/* Feature 4 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
               <div className="w-14 h-14 bg-gradient-brand rounded-xl flex items-center justify-center mb-6 group-hover:shadow-glow transition-all">
                 <Zap className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3">Lightning Fast</h3>
-              <p className="text-gray-400">
+              <p className="text-dark-text-secondary">
                 Generate a complete weekly plan in under 30 seconds. No more hours wasted on planning.
               </p>
             </div>
 
             {/* Feature 5 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
               <div className="w-14 h-14 bg-gradient-brand rounded-xl flex items-center justify-center mb-6 group-hover:shadow-glow transition-all">
                 <ShieldCheck className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3">Privacy First</h3>
-              <p className="text-gray-400">
+              <p className="text-dark-text-secondary">
                 Your data is encrypted and never used to train public models. GDPR compliant with data export
                 anytime.
               </p>
             </div>
 
             {/* Feature 6 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8 hover:border-primary-500/50 transition-all group">
               <div className="w-14 h-14 bg-gradient-brand rounded-xl flex items-center justify-center mb-6 group-hover:shadow-glow transition-all">
                 <RefreshCw className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3">Flexible & Adaptive</h3>
-              <p className="text-gray-400">
+              <p className="text-dark-text-secondary">
                 Not happy with the plan? Regenerate instantly with different preferences or manually adjust any
                 task.
               </p>
@@ -481,27 +481,27 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-24 px-6 bg-gray-900/50">
+      <section id="testimonials" className="py-24 px-6 bg-dark-bg-secondary/50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Loved by <span className="bg-gradient-brand bg-clip-text text-transparent">productivity
                 enthusiasts</span>
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
               See what our users are saying
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Testimonial 1 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8">
               <div className="flex items-center gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-6">
+              <p className="text-dark-text-secondary mb-6">
                 &quot;I went from spending 2 hours every Sunday planning my week to just 2 minutes. MicroPlanner is a
                 game-changer for my productivity.&quot;
               </p>
@@ -511,19 +511,19 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="font-semibold">Sarah Chen</div>
-                  <div className="text-sm text-gray-500">Product Manager @ Tech Co</div>
+                  <div className="text-sm text-dark-text-tertiary">Product Manager @ Tech Co</div>
                 </div>
               </div>
             </div>
 
             {/* Testimonial 2 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8">
               <div className="flex items-center gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-6">
+              <p className="text-dark-text-secondary mb-6">
                 &quot;Finally, a tool that actually helps me achieve my goals. The AI scheduling is incredibly smart
                 and respects my energy levels.&quot;
               </p>
@@ -533,19 +533,19 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="font-semibold">Marcus Rodriguez</div>
-                  <div className="text-sm text-gray-500">Freelance Developer</div>
+                  <div className="text-sm text-dark-text-tertiary">Freelance Developer</div>
                 </div>
               </div>
             </div>
 
             {/* Testimonial 3 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-2xl p-8">
               <div className="flex items-center gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-6">
+              <p className="text-dark-text-secondary mb-6">
                 &quot;Best investment I&apos;ve made in my productivity. My gym consistency went from 40% to 95% in one
                 month. Highly recommend!&quot;
               </p>
@@ -555,7 +555,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="font-semibold">Emily Park</div>
-                  <div className="text-sm text-gray-500">Entrepreneur</div>
+                  <div className="text-sm text-dark-text-tertiary">Entrepreneur</div>
                 </div>
               </div>
             </div>
@@ -564,49 +564,49 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 px-6 bg-gray-950">
+      <section id="pricing" className="py-24 px-6 bg-dark-bg-primary">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Simple, <span className="bg-gradient-brand bg-clip-text text-transparent">transparent</span> pricing
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-xl text-dark-text-secondary max-w-2xl mx-auto">
               Start free, upgrade when you need more
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Free Tier */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-8">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-3xl p-8">
               <div className="mb-8">
                 <h3 className="text-2xl font-bold mb-2">Free</h3>
                 <div className="flex items-baseline gap-2 mb-4">
                   <span className="text-5xl font-bold">$0</span>
-                  <span className="text-gray-500">/month</span>
+                  <span className="text-dark-text-tertiary">/month</span>
                 </div>
-                <p className="text-gray-400">Perfect to get started</p>
+                <p className="text-dark-text-secondary">Perfect to get started</p>
               </div>
 
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">2 active goals</span>
+                  <span className="text-dark-text-secondary">2 active goals</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">5 AI plans per week</span>
+                  <span className="text-dark-text-secondary">5 AI plans per week</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">Basic AI scheduler</span>
+                  <span className="text-dark-text-secondary">Basic AI scheduler</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">Manual calendar sync</span>
+                  <span className="text-dark-text-secondary">Manual calendar sync</span>
                 </li>
               </ul>
 
-              <button className="w-full px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl transition-all">
+              <button className="w-full px-6 py-3 bg-dark-bg-tertiary hover:bg-dark-bg-hover text-white font-semibold rounded-xl transition-all">
                 Start Free
               </button>
             </div>
@@ -616,44 +616,44 @@ export default function HomePage() {
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-brand text-white text-sm font-semibold rounded-full">
                 MOST POPULAR
               </div>
-              <div className="bg-gray-900 rounded-3xl p-8 h-full">
+              <div className="bg-dark-bg-secondary rounded-3xl p-8 h-full">
                 <div className="mb-8">
                   <h3 className="text-2xl font-bold mb-2">Pro</h3>
                   <div className="flex items-baseline gap-2 mb-4">
                     <span className="text-5xl font-bold">$15</span>
-                    <span className="text-gray-500">/month</span>
+                    <span className="text-dark-text-tertiary">/month</span>
                   </div>
-                  <p className="text-gray-400">For power users</p>
+                  <p className="text-dark-text-secondary">For power users</p>
                 </div>
 
                 <ul className="space-y-4 mb-8">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Unlimited goals</span>
+                    <span className="text-dark-text-secondary">Unlimited goals</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Unlimited AI plans</span>
+                    <span className="text-dark-text-secondary">Unlimited AI plans</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Claude Sonnet 3.5 AI</span>
+                    <span className="text-dark-text-secondary">Claude Sonnet 3.5 AI</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Auto calendar sync</span>
+                    <span className="text-dark-text-secondary">Auto calendar sync</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">AI learns your patterns</span>
+                    <span className="text-dark-text-secondary">AI learns your patterns</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Weekly insights</span>
+                    <span className="text-dark-text-secondary">Weekly insights</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">Priority support</span>
+                    <span className="text-dark-text-secondary">Priority support</span>
                   </li>
                 </ul>
 
@@ -664,122 +664,122 @@ export default function HomePage() {
             </div>
 
             {/* Premium Tier */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-8">
+            <div className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-3xl p-8">
               <div className="mb-8">
                 <h3 className="text-2xl font-bold mb-2">Premium</h3>
                 <div className="flex items-baseline gap-2 mb-4">
                   <span className="text-5xl font-bold">$29</span>
-                  <span className="text-gray-500">/month</span>
+                  <span className="text-dark-text-tertiary">/month</span>
                 </div>
-                <p className="text-gray-400">For teams & professionals</p>
+                <p className="text-dark-text-secondary">For teams & professionals</p>
               </div>
 
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">Everything in Pro</span>
+                  <span className="text-dark-text-secondary">Everything in Pro</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">Team workspace (5 members)</span>
+                  <span className="text-dark-text-secondary">Team workspace (5 members)</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">Custom AI personas</span>
+                  <span className="text-dark-text-secondary">Custom AI personas</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">API access</span>
+                  <span className="text-dark-text-secondary">API access</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">Dedicated support</span>
+                  <span className="text-dark-text-secondary">Dedicated support</span>
                 </li>
               </ul>
 
-              <button className="w-full px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl transition-all">
+              <button className="w-full px-6 py-3 bg-dark-bg-tertiary hover:bg-dark-bg-hover text-white font-semibold rounded-xl transition-all">
                 Start 14-Day Trial
               </button>
             </div>
           </div>
 
-          <p className="text-center text-gray-500 mt-8">
+          <p className="text-center text-dark-text-tertiary mt-8">
             All plans include 7-day money-back guarantee • Cancel anytime
           </p>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 px-6 bg-gray-900/30">
+      <section className="py-24 px-6 bg-dark-bg-secondary/30">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">Frequently asked questions</h2>
-            <p className="text-xl text-gray-400">Everything you need to know about MicroPlanner</p>
+            <p className="text-xl text-dark-text-secondary">Everything you need to know about MicroPlanner</p>
           </div>
 
           <div className="space-y-4">
             {/* FAQ Item 1 */}
-            <details className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 cursor-pointer group hover:border-gray-700">
+            <details className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-lg p-6 cursor-pointer group hover:border-dark-border-secondary">
               <summary className="font-semibold text-lg flex justify-between items-center">
                 How does the AI actually work?
-                <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                <ChevronDown className="w-5 h-5 text-dark-text-tertiary group-open:rotate-180 transition-transform" />
               </summary>
-              <p className="mt-4 text-gray-400">
+              <p className="mt-4 text-dark-text-secondary">
                 MicroPlanner uses advanced language models (GPT-4 and Claude) combined with scheduling algorithms to analyze your goals, calendar, energy patterns, and preferences. It then generates an optimized weekly schedule that balances all your commitments while respecting your constraints.
               </p>
             </details>
 
             {/* FAQ Item 2 */}
-            <details className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 cursor-pointer group hover:border-gray-700">
+            <details className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-lg p-6 cursor-pointer group hover:border-dark-border-secondary">
               <summary className="font-semibold text-lg flex justify-between items-center">
                 Can I edit the AI-generated plans?
-                <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                <ChevronDown className="w-5 h-5 text-dark-text-tertiary group-open:rotate-180 transition-transform" />
               </summary>
-              <p className="mt-4 text-gray-400">
+              <p className="mt-4 text-dark-text-secondary">
                 Absolutely! You have full control. You can drag tasks to different times, delete tasks, add manual tasks, or regenerate the entire plan. The AI is there to assist you, not replace your judgment.
               </p>
             </details>
 
             {/* FAQ Item 3 */}
-            <details className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 cursor-pointer group hover:border-gray-700">
+            <details className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-lg p-6 cursor-pointer group hover:border-dark-border-secondary">
               <summary className="font-semibold text-lg flex justify-between items-center">
                 Is my calendar data secure?
-                <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                <ChevronDown className="w-5 h-5 text-dark-text-tertiary group-open:rotate-180 transition-transform" />
               </summary>
-              <p className="mt-4 text-gray-400">
+              <p className="mt-4 text-dark-text-secondary">
                 Yes. We take security seriously. All calendar tokens are encrypted at rest, we&apos;re GDPR compliant, and your data is never used to train public AI models. You can export or delete your data at any time.
               </p>
             </details>
 
             {/* FAQ Item 4 */}
-            <details className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 cursor-pointer group hover:border-gray-700">
+            <details className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-lg p-6 cursor-pointer group hover:border-dark-border-secondary">
               <summary className="font-semibold text-lg flex justify-between items-center">
                 Which calendar apps do you support?
-                <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                <ChevronDown className="w-5 h-5 text-dark-text-tertiary group-open:rotate-180 transition-transform" />
               </summary>
-              <p className="mt-4 text-gray-400">
+              <p className="mt-4 text-dark-text-secondary">
                 Currently we support Google Calendar with bi-directional sync. Apple Calendar and Outlook support are coming in the next few months. You can also export plans as ICS files for any calendar app.
               </p>
             </details>
 
             {/* FAQ Item 5 */}
-            <details className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 cursor-pointer group hover:border-gray-700">
+            <details className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-lg p-6 cursor-pointer group hover:border-dark-border-secondary">
               <summary className="font-semibold text-lg flex justify-between items-center">
                 Can I cancel my subscription anytime?
-                <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                <ChevronDown className="w-5 h-5 text-dark-text-tertiary group-open:rotate-180 transition-transform" />
               </summary>
-              <p className="mt-4 text-gray-400">
+              <p className="mt-4 text-dark-text-secondary">
                 Yes. You can cancel your subscription with one click from your account settings. There are no cancellation fees, and you&apos;ll continue to have access until the end of your billing period.
               </p>
             </details>
 
             {/* FAQ Item 6 */}
-            <details className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 cursor-pointer group hover:border-gray-700">
+            <details className="bg-dark-bg-secondary/50 border border-dark-border-primary rounded-lg p-6 cursor-pointer group hover:border-dark-border-secondary">
               <summary className="font-semibold text-lg flex justify-between items-center">
                 What if the AI schedules something at a bad time?
-                <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                <ChevronDown className="w-5 h-5 text-dark-text-tertiary group-open:rotate-180 transition-transform" />
               </summary>
-              <p className="mt-4 text-gray-400">
+              <p className="mt-4 text-dark-text-secondary">
                 The AI learns from your feedback! If you reject or edit plans, it remembers your preferences for future schedules. You can also set &quot;blocked times&quot; to prevent scheduling during specific periods.
               </p>
             </details>
@@ -812,7 +812,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-950 border-t border-gray-800 py-12 px-6">
+      <footer className="bg-dark-bg-primary border-t border-dark-border-primary py-12 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             {/* Brand */}
@@ -823,7 +823,7 @@ export default function HomePage() {
                 </div>
                 <span className="text-xl font-bold">MicroPlanner</span>
               </div>
-              <p className="text-gray-400 text-sm">
+              <p className="text-dark-text-secondary text-sm">
                 AI-powered weekly planning that actually works.
               </p>
             </div>
@@ -831,7 +831,7 @@ export default function HomePage() {
             {/* Product */}
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <ul className="space-y-2 text-sm text-dark-text-secondary">
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Changelog</a></li>
@@ -842,7 +842,7 @@ export default function HomePage() {
             {/* Company */}
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <ul className="space-y-2 text-sm text-dark-text-secondary">
                 <li><a href="#" className="hover:text-white transition-colors">About</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
@@ -853,7 +853,7 @@ export default function HomePage() {
             {/* Legal */}
             <div>
               <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <ul className="space-y-2 text-sm text-dark-text-secondary">
                 <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
@@ -862,18 +862,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-500">
+          <div className="pt-8 border-t border-dark-border-primary flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-dark-text-tertiary">
               © 2025 MicroPlanner. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="#" className="text-dark-text-secondary hover:text-white transition-colors">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="#" className="text-dark-text-secondary hover:text-white transition-colors">
                 <Github className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="#" className="text-dark-text-secondary hover:text-white transition-colors">
                 <Linkedin className="w-5 h-5" />
               </a>
             </div>
