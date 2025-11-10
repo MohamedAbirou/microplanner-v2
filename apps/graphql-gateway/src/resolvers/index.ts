@@ -2,6 +2,7 @@ import { goalResolvers } from './goal.resolver';
 import { taskResolvers } from './task.resolver';
 import { projectResolvers } from './project.resolver';
 import { productivityResolvers } from './productivity.resolver';
+import { userResolvers } from './user.resolver';
 
 /**
  * Merge all resolvers
@@ -12,6 +13,7 @@ export const resolvers = {
     ...taskResolvers.Query,
     ...projectResolvers.Query,
     ...productivityResolvers.Query,
+    ...userResolvers.Query,
   },
 
   Mutation: {
@@ -19,6 +21,7 @@ export const resolvers = {
     ...taskResolvers.Mutation,
     ...projectResolvers.Mutation,
     ...productivityResolvers.Mutation,
+    ...userResolvers.Mutation,
   },
 
   Subscription: {

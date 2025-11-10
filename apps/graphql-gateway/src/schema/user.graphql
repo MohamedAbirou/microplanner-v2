@@ -1,0 +1,123 @@
+# User Settings and Profile Management
+
+type UserSettings {
+  id: ID!
+  userId: ID!
+
+  # Profile
+  firstName: String
+  lastName: String
+
+  # Preferences
+  theme: Theme!
+  energyPattern: EnergyPattern
+
+  # Notifications
+  notifications: NotificationSettings!
+
+  # Onboarding
+  onboardingCompleted: Boolean!
+  onboardingCompletedAt: DateTime
+
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type NotificationSettings {
+  email: Boolean!
+  weeklySummary: Boolean!
+  planReminders: Boolean!
+  taskReminders: Boolean!
+  goalMilestones: Boolean!
+  productivityInsights: Boolean!
+}
+
+# Enums
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum EnergyPattern {
+  MORNING
+  EVENING
+  FLEXIBLE
+}
+
+# Queries
+extend type Query {
+  # Get user settings
+  userSettings: UserSettings
+
+  # Check onboarding status
+  onboardingStatus: OnboardingStatus!
+}
+
+type OnboardingStatus {
+  completed: Boolean!
+  completedAt: DateTime
+  currentStep: Int
+}
+
+# Mutations
+extend type Mutation {
+  # Update user profile
+  updateUserProfile(input: UpdateUserProfileInput!): User!
+
+  # Update user settings
+  updateUserSettings(input: UpdateUserSettingsInput!): UserSettings!
+
+  # Complete onboarding
+  completeOnboarding(input: CompleteOnboardingInput!): OnboardingResult!
+}
+
+# Complete onboarding with all data at once
+input CompleteOnboardingInput {
+  # Profile
+  firstName: String
+  lastName: String
+
+  # Work preferences
+  timezone: String!
+  workDays: [Int!]!
+  workStartTime: String!
+  workEndTime: String!
+  maxMeetingsPerDay: Int
+  energyPattern: EnergyPattern
+
+  # Initial goals
+  goals: [CreateGoalInput!]
+}
+
+type OnboardingResult {
+  success: Boolean!
+  user: User!
+  settings: UserSettings!
+  goals: [Goal!]!
+}
+
+# Update user profile input
+input UpdateUserProfileInput {
+  firstName: String
+  lastName: String
+  name: String
+  avatar: String
+  timezone: String
+}
+
+# Update user settings input
+input UpdateUserSettingsInput {
+  theme: Theme
+  energyPattern: EnergyPattern
+  notifications: NotificationSettingsInput
+}
+
+input NotificationSettingsInput {
+  email: Boolean
+  weeklySummary: Boolean
+  planReminders: Boolean
+  taskReminders: Boolean
+  goalMilestones: Boolean
+  productivityInsights: Boolean
+}

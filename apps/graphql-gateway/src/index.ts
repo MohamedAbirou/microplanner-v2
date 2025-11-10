@@ -5,7 +5,7 @@ import Redis from 'ioredis';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { typeDefs } from './schema/schema';
 import { resolvers as allResolvers } from './resolvers';
-import { GoalsAPI, TasksAPI, ProductivityAPI, ProjectsAPI } from './datasources/rest-api';
+import { UserAPI, GoalsAPI, TasksAPI, ProductivityAPI, ProjectsAPI } from './datasources/rest-api';
 import {
   createTaskLoader,
   createGoalLoader,
@@ -129,6 +129,7 @@ async function startServer() {
       const userId = user?.userId || user?.sub || '';
 
       // Create data sources
+      const userAPI = new UserAPI(token);
       const goalsAPI = new GoalsAPI(token);
       const tasksAPI = new TasksAPI(token);
       const productivityAPI = new ProductivityAPI(token);
@@ -146,6 +147,7 @@ async function startServer() {
         redis,
         pubsub,
         dataSources: {
+          userAPI,
           goalsAPI,
           tasksAPI,
           productivityAPI,
