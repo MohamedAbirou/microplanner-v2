@@ -6,13 +6,13 @@ import type { Task, SyncLog } from '@microplanner/database';
 import { SyncStatus } from '@microplanner/database';
 import { SyncTasksDto, ConflictResolution } from './dto/sync-tasks.dto';
 
-interface ConflictInfo {
+export interface ConflictInfo {
   task: Task;
   reason: string;
   suggestedTime?: { startTime: string; endTime: string };
 }
 
-interface SyncResult {
+export interface SyncResult {
   success: number;
   failed: number;
   skipped: number;

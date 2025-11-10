@@ -15,7 +15,7 @@ import {
 } from './types/scheduling.types';
 
 // Internal time slot type for getAvailableSlots return
-interface TimeSlot {
+export interface TimeSlot {
   start: Date;
   end: Date;
   available: boolean;
