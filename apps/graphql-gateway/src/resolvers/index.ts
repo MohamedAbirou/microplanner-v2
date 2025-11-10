@@ -3,6 +3,7 @@ import { taskResolvers } from './task.resolver';
 import { projectResolvers } from './project.resolver';
 import { productivityResolvers } from './productivity.resolver';
 import { userResolvers } from './user.resolver';
+import { waitlistResolvers } from './waitlist.resolver';
 
 /**
  * Merge all resolvers
@@ -14,6 +15,7 @@ export const resolvers = {
     ...projectResolvers.Query,
     ...productivityResolvers.Query,
     ...userResolvers.Query,
+    ...waitlistResolvers.Query,
   },
 
   Mutation: {
@@ -22,6 +24,7 @@ export const resolvers = {
     ...projectResolvers.Mutation,
     ...productivityResolvers.Mutation,
     ...userResolvers.Mutation,
+    ...waitlistResolvers.Mutation,
   },
 
   Subscription: {
