@@ -10,8 +10,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Shadcn/ui CSS variable colors
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+
         // Brand Colors
         primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
           50: '#EFF6FF',
           100: '#DBEAFE',
           200: '#BFDBFE',
@@ -24,6 +33,8 @@ const config: Config = {
           900: '#1E3A8A',
         },
         accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
           50: '#FAF5FF',
           100: '#F3E8FF',
           200: '#E9D5FF',
@@ -34,6 +45,14 @@ const config: Config = {
           700: '#7C3AED', // Primary Purple
           800: '#6B21A8',
           900: '#581C87',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
         },
         // Semantic Colors
         success: {
