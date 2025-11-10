@@ -2,6 +2,64 @@ import axios, { AxiosInstance } from 'axios';
 
 const API_BASE_URL = process.env.API_GATEWAY_URL || 'http://localhost:3000';
 
+// ==================== USER API ====================
+export class UserAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = axios.create({
+      baseURL: `${API_BASE_URL}/user`,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  }
+
+  // Get user profile
+  async getUser(userId: string) {
+    const { data } = await this.client.get(`/${userId}`);
+    return data;
+  }
+
+  // Update user profile
+  async updateUserProfile(userId: string, input: any) {
+    const { data} = await this.client.put(`/${userId}/profile`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  // Get user settings
+  async getUserSettings(userId: string) {
+    const { data } = await this.client.get(`/${userId}/settings`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  // Update user settings
+  async updateUserSettings(userId: string, input: any) {
+    const { data } = await this.client.put(`/${userId}/settings`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  // Get onboarding status
+  async getOnboardingStatus(userId: string) {
+    const { data } = await this.client.get(`/${userId}/onboarding/status`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  // Complete onboarding
+  async completeOnboarding(userId: string, input: any) {
+    const { data } = await this.client.post(`/${userId}/onboarding/complete`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+}
+
 export class GoalsAPI {
   private client: AxiosInstance;
 

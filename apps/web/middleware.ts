@@ -22,26 +22,38 @@ const isOnboardingRoute = createRouteMatcher(['/onboarding(.*)']);
 // Define dashboard routes
 const isDashboardRoute = createRouteMatcher(['/dashboard(.*)']);
 
-// Check if user has completed onboarding
-async function checkOnboardingStatus(userId: string): Promise<boolean> {
+// Check if user has completed onboarding via GraphQL
+async function checkOnboardingStatus(userId: string, token: string | null): Promise<boolean> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    const graphqlUrl = process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:4000/graphql';
 
-    const response = await fetch(`${apiUrl}/user/onboarding/status?userId=${userId}`, {
-      method: 'GET',
+    const query = `
+      query GetOnboardingStatus {
+        onboardingStatus {
+          completed
+        }
+      }
+    `;
+
+    const response = await fetch(graphqlUrl, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : '',
       },
+      body: JSON.stringify({ query }),
       // Add timeout to prevent hanging
       signal: AbortSignal.timeout(2000),
     });
 
     if (response.ok) {
-      const data = await response.json();
-      return data.completed === true;
+      const result = await response.json();
+      if (result.data?.onboardingStatus) {
+        return result.data.onboardingStatus.completed === true;
+      }
     }
   } catch (error) {
-    console.warn('Unable to check onboarding status (endpoint may not exist yet):', error);
+    console.warn('Unable to check onboarding status (GraphQL Gateway may not be ready):', error);
   }
 
   // Default to assuming onboarding is complete if we can't check
@@ -50,7 +62,7 @@ async function checkOnboardingStatus(userId: string): Promise<boolean> {
 }
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, redirectToSignIn } = await auth();
+  const { userId, redirectToSignIn, getToken } = await auth();
 
   // Allow public routes
   if (isPublicRoute(req)) {
@@ -62,8 +74,11 @@ export default clerkMiddleware(async (auth, req) => {
     return redirectToSignIn();
   }
 
+  // Get Clerk token for GraphQL authentication
+  const token = await getToken();
+
   // Check if user has completed onboarding
-  const hasCompletedOnboarding = await checkOnboardingStatus(userId);
+  const hasCompletedOnboarding = await checkOnboardingStatus(userId, token);
 
   // Redirect to onboarding if not completed and trying to access dashboard
   if (!hasCompletedOnboarding && isDashboardRoute(req)) {
