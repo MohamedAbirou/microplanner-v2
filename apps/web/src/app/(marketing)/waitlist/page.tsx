@@ -4,26 +4,75 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, CheckCircle2, Sparkles, Users, Zap, TrendingUp } from 'lucide-react';
+import { useMutation, useQuery } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  JOIN_WAITLIST,
+  type JoinWaitlistData,
+  type JoinWaitlistVariables
+} from '@/lib/graphql/mutations/waitlist';
+import {
+  GET_WAITLIST_STATS,
+  type WaitlistStatsData
+} from '@/lib/graphql/queries/waitlist';
 
 export default function WaitlistPage() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [position, setPosition] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // GraphQL mutations and queries
+  const [joinWaitlist, { loading }] = useMutation<JoinWaitlistData, JoinWaitlistVariables>(
+    JOIN_WAITLIST
+  );
+
+  const { data: statsData } = useQuery<WaitlistStatsData>(GET_WAITLIST_STATS, {
+    pollInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Map role to useCase enum
+  const mapRoleToUseCase = (role: string): 'PERSONAL' | 'TEAM' | 'BUSINESS' | 'OTHER' => {
+    const mapping: Record<string, 'PERSONAL' | 'TEAM' | 'BUSINESS' | 'OTHER'> = {
+      'student': 'PERSONAL',
+      'professional': 'PERSONAL',
+      'entrepreneur': 'BUSINESS',
+      'team-lead': 'TEAM',
+      'developer': 'PERSONAL',
+      'other': 'OTHER',
+    };
+    return mapping[role] || 'OTHER';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setErrorMessage('');
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const { data } = await joinWaitlist({
+        variables: {
+          input: {
+            email,
+            name,
+            useCase: role ? mapRoleToUseCase(role) : undefined,
+          },
+        },
+      });
 
-    setSubmitted(true);
-    setLoading(false);
+      if (data?.joinWaitlist.success) {
+        setPosition(data.joinWaitlist.position);
+        setSubmitted(true);
+      } else {
+        setErrorMessage(data?.joinWaitlist.message || 'Failed to join waitlist. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error joining waitlist:', error);
+      setErrorMessage('An error occurred. Please try again later.');
+    }
   };
 
   if (submitted) {
@@ -42,6 +91,14 @@ export default function WaitlistPage() {
             <p className="mb-8 text-base text-muted-foreground md:text-lg">
               Thanks for joining! We'll keep you updated on our progress and let you know as soon as MicroPlanner launches.
             </p>
+
+            {position && (
+              <div className="mb-6 rounded-xl border border-secondary-700/20 bg-secondary-700/5 p-4">
+                <p className="text-sm text-muted-foreground">
+                  You're <strong className="font-semibold text-foreground">#{position}</strong> on the waitlist!
+                </p>
+              </div>
+            )}
 
             <div className="mb-8 rounded-xl border border-primary-500/20 bg-primary-500/5 p-6">
               <p className="text-sm text-muted-foreground">
@@ -150,6 +207,12 @@ export default function WaitlistPage() {
                       </select>
                     </div>
 
+                    {errorMessage && (
+                      <div className="rounded-lg border border-error-500/20 bg-error-500/5 p-3">
+                        <p className="text-sm text-error-500">{errorMessage}</p>
+                      </div>
+                    )}
+
                     <Button
                       type="submit"
                       className="w-full"
@@ -235,7 +298,9 @@ export default function WaitlistPage() {
                   <div className="mt-6 rounded-xl border border-border bg-card p-4">
                     <div className="flex items-center gap-2 text-sm">
                       <Users className="h-4 w-4 text-primary-500" />
-                      <span className="font-semibold">1,234</span>
+                      <span className="font-semibold">
+                        {statsData?.waitlistStats.total.toLocaleString() || '0'}
+                      </span>
                       <span className="text-muted-foreground">people waiting</span>
                     </div>
                   </div>
