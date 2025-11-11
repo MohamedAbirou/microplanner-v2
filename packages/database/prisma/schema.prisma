@@ -9,6 +9,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
   extensions = [pgvector(map: "vector")]
 }
 
@@ -251,9 +252,7 @@ enum SyncStatus {
 
 // ==================== TASK DEPENDENCIES & PROJECTS (Phase 17) ====================
 
-/**
- * Task dependencies (this task depends on another task)
- */
+// Task dependencies (this task depends on another task)
 model TaskDependency {
   id              String   @id @default(cuid())
 
@@ -276,9 +275,7 @@ model TaskDependency {
   @@index([blockingTaskId])
 }
 
-/**
- * Projects (grouping tasks into projects)
- */
+// Projects (grouping tasks into projects)
 model Project {
   id              String   @id @default(cuid())
   userId          String
@@ -825,9 +822,7 @@ model Booking {
 
 // ==================== INTEGRATIONS ====================
 
-/**
- * Third-party integrations (Slack, Zoom, Notion, etc.)
- */
+// Third-party integrations (Slack, Zoom, Notion, etc.)
 model Integration {
   id            String   @id @default(cuid())
   userId        String
@@ -855,9 +850,7 @@ model Integration {
   @@index([isActive])
 }
 
-/**
- * Webhooks for external event notifications
- */
+// Webhooks for external event notifications
 model Webhook {
   id              String   @id @default(cuid())
   userId          String
@@ -883,9 +876,7 @@ model Webhook {
   @@index([isActive])
 }
 
-/**
- * Webhook delivery log
- */
+// Webhook delivery log
 model WebhookDelivery {
   id            String   @id @default(cuid())
   webhookId     String
@@ -913,9 +904,7 @@ model WebhookDelivery {
 
 // ==================== PRODUCTIVITY & WORK-LIFE BALANCE (Phase 18) ====================
 
-/**
- * Work hours configuration
- */
+// Work hours configuration
 model WorkHours {
   id                      String   @id @default(cuid())
   userId                  String   @unique
@@ -938,9 +927,7 @@ model WorkHours {
   @@index([userId])
 }
 
-/**
- * Focus time blocks
- */
+// Focus time blocks
 model FocusTimeBlock {
   id                  String   @id @default(cuid())
   userId              String
@@ -967,9 +954,7 @@ model FocusTimeBlock {
   @@index([isActive])
 }
 
-/**
- * No-meeting days
- */
+// No-meeting days
 model NoMeetingDay {
   id              String   @id @default(cuid())
   userId          String
@@ -986,9 +971,7 @@ model NoMeetingDay {
   @@index([userId])
 }
 
-/**
- * Priority hours
- */
+// Priority hours
 model PriorityHours {
   id                    String   @id @default(cuid())
   userId                String   @unique
@@ -1005,9 +988,7 @@ model PriorityHours {
   @@index([userId])
 }
 
-/**
- * Calendar defense rules
- */
+// Calendar defense rules
 model CalendarDefense {
   id                            String   @id @default(cuid())
   userId                        String   @unique
@@ -1033,9 +1014,7 @@ model CalendarDefense {
   @@index([userId])
 }
 
-/**
- * Smart 1:1 scheduling
- */
+// Smart 1:1 scheduling
 model Smart1on1 {
   id                      String    @id @default(cuid())
   userId                  String
@@ -1062,9 +1041,7 @@ model Smart1on1 {
   @@index([isActive])
 }
 
-/**
- * Travel time entries
- */
+// Travel time entries
 model TravelTime {
   id                String   @id @default(cuid())
   userId            String
@@ -1082,9 +1059,7 @@ model TravelTime {
   @@index([toEventId])
 }
 
-/**
- * Kanban boards
- */
+// Kanban boards
 model KanbanBoard {
   id          String         @id @default(cuid())
   userId      String
@@ -1105,9 +1080,7 @@ model KanbanBoard {
   @@index([projectId])
 }
 
-/**
- * Kanban columns
- */
+// Kanban columns
 model KanbanColumn {
   id       String      @id @default(cuid())
   boardId  String
@@ -1121,9 +1094,7 @@ model KanbanColumn {
   @@index([boardId])
 }
 
-/**
- * Productivity scores (daily)
- */
+// Productivity scores (daily)
 model ProductivityScore {
   id                      String   @id @default(cuid())
   userId                  String
@@ -1151,9 +1122,7 @@ model ProductivityScore {
   @@index([date])
 }
 
-/**
- * Smart notifications
- */
+// Smart notifications
 model SmartNotification {
   id         String   @id @default(cuid())
   userId     String
@@ -1173,9 +1142,7 @@ model SmartNotification {
   @@index([createdAt])
 }
 
-/**
- * Notification preferences
- */
+// Notification preferences
 model NotificationPreferences {
   id                    String   @id @default(cuid())
   userId                String   @unique
@@ -1205,10 +1172,7 @@ model NotificationPreferences {
 // MARKETING & GROWTH
 // ============================================
 
-/**
- * Waitlist for early access signups
- * Stores email signups before launch/during beta
- */
+// Waitlist for early access signups (Stores email signups before launch/during beta)
 model Waitlist {
   id         String   @id @default(cuid())
 

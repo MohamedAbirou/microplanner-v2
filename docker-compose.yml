@@ -51,7 +51,7 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3001
-      DATABASE_URL: postgresql://microplanner:microplanner_dev_password@postgres:5432/microplanner_dev
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
       PLANNING_SERVICE_URL: http://planning-service:8000
     volumes:
@@ -69,33 +69,6 @@ services:
     networks:
       - microplanner-network
     command: pnpm dev
-
-  # Python FastAPI Planning Service
-  planning-service:
-    build:
-      context: .
-      dockerfile: ./apps/planning-service/Dockerfile
-    container_name: microplanner-planning-service
-    restart: unless-stopped
-    ports:
-      - '8000:8000'
-    environment:
-      ENVIRONMENT: development
-      PORT: 8000
-      DATABASE_URL: postgresql://microplanner:microplanner_dev_password@postgres:5432/microplanner_dev
-      REDIS_URL: redis://redis:6379
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key-here}
-    volumes:
-      - ./apps/planning-service:/app
-      - /app/__pycache__
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - microplanner-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   # Next.js Web Application (Development)
   web:
