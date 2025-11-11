@@ -23,5 +23,5 @@ export { PrismaClient } from '@prisma/client';
 // Commented out due to module resolution issues - types are available from @prisma/client
 // export * from './types';
 
-// Export Prisma types from generated client
-export type * from '@prisma/client';
+// Export Prisma types AND enums from generated client
+export * from '@prisma/client';
