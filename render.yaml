@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: microplanner-api
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: |
+      corepack enable
+      corepack prepare pnpm@8.15.4 --activate
+      pnpm install --frozen-lockfile
+      pnpm build --filter=@microplanner/api-gateway
+    startCommand: node apps/api-gateway/dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
