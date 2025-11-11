@@ -149,10 +149,10 @@ export default function FeaturesPage() {
               <div className="rounded-lg border border-border bg-card p-6">
                 <h3 className="mb-2 font-semibold text-lg flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-primary-500" />
-                  Real Results
+                  Built for Results
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Users report 47% more goals completed, 3.2x productivity boost, and 12+ hours saved per week on average.
+                  Designed to help you complete more goals with AI-powered scheduling that adapts to your unique productivity patterns.
                 </p>
               </div>
 
@@ -176,18 +176,11 @@ export default function FeaturesPage() {
             <p className="mb-6 text-muted-foreground">
               Start with our free plan today. No credit card required.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link href="/sign-up">
-                <Button size="lg">
-                  Get Started Free
-                </Button>
-              </Link>
-              <Link href="/waitlist">
-                <Button variant="outline" size="lg">
-                  Join Waitlist
-                </Button>
-              </Link>
-            </div>
+            <Link href="/waitlist">
+              <Button size="lg">
+                Join Waitlist
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

@@ -295,15 +295,10 @@ console.log('Goal created:', goal.id);`}</code>
               Get your API key and start building integrations today.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link href="/sign-up">
+              <Link href="/waitlist">
                 <Button size="lg">
-                  Get API Key
+                  Join Waitlist
                   <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/help">
-                <Button variant="outline" size="lg">
-                  View Full Docs
                 </Button>
               </Link>
             </div>

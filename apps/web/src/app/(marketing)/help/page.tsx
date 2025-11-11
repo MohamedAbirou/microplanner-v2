@@ -1,77 +1,30 @@
 'use client';
 
 import Link from 'next/link';
-import { HelpCircle, Book, MessageSquare, Video, Mail, ChevronRight } from 'lucide-react';
+import { HelpCircle, Book, Rocket, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function HelpPage() {
-  const helpCategories = [
-    {
-      icon: Book,
-      title: 'Getting Started',
-      description: 'Learn the basics and set up your account',
-      articles: [
-        'Creating your first goal',
-        'Setting up calendar sync',
-        'Understanding the AI planner',
-        'Customizing your preferences',
-      ],
-    },
-    {
-      icon: Video,
-      title: 'Video Tutorials',
-      description: 'Step-by-step video guides',
-      articles: [
-        'Initial setup walkthrough',
-        'Using the planning dashboard',
-        'Tracking progress effectively',
-        'Integrating with calendars',
-      ],
-    },
-    {
-      icon: HelpCircle,
-      title: 'Common Questions',
-      description: 'Answers to frequently asked questions',
-      articles: [
-        'How does AI planning work?',
-        'Can I use multiple calendars?',
-        'What data is private?',
-        'How do I export my data?',
-      ],
-    },
-    {
-      icon: MessageSquare,
-      title: 'Contact Support',
-      description: 'Get help from our support team',
-      articles: [
-        'Email support (24-48 hours)',
-        'Chat support (business hours)',
-        'Priority support (Pro/Premium)',
-        'Report a bug or issue',
-      ],
-    },
-  ];
-
   const resources = [
     {
-      title: 'API Documentation',
-      description: 'For developers integrating with MicroPlanner',
-      link: '/api',
+      title: 'Roadmap',
+      description: 'See what\'s being built and when features will launch',
+      link: '/roadmap',
     },
     {
-      title: 'Glossary',
-      description: 'Productivity terms and concepts explained',
-      link: '/glossary',
+      title: 'About',
+      description: 'Learn about MicroPlanner and the solo founder building it',
+      link: '/about',
     },
     {
-      title: 'System Status',
-      description: 'Check if services are running smoothly',
-      link: '/status',
+      title: 'Story',
+      description: 'Read why MicroPlanner is being built',
+      link: '/story',
     },
     {
-      title: 'Changelog',
-      description: 'Latest features and improvements',
-      link: '/changelog',
+      title: 'Blog',
+      description: 'Build-in-public updates (starting after launch)',
+      link: '/blog',
     },
   ];
 
@@ -89,61 +42,44 @@ export default function HelpPage() {
           {/* Header */}
           <div className="mx-auto mb-16 max-w-3xl text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-500/20 bg-primary-500/10 px-4 py-1.5 text-xs font-medium text-primary-500">
-              HELP & SUPPORT
+              PRE-LAUNCH
             </div>
             <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              How Can We <span className="text-gradient">Help?</span>
+              Help & <span className="text-gradient">Support</span>
             </h1>
             <p className="mb-8 text-base text-muted-foreground md:text-lg">
-              Find answers, tutorials, and support to get the most out of MicroPlanner.
+              MicroPlanner is currently in pre-launch. Full help docs, tutorials, and support will be available once Phase 1 launches.
             </p>
+          </div>
 
-            {/* Search Bar */}
-            <div className="mx-auto max-w-xl">
-              <div className="flex">
-                <input
-                  type="text"
-                  placeholder="Search help articles..."
-                  className="flex-1 rounded-l-lg border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                <Button className="rounded-l-none">Search</Button>
+          {/* Pre-Launch Status */}
+          <div className="mx-auto mb-12 max-w-3xl">
+            <div className="rounded-xl border border-border bg-card p-8">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-500/10">
+                  <Rocket className="h-5 w-5 text-primary-500" />
+                </div>
+                <h2 className="text-xl font-bold">We're Still Building!</h2>
               </div>
+              <p className="mb-4 text-muted-foreground">
+                <strong className="text-foreground">Current status:</strong> Phase 0 complete (marketing site & waitlist).
+                Building Phase 1 (core MVP) right now.
+              </p>
+              <p className="mb-4 text-muted-foreground">
+                <strong className="text-foreground">What this means:</strong> Help articles, tutorials, and documentation
+                will be written as features are built. No point documenting features that don't exist yet.
+              </p>
+              <p className="text-muted-foreground">
+                <strong className="text-foreground">When you'll get help:</strong> Once Phase 1 launches (December 2024),
+                you'll get full documentation, video tutorials, and email support.
+              </p>
             </div>
           </div>
 
-          {/* Help Categories */}
-          <div className="mb-20 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {helpCategories.map((category, index) => (
-              <div
-                key={index}
-                className="group rounded-xl border border-border bg-card p-6 transition-all hover:border-primary-500/50 hover:shadow-lg hover:translate-y-[-4px] cursor-pointer"
-              >
-                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary-500/10 group-hover:bg-primary-500/20 transition-colors">
-                  <category.icon className="h-5 w-5 text-primary-500" />
-                </div>
-                <h3 className="mb-1 font-semibold group-hover:text-primary-600 transition-colors">
-                  {category.title}
-                </h3>
-                <p className="mb-4 text-xs text-muted-foreground">
-                  {category.description}
-                </p>
-
-                <ul className="space-y-2">
-                  {category.articles.map((article, i) => (
-                    <li key={i} className="text-xs text-muted-foreground flex items-center gap-2">
-                      <span className="inline-block w-1 h-1 bg-primary-500 rounded-full" />
-                      {article}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {/* Quick Links */}
+          {/* Available Resources */}
           <div className="mx-auto mb-20 max-w-4xl">
             <h2 className="mb-8 text-center text-2xl font-bold">
-              Popular <span className="text-gradient">Resources</span>
+              What's Available <span className="text-gradient">Right Now</span>
             </h2>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -159,7 +95,7 @@ export default function HelpPage() {
                           {resource.description}
                         </p>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary-600 transition-colors mt-0.5" />
+                      <Book className="h-5 w-5 text-muted-foreground group-hover:text-primary-600 transition-colors mt-0.5" />
                     </div>
                   </div>
                 </Link>
@@ -167,37 +103,37 @@ export default function HelpPage() {
             </div>
           </div>
 
-          {/* FAQ */}
+          {/* Real FAQs for Pre-Launch */}
           <div className="mx-auto mb-20 max-w-3xl">
             <h2 className="mb-8 text-center text-2xl font-bold">
-              Frequently Asked <span className="text-gradient">Questions</span>
+              Pre-Launch <span className="text-gradient">Questions</span>
             </h2>
 
             <div className="space-y-4">
               {[
                 {
-                  q: 'How do I reset my password?',
-                  a: 'Click "Forgot password" on the login page. We\'ll send you a link to reset it. Check your spam folder if you don\'t see it.',
+                  q: 'When will MicroPlanner launch?',
+                  a: 'Phase 1 (core MVP) is planned for December 2024. You can follow progress on the roadmap and by joining the waitlist for updates.',
                 },
                 {
-                  q: 'Can I export my data?',
-                  a: 'Yes! Go to Settings > Data & Privacy > Export. You can export all your goals, plans, and analytics data in CSV format.',
+                  q: 'Can I use MicroPlanner now?',
+                  a: 'Not yet! We\'re currently building Phase 1. Join the waitlist to be among the first to get access when it launches.',
                 },
                 {
-                  q: 'How do I cancel my subscription?',
-                  a: 'Go to Settings > Billing > Cancel Subscription. Your cancellation takes effect immediately. You can reactivate anytime.',
+                  q: 'How much will it cost?',
+                  a: 'Planned pricing is $8-12/month (60% cheaper than Motion\'s $34/month). There will also be a free tier to try it out. Check the pricing page for details.',
                 },
                 {
-                  q: 'What if I lose my phone?',
-                  a: 'Your data is safe. Log in from another device and your data will be there. Enable two-factor authentication for extra security.',
+                  q: 'Who is building MicroPlanner?',
+                  a: 'Just me, Mohamed Abirou - a 23-year-old developer from Morocco. No team, no VC funding, just building in public. Read the full story on the About page.',
                 },
                 {
-                  q: 'Can I use MicroPlanner offline?',
-                  a: 'Currently, MicroPlanner requires internet to sync. We\'re working on offline support for premium users.',
+                  q: 'How can I follow the progress?',
+                  a: 'Join the waitlist for email updates, follow on LinkedIn (mohamed-abirou), or check the blog after launch for weekly build logs.',
                 },
                 {
-                  q: 'Is MicroPlanner accessible to people with disabilities?',
-                  a: 'Yes! We\'re committed to WCAG 2.1 AA compliance. Email accessibility@microplanner.app if you encounter issues.',
+                  q: 'Will there be tutorials and docs?',
+                  a: 'Yes! Full documentation, video tutorials, and help articles will be created as features are built during Phase 1 and beyond.',
                 },
               ].map((faq, i) => (
                 <details
@@ -218,23 +154,29 @@ export default function HelpPage() {
 
           {/* Contact CTA */}
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
+            <div className="mb-4 flex justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-500/10">
+                <HelpCircle className="h-8 w-8 text-primary-500" />
+              </div>
+            </div>
             <h2 className="mb-4 text-2xl font-bold">
-              Didn't find what you're looking for?
+              Have Questions?
             </h2>
             <p className="mb-6 text-muted-foreground">
-              Our support team is here to help. We typically respond within 24-48 hours.
+              For pre-launch questions or feedback, reach out directly. Email support will be available after Phase 1 launches.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link href="/contact">
                 <Button size="lg">
                   <Mail className="h-4 w-4" />
-                  Contact Support
+                  Contact Me
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" disabled>
-                <MessageSquare className="h-4 w-4" />
-                Live Chat (Coming Soon)
-              </Button>
+              <Link href="/waitlist">
+                <Button variant="outline" size="lg">
+                  Join Waitlist
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

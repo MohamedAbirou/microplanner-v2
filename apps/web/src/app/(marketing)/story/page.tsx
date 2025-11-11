@@ -34,9 +34,8 @@ export default function StoryPage() {
               <div className="rounded-xl border border-border bg-card p-6 md:p-8">
                 <h2 className="mb-4 text-2xl font-bold text-foreground">Hey, I'm Mohamed 👋</h2>
                 <p className="mb-4">
-                  I'm a 23-year-old software engineer from Morocco. For the past 7 years, I've been building things — from full ERPs
-                  that improved team efficiency by 70%, to AI-powered SaaS platforms, to internal tools that automated 90% of
-                  repetitive tasks.
+                  I'm a 23-year-old software engineer from Morocco. I've been in the IT field for 7 years, and seriously building
+                  products for the last 4-5 years. I've built ERPs, AI-powered SaaS platforms, automation tools — you name it.
                 </p>
                 <p>
                   But there's always been one frustration: <strong className="text-foreground">planning</strong>. I've tried every
@@ -114,26 +113,14 @@ export default function StoryPage() {
               <div>
                 <h2 className="mb-4 text-2xl font-bold text-foreground">My Background</h2>
                 <p className="mb-4">
-                  Over the past 2 years of professional work (7 years in tech total), I've:
+                  I've been in tech for 7 years, seriously building products for the last 4-5 years. I've built in many languages,
+                  worked on different concepts — ERPs that improved team efficiency by 60-70%, AI-powered SaaS platforms, automation
+                  tools that eliminated 90% of repetitive tasks.
                 </p>
-                <ul className="space-y-2 rounded-xl border border-border bg-card p-6">
-                  <li className="flex gap-2">
-                    <span className="text-secondary-700 font-bold">✓</span>
-                    <span>Built 2 full ERPs from scratch (Purchasing Service + Resources Service) that improved efficiency by 60-70%</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-secondary-700 font-bold">✓</span>
-                    <span>Created an AI Art Portrait Generator (MERN stack) for a US client</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-secondary-700 font-bold">✓</span>
-                    <span>Recently shipped GreenLean: A full AI-powered health & fitness SaaS with meal plans, workouts, and gamification</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-secondary-700 font-bold">✓</span>
-                    <span>Automated internal workflows with bots that saved teams 90% of repetitive tasks</span>
-                  </li>
-                </ul>
+                <p className="rounded-xl border border-border bg-card p-6">
+                  <strong className="text-foreground">The specifics don't matter.</strong> What matters is: I know how to ship products
+                  that solve real problems. And now I'm solving one that's been bugging me for years: affordable, beautiful AI planning.
+                </p>
               </div>
 
               {/* The Dream */}

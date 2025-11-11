@@ -43,44 +43,24 @@ export default function HomePage() {
 
             {/* Description */}
             <p className="mb-8 max-w-2xl text-base text-muted-foreground md:text-lg">
-              AI-powered weekly planner that learns from your habits, optimizes your schedule, and helps you crush your goals. Better than ReclaimAI and Motion.
+              AI-powered weekly planner that learns from your habits, optimizes your schedule, and helps you achieve your goals. Affordable alternative to Motion, ReclaimAI, and other expensive planning tools.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/sign-up"
+                href="/waitlist"
                 className="group inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-primary px-6 py-3 text-sm font-semibold text-white shadow-primary-glow transition-all hover:shadow-xl hover:scale-105"
               >
-                Get Started Free
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-
-              <Link
-                href="/waitlist"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold transition-all hover:bg-accent"
-              >
                 Join Waitlist
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
 
-            {/* Social Proof */}
-            <div className="mt-8 flex items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-7 w-7 rounded-full border-2 border-background bg-gradient-to-br from-primary-400 to-secondary-600"
-                    />
-                  ))}
-                </div>
-                <span>Join early users</span>
-              </div>
-              <div className="h-3 w-px bg-border" />
-              <div className="flex items-center gap-1">
-                <span className="text-yellow-500">★★★★★</span>
-                <span>Loved by productivity enthusiasts</span>
+            {/* Pre-Launch Badge */}
+            <div className="mt-8">
+              <div className="inline-flex items-center gap-2 rounded-full border border-secondary-700/20 bg-secondary-700/10 px-4 py-2 text-xs font-medium text-secondary-700">
+                <span>🚀 Pre-Launch - Building Phase 1 Now</span>
               </div>
             </div>
           </div>
@@ -546,8 +526,8 @@ export default function HomePage() {
                   a: 'Yes! MicroPlanner syncs bi-directionally with Google Calendar (more providers coming soon). It reads your existing events to avoid conflicts and can create calendar events for your planned tasks.',
                 },
                 {
-                  q: 'How is this better than ReclaimAI or Motion?',
-                  a: 'MicroPlanner uses state-of-the-art AI (Claude Sonnet 3.5), learns your unique patterns, and offers transparent pricing. Our AI planning is more intelligent, our interface is cleaner, and we\'re built for massive scale.',
+                  q: 'How is this different from Motion, ReclaimAI, Todoist, or Sunsama?',
+                  a: '60% cheaper ($8-12/month vs $34/month for Motion). Built in public so you can influence the roadmap. Solo founder means fast decisions, no bureaucracy. Modern, clean UI designed from scratch. Focus on affordability without sacrificing quality.',
                 },
                 {
                   q: 'Can I cancel anytime?',

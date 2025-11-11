@@ -176,35 +176,6 @@ export default function HowItWorksPage() {
             </div>
           </div>
 
-          {/* Results Section */}
-          <div className="mx-auto mb-20 max-w-4xl">
-            <h2 className="mb-12 text-center text-3xl font-bold">
-              Real <span className="text-gradient">Results</span>
-            </h2>
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-lg border border-border bg-card p-6 text-center">
-                <div className="mb-2 text-3xl font-bold text-primary-500">47%</div>
-                <p className="text-sm text-muted-foreground">More Goals Completed</p>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card p-6 text-center">
-                <div className="mb-2 text-3xl font-bold text-secondary-700">3.2x</div>
-                <p className="text-sm text-muted-foreground">Productivity Boost</p>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card p-6 text-center">
-                <div className="mb-2 text-3xl font-bold text-primary-500">12hrs</div>
-                <p className="text-sm text-muted-foreground">Saved Per Week</p>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card p-6 text-center">
-                <div className="mb-2 text-3xl font-bold text-secondary-700">93%</div>
-                <p className="text-sm text-muted-foreground">User Satisfaction</p>
-              </div>
-            </div>
-          </div>
-
           {/* CTA Section */}
           <div className="mt-16 rounded-2xl border border-border bg-card p-12 text-center">
             <h2 className="mb-4 text-2xl font-bold">
@@ -213,19 +184,12 @@ export default function HowItWorksPage() {
             <p className="mb-6 text-muted-foreground">
               See how MicroPlanner can transform your planning in action.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link href="/sign-up">
-                <Button size="lg">
-                  Get Started Free
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/waitlist">
-                <Button variant="outline" size="lg">
-                  Join Waitlist
-                </Button>
-              </Link>
-            </div>
+            <Link href="/waitlist">
+              <Button size="lg">
+                Join Waitlist
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
