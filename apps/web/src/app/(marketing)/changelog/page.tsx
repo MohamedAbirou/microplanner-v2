@@ -1,14 +1,14 @@
 'use client';
 
-import Link from 'next/link';
-import { ArrowRight, Sparkles, Zap, Bug, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ArrowRight, Bug, Sparkles, Wrench, Zap } from 'lucide-react';
+import Link from 'next/link';
 
 // Mock changelog - will be real as features ship
 const changelog = [
   {
     version: '0.1.0',
-    date: 'November 11, 2024',
+    date: 'November 11, 2025',
     type: 'launch',
     items: [
       { type: 'new', text: 'Marketing website with ultra-premium design' },

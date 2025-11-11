@@ -159,7 +159,7 @@ async sendWeeklySummaries() { ... }
 **Environment Variables**:
 ```env
 RESEND_API_KEY=re_xxxxx
-EMAIL_FROM=MicroPlanner <noreply@microplanner.app>
+EMAIL_FROM=MicroPlanner <noreply@microplanner.ai>
 ```
 
 ---
@@ -685,7 +685,7 @@ model Booking {
 
 **Public Booking Page**:
 ```
-https://microplanner.app/book/john-doe/30min
+https://microplanner.ai/book/john-doe/30min
 ```
 
 ---
@@ -719,7 +719,7 @@ export class MicrosoftOAuthService {
 ```env
 MICROSOFT_CLIENT_ID=xxxxx
 MICROSOFT_CLIENT_SECRET=xxxxx
-MICROSOFT_REDIRECT_URI=https://api.microplanner.app/api/v1/calendar/oauth/microsoft/callback
+MICROSOFT_REDIRECT_URI=https://api.microplanner.ai/api/v1/calendar/oauth/microsoft/callback
 ```
 
 ---

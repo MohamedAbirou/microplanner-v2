@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import { ArrowRight, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ArrowRight, LucideIcon } from 'lucide-react';
+import Link from 'next/link';
 
 interface Feature {
   icon: LucideIcon;
@@ -30,8 +30,8 @@ export function PageTemplate({
   description,
   features = [],
   benefits = [],
-  ctaText = 'Get Started Free',
-  ctaLink = '/sign-up',
+  ctaText = 'Join Waitlist',
+  ctaLink = '/waitlist',
   children,
 }: PageTemplateProps) {
   return (
@@ -61,11 +61,6 @@ export function PageTemplate({
                 <Button size="lg">
                   {ctaText}
                   <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/waitlist">
-                <Button variant="outline" size="lg">
-                  Join Waitlist
                 </Button>
               </Link>
             </div>

@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-Production: https://api.microplanner.app/api/v1
+Production: https://api.microplanner.ai/api/v1
 Development: http://localhost:3000/api/v1
 ```
 

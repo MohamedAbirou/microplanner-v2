@@ -435,7 +435,7 @@ This project is proprietary and confidential.
 
 For questions or issues:
 - Open a GitHub Issue
-- Email: support@microplanner.app (coming soon)
+- Email: support@microplanner.ai (coming soon)
 
 ---
 

@@ -14,7 +14,7 @@ export default function TermsPage() {
           <div className="mb-12">
             <h1 className="mb-2 text-4xl font-bold tracking-tight">Terms of Use</h1>
             <p className="text-muted-foreground">
-              Last Updated: November 11, 2024
+              Last Updated: November 11, 2025
             </p>
           </div>
 
@@ -168,7 +168,7 @@ export default function TermsPage() {
                 These Terms shall be governed by and construed in accordance with the laws of the State of California, USA, without regard to its conflict of law principles. Any legal action or proceeding arising under these Terms shall be brought exclusively in the state or federal courts located in California.
               </p>
               <p>
-                Before filing a claim, you agree to attempt to resolve any dispute informally by contacting us at legal@microplanner.app.
+                Before filing a claim, you agree to attempt to resolve any dispute informally by contacting us at legal@microplanner.ai.
               </p>
             </section>
 
@@ -188,8 +188,8 @@ export default function TermsPage() {
               </p>
               <div className="ml-6 mt-4 space-y-2 border-l-2 border-primary-500/50 pl-4">
                 <p className="font-semibold text-foreground">MicroPlanner, Inc.</p>
-                <p>Email: legal@microplanner.app</p>
-                <p>Website: microplanner.app</p>
+                <p>Email: legal@microplanner.ai</p>
+                <p>Website: microplanner.ai</p>
                 <p>Address: San Francisco, California, USA</p>
               </div>
             </section>
@@ -198,7 +198,7 @@ export default function TermsPage() {
           {/* Footer Notice */}
           <div className="mt-12 border-t border-border/40 pt-8">
             <p className="text-xs text-muted-foreground">
-              These Terms of Use were last updated on November 11, 2024. We recommend reviewing this page periodically for any changes.
+              These Terms of Use were last updated on November 11, 2025. We recommend reviewing this page periodically for any changes.
             </p>
           </div>
         </div>

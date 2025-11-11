@@ -1,10 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowRight, CheckCircle2, Sparkles, Users, Zap, TrendingUp } from 'lucide-react';
-import { useMutation, useQuery } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +12,11 @@ import {
   GET_WAITLIST_STATS,
   type WaitlistStatsData
 } from '@/lib/graphql/queries/waitlist';
+import { useMutation, useQuery } from '@apollo/client';
+import { ArrowRight, CheckCircle2, Sparkles, TrendingUp, Users, Zap } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
 
 export default function WaitlistPage() {
   const [email, setEmail] = useState('');
@@ -142,15 +142,25 @@ export default function WaitlistPage() {
           <div className="mx-auto max-w-4xl">
             {/* Header */}
             <div className="mb-12 text-center">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-secondary-700 shadow-gradient-glow">
+              <div className="mb-6 inline-flex items-center justify-center">
+                            <Image
+                              src="/logo-icon.svg"
+                              alt="MicroPlanner"
+                              width={96}
+                              height={96}
+                              priority
+                              className="h-16 w-16"
+                            />
+                          </div>
+              {/* <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-secondary-700 shadow-gradient-glow">
                 <Image
-                  src="/logo.svg"
+                  src="/logo-icon.svg"
                   alt="MicroPlanner"
                   width={32}
                   height={32}
                   className="h-8 w-8"
                 />
-              </div>
+              </div> */}
 
               <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
                 Join the <span className="text-gradient">Waitlist</span>

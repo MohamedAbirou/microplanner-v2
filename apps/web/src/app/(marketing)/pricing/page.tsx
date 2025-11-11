@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { ArrowRight, CheckCircle2, HelpCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ArrowRight, CheckCircle2, HelpCircle, Zap } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
 
 export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
@@ -114,7 +114,7 @@ export default function PricingPage() {
     },
     {
       q: 'How do I contact sales for enterprise pricing?',
-      a: 'Great question! Email us at sales@microplanner.app or use our contact form. We\'ll get back to you within 24 hours.',
+      a: 'Great question! Email us at sales@microplanner.ai or use our contact form. We\'ll get back to you within 24 hours.',
     },
   ];
 

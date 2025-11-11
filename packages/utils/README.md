@@ -72,7 +72,7 @@ import {
 } from '@microplanner/utils';
 
 // Format date
-const formatted = formatDate(new Date()); // "January 15, 2024"
+const formatted = formatDate(new Date()); // "January 15, 2025"
 
 // Debounce function
 const debouncedSearch = debounce((query: string) => {

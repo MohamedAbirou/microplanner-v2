@@ -1,22 +1,15 @@
 'use client';
 
-import Link from 'next/link';
-import { PageTemplate } from '@/components/marketing/page-template';
-import {
-  Sparkles,
-  Calendar,
-  Target,
-  TrendingUp,
-  Clock,
-  Award,
-  Zap,
-  BarChart3,
-  Users,
-  Brain,
-  Share2,
-  Lock,
-} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  BarChart3,
+  File,
+  Lock,
+  Sparkles,
+  Target,
+  Users
+} from 'lucide-react';
+import Link from 'next/link';
 
 export default function FeaturesPage() {
   const mainFeatures = [
@@ -27,53 +20,47 @@ export default function FeaturesPage() {
       link: '/features/ai-planning',
     },
     {
-      icon: Calendar,
-      title: 'Smart Scheduling',
-      description: 'Auto-sync with Google Calendar. AI avoids conflicts and optimizes your schedule in real-time.',
-      link: '/features/calendar-sync',
-    },
-    {
       icon: Target,
       title: 'Goal Tracking',
       description: 'Set goals with frequency, duration, and preferred times. Track completion rates and streaks.',
       link: '/features/goals',
     },
     {
-      icon: TrendingUp,
-      title: 'Advanced Analytics',
-      description: 'Deep insights into your productivity patterns. Learn your best times and optimal session lengths.',
-      link: '/features/analytics',
+      icon: File,
+      title: 'Task Management',
+      description: 'Master your to-do list with intelligent task management. Create, organize, and track tasks effortlessly while staying focused on what matters most.',
+      link: '/features/tasks',
     },
-    {
-      icon: Clock,
-      title: 'Time Tracking',
-      description: 'Automatically track time spent on tasks and goals. Understand where your time really goes.',
-      link: '/features/time-tracking',
-    },
-    {
-      icon: Award,
-      title: 'Focus Time Protection',
-      description: 'Block time for deep work and protect it from meetings and distractions.',
-      link: '/features/focus-time',
-    },
-    {
-      icon: Brain,
-      title: 'Habit Formation',
-      description: 'Build lasting habits with AI-optimized schedules and streak tracking.',
-      link: '/features/habits',
-    },
-    {
-      icon: Share2,
-      title: 'Scheduling Links',
-      description: 'Share your availability and let others book time on your calendar directly.',
-      link: '/features/scheduling-links',
-    },
-    {
-      icon: Zap,
-      title: 'Plan Templates',
-      description: 'Save and reuse plan templates. Browse community templates for any goal.',
-      link: '#',
-    },
+    // {
+    //   icon: Clock,
+    //   title: 'Time Tracking',
+    //   description: 'Automatically track time spent on tasks and goals. Understand where your time really goes.',
+    //   link: '/features/time-tracking',
+    // },
+    // {
+    //   icon: Award,
+    //   title: 'Focus Time Protection',
+    //   description: 'Block time for deep work and protect it from meetings and distractions.',
+    //   link: '/features/focus-time',
+    // },
+    // {
+    //   icon: Brain,
+    //   title: 'Habit Formation',
+    //   description: 'Build lasting habits with AI-optimized schedules and streak tracking.',
+    //   link: '/features/habits',
+    // },
+    // {
+    //   icon: Share2,
+    //   title: 'Scheduling Links',
+    //   description: 'Share your availability and let others book time on your calendar directly.',
+    //   link: '/features/scheduling-links',
+    // },
+    // {
+    //   icon: Zap,
+    //   title: 'Plan Templates',
+    //   description: 'Save and reuse plan templates. Browse community templates for any goal.',
+    //   link: '#',
+    // },
   ];
 
   return (
