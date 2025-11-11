@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import { ArrowRight, Code, Rocket, Heart, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ArrowRight, Code, Globe, Heart, Rocket } from 'lucide-react';
+import Link from 'next/link';
 
 export default function StoryPage() {
   return (
@@ -24,7 +24,7 @@ export default function StoryPage() {
                 Why I'm Building <span className="text-gradient">MicroPlanner</span>
               </h1>
               <p className="text-base text-muted-foreground md:text-lg">
-                The story of a 23-year-old engineer from Morocco taking on Motion and ReclaimAI
+                The story of a 23-year-old engineer taking on Motion and ReclaimAI
               </p>
             </div>
 
@@ -32,40 +32,143 @@ export default function StoryPage() {
             <div className="space-y-8 text-muted-foreground">
               {/* Introduction */}
               <div className="rounded-xl border border-border bg-card p-6 md:p-8">
-                <h2 className="mb-4 text-2xl font-bold text-foreground">Hey, I'm Mohamed 👋</h2>
+                <h2 className="mb-4 text-2xl font-bold text-foreground">Hey, I'm Moe 👋</h2>
                 <p className="mb-4">
-                  I'm a 23-year-old software engineer from Morocco. I've been in the IT field for 7 years, and seriously building
-                  products for the last 4-5 years. I've built ERPs, AI-powered SaaS platforms, automation tools — you name it.
+                  I'm a 23-year-old software engineer. I've been in the IT field for 7 years, and
+                  seriously building products for the last 4-5 years. I've built ERPs, AI-powered
+                  SaaS platforms, automation tools — you name it.
                 </p>
                 <p>
-                  But there's always been one frustration: <strong className="text-foreground">planning</strong>. I've tried every
-                  productivity tool out there — Motion, ReclaimAI, Todoist, Notion — and they all had the same problems.
+                  But there's always been one frustration:
+                  <strong className="text-foreground">planning</strong>. I've tried every
+                  productivity tool out there — Motion, ReclaimAI, Todoist, Notion — and they all
+                  had the same problems.
                 </p>
+              </div>
+
+              {/* Market Overview */}
+              <div>
+                <h2 className="mb-4 text-2xl font-bold text-foreground">The Market Right Now</h2>
+                <div className="rounded-xl border border-border bg-card p-6 md:p-8 space-y-4">
+                  <p>
+                    Tools like <strong className="text-foreground">Motion</strong>,{" "}
+                    <strong className="text-foreground">ReclaimAI</strong>,{" "}
+                    <strong className="text-foreground">Sunsama</strong>, and{" "}
+                    <strong className="text-foreground">Akiflow</strong> have fundamentally changed
+                    how we plan our days. They fall into two main categories:
+                  </p>
+
+                  <ul>
+                    <li>
+                      All-in-One AI Schedulers (Motion): A full replacement for your task manager,
+                      project tracker, and calendar, relying entirely on AI to auto-schedule
+                      everything.
+                    </li>
+
+                    <li>
+                      Calendar Augmentation Tools (ReclaimAI, Sunsama, Akiflow): These connect to
+                      your existing Google/Outlook Calendar and Task/PM apps (like Asana, Jira) to
+                      pull tasks in and use time-blocking to plan your day.
+                    </li>
+                  </ul>
+
+                  <p>
+                    They're sophisticated, offering smart scheduling, AI-assisted calendars, and
+                    deep integrations with platforms like Slack and Google Calendar. But the core
+                    critique remains: they are overwhelmingly built for enterprise teams, priced for
+                    companies, and designed around optimizing a high-volume, meeting-heavy corporate
+                    workflow. For the average indie maker, freelancer, or student, they remain
+                    complicated, expensive, and oddly disconnected from a more flexible, personal
+                    life.
+                  </p>
+                </div>
               </div>
 
               {/* The Problem */}
               <div>
                 <h2 className="mb-4 text-2xl font-bold text-foreground">The Problem</h2>
                 <div className="space-y-4 rounded-xl border border-border bg-card p-6 md:p-8">
+                  {/* Pricing */}
                   <div className="flex gap-3">
                     <span className="text-error-500 font-bold">→</span>
                     <div>
-                      <strong className="text-foreground">Motion is $34/month.</strong> That's $408/year for a planning tool. For
-                      indie developers and students? That's a dealbreaker.
+                      <strong className="text-foreground">
+                        They're expensive, and the price is rising.
+                      </strong>
+                      The sticker shock is real: Motion's Individual Plan is $34/month (or $19/month
+                      annual). Sunsama is *$20/month*. While Reclaim.ai offers a generous free tier,
+                      its most popular business plan is $15/month (or $12/month annual), and Akiflow
+                      is a steep **$34/month** (or $19/month annual). Planning your life, without
+                      even accounting for their new 'AI Employee' add-ons, shouldn't cost the price
+                      of your combined Netflix, Spotify, and gym membership.
                     </div>
                   </div>
+                  {/* UX / Usability */}
                   <div className="flex gap-3">
                     <span className="text-error-500 font-bold">→</span>
                     <div>
-                      <strong className="text-foreground">ReclaimAI's UI is clunky.</strong> Great AI, but the interface feels like
-                      it was designed in 2015. It doesn't spark joy.
+                      <strong className="text-foreground">They feel heavy.</strong> Too many
+                      buttons, too many integrations, too little joy. Motion’s all-in-one approach
+                      and new AI Employees platform add significant setup complexity. ReclaimAI is
+                      the most seamless integrator, but its core function is aggressive time-defense
+                      for professionals, not simple daily flow. Sunsama is calm but remains a manual
+                      "daily planning ritual" tool. Akiflow tries to centralize everything, which
+                      can lead to cognitive overload and a cluttered inbox-style interface.
                     </div>
                   </div>
+                  {/* Mobile Experience */}
                   <div className="flex gap-3">
                     <span className="text-error-500 font-bold">→</span>
                     <div>
-                      <strong className="text-foreground">None of them feel made for me.</strong> They're built for enterprise teams
-                      or Silicon Valley types. Not for a Moroccan engineer trying to build his dream.
+                      <strong className="text-foreground">Mobile is often an afterthought.</strong>
+                      This has slightly improved but remains a weak point. Reclaim.ai still does not
+                      have a native mobile app; users are directed to a mobile web experience, which
+                      is insufficient for quick task input or reliable offline use. Motion and
+                      Sunsama have decent mobile apps, but Akiflow's mobile experience, while
+                      available, still lags behind the speed and functionality of its core desktop
+                      app, making true on-the-go planning feel sluggish.
+                    </div>
+                  </div>
+                  {/* AI Intelligence */}
+                  <div className="flex gap-3">
+                    <span className="text-error-500 font-bold">→</span>
+                    <div>
+                      <strong className="text-foreground">
+                        Their AI is functional, but lacks true intelligence.
+                      </strong>
+                      Motion's AI is based on rules, urgency, and deadlines—it is auto-scheduling,
+                      not adaptive learning. It doesn't inherently understand energy patterns,
+                      account for cognitive load, or provide meaningful burnout detection. It
+                      schedules the task where there is a time slot, not where you are most likely
+                      to be effective, which is a key distinction for personal productivity.
+                    </div>
+                  </div>
+                  {/* Personal Fit */}
+                  <div className="flex gap-3">
+                    <span className="text-error-500 font-bold">→</span>
+                    <div>
+                      <strong className="text-foreground">
+                        They're fundamentally not built for people like me.
+                      </strong>
+                      Most of these apps, including the new 'AI Employee' and 'Smart Meeting'
+                      features, are tuned for large teams with daily stand-ups, shared team
+                      calendars, and OKRs. They over-engineer the needs of a solo builder, creator,
+                      or a Moroccan engineer trying to balance deep work, client calls, sleep, and
+                      life without having to fight an enterprise-grade tool.
+                    </div>
+                  </div>
+                  {/* Collaboration */}
+                  <div className="flex gap-3">
+                    <span className="text-error-500 font-bold">→</span>
+                    <div>
+                      <strong className="text-foreground">
+                        Collaboration is team-centric, not project-centric.
+                      </strong>
+                      Motion and ReclaimAI offer team features for shared workload visibility and
+                      optimized meeting booking across users, but this often focuses on optimizing
+                      the calendar rather than facilitating a project. There is little focus on
+                      simple, real-time shared task lists or team context outside of the main PM
+                      integrations, which is overkill for a small freelance or founder team.
                     </div>
                   </div>
                 </div>
@@ -75,67 +178,67 @@ export default function StoryPage() {
               <div>
                 <h2 className="mb-4 text-2xl font-bold text-foreground">The Decision</h2>
                 <p className="mb-4">
-                  So I decided to build my own. Not just for me — but for everyone who's been priced out of productivity, who wants
-                  beautiful software that actually works, who believes planning shouldn't cost $400/year.
+                  So I decided to build the tool I
+                  always wanted to exist.
                 </p>
                 <p className="mb-4">
-                  <strong className="text-foreground">MicroPlanner</strong> is my answer. An AI-powered planner that's:
+                  Not another “AI assistant” that schedules your life into chaos. Not a corporate
+                  tool disguised as a personal one. But a planner that actually understands you —
+                  your energy, your flow, your limits — and adapts to{' '}
+                  <strong className="text-foreground">how you really work</strong>.
+                </p>
+                <p className="mb-4">
+                  That’s how <strong className="text-foreground">MicroPlanner</strong> was born: a
+                  calm, adaptive, and beautifully minimal AI-powered planner made for humans, not
+                  teams.
                 </p>
                 <div className="space-y-3 rounded-xl border border-primary-500/20 bg-primary-500/5 p-6">
                   <div className="flex items-start gap-3">
                     <Code className="h-5 w-5 text-primary-500 mt-0.5" />
                     <div>
-                      <strong className="text-foreground">Affordable:</strong> $8-12/month, not $34.
+                      <strong className="text-foreground">Accessible:</strong> Priced like a tool
+                      for creators, not corporations — around $8–12/month.
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Rocket className="h-5 w-5 text-primary-500 mt-0.5" />
                     <div>
-                      <strong className="text-foreground">Beautiful:</strong> Modern UI that actually feels good to use.
+                      <strong className="text-foreground">Effortless:</strong> No more configuring
+                      20 settings before you can get started. It learns as you use it.
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Heart className="h-5 w-5 text-primary-500 mt-0.5" />
                     <div>
-                      <strong className="text-foreground">Powerful:</strong> AI planning that learns from you and gets smarter.
+                      <strong className="text-foreground">Human-centric:</strong> Designed to
+                      respect your energy, focus, and mental space — not fill every empty slot.
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Globe className="h-5 w-5 text-primary-500 mt-0.5" />
                     <div>
-                      <strong className="text-foreground">Built in public:</strong> You get to watch and influence every step.
+                      <strong className="text-foreground">Built in public:</strong> Transparent
+                      journey, community-driven feedback, open to everyone who believes in better
+                      tools.
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* My Background */}
-              <div>
-                <h2 className="mb-4 text-2xl font-bold text-foreground">My Background</h2>
-                <p className="mb-4">
-                  I've been in tech for 7 years, seriously building products for the last 4-5 years. I've built in many languages,
-                  worked on different concepts — ERPs that improved team efficiency by 60-70%, AI-powered SaaS platforms, automation
-                  tools that eliminated 90% of repetitive tasks.
-                </p>
-                <p className="rounded-xl border border-border bg-card p-6">
-                  <strong className="text-foreground">The specifics don't matter.</strong> What matters is: I know how to ship products
-                  that solve real problems. And now I'm solving one that's been bugging me for years: affordable, beautiful AI planning.
-                </p>
               </div>
 
               {/* The Dream */}
               <div className="rounded-xl border border-secondary-700/20 bg-secondary-700/5 p-6 md:p-8">
                 <h2 className="mb-4 text-2xl font-bold text-foreground">The Dream</h2>
                 <p className="mb-4">
-                  I'm not building MicroPlanner to get rich (though that would be nice 😄). I'm building it because I want to be free.
-                </p>
-                <p className="mb-4">
-                  Free to travel. Free to work from Switzerland (my dream country). Free to build products I believe in without asking
-                  permission from a boss.
+                  I'm not building MicroPlanner to get rich (though that would be nice 😄). I'm
+                  building it because I want to be free. Free to build
+                  products I believe in without asking permission from a boss.
                 </p>
                 <p>
-                  <strong className="text-foreground">This is my first step toward that freedom.</strong> And I'm building it in
-                  public so you can follow the journey, learn from my mistakes, and maybe get inspired to chase your own dreams.
+                  <strong className="text-foreground">
+                    This is my first step toward that freedom.
+                  </strong>{" "}
+                  And I'm building it in public so you can follow the journey, learn from my
+                  mistakes, and maybe get inspired to chase your own dreams.
                 </p>
               </div>
 
@@ -143,8 +246,8 @@ export default function StoryPage() {
               <div className="text-center">
                 <h2 className="mb-4 text-2xl font-bold text-foreground">Join the Journey</h2>
                 <p className="mb-6">
-                  I'll be sharing everything: the wins, the failures, the code, the revenue, the struggles. If you want to follow
-                  along or be among the first to try MicroPlanner:
+                  I'll be sharing everything: the wins, the failures, the code, the revenue, the
+                  struggles. If you want to follow along or be among the first to try MicroPlanner:
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
                   <Link href="/waitlist">
@@ -153,7 +256,11 @@ export default function StoryPage() {
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <a href="https://linkedin.com/in/mohamed-abirou" target="_blank" rel="noopener noreferrer">
+                  <a
+                    href="https://linkedin.com/in/mohamed-abirou"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Button variant="outline" size="lg">
                       Follow on LinkedIn
                     </Button>
@@ -163,9 +270,8 @@ export default function StoryPage() {
 
               {/* Signature */}
               <div className="text-center text-sm italic text-muted-foreground">
-                <p>— Mohamed Abirou</p>
+                <p>— Moe Abirou</p>
                 <p>Founder, MicroPlanner</p>
-                <p>Building from Morocco 🇲🇦</p>
               </div>
             </div>
           </div>

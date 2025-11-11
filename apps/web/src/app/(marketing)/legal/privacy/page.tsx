@@ -14,7 +14,7 @@ export default function PrivacyPage() {
           <div className="mb-12">
             <h1 className="mb-2 text-4xl font-bold tracking-tight">Privacy Policy</h1>
             <p className="text-muted-foreground">
-              Last Updated: November 11, 2024
+              Last Updated: November 11, 2025
             </p>
           </div>
 
@@ -187,10 +187,10 @@ export default function PrivacyPage() {
                   <strong>Your Rights:</strong> You have the right to access, correct, delete, and port your personal data
                 </li>
                 <li>
-                  <strong>Data Subject Requests:</strong> You can submit requests to exercise your rights at privacy@microplanner.app
+                  <strong>Data Subject Requests:</strong> You can submit requests to exercise your rights at privacy@microplanner.ai
                 </li>
                 <li>
-                  <strong>Data Protection Officer:</strong> You can contact our DPO at dpo@microplanner.app
+                  <strong>Data Protection Officer:</strong> You can contact our DPO at dpo@microplanner.ai
                 </li>
                 <li>
                   <strong>Data Transfers:</strong> We use Standard Contractual Clauses to comply with GDPR requirements for international data transfers
@@ -222,7 +222,7 @@ export default function PrivacyPage() {
                 </li>
               </ul>
               <p className="mt-4">
-                To exercise your CCPA rights, please submit a request to privacy@microplanner.app with verification of your identity.
+                To exercise your CCPA rights, please submit a request to privacy@microplanner.ai with verification of your identity.
               </p>
             </section>
 
@@ -284,9 +284,9 @@ export default function PrivacyPage() {
               </p>
               <div className="ml-6 mt-4 space-y-2 border-l-2 border-primary-500/50 pl-4">
                 <p className="font-semibold text-foreground">MicroPlanner, Inc. Privacy Team</p>
-                <p>Email: privacy@microplanner.app</p>
-                <p>DPO: dpo@microplanner.app</p>
-                <p>Website: microplanner.app</p>
+                <p>Email: privacy@microplanner.ai</p>
+                <p>DPO: dpo@microplanner.ai</p>
+                <p>Website: microplanner.ai</p>
                 <p>Address: San Francisco, California, USA</p>
               </div>
             </section>
@@ -303,7 +303,7 @@ export default function PrivacyPage() {
           {/* Footer Notice */}
           <div className="mt-12 border-t border-border/40 pt-8">
             <p className="text-xs text-muted-foreground">
-              This Privacy Policy was last updated on November 11, 2024. We recommend reviewing this policy periodically for any changes.
+              This Privacy Policy was last updated on November 11, 2025. We recommend reviewing this policy periodically for any changes.
             </p>
           </div>
         </div>

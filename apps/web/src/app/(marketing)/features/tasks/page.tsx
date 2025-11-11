@@ -2,12 +2,12 @@
 
 import { PageTemplate } from '@/components/marketing/page-template';
 import {
-  ListChecks,
+  AlertCircle,
+  Clock,
   Layers,
+  ListChecks,
   Repeat,
   Tag,
-  Clock,
-  AlertCircle,
 } from 'lucide-react';
 
 export default function TasksPage() {

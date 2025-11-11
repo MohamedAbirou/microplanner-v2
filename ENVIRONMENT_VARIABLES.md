@@ -162,7 +162,7 @@ APP_URL="https://app.microplanner.com"
 API_URL="http://localhost:3000"
 
 # Production
-API_URL="https://api.microplanner.app"
+API_URL="https://api.microplanner.ai"
 ```
 
 ---
@@ -271,7 +271,7 @@ CLERK_WEBHOOK_SECRET="whsec_AbCdEf123456GhIjKlMnOpQrStUvWxYz"
 
 **How to Get**:
 1. Clerk Dashboard > Webhooks
-2. Add endpoint: `https://api.microplanner.app/api/v1/webhooks/clerk`
+2. Add endpoint: `https://api.microplanner.ai/api/v1/webhooks/clerk`
 3. Subscribe to events: `user.created`, `user.updated`, `user.deleted`
 4. Copy "Signing Secret"
 
@@ -346,7 +346,7 @@ STRIPE_WEBHOOK_SECRET="whsec_AbCdEf123456GhIjKlMnOpQrStUvWxYz"
 
 **How to Get**:
 1. Stripe Dashboard > Developers > Webhooks
-2. Add endpoint: `https://api.microplanner.app/api/v1/billing/webhooks/stripe`
+2. Add endpoint: `https://api.microplanner.ai/api/v1/billing/webhooks/stripe`
 3. Select events:
    - `checkout.session.completed`
    - `customer.subscription.updated`
@@ -444,7 +444,7 @@ GOOGLE_CLIENT_ID="123456789012-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent
    - Name: MicroPlanner API
    - Authorized redirect URIs:
      - `http://localhost:3000/api/v1/calendar/oauth/google/callback`
-     - `https://api.microplanner.app/api/v1/calendar/oauth/google/callback`
+     - `https://api.microplanner.ai/api/v1/calendar/oauth/google/callback`
 5. Copy Client ID
 
 ---
@@ -487,7 +487,7 @@ GOOGLE_CLIENT_SECRET="GOCSPX-AbCdEfGhIjKlMnOpQrStUvWxYz"
 GOOGLE_REDIRECT_URI="http://localhost:3000/api/v1/calendar/oauth/google/callback"
 
 # Production
-GOOGLE_REDIRECT_URI="https://api.microplanner.app/api/v1/calendar/oauth/google/callback"
+GOOGLE_REDIRECT_URI="https://api.microplanner.ai/api/v1/calendar/oauth/google/callback"
 ```
 
 **Important**:
@@ -700,7 +700,7 @@ fly secrets set \
   NODE_ENV="production" \
   PORT="8080" \
   APP_URL="https://app.microplanner.com" \
-  API_URL="https://api.microplanner.app" \
+  API_URL="https://api.microplanner.ai" \
   DATABASE_URL="postgresql://..." \
   CLERK_SECRET_KEY="sk_live_xxxxx" \
   CLERK_PUBLISHABLE_KEY="pk_live_xxxxx" \
@@ -711,7 +711,7 @@ fly secrets set \
   STRIPE_PRO_PRICE_ID="price_xxxxx" \
   GOOGLE_CLIENT_ID="xxxxx.apps.googleusercontent.com" \
   GOOGLE_CLIENT_SECRET="GOCSPX-xxxxx" \
-  GOOGLE_REDIRECT_URI="https://api.microplanner.app/api/v1/calendar/oauth/google/callback" \
+  GOOGLE_REDIRECT_URI="https://api.microplanner.ai/api/v1/calendar/oauth/google/callback" \
   ENCRYPTION_SECRET="$(openssl rand -base64 32)" \
   SENTRY_DSN="https://..." \
   LOG_LEVEL="info"
@@ -866,7 +866,7 @@ required.forEach(key => {
 ### Support:
 
 - GitHub Issues: [your-repo/issues]
-- Email: support@microplanner.app
+- Email: support@microplanner.ai
 
 ---
 

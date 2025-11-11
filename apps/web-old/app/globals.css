@@ -1,0 +1,260 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* CSS Variables for Theme */
+  :root {
+    /* Light Mode (Default) */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 4%;
+
+    --primary: 217.2 91.2% 59.8%; /* #2563EB */
+    --primary-foreground: 0 0% 100%;
+
+    --accent: 271.5 81.3% 55.9%; /* #7C3AED */
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217.2 91.2% 59.8%;
+
+    --success: 142.1 76.2% 36.3%;
+    --warning: 37.7 92.1% 50.2%;
+    --error: 0 84.2% 60.2%;
+
+    --radius: 0.5rem;
+
+    /* Animations */
+    --duration-instant: 150ms;
+    --duration-fast: 250ms;
+    --duration-normal: 350ms;
+    --duration-slow: 500ms;
+  }
+
+  /* Dark Mode */
+  .dark {
+    --background: 0 0% 3.9%; /* #0A0A0A */
+    --foreground: 0 0% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 271.5 81.3% 55.9%;
+    --accent-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --card: 0 0% 9%; /* #171717 */
+    --card-foreground: 0 0% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 217.2 91.2% 59.8%;
+
+    --success: 142.1 70.6% 45.3%;
+    --warning: 37.7 92.1% 50.2%;
+    --error: 0 72.2% 50.6%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus states */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* Glass Card */
+  .glass-card {
+    @apply bg-dark-bg-secondary/70 backdrop-blur-xl border border-dark-border-primary shadow-xl;
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Gradient Text */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Button Base */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg font-semibold transition-all duration-250;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Button Primary (Gradient) */
+  .btn-primary {
+    @apply btn bg-gradient-brand text-white shadow-glow-brand;
+    @apply hover:shadow-glow-brand/80 active:scale-95;
+  }
+
+  /* Button Secondary */
+  .btn-secondary {
+    @apply btn border border-dark-border-secondary text-dark-text-primary;
+    @apply hover:border-dark-border-primary hover:bg-dark-bg-hover;
+  }
+
+  /* Button Ghost */
+  .btn-ghost {
+    @apply btn text-dark-text-secondary;
+    @apply hover:text-dark-text-primary hover:bg-dark-bg-hover;
+  }
+
+  /* Input */
+  .input {
+    @apply w-full px-4 py-3 bg-dark-bg-secondary border border-dark-border-primary rounded-lg;
+    @apply text-dark-text-primary placeholder-dark-text-tertiary;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent;
+    @apply transition-all duration-150;
+  }
+
+  /* Card */
+  .card {
+    @apply p-6 bg-dark-bg-secondary/70 backdrop-blur-xl rounded-2xl border border-dark-border-primary;
+    @apply shadow-xl hover:border-dark-border-secondary transition-all duration-350;
+  }
+
+  /* Feature Card with Gradient Border */
+  .feature-card {
+    @apply relative p-6 bg-dark-bg-primary rounded-2xl overflow-hidden;
+  }
+
+  .feature-card::before {
+    content: '';
+    @apply absolute inset-0 rounded-2xl p-[1px] bg-gradient-brand -z-10;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+  }
+}
+
+@layer utilities {
+  /* Shadows */
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+  }
+
+  .shadow-glow-blue {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+  }
+
+  .shadow-glow-purple {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+  }
+
+  .shadow-glow-brand {
+    box-shadow: 0 0 30px rgba(37, 99, 235, 0.3);
+  }
+
+  /* Backgrounds */
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+  }
+
+  .bg-gradient-hero {
+    background: linear-gradient(135deg, hsl(217.2 91.2% 20%) 0%, hsl(var(--primary)) 50%, hsl(var(--accent)) 100%);
+  }
+
+  .bg-gradient-subtle {
+    background: radial-gradient(circle at top right, hsl(var(--accent) / 0.1), transparent 50%),
+                radial-gradient(circle at bottom left, hsl(var(--primary) / 0.1), transparent 50%);
+  }
+
+  /* Text Utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn var(--duration-fast) ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp var(--duration-normal) ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn var(--duration-normal) ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Scrollbar Styling */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-dark-bg-secondary;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-dark-border-secondary rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-600;
+  }
+}

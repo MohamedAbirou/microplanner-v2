@@ -1,9 +1,9 @@
+import { Task, User, WeeklyPlan } from '@microplanner/database';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { Task, User, WeeklyPlan } from '@microplanner/database';
+import { Resend } from 'resend';
 
 /**
  * Email Service
@@ -28,7 +28,7 @@ export class EmailService {
 
   constructor(private configService: ConfigService) {
     const resendApiKey = this.configService.get<string>('RESEND_API_KEY');
-    this.fromEmail = this.configService.get<string>('EMAIL_FROM') || 'MicroPlanner <noreply@microplanner.app>';
+    this.fromEmail = this.configService.get<string>('EMAIL_FROM') || 'MicroPlanner <noreply@microplanner.ai>';
     this.appUrl = this.configService.get<string>('APP_URL') || 'http://localhost:3001';
 
     if (!resendApiKey) {

@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
-import { HelpCircle, Book, Rocket, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Book, HelpCircle, Rocket } from 'lucide-react';
+import Link from 'next/link';
 
 export default function HelpPage() {
   const resources = [
@@ -70,7 +70,7 @@ export default function HelpPage() {
                 will be written as features are built. No point documenting features that don't exist yet.
               </p>
               <p className="text-muted-foreground">
-                <strong className="text-foreground">When you'll get help:</strong> Once Phase 1 launches (December 2024),
+                <strong className="text-foreground">When you'll get help:</strong> Once Phase 1 launches (December 2025),
                 you'll get full documentation, video tutorials, and email support.
               </p>
             </div>
@@ -113,7 +113,7 @@ export default function HelpPage() {
               {[
                 {
                   q: 'When will MicroPlanner launch?',
-                  a: 'Phase 1 (core MVP) is planned for December 2024. You can follow progress on the roadmap and by joining the waitlist for updates.',
+                  a: 'Phase 1 (core MVP) is planned for December 2025. You can follow progress on the roadmap and by joining the waitlist for updates.',
                 },
                 {
                   q: 'Can I use MicroPlanner now?',
@@ -125,7 +125,7 @@ export default function HelpPage() {
                 },
                 {
                   q: 'Who is building MicroPlanner?',
-                  a: 'Just me, Mohamed Abirou - a 23-year-old developer from Morocco. No team, no VC funding, just building in public. Read the full story on the About page.',
+                  a: 'Just me, Moe Abirou - a 23-year-old developer . No team, no VC funding, just building in public. Read the full story on the About page.',
                 },
                 {
                   q: 'How can I follow the progress?',
@@ -166,17 +166,16 @@ export default function HelpPage() {
               For pre-launch questions or feedback, reach out directly. Email support will be available after Phase 1 launches.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link href="/contact">
-                <Button size="lg">
-                  <Mail className="h-4 w-4" />
-                  Contact Me
-                </Button>
-              </Link>
               <Link href="/waitlist">
-                <Button variant="outline" size="lg">
+                <Button size="lg">
                   Join Waitlist
                 </Button>
               </Link>
+              {/* <Link href="/waitlist">
+                <Button variant="outline" size="lg">
+                  Join Waitlist
+                </Button>
+              </Link> */}
             </div>
           </div>
         </div>

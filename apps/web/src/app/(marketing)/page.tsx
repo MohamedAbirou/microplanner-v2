@@ -1,17 +1,34 @@
-import Link from 'next/link';
+import {
+  ArrowRight,
+  Award,
+  Calendar,
+  CheckCircle2,
+  ChevronDown,
+  Play,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
 import Image from 'next/image';
-import { ArrowRight, Sparkles, Calendar, Target, TrendingUp, CheckCircle2, Play, Zap, Award, Users, Clock, BarChart3, ChevronDown } from 'lucide-react';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
     <div className="relative min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-16 md:py-24">
-        {/* Background Gradient */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-hero opacity-10" />
-          <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-primary-500/20 blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-secondary-700/20 blur-3xl" />
+        {/* Background Effects */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute top-0 left-1/4 w-96 h-96 bg-primary-600/30 rounded-full blur-3xl animate-pulse"
+            style={{ animationDuration: '6s' }}
+          />
+          <div
+            className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary-600/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDuration: '6s', animationDelay: '2s' }}
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_2px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_2px,transparent_1px)] bg-[size:72px_72px]" />
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -19,12 +36,12 @@ export default function HomePage() {
             {/* Logo */}
             <div className="mb-6">
               <Image
-                src="/logo.svg"
+                src="/logo-icon.svg"
                 alt="MicroPlanner"
                 width={96}
                 height={96}
                 priority
-                className="h-20 w-20 md:h-24 md:w-24"
+                className="h-20 w-20"
               />
             </div>
 
@@ -43,7 +60,9 @@ export default function HomePage() {
 
             {/* Description */}
             <p className="mb-8 max-w-2xl text-base text-muted-foreground md:text-lg">
-              AI-powered weekly planner that learns from your habits, optimizes your schedule, and helps you achieve your goals. Affordable alternative to Motion, ReclaimAI, and other expensive planning tools.
+              AI-powered weekly planner that learns from your habits, optimizes your schedule, and
+              helps you achieve your goals. Affordable alternative to Motion, ReclaimAI, and other
+              expensive planning tools.
             </p>
 
             {/* CTA Buttons */}
@@ -81,7 +100,7 @@ export default function HomePage() {
             {/* Video Placeholder with Browser Chrome */}
             <div className="relative mx-auto max-w-4xl">
               {/* Browser Chrome */}
-              <div className="overflow-hidden rounded-t-lg border border-border bg-muted/50">
+              <div className="overflow-hidden rounded-t-lg border border-border bg-muted">
                 <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
                   <div className="flex gap-1.5">
                     <div className="h-3 w-3 rounded-full bg-red-500/80"></div>
@@ -91,7 +110,7 @@ export default function HomePage() {
                   <div className="flex-1 px-3">
                     <div className="flex items-center gap-2 rounded bg-background/60 px-3 py-1 text-xs text-muted-foreground">
                       <span className="text-primary-500">🔒</span>
-                      <span>microplanner.app</span>
+                      <span>microplanner.ai</span>
                     </div>
                   </div>
                 </div>
@@ -133,7 +152,8 @@ export default function HomePage() {
               </div>
               <h3 className="mb-2 text-lg font-semibold">Set Your Goals</h3>
               <p className="text-sm text-muted-foreground">
-                Define what you want to achieve. Set frequency, duration, and preferred times. MicroPlanner adapts to your unique schedule and energy patterns.
+                Define what you want to achieve. Set frequency, duration, and preferred times.
+                MicroPlanner adapts to your unique schedule and energy patterns.
               </p>
             </div>
 
@@ -144,7 +164,8 @@ export default function HomePage() {
               </div>
               <h3 className="mb-2 text-lg font-semibold">Get Your Plan</h3>
               <p className="text-sm text-muted-foreground">
-                AI generates a personalized weekly plan using Claude Sonnet 3.5. Intelligent scheduling avoids conflicts and optimizes for your productivity peaks.
+                AI generates a personalized weekly plan using Claude Sonnet 3.5. Intelligent
+                scheduling avoids conflicts and optimizes for your productivity peaks.
               </p>
             </div>
 
@@ -155,7 +176,8 @@ export default function HomePage() {
               </div>
               <h3 className="mb-2 text-lg font-semibold">Achieve More</h3>
               <p className="text-sm text-muted-foreground">
-                Execute your plan with confidence. Track progress, celebrate streaks, and watch your productivity soar. Auto-sync with your calendar keeps everything in sync.
+                Execute your plan with confidence. Track progress, celebrate streaks, and watch your
+                productivity soar. Auto-sync with your calendar keeps everything in sync.
               </p>
             </div>
           </div>
@@ -166,57 +188,58 @@ export default function HomePage() {
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-6xl">
-            <div className="overflow-hidden rounded-t-xl border border-border bg-muted/50">
-              <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+            <div className="overflow-hidden rounded-t-xl border border-card bg-muted">
+              <div className="flex items-center justify-between border-b border-card px-4 py-2.5">
                 <div className="flex gap-1.5">
                   <div className="h-3 w-3 rounded-full bg-red-500/80"></div>
                   <div className="h-3 w-3 rounded-full bg-yellow-500/80"></div>
                   <div className="h-3 w-3 rounded-full bg-green-500/80"></div>
                 </div>
-                <div className="text-xs font-medium text-muted-foreground">MicroPlanner Dashboard</div>
-                <div className="w-14"></div>
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-b-xl border-x border-b border-border bg-background p-6">
+            <div className="overflow-hidden rounded-b-xl border-x border-b border-card bg-card p-6">
               {/* Simple Calendar Grid Prototype */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Your Week</h3>
-                  <div className="flex gap-2">
-                    <div className="rounded-lg bg-primary-500/10 px-3 py-1 text-xs font-medium text-primary-600 dark:text-primary-400">
-                      AI Generated
-                    </div>
-                    <div className="rounded-lg bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 dark:text-green-400">
-                      95% Optimized
-                    </div>
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-7 gap-2">
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                    <div key={day} className="text-center text-xs font-medium text-muted-foreground">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <div
+                      key={day}
+                      className="text-center text-xs font-medium text-muted-foreground"
+                    >
                       {day}
                     </div>
                   ))}
 
-                  {[...Array(7)].map((_, i) => (
-                    <div key={i} className="space-y-1">
-                      <div className="rounded border border-border bg-card p-2 text-center text-xs font-medium">
-                        {i + 8}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="h-10 rounded bg-primary-500/20 border border-primary-500/30 p-1 text-xs flex items-center justify-center font-medium text-primary-600 dark:text-primary-400">
-                          Goal #{i + 1}
-                        </div>
-                        <div className="h-8 rounded bg-secondary-700/20 border border-secondary-700/30 p-1 text-xs flex items-center justify-center font-medium text-secondary-700 dark:text-secondary-400">
-                          Task
-                        </div>
-                      </div>
+                  {[
+                    ['Gym', 'Read'],
+                    ['Code'],
+                    ['Gym', 'Read'],
+                    ['Code'],
+                    ['Gym', 'Read'],
+                    ['Code'],
+                    ['Read'],
+                  ].map((tasks, i) => (
+                    <div key={i} className="space-y-2">
+                      {tasks.map((task, j) => {
+                        const color =
+                          task === 'Gym'
+                            ? 'bg-primary-500/20 border-primary-500/30'
+                            : task === 'Code'
+                              ? 'bg-secondary-700/20 border-secondary-700/30'
+                              : 'bg-green-700/20 border-green-500';
+                        const emoji = task === 'Gym' ? '🏋️' : task === 'Code' ? '💻' : '📚';
+                        return (
+                          <div
+                            key={j}
+                            className={`${color} flex items-center justify-center border-l-4 rounded-md py-2 text-xs font-medium`}
+                          >
+                            {emoji}&nbsp;{task}
+                          </div>
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
-              </div>
             </div>
           </div>
         </div>
@@ -275,37 +298,43 @@ export default function HomePage() {
               {
                 icon: Sparkles,
                 title: 'AI-Powered Planning',
-                description: 'Claude Sonnet 3.5 generates personalized weekly plans based on your goals, energy patterns, and constraints.',
+                description:
+                  'Claude Sonnet 3.5 generates personalized weekly plans based on your goals, energy patterns, and constraints.',
                 gradient: 'from-primary-500 to-primary-600',
               },
               {
                 icon: Calendar,
                 title: 'Smart Scheduling',
-                description: 'Auto-sync with Google Calendar. AI avoids conflicts and optimizes your schedule in real-time.',
+                description:
+                  'Auto-sync with Google Calendar. AI avoids conflicts and optimizes your schedule in real-time.',
                 gradient: 'from-secondary-600 to-secondary-700',
               },
               {
                 icon: Target,
                 title: 'Goal Tracking',
-                description: 'Set goals with frequency, duration, and preferred times. Track completion rates and streaks.',
+                description:
+                  'Set goals with frequency, duration, and preferred times. Track completion rates and streaks.',
                 gradient: 'from-primary-500 to-secondary-700',
               },
               {
                 icon: TrendingUp,
                 title: 'Advanced Analytics',
-                description: 'Deep insights into your productivity patterns. Learn your best times and optimal session lengths.',
+                description:
+                  'Deep insights into your productivity patterns. Learn your best times and optimal session lengths.',
                 gradient: 'from-primary-600 to-primary-700',
               },
               {
                 icon: Zap,
                 title: 'Plan Templates',
-                description: 'Save and reuse plan templates. Browse community templates for productivity, fitness, and learning.',
+                description:
+                  'Save and reuse plan templates. Browse community templates for productivity, fitness, and learning.',
                 gradient: 'from-secondary-700 to-purple-700',
               },
               {
                 icon: Award,
                 title: 'Built for Scale',
-                description: 'Ultra-fast, secure, and ready for millions of users. Built with Next.js 15 and cutting-edge tech.',
+                description:
+                  'Ultra-fast, secure, and ready for millions of users. Built with Next.js 15 and cutting-edge tech.',
                 gradient: 'from-primary-500 to-secondary-600',
               },
             ].map((feature, i) => (
@@ -313,7 +342,9 @@ export default function HomePage() {
                 key={i}
                 className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-primary-500/50 hover:shadow-lg"
               >
-                <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${feature.gradient}`}>
+                <div
+                  className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${feature.gradient}`}
+                >
                   <feature.icon className="h-5 w-5 text-white" />
                 </div>
                 <h3 className="mb-2 text-base font-semibold">{feature.title}</h3>
@@ -365,8 +396,8 @@ export default function HomePage() {
                 </li>
               </ul>
               <Link
-                href="/sign-up"
-                className="block w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-semibold transition-colors hover:bg-accent"
+                href="/waitlist"
+                className="block w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-semibold transition-colors hover:bg-background"
               >
                 Get Started
               </Link>
@@ -400,8 +431,8 @@ export default function HomePage() {
                 </li>
               </ul>
               <Link
-                href="/sign-up"
-                className="block w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-semibold transition-colors hover:bg-accent"
+                href="/waitlist"
+                className="block w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-semibold transition-colors hover:bg-background"
               >
                 Choose Starter
               </Link>
@@ -448,7 +479,7 @@ export default function HomePage() {
                 </li>
               </ul>
               <Link
-                href="/sign-up"
+                href="/waitlist"
                 className="block w-full rounded-lg bg-gradient-primary py-2 text-center text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
               >
                 Choose Pro
@@ -487,8 +518,8 @@ export default function HomePage() {
                 </li>
               </ul>
               <Link
-                href="/sign-up"
-                className="block w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-semibold transition-colors hover:bg-accent"
+                href="/waitlist"
+                className="block w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-semibold transition-colors hover:bg-background"
               >
                 Choose Premium
               </Link>
@@ -546,7 +577,7 @@ export default function HomePage() {
                   key={i}
                   className="group rounded-xl border border-border bg-card overflow-hidden"
                 >
-                  <summary className="flex cursor-pointer items-center justify-between p-4 font-semibold hover:bg-accent transition-colors">
+                  <summary className="flex cursor-pointer items-center justify-between p-4 font-semibold hover:bg-background transition-colors">
                     <span className="text-sm">{faq.q}</span>
                     <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                   </summary>
@@ -561,24 +592,22 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-12 md:py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-2xl border border-primary-500/20 bg-gradient-hero p-10 text-center shadow-gradient-glow md:p-16">
-            <div className="relative z-10">
-              <h2 className="mb-4 text-2xl font-bold text-white sm:text-3xl md:text-4xl">
-                Ready to Transform Your Productivity?
-              </h2>
-              <p className="mb-8 text-base text-white/90 md:text-lg">
-                Join thousands of users who crush their goals with MicroPlanner
-              </p>
-              <Link
-                href="/sign-up"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-600 transition-all hover:scale-105 hover:shadow-xl"
-              >
-                Get Started Free
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+      <section className="pt-12 md:pt-20">
+        <div className="relative overflow-hidden w-full border border-primary-500/20 bg-gradient-hero p-10 text-center md:p-16">
+          <div className="relative z-10">
+            <h2 className="mb-4 text-2xl font-bold text-white sm:text-3xl md:text-4xl">
+              Ready to Transform Your Productivity?
+            </h2>
+            <p className="mb-8 text-base text-white/90 md:text-lg">
+              Join thousands of users who crush their goals with MicroPlanner
+            </p>
+            <Link
+              href="/waitlist"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-600 transition-all hover:scale-105 hover:shadow-xl"
+            >
+              Join Waitlist
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>

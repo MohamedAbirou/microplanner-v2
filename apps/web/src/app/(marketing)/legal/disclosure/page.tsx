@@ -14,7 +14,7 @@ export default function DisclosurePage() {
           <div className="mb-12">
             <h1 className="mb-2 text-4xl font-bold tracking-tight">Responsible Disclosure Policy</h1>
             <p className="text-muted-foreground">
-              Last Updated: November 11, 2024
+              Last Updated: November 11, 2025
             </p>
           </div>
 
@@ -38,7 +38,7 @@ export default function DisclosurePage() {
                 This Responsible Disclosure Policy applies to all security vulnerabilities discovered in:
               </p>
               <ul className="ml-6 list-disc space-y-2">
-                <li>MicroPlanner.app and all subdomains</li>
+                <li>microplanner.ai and all subdomains</li>
                 <li>MicroPlanner web application</li>
                 <li>MicroPlanner mobile applications (iOS and Android)</li>
                 <li>MicroPlanner APIs and backend services</li>
@@ -109,7 +109,7 @@ export default function DisclosurePage() {
                 Please report security vulnerabilities directly to our Security Team at:
               </p>
               <div className="ml-6 mt-4 space-y-2 border-l-2 border-primary-500/50 pl-4">
-                <p className="font-semibold text-foreground">Email: security@microplanner.app</p>
+                <p className="font-semibold text-foreground">Email: security@microplanner.ai</p>
                 <p>PGP Key available upon request for encrypted communication</p>
               </div>
 
@@ -272,7 +272,7 @@ export default function DisclosurePage() {
                 Our vulnerability disclosure process follows these steps:
               </p>
               <ol className="ml-6 list-decimal space-y-2">
-                <li>Researcher submits vulnerability report to security@microplanner.app</li>
+                <li>Researcher submits vulnerability report to security@microplanner.ai</li>
                 <li>We acknowledge receipt within 24 hours with a ticket number</li>
                 <li>Our security team investigates and assesses severity</li>
                 <li>We develop and test a fix</li>
@@ -309,7 +309,7 @@ export default function DisclosurePage() {
                 If you discover a vulnerability in a third-party service integrated with MicroPlanner (Google Calendar, Slack, Zoom, etc.), please report it directly to that service's security team, not to MicroPlanner. Most major services have their own responsible disclosure programs.
               </p>
               <p>
-                If you believe the vulnerability may impact MicroPlanner users through the integration, please also notify us at security@microplanner.app so we can assess the impact.
+                If you believe the vulnerability may impact MicroPlanner users through the integration, please also notify us at security@microplanner.ai so we can assess the impact.
               </p>
             </section>
 
@@ -371,13 +371,13 @@ export default function DisclosurePage() {
               <div className="ml-6 mt-4 space-y-2 border-l-2 border-primary-500/50 pl-4">
                 <p className="font-semibold text-foreground">MicroPlanner Security Team</p>
                 <p>
-                  <strong>Email:</strong> security@microplanner.app
+                  <strong>Email:</strong> security@microplanner.ai
                 </p>
                 <p>
                   <strong>Response Time:</strong> Within 24 hours
                 </p>
                 <p>
-                  <strong>Website:</strong> microplanner.app
+                  <strong>Website:</strong> microplanner.ai
                 </p>
                 <p>
                   <strong>Address:</strong> San Francisco, California, USA
@@ -389,7 +389,7 @@ export default function DisclosurePage() {
           {/* Footer Notice */}
           <div className="mt-12 border-t border-border/40 pt-8">
             <p className="text-xs text-muted-foreground">
-              This Responsible Disclosure Policy was last updated on November 11, 2024. We appreciate your contributions to making MicroPlanner more secure.
+              This Responsible Disclosure Policy was last updated on November 11, 2025. We appreciate your contributions to making MicroPlanner more secure.
             </p>
           </div>
         </div>
