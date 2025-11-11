@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Twitter, Linkedin, Github, MessageCircle } from 'lucide-react';
 
 export default function MarketingLayout({
   children,
@@ -36,10 +36,10 @@ export default function MarketingLayout({
                 Features
               </Link>
               <Link
-                href="/how-it-works"
+                href="/story"
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                How it works
+                Story
               </Link>
               <Link
                 href="/pricing"
@@ -48,26 +48,20 @@ export default function MarketingLayout({
                 Pricing
               </Link>
               <Link
-                href="/testimonials"
+                href="/roadmap"
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                Testimonials
+                Roadmap
               </Link>
             </nav>
 
-            {/* Auth Buttons */}
+            {/* CTA Button */}
             <div className="flex items-center gap-3">
               <Link
-                href="/sign-in"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/sign-up"
+                href="/waitlist"
                 className="inline-flex items-center justify-center rounded-lg bg-gradient-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md hover:scale-105"
               >
-                Get Started
+                Join Waitlist
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </div>
@@ -78,191 +72,32 @@ export default function MarketingLayout({
       {/* Main Content */}
       <main className="flex-1">{children}</main>
 
-      {/* Dense Footer - ReclaimAI Style */}
+      {/* Simplified Footer */}
       <footer className="border-t border-border/40 bg-muted/30">
         <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-6">
-            {/* Products */}
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {/* Product */}
             <div>
-              <h3 className="mb-4 text-sm font-semibold text-foreground">Products</h3>
+              <h3 className="mb-4 text-sm font-semibold text-foreground">Product</h3>
               <ul className="space-y-2.5 text-sm">
                 <li>
-                  <Link href="/features/ai-planning" className="text-muted-foreground hover:text-foreground transition-colors">
-                    AI Planning
+                  <Link href="/features" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Features
                   </Link>
                 </li>
-                <li>
-                  <Link href="/features/goals" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Goals
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/features/tasks" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Tasks
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/features/calendar-sync" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Calendar Sync
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/features/scheduling-links" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Scheduling Links
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/features/time-tracking" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Time Tracking
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/features/analytics" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Analytics
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/features/focus-time" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Focus Time
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/features/habits" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Habits
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Use Cases */}
-            <div>
-              <h3 className="mb-4 text-sm font-semibold text-foreground">Use Cases</h3>
-              <ul className="space-y-2.5 text-sm">
-                <li>
-                  <Link href="/use-cases/individuals" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Individuals
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/use-cases/students" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Students
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/use-cases/teams" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Teams
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/use-cases/product-teams" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Product Teams
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/use-cases/engineering" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Engineering Teams
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/use-cases/sales" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Sales Teams
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/use-cases/marketing" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Marketing Teams
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Pricing */}
-            <div>
-              <h3 className="mb-4 text-sm font-semibold text-foreground">Pricing</h3>
-              <ul className="space-y-2.5 text-sm">
                 <li>
                   <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Pricing & Plans
+                    Pricing
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pricing/student" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Student Discount
+                  <Link href="/roadmap" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Roadmap
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pricing/nonprofit" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Nonprofit Discount
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/pricing/startup" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Startup Discount
-                  </Link>
-                </li>
-              </ul>
-              <h3 className="mb-4 mt-6 text-sm font-semibold text-foreground">Compare</h3>
-              <ul className="space-y-2.5 text-sm">
-                <li>
-                  <Link href="/compare/reclaim" className="text-muted-foreground hover:text-foreground transition-colors">
-                    vs. ReclaimAI
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/compare/motion" className="text-muted-foreground hover:text-foreground transition-colors">
-                    vs. Motion
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/compare/calendly" className="text-muted-foreground hover:text-foreground transition-colors">
-                    vs. Calendly
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Integrations */}
-            <div>
-              <h3 className="mb-4 text-sm font-semibold text-foreground">Integrations</h3>
-              <ul className="space-y-2.5 text-sm">
-                <li>
-                  <Link href="/integrations/google-calendar" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Google Calendar
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/integrations/slack" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Slack
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/integrations/zoom" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Zoom
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/integrations/notion" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Notion
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/integrations/todoist" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Todoist
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/integrations/asana" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Asana
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/integrations/jira" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Jira
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/integrations/linear" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Linear
+                  <Link href="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
+                    How It Works
                   </Link>
                 </li>
               </ul>
@@ -273,13 +108,8 @@ export default function MarketingLayout({
               <h3 className="mb-4 text-sm font-semibold text-foreground">Company</h3>
               <ul className="space-y-2.5 text-sm">
                 <li>
-                  <Link href="/contact/sales" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Contact Sales
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/contact/support" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Contact Support
+                  <Link href="/story" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Our Story
                   </Link>
                 </li>
                 <li>
@@ -288,18 +118,8 @@ export default function MarketingLayout({
                   </Link>
                 </li>
                 <li>
-                  <Link href="/careers" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Careers
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/customers" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Customers
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/affiliate" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Affiliate Program
+                  <Link href="/contact/support" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Contact
                   </Link>
                 </li>
               </ul>
@@ -315,52 +135,91 @@ export default function MarketingLayout({
                   </Link>
                 </li>
                 <li>
+                  <Link href="/changelog" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Changelog
+                  </Link>
+                </li>
+                <li>
                   <Link href="/help" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Help Docs
+                    Help
                   </Link>
                 </li>
                 <li>
-                  <Link href="/webinars" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Webinars & Demos
+                  <Link href="/status" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Status
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h3 className="mb-4 text-sm font-semibold text-foreground">Legal</h3>
+              <ul className="space-y-2.5 text-sm">
+                <li>
+                  <Link href="/legal/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Terms
                   </Link>
                 </li>
                 <li>
-                  <Link href="/glossary" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Glossary
+                  <Link href="/legal/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Privacy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/api" className="text-muted-foreground hover:text-foreground transition-colors">
-                    API Documentation
+                  <Link href="/legal/security" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Security
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
 
-          {/* Bottom Bar */}
-          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/40 pt-8 text-xs text-muted-foreground sm:flex-row">
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-              <Link href="/legal/security" className="hover:text-foreground transition-colors">
-                Security
-              </Link>
-              <Link href="/legal/terms" className="hover:text-foreground transition-colors">
-                Terms of Use
-              </Link>
-              <Link href="/legal/privacy" className="hover:text-foreground transition-colors">
-                Privacy Policy
-              </Link>
-              <Link href="/legal/disclosure" className="hover:text-foreground transition-colors">
-                Responsible Disclosure
-              </Link>
-              <Link href="/changelog" className="hover:text-foreground transition-colors">
-                Changelog
-              </Link>
-              <Link href="/status" className="hover:text-foreground transition-colors">
-                Status
-              </Link>
+          {/* Social & Bottom Bar */}
+          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/40 pt-8">
+            {/* Social Links */}
+            <div className="flex items-center gap-4">
+              <a
+                href="https://twitter.com/microplanner"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Twitter"
+              >
+                <Twitter className="h-5 w-5" />
+              </a>
+              <a
+                href="https://linkedin.com/in/mohamed-abirou"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="h-5 w-5" />
+              </a>
+              <a
+                href="https://github.com/MohamedAbirou"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="GitHub"
+              >
+                <Github className="h-5 w-5" />
+              </a>
+              <a
+                href="https://discord.gg/microplanner"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Discord"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </a>
             </div>
-            <p>&copy; {new Date().getFullYear()} MicroPlanner, Inc.</p>
+
+            <p className="text-xs text-muted-foreground">
+              &copy; {new Date().getFullYear()} MicroPlanner. Building in public.
+            </p>
           </div>
         </div>
       </footer>
