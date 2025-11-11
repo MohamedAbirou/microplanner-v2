@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, HelpCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function PricingPage() {
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+
   const plans = [
     {
       name: 'Free',
@@ -141,12 +144,25 @@ export default function PricingPage() {
 
           {/* Billing Toggle */}
           <div className="mb-12 flex justify-center items-center gap-4">
-            <span className="text-sm font-medium">Monthly</span>
             <div className="relative inline-flex items-center rounded-full bg-card border border-border p-1">
-              <button className="px-4 py-2 text-sm font-medium rounded-full bg-primary-500/10 text-primary-600">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
+                  billingPeriod === 'monthly'
+                    ? 'bg-primary-500/10 text-primary-600'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
                 Monthly
               </button>
-              <button className="px-4 py-2 text-sm font-medium text-muted-foreground">
+              <button
+                onClick={() => setBillingPeriod('annual')}
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
+                  billingPeriod === 'annual'
+                    ? 'bg-primary-500/10 text-primary-600'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
                 Annual <span className="text-xs font-bold text-primary-500 ml-1">(Save 20%)</span>
               </button>
             </div>
@@ -175,9 +191,23 @@ export default function PricingPage() {
                   <h3 className="mb-1 text-xl font-bold">{plan.name}</h3>
                   <p className="text-xs text-muted-foreground mb-4">{plan.description}</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold">${plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
+                    {billingPeriod === 'annual' && plan.price > 0 ? (
+                      <>
+                        <span className="text-4xl font-bold">${Math.round(plan.price * 12 * 0.8)}</span>
+                        <span className="text-muted-foreground">/year</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-4xl font-bold">${plan.price}</span>
+                        <span className="text-muted-foreground">/month</span>
+                      </>
+                    )}
                   </div>
+                  {billingPeriod === 'annual' && plan.price > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ${plan.price}/month billed annually
+                    </p>
+                  )}
                 </div>
 
                 <Link href={plan.ctaLink} className="block mb-8">
