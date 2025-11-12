@@ -1,19 +1,6 @@
-# Ignore source files - only use built bundle
-src/
-*.ts
-!dist/
-tsconfig.json
-nest-cli.json
-webpack.config.js
-
-# Ignore workspace packages - they're bundled
-../../packages/
-
 # Standard ignores
-node_modules/
 .git/
-.env*
-!.env.example
 *.log
 coverage/
 test/
+*.spec.ts
