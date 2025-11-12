@@ -47,7 +47,7 @@ export default function BlogPage() {
                 I'll start publishing build logs and progress updates once I launch the MVP. For
                 now, you can follow along on{' '}
                 <a
-                  href="https://linkedin.com/in/mohamed-abirou"
+                  href="https://linkedin.com/in/mohamed-abirou-34ba39241/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-primary-500 hover:text-primary-600 underline"
