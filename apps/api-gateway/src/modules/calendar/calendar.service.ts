@@ -1,10 +1,10 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
-import { GoogleOAuthService } from './services/google-oauth.service';
-import { google } from 'googleapis';
-import type { Task, SyncLog } from '@microplanner/database';
+import type { SyncLog, Task } from '@microplanner/database';
 import { SyncStatus } from '@microplanner/database';
-import { SyncTasksDto, ConflictResolution } from './dto/sync-tasks.dto';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { google } from 'googleapis';
+import { PrismaService } from '../../database/prisma.service';
+import { ConflictResolution, SyncTasksDto } from './dto/sync-tasks.dto';
+import { GoogleOAuthService } from './services/google-oauth.service';
 
 export interface ConflictInfo {
   task: Task;
@@ -523,7 +523,7 @@ export class CalendarService {
         tasksSucceeded: result.success,
         tasksFailed: result.failed + result.skipped,
         success: result.failed === 0 && result.skipped === 0,
-        errors: (result.conflicts as any).length > 0 ? result.conflicts : null,
+        errors: (result.conflicts as any).length > 0 ? (result.conflicts as any) : null,
         duration,
       },
     });
