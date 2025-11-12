@@ -7,6 +7,13 @@ settings:
 importers:
 
   .:
+    dependencies:
+      prisma:
+        specifier: ^5.22.0
+        version: 5.22.0
+      turbo:
+        specifier: ^1.13.4
+        version: 1.13.4
     devDependencies:
       '@turbo/gen':
         specifier: ^1.13.0
@@ -14,9 +21,6 @@ importers:
       prettier:
         specifier: ^3.2.5
         version: 3.6.2
-      turbo:
-        specifier: ^1.13.4
-        version: 1.13.4
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
@@ -14837,7 +14841,7 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
-    dev: true
+    dev: false
     optional: true
 
   /turbo-darwin-arm64@1.13.4:
@@ -14845,7 +14849,7 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
+    dev: false
     optional: true
 
   /turbo-linux-64@1.13.4:
@@ -14853,7 +14857,7 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
+    dev: false
     optional: true
 
   /turbo-linux-arm64@1.13.4:
@@ -14861,7 +14865,7 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
+    dev: false
     optional: true
 
   /turbo-windows-64@1.13.4:
@@ -14869,7 +14873,7 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: true
+    dev: false
     optional: true
 
   /turbo-windows-arm64@1.13.4:
@@ -14877,7 +14881,7 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
-    dev: true
+    dev: false
     optional: true
 
   /turbo@1.13.4:
@@ -14890,7 +14894,7 @@ packages:
       turbo-linux-arm64: 1.13.4
       turbo-windows-64: 1.13.4
       turbo-windows-arm64: 1.13.4
-    dev: true
+    dev: false
 
   /type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
