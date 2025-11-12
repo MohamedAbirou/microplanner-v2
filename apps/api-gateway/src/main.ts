@@ -63,7 +63,8 @@ async function bootstrap() {
     'http://localhost:3001', // Next.js web app (dev)
     'http://localhost:19006', // Expo web (dev)
     'exp://localhost:19000', // Expo mobile (dev)
-    'https://microplanner-web.vercel.app'
+    'https://microplanner-web.vercel.app',
+    'https://microplanner-v2-api-gateway.vercel.app/graphql'
   ];
 
   // Add production URLs if in production
