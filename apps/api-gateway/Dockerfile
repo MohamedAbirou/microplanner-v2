@@ -48,18 +48,20 @@ COPY packages/database/package.json ./packages/database/
 COPY packages/types/package.json ./packages/types/
 COPY packages/config/package.json ./packages/config/
 
+# Copy Prisma schema (needed for client generation)
+COPY packages/database/prisma ./packages/database/prisma
+
 # Install ONLY production dependencies
 RUN pnpm install --frozen-lockfile --prod
+
+# Generate Prisma Client with correct binaries for Alpine Linux
+RUN pnpm --filter @microplanner/database db:generate
 
 # Copy built application
 COPY --from=build /app/apps/api-gateway/dist ./apps/api-gateway/dist
 
-# Copy packages with generated Prisma client
+# Copy packages source (excluding node_modules, Prisma is already generated)
 COPY --from=build /app/packages ./packages
-
-# Copy Prisma schema and generated binaries
-COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 
 WORKDIR /app/apps/api-gateway
 
