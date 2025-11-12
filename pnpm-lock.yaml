@@ -162,6 +162,9 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
+      webpack-node-externals:
+        specifier: ^3.0.0
+        version: 3.0.0
       winston:
         specifier: ^3.11.0
         version: 3.18.3
@@ -669,7 +672,7 @@ importers:
         specifier: ^5.9.1
         version: 5.22.0(prisma@5.22.0)
       prisma:
-        specifier: ^5.22.0
+        specifier: ^5.9.1
         version: 5.22.0
     devDependencies:
       tsx:
