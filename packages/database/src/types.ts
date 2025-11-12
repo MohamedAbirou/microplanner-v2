@@ -41,23 +41,12 @@ export interface User {
   sleepTime: string;
   workStartTime: string;
   workEndTime: string;
-  workDays: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
   productivityPeaks: string[];
   energyPattern: EnergyPattern | null;
   blockedTimes: any | null; // Json type
 
-  // Email notification preferences
-  emailNotifications: boolean;
-  taskReminderOneDayBefore: boolean;
-  taskReminderOneHourBefore: boolean;
-  weeklySummaryEnabled: boolean;
-  planReadyNotification: boolean;
-
   // Device tokens
   pushTokens: string[];
-
-  // AI Learning (PRO/PREMIUM feature)
-  patternInsights: any | null; // JSON type - stores UserPatternInsights
 
   // Metadata
   onboardingCompleted: boolean;
@@ -170,6 +159,8 @@ export interface Task {
   // Task details
   title: string;
   notes: string | null;
+  priority: number;
+  tags: string[];
 
   // Scheduling
   scheduledDate: Date;

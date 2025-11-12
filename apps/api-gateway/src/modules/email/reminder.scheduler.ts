@@ -49,8 +49,7 @@ export class ReminderScheduler {
             gte: windowStart,
             lte: windowEnd,
           },
-          status: 'TODO',
-          deletedAt: null,
+          isCompleted: false,
         },
         include: {
           user: true,
@@ -66,10 +65,10 @@ export class ReminderScheduler {
       let sent = 0;
       for (const task of tasks) {
         try {
-          // Check user notification preferences
-          if (!task.user.emailNotifications || !task.user.taskReminderOneHourBefore) {
-            continue; // Skip if user has disabled notifications
-          }
+          // TODO: Check user notification preferences once fields are added to schema
+          // if (!task.user.emailNotifications || !task.user.taskReminderOneHourBefore) {
+          //   continue;
+          // }
 
           await this.emailService.sendTaskReminder(task, task.user, '1_hour_before');
           sent++;
@@ -118,8 +117,7 @@ export class ReminderScheduler {
             gte: tomorrow,
             lte: tomorrowEnd,
           },
-          status: 'TODO',
-          deletedAt: null,
+          isCompleted: false,
         },
         include: {
           user: true,
@@ -135,10 +133,10 @@ export class ReminderScheduler {
       let sent = 0;
       for (const task of tasks) {
         try {
-          // Check user notification preferences
-          if (!task.user.emailNotifications || !task.user.taskReminderOneDayBefore) {
-            continue; // Skip if user has disabled notifications
-          }
+          // TODO: Check user notification preferences once fields are added to schema
+          // if (!task.user.emailNotifications || !task.user.taskReminderOneDayBefore) {
+          //   continue;
+          // }
 
           await this.emailService.sendTaskReminder(task, task.user, '1_day_before');
           sent++;
@@ -181,11 +179,7 @@ export class ReminderScheduler {
       weekStart.setHours(0, 0, 0, 0);
 
       // Find all active users
-      const users = await this.prisma.user.findMany({
-        where: {
-          deletedAt: null,
-        },
-      });
+      const users = await this.prisma.user.findMany();
 
       if (users.length === 0) {
         this.logger.debug('No users found for weekly summaries');
@@ -196,10 +190,10 @@ export class ReminderScheduler {
       let sent = 0;
       for (const user of users) {
         try {
-          // Check user notification preferences
-          if (!user.emailNotifications || !user.weeklySummaryEnabled) {
-            continue; // Skip if user has disabled weekly summaries
-          }
+          // TODO: Check user notification preferences once fields are added to schema
+          // if (!user.emailNotifications || !user.weeklySummaryEnabled) {
+          //   continue;
+          // }
 
           // Gather weekly statistics
           const [goalsCreated, plansGenerated, tasksCompleted, totalTasks] =
@@ -219,7 +213,7 @@ export class ReminderScheduler {
               this.prisma.task.count({
                 where: {
                   userId: user.id,
-                  status: 'COMPLETED',
+                  isCompleted: true,
                   completedAt: { gte: weekStart, lte: weekEnd },
                 },
               }),
@@ -299,7 +293,6 @@ export class ReminderScheduler {
     const goals = await this.prisma.goal.findMany({
       where: {
         userId,
-        deletedAt: null,
       },
       include: {
         tasks: {
@@ -314,7 +307,7 @@ export class ReminderScheduler {
     const goalsWithStats = goals
       .map((goal) => {
         const totalTasks = goal.tasks.length;
-        const completedTasks = goal.tasks.filter((t) => t.status === 'COMPLETED').length;
+        const completedTasks = goal.tasks.filter((t) => t.isCompleted).length;
         const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
         return {

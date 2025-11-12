@@ -150,7 +150,8 @@ export class GPT4oMiniPlannerService implements IPlanningStrategy {
     weekEnd.setDate(weekEnd.getDate() + 7);
 
     const workHours = { start: user.workStartTime || '09:00', end: user.workEndTime || '17:00' };
-    const workDays = user.workDays && user.workDays.length > 0 ? user.workDays : [1, 2, 3, 4, 5]; // Default: Mon-Fri
+    // TODO: Use user.workDays once field is added to schema
+    const workDays = [1, 2, 3, 4, 5]; // Default: Mon-Fri
     const timezone = user.timezone || 'UTC';
 
     // Format goals
@@ -290,7 +291,8 @@ Always output valid JSON matching the requested format. Be concise but insightfu
 
     // Calculate available hours
     const workHours = { start: user.workStartTime || '09:00', end: user.workEndTime || '17:00' };
-    const workDays = user.workDays && user.workDays.length > 0 ? user.workDays : [1, 2, 3, 4, 5]; // Default: Mon-Fri
+    // TODO: Use user.workDays once field is added to schema
+    const workDays = [1, 2, 3, 4, 5]; // Default: Mon-Fri
 
     const hoursPerDay =
       (this.timeToMinutes(workHours.end) - this.timeToMinutes(workHours.start)) / 60;
