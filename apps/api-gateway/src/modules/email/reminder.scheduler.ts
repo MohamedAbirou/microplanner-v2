@@ -70,7 +70,7 @@ export class ReminderScheduler {
           //   continue;
           // }
 
-          await this.emailService.sendTaskReminder(task, task.user, '1_hour_before');
+          await this.emailService.sendTaskReminder(task as any, task.user, '1_hour_before');
           sent++;
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -138,7 +138,7 @@ export class ReminderScheduler {
           //   continue;
           // }
 
-          await this.emailService.sendTaskReminder(task, task.user, '1_day_before');
+          await this.emailService.sendTaskReminder(task as any, task.user, '1_day_before');
           sent++;
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -249,7 +249,7 @@ export class ReminderScheduler {
           );
 
           // Send email
-          await this.emailService.sendWeeklySummary(user, {
+          await this.emailService.sendWeeklySummary(user as any, {
             weekStartDate: weekStart,
             weekEndDate: weekEnd,
             goalsCreated,

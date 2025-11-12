@@ -1,26 +1,33 @@
 // Temporary types file until Prisma client is generated
 // Based on schema.prisma
+// NOTE: Using const enums to match Prisma-generated types
 
-export enum SubscriptionTier {
-  FREE = 'FREE',
-  STARTER = 'STARTER',
-  PRO = 'PRO',
-  PREMIUM = 'PREMIUM',
-}
+export const SubscriptionTier = {
+  FREE: 'FREE',
+  STARTER: 'STARTER',
+  PRO: 'PRO',
+  PREMIUM: 'PREMIUM',
+} as const;
 
-export enum SubscriptionStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  PAST_DUE = 'PAST_DUE',
-  CANCELED = 'CANCELED',
-  TRIALING = 'TRIALING',
-}
+export type SubscriptionTier = typeof SubscriptionTier[keyof typeof SubscriptionTier];
 
-export enum EnergyPattern {
-  MORNING_PERSON = 'MORNING_PERSON',
-  NIGHT_OWL = 'NIGHT_OWL',
-  BALANCED = 'BALANCED',
-}
+export const SubscriptionStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  PAST_DUE: 'PAST_DUE',
+  CANCELED: 'CANCELED',
+  TRIALING: 'TRIALING',
+} as const;
+
+export type SubscriptionStatus = typeof SubscriptionStatus[keyof typeof SubscriptionStatus];
+
+export const EnergyPattern = {
+  MORNING_PERSON: 'MORNING_PERSON',
+  NIGHT_OWL: 'NIGHT_OWL',
+  BALANCED: 'BALANCED',
+} as const;
+
+export type EnergyPattern = typeof EnergyPattern[keyof typeof EnergyPattern];
 
 export interface User {
   id: string;
@@ -94,12 +101,14 @@ export interface Goal {
   updatedAt: Date;
 }
 
-export enum PlanStatus {
-  DRAFT = 'DRAFT',
-  ACCEPTED = 'ACCEPTED',
-  APPLIED = 'APPLIED',
-  ARCHIVED = 'ARCHIVED',
-}
+export const PlanStatus = {
+  DRAFT: 'DRAFT',
+  ACCEPTED: 'ACCEPTED',
+  APPLIED: 'APPLIED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+
+export type PlanStatus = typeof PlanStatus[keyof typeof PlanStatus];
 
 export interface WeeklyPlan {
   id: string;
@@ -142,13 +151,15 @@ export interface WeeklyPlan {
   updatedAt: Date;
 }
 
-export enum SyncStatus {
-  PENDING = 'PENDING',
-  SYNCING = 'SYNCING',
-  SYNCED = 'SYNCED',
-  FAILED = 'FAILED',
-  CONFLICT = 'CONFLICT',
-}
+export const SyncStatus = {
+  PENDING: 'PENDING',
+  SYNCING: 'SYNCING',
+  SYNCED: 'SYNCED',
+  FAILED: 'FAILED',
+  CONFLICT: 'CONFLICT',
+} as const;
+
+export type SyncStatus = typeof SyncStatus[keyof typeof SyncStatus];
 
 export interface Task {
   id: string;

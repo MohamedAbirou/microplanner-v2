@@ -190,7 +190,7 @@ export class PlansService {
     //   });
     // }
 
-    return plan;
+    return plan as any;
   }
 
   /**
@@ -268,7 +268,7 @@ export class PlansService {
     //   });
     // }
 
-    return plan;
+    return plan as any;
   }
 
   /**
@@ -287,7 +287,7 @@ export class PlansService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return plan;
+    return plan as any;
   }
 
   /**
@@ -307,7 +307,7 @@ export class PlansService {
       throw new NotFoundException('Plan not found');
     }
 
-    return plan;
+    return plan as any;
   }
 
   /**
@@ -328,7 +328,7 @@ export class PlansService {
     ]);
 
     return {
-      plans,
+      plans: plans as any,
       total,
       page,
       limit,

@@ -523,7 +523,7 @@ export class CalendarService {
         tasksSucceeded: result.success,
         tasksFailed: result.failed + result.skipped,
         success: result.failed === 0 && result.skipped === 0,
-        errors: result.conflicts.length > 0 ? result.conflicts : null,
+        errors: (result.conflicts as any).length > 0 ? result.conflicts : null,
         duration,
       },
     });
