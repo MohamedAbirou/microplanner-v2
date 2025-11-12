@@ -513,10 +513,10 @@ importers:
       '@prisma/client':
         specifier: ^5.9.1
         version: 5.22.0(prisma@5.22.0)
-    devDependencies:
       prisma:
         specifier: ^5.9.1
         version: 5.22.0
+    devDependencies:
       tsx:
         specifier: ^4.7.1
         version: 4.20.6
@@ -4069,9 +4069,11 @@ packages:
 
   /@prisma/debug@5.22.0:
     resolution: {integrity: sha512-AUt44v3YJeggO2ZU5BkXI7M4hu9BF2zzH2iF2V5pyXT/lRTyWiElZ7It+bRH1EshoMRxHgpYg4VB6rCM+mG5jQ==}
+    dev: false
 
   /@prisma/engines-version@5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2:
     resolution: {integrity: sha512-2PTmxFR2yHW/eB3uqWtcgRcgAbG1rwG9ZriSvQw+nnb7c4uCr3RAcGMb6/zfE88SKlC1Nj2ziUvc96Z379mHgQ==}
+    dev: false
 
   /@prisma/engines@5.22.0:
     resolution: {integrity: sha512-UNjfslWhAt06kVL3CjkuYpHAWSO6L4kDCVPegV6itt7nD1kSJavd3vhgAEhjglLJJKEdJ7oIqDJ+yHk6qO8gPA==}
@@ -4081,6 +4083,7 @@ packages:
       '@prisma/engines-version': 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
       '@prisma/fetch-engine': 5.22.0
       '@prisma/get-platform': 5.22.0
+    dev: false
 
   /@prisma/fetch-engine@5.22.0:
     resolution: {integrity: sha512-bkrD/Mc2fSvkQBV5EpoFcZ87AvOgDxbG99488a5cexp5Ccny+UM6MAe/UFkUC0wLYD9+9befNOqGiIJhhq+HbA==}
@@ -4088,11 +4091,13 @@ packages:
       '@prisma/debug': 5.22.0
       '@prisma/engines-version': 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
       '@prisma/get-platform': 5.22.0
+    dev: false
 
   /@prisma/get-platform@5.22.0:
     resolution: {integrity: sha512-pHhpQdr1UPFpt+zFfnPazhulaZYCUqeIcPpJViYoq9R+D/yw4fjE+CtnsnKzPYm0ddUbeXUzjGVGIRVgPDCk4Q==}
     dependencies:
       '@prisma/debug': 5.22.0
+    dev: false
 
   /@prisma/instrumentation@6.15.0(@opentelemetry/api@1.9.0):
     resolution: {integrity: sha512-6TXaH6OmDkMOQvOxwLZ8XS51hU2v4A3vmE2pSijCIiGRJYyNeMcL6nMHQMyYdZRD8wl7LF3Wzc+AMPMV/9Oo7A==}
@@ -12236,6 +12241,7 @@ packages:
       '@prisma/engines': 5.22.0
     optionalDependencies:
       fsevents: 2.3.3
+    dev: false
 
   /promise@7.3.1:
     resolution: {integrity: sha512-nolQXZ/4L+bP/UGlkfaIujX9BKxGwmQ9OT4mOt5yvy8iK1h3wqTEJCijzGANTCCl9nWjY41juyAn2K3Q1hLLTg==}
