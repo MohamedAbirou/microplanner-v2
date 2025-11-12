@@ -159,20 +159,15 @@ export default function AboutPage() {
                 <h2 className="mb-4 text-2xl font-bold text-foreground">About the Founder</h2>
 
                 <p className="mb-4">
-                  I'm <strong className="text-foreground">Mohamed Abirou</strong>, 23 years old,
-                  based in Morocco 🇲🇦. I've been learning and building with code for 7 years,
-                  seriously building products for the last 4-5 years.
-                </p>
-
-                <p className="mb-4">
-                  What I've built: ERPs that improved team efficiency by 60-70%, AI-powered SaaS
-                  platforms, automation tools that saved 90% of repetitive work. I know how to build
-                  software that solves real problems.
+                  I'm <strong className="text-foreground">Moe Abirou</strong>, 23 years old software engineer. I've been in the IT field for 7 years, and
+                  seriously building products for the last 4-5 years. I've built ERPs, AI-powered
+                  SaaS platforms, automation tools — you name it.
                 </p>
 
                 <p>
                   <strong className="text-foreground">My dream:</strong> Freedom. Freedom to work
-                  from anywhere (ideally Switzerland 🇨🇭), build products I believe in, and live life
+                  from anywhere (ideally Switzerland 🇨🇭). Free to build
+                  products I believe in without asking permission from a boss and live life
                   on my own terms. MicroPlanner is my first step toward that freedom.
                 </p>
               </div>
@@ -253,7 +248,7 @@ export default function AboutPage() {
                 </Link>
 
                 <a
-                  href="https://linkedin.com/in/mohamed-abirou"
+                  href="https://linkedin.com/in/mohamed-abirou-34ba39241/"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
