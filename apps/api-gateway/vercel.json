@@ -1,15 +1,19 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
+  "buildCommand": "(cd ../.. && pnpm install) && pnpm build",
+  "installCommand": "echo 'Skip'",
+  "devCommand": "pnpm dev",
+  "outputDirectory": ".",
+  "functions": {
+    "dist/main.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 30
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/api/index.ts"
+      "source": "/(.*)",
+      "destination": "/dist/main.js"
     }
   ]
 }

@@ -153,14 +153,30 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = configService.get<number>('PORT') || 3001;
-  await app.listen(port);
 
-  logger.log(`
-    🚀 MicroPlanner API Gateway is running!
-    🔗 API: http://localhost:${port}/api
-    📚 Docs: http://localhost:${port}/api/docs
-    🌍 Environment: ${configService.get('NODE_ENV')}
-  `);
+  // Only listen if not in serverless environment
+  if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    await app.listen(port);
+
+    logger.log(`
+      🚀 MicroPlanner API Gateway is running!
+      🔗 API: http://localhost:${port}/api
+      📚 Docs: http://localhost:${port}/api/docs
+      🌍 Environment: ${configService.get('NODE_ENV')}
+    `);
+  }
+
+  return app;
 }
 
-bootstrap();
+// For local development
+if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  bootstrap();
+}
+
+// For Vercel serverless
+export default async function handler(req: any, res: any) {
+  const app = await bootstrap();
+  const expressApp = app.getHttpAdapter().getInstance();
+  return expressApp(req, res);
+}
