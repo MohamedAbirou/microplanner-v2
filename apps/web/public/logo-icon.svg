@@ -1,0 +1,133 @@
+<!-- MicroPlanner Icon Logo (Square, for app icon) -->
+
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+
+    </linearGradient>
+
+ 
+
+    <linearGradient id="iconSecondary" x1="0%" y1="0%" x2="100%" y2="100%">
+
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+
+      <stop offset="100%" style="stop-color:#A855F7;stop-opacity:1" />
+
+    </linearGradient>
+
+  </defs>
+
+ 
+
+  <!-- Rounded Square Background -->
+
+  <rect width="512" height="512" rx="115" fill="url(#iconGradient)"/>
+
+ 
+
+  <!-- Calendar Grid Pattern (lighter) -->
+
+  <g opacity="0.15">
+
+    <line x1="100" y1="100" x2="100" y2="412" stroke="white" stroke-width="4"/>
+
+    <line x1="178" y1="100" x2="178" y2="412" stroke="white" stroke-width="4"/>
+
+    <line x1="256" y1="100" x2="256" y2="412" stroke="white" stroke-width="4"/>
+
+    <line x1="334" y1="100" x2="334" y2="412" stroke="white" stroke-width="4"/>
+
+    <line x1="412" y1="100" x2="412" y2="412" stroke="white" stroke-width="4"/>
+
+ 
+
+    <line x1="100" y1="100" x2="412" y2="100" stroke="white" stroke-width="4"/>
+
+    <line x1="100" y1="178" x2="412" y2="178" stroke="white" stroke-width="4"/>
+
+    <line x1="100" y1="256" x2="412" y2="256" stroke="white" stroke-width="4"/>
+
+    <line x1="100" y1="334" x2="412" y2="334" stroke="white" stroke-width="4"/>
+
+    <line x1="100" y1="412" x2="412" y2="412" stroke="white" stroke-width="4"/>
+
+  </g>
+
+ 
+
+  <!-- AI Brain Network (White) -->
+
+  <g>
+
+    <!-- Central Node -->
+
+    <circle cx="256" cy="256" r="32" fill="white"/>
+
+ 
+
+    <!-- Surrounding Nodes -->
+
+    <circle cx="180" cy="180" r="22" fill="white" opacity="0.9"/>
+
+    <circle cx="332" cy="180" r="22" fill="white" opacity="0.9"/>
+
+    <circle cx="180" cy="332" r="22" fill="white" opacity="0.9"/>
+
+    <circle cx="332" cy="332" r="22" fill="white" opacity="0.9"/>
+
+ 
+
+    <!-- Outer Ring Nodes -->
+
+    <circle cx="140" cy="256" r="16" fill="white" opacity="0.7"/>
+
+    <circle cx="372" cy="256" r="16" fill="white" opacity="0.7"/>
+
+    <circle cx="256" cy="140" r="16" fill="white" opacity="0.7"/>
+
+    <circle cx="256" cy="372" r="16" fill="white" opacity="0.7"/>
+
+ 
+
+    <!-- Connection Lines -->
+
+    <line x1="256" y1="256" x2="180" y2="180" stroke="white" stroke-width="6" opacity="0.6"/>
+
+    <line x1="256" y1="256" x2="332" y2="180" stroke="white" stroke-width="6" opacity="0.6"/>
+
+    <line x1="256" y1="256" x2="180" y2="332" stroke="white" stroke-width="6" opacity="0.6"/>
+
+    <line x1="256" y1="256" x2="332" y2="332" stroke="white" stroke-width="6" opacity="0.6"/>
+
+ 
+
+    <line x1="256" y1="256" x2="140" y2="256" stroke="white" stroke-width="4" opacity="0.5"/>
+
+    <line x1="256" y1="256" x2="372" y2="256" stroke="white" stroke-width="4" opacity="0.5"/>
+
+    <line x1="256" y1="256" x2="256" y2="140" stroke="white" stroke-width="4" opacity="0.5"/>
+
+    <line x1="256" y1="256" x2="256" y2="372" stroke="white" stroke-width="4" opacity="0.5"/>
+
+ 
+
+    <!-- Inter-node connections -->
+
+    <line x1="180" y1="180" x2="332" y2="180" stroke="white" stroke-width="4" opacity="0.4"/>
+
+    <line x1="180" y1="332" x2="332" y2="332" stroke="white" stroke-width="4" opacity="0.4"/>
+
+    <line x1="180" y1="180" x2="180" y2="332" stroke="white" stroke-width="4" opacity="0.4"/>
+
+    <line x1="332" y1="180" x2="332" y2="332" stroke="white" stroke-width="4" opacity="0.4"/>
+
+  </g>
+
+</svg>

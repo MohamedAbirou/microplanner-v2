@@ -1,0 +1,93 @@
+<!-- MicroPlanner Wordmark (Horizontal Logo with Text) -->
+
+<svg width="600" height="120" viewBox="0 0 600 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+
+    <linearGradient id="wordmarkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+
+    </linearGradient>
+
+  </defs>
+
+ 
+
+  <!-- Logo Icon (Left Side) -->
+
+  <g>
+
+    <!-- Outer Circle -->
+
+    <circle cx="60" cy="60" r="50" fill="url(#wordmarkGradient)" opacity="0.1"/>
+
+ 
+
+    <!-- Calendar Grid -->
+
+    <g opacity="0.3">
+
+      <line x1="25" y1="25" x2="25" y2="95" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+      <line x1="43" y1="25" x2="43" y2="95" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+      <line x1="60" y1="25" x2="60" y2="95" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+      <line x1="77" y1="25" x2="77" y2="95" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+      <line x1="95" y1="25" x2="95" y2="95" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+ 
+
+      <line x1="25" y1="25" x2="95" y2="25" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+      <line x1="25" y1="43" x2="95" y2="43" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+      <line x1="25" y1="60" x2="95" y2="60" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+      <line x1="25" y1="77" x2="95" y2="77" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+      <line x1="25" y1="95" x2="95" y2="95" stroke="url(#wordmarkGradient)" stroke-width="1.5"/>
+
+    </g>
+
+ 
+
+    <!-- Brain Network -->
+
+    <circle cx="60" cy="60" r="8" fill="url(#wordmarkGradient)"/>
+
+    <circle cx="43" cy="43" r="5" fill="url(#wordmarkGradient)"/>
+
+    <circle cx="77" cy="43" r="5" fill="url(#wordmarkGradient)"/>
+
+    <circle cx="43" cy="77" r="5" fill="url(#wordmarkGradient)"/>
+
+    <circle cx="77" cy="77" r="5" fill="url(#wordmarkGradient)"/>
+
+ 
+
+    <line x1="60" y1="60" x2="43" y2="43" stroke="url(#wordmarkGradient)" stroke-width="2" opacity="0.5"/>
+
+    <line x1="60" y1="60" x2="77" y2="43" stroke="url(#wordmarkGradient)" stroke-width="2" opacity="0.5"/>
+
+    <line x1="60" y1="60" x2="43" y2="77" stroke="url(#wordmarkGradient)" stroke-width="2" opacity="0.5"/>
+
+    <line x1="60" y1="60" x2="77" y2="77" stroke="url(#wordmarkGradient)" stroke-width="2" opacity="0.5"/>
+
+  </g>
+
+ 
+
+  <!-- MicroPlanner Text -->
+
+  <text x="130" y="75" font-family="Inter, sans-serif" font-size="48" font-weight="700" fill="#0A0A0A" letter-spacing="-0.02em">
+
+    <tspan fill="url(#wordmarkGradient)">Micro</tspan><tspan fill="#0A0A0A">Planner</tspan>
+
+  </text>
+
+</svg>

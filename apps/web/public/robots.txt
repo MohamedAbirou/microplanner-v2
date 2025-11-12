@@ -8,4 +8,4 @@ Disallow: /api
 Disallow: /settings
 
 # Sitemap
-Sitemap: https://microplanner.app/sitemap.xml
+Sitemap: https://microplanner.ai/sitemap.xml

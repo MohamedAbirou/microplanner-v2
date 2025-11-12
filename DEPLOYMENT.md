@@ -77,7 +77,7 @@ STRIPE_PRO_PRICE_ID="price_xxxxx"
 # Google Calendar
 GOOGLE_CLIENT_ID="xxxxx.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="GOCSPX-xxxxx"
-GOOGLE_REDIRECT_URI="https://api.microplanner.app/api/v1/calendar/oauth/google/callback"
+GOOGLE_REDIRECT_URI="https://api.microplanner.ai/api/v1/calendar/oauth/google/callback"
 
 # Encryption (Generate with: openssl rand -base64 32)
 ENCRYPTION_SECRET="your-256-bit-encryption-key-here"
@@ -86,7 +86,7 @@ ENCRYPTION_SECRET="your-256-bit-encryption-key-here"
 NODE_ENV="production"
 PORT="3000"
 APP_URL="https://app.microplanner.com"
-API_URL="https://api.microplanner.app"
+API_URL="https://api.microplanner.ai"
 ```
 
 ---
@@ -359,14 +359,14 @@ fly secrets set STRIPE_PRO_PRICE_ID="price_xxxxx"
 # Google Calendar
 fly secrets set GOOGLE_CLIENT_ID="xxxxx.apps.googleusercontent.com"
 fly secrets set GOOGLE_CLIENT_SECRET="GOCSPX-xxxxx"
-fly secrets set GOOGLE_REDIRECT_URI="https://api.microplanner.app/api/v1/calendar/oauth/google/callback"
+fly secrets set GOOGLE_REDIRECT_URI="https://api.microplanner.ai/api/v1/calendar/oauth/google/callback"
 
 # Encryption
 fly secrets set ENCRYPTION_SECRET="$(openssl rand -base64 32)"
 
 # App Config
 fly secrets set APP_URL="https://app.microplanner.com"
-fly secrets set API_URL="https://api.microplanner.app"
+fly secrets set API_URL="https://api.microplanner.ai"
 ```
 
 ### 6. Deploy
@@ -386,13 +386,13 @@ fly status
 
 ```bash
 # Add custom domain
-fly certs add api.microplanner.app
+fly certs add api.microplanner.ai
 
 # Get DNS instructions
-fly certs show api.microplanner.app
+fly certs show api.microplanner.ai
 
 # Add CNAME record to your DNS:
-# CNAME api.microplanner.app -> microplanner-api.fly.dev
+# CNAME api.microplanner.ai -> microplanner-api.fly.dev
 ```
 
 ### 8. Scale (Optional)
@@ -488,13 +488,13 @@ jobs:
 
 **Clerk Dashboard**:
 - Go to Webhooks
-- Add endpoint: `https://api.microplanner.app/api/v1/webhooks/clerk`
+- Add endpoint: `https://api.microplanner.ai/api/v1/webhooks/clerk`
 - Subscribe to events: `user.created`, `user.updated`, `user.deleted`
 - Copy webhook secret → Update `CLERK_WEBHOOK_SECRET`
 
 **Stripe Dashboard**:
 - Go to Developers > Webhooks
-- Add endpoint: `https://api.microplanner.app/api/v1/billing/webhooks/stripe`
+- Add endpoint: `https://api.microplanner.ai/api/v1/billing/webhooks/stripe`
 - Subscribe to events:
   - `checkout.session.completed`
   - `customer.subscription.updated`
@@ -506,7 +506,7 @@ jobs:
 **Google Cloud Console**:
 - Go to APIs & Services > Credentials
 - Edit OAuth 2.0 Client ID
-- Add Authorized redirect URI: `https://api.microplanner.app/api/v1/calendar/oauth/google/callback`
+- Add Authorized redirect URI: `https://api.microplanner.ai/api/v1/calendar/oauth/google/callback`
 
 ### 2. Run Database Migrations
 
@@ -519,7 +519,7 @@ pnpm prisma migrate deploy
 ### 3. Verify Health Check
 
 ```bash
-curl https://api.microplanner.app/health
+curl https://api.microplanner.ai/health
 # Should return: {"status": "ok", "timestamp": "..."}
 ```
 
@@ -527,10 +527,10 @@ curl https://api.microplanner.app/health
 
 ```bash
 # Test Swagger docs
-open https://api.microplanner.app/api
+open https://api.microplanner.ai/api
 
 # Test authentication
-curl -X GET https://api.microplanner.app/api/v1/users/me \
+curl -X GET https://api.microplanner.ai/api/v1/users/me \
   -H "Authorization: Bearer <clerk_token>"
 
 # Test Stripe webhook (use Stripe CLI)
@@ -690,7 +690,7 @@ psql $DATABASE_URL -c "SELECT 1"
 fly secrets list | grep WEBHOOK
 
 # Verify endpoint in Stripe/Clerk dashboard
-# Must match exactly: https://api.microplanner.app/api/v1/...
+# Must match exactly: https://api.microplanner.ai/api/v1/...
 ```
 
 **3. Build Failures**:

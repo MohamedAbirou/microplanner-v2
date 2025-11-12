@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import { CheckCircle2, Circle, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ArrowRight, CheckCircle2, Circle, Clock } from 'lucide-react';
+import Link from 'next/link';
 
 export default function RoadmapPage() {
   return (
@@ -38,7 +38,7 @@ export default function RoadmapPage() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-foreground">Phase 0: Foundation</h2>
-                    <p className="text-sm text-success-500">✓ Completed - November 2024</p>
+                    <p className="text-sm text-success-500">✓ Completed - November 2025</p>
                   </div>
                 </div>
                 <ul className="ml-13 space-y-2 text-sm text-muted-foreground">
@@ -69,7 +69,7 @@ export default function RoadmapPage() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-foreground">Phase 1: Core MVP</h2>
-                    <p className="text-sm text-primary-500">🚧 In Progress - December 2024</p>
+                    <p className="text-sm text-primary-500">🚧 In Progress - December 2025</p>
                   </div>
                 </div>
                 <ul className="ml-13 space-y-2 text-sm text-muted-foreground">
@@ -100,7 +100,7 @@ export default function RoadmapPage() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-foreground">Phase 2: AI Planning</h2>
-                    <p className="text-sm text-muted-foreground">Q1 2025</p>
+                    <p className="text-sm text-muted-foreground">Q1 2026</p>
                   </div>
                 </div>
                 <ul className="ml-13 space-y-2 text-sm text-muted-foreground">
@@ -131,7 +131,7 @@ export default function RoadmapPage() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-foreground">Phase 3: Analytics & Insights</h2>
-                    <p className="text-sm text-muted-foreground">Q2 2025</p>
+                    <p className="text-sm text-muted-foreground">Q2 2026</p>
                   </div>
                 </div>
                 <ul className="ml-13 space-y-2 text-sm text-muted-foreground">
@@ -162,7 +162,7 @@ export default function RoadmapPage() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-foreground">Phase 4: Integrations & Mobile</h2>
-                    <p className="text-sm text-muted-foreground">Q3 2025</p>
+                    <p className="text-sm text-muted-foreground">Q3 2026</p>
                   </div>
                 </div>
                 <ul className="ml-13 space-y-2 text-sm text-muted-foreground">
