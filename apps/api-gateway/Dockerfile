@@ -1,6 +1,8 @@
 # Multi-stage build for NestJS API Gateway
 
 FROM node:18-alpine AS base
+# Install OpenSSL compatibility for Prisma
+RUN apk add --no-cache openssl openssl-dev libc6-compat
 RUN npm install -g pnpm@8.15.4
 WORKDIR /app
 
