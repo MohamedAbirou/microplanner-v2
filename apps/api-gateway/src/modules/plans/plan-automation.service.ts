@@ -101,7 +101,7 @@ export class PlanAutomationService {
               weekStartDate: nextWeekStart.toISOString().split('T')[0],
               goalIds: [], // Auto-include all active goals
             },
-            user,
+            user as any,
           );
 
           successCount++;
@@ -181,7 +181,7 @@ export class PlanAutomationService {
             weekStartDate: nextWeekStart.toISOString().split('T')[0],
             goalIds: [],
           },
-          user,
+          user as any,
         );
 
         successCount++;
@@ -251,7 +251,7 @@ export class PlanAutomationService {
           weekStartDate: nextWeekStart.toISOString().split('T')[0],
           goalIds: [],
         },
-        user,
+        user as any,
       );
 
       this.logger.log(`Auto-generated plan ${plan.id} for user ${userId}`);

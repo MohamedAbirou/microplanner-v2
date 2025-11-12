@@ -61,7 +61,7 @@ export class TasksService {
     });
 
     this.logger.log(`Manual task created: ${task.id}`);
-    return task;
+    return task as any;
   }
 
   /**
@@ -105,7 +105,7 @@ export class TasksService {
       this.prisma.task.count({ where }),
     ]);
 
-    return { tasks, total, page, limit };
+    return { tasks: tasks as any, total, page, limit };
   }
 
   /**
@@ -120,7 +120,7 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    return task;
+    return task as any;
   }
 
   /**
@@ -165,7 +165,7 @@ export class TasksService {
     return this.prisma.task.update({
       where: { id: taskId },
       data,
-    });
+    }) as any;
   }
 
   /**
@@ -225,7 +225,7 @@ export class TasksService {
       this.logger.warn(`Failed to record completion event: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    return updatedTask;
+    return updatedTask as any;
   }
 
   /**
@@ -262,7 +262,7 @@ export class TasksService {
       await this.updatePlanCompletion(task.planId);
     }
 
-    return updatedTask;
+    return updatedTask as any;
   }
 
   /**
