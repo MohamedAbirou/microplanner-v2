@@ -1,14 +1,14 @@
-import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import helmet from 'helmet';
-import compression from 'compression';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/node';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
-import { AppModule } from './app.module';
+import compression from 'compression';
+import helmet from 'helmet';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
+import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
@@ -63,6 +63,7 @@ async function bootstrap() {
     'http://localhost:3001', // Next.js web app (dev)
     'http://localhost:19006', // Expo web (dev)
     'exp://localhost:19000', // Expo mobile (dev)
+    'https://microplanner-web.vercel.app'
   ];
 
   // Add production URLs if in production
