@@ -29,7 +29,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/database ./packages/database
 COPY packages/types ./packages/types
 COPY packages/config ./packages/config
-COPY apps/api-gateway ./apps/api-gateway
+COPY apps/api-gateway ./apps/api-gateway/
 
 # Generate Prisma client
 RUN pnpm --filter @microplanner/database db:generate
