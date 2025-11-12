@@ -71,12 +71,25 @@ async function bootstrap() {
     if (appUrl) {
       allowedOrigins.push(appUrl);
     }
+    // Add Vercel production URLs
+    allowedOrigins.push('https://microplanner-web.vercel.app');
+    allowedOrigins.push('https://microplanner-web-git-main.vercel.app'); // Git branch preview
   }
+
+  // Allow all Vercel preview deployments in production
+  const isVercelPreview = (origin: string) => {
+    return origin?.includes('.vercel.app');
+  };
 
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
+
+      // Allow Vercel preview deployments
+      if (process.env.NODE_ENV === 'production' && isVercelPreview(origin)) {
+        return callback(null, true);
+      }
 
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
