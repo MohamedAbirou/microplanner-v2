@@ -1,5 +1,15 @@
 {
-  "buildCommand": "(cd ../.. && pnpm install) && pnpm run vercel-build",
-  "outputDirectory": "dist",
-  "installCommand": "echo 'Skipping default install - handled in buildCommand'"
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
+    }
+  ]
 }
