@@ -182,12 +182,13 @@ export class PlansService {
     );
 
     // 9. Send email notification (async, non-blocking)
-    if (user.planReadyNotification) {
-      this.emailService.sendPlanReady(user, plan).catch((error) => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
-      });
-    }
+    // TODO: Re-enable once planReadyNotification field is added to schema
+    // if (user.planReadyNotification) {
+    //   this.emailService.sendPlanReady(user, plan).catch((error) => {
+    //     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    //     this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
+    //   });
+    // }
 
     return plan;
   }
@@ -259,12 +260,13 @@ export class PlansService {
     this.logger.log(`Plan generated from template: ${plan.id} with ${tasks.length} tasks`);
 
     // Send email notification (async, non-blocking)
-    if (user.planReadyNotification) {
-      this.emailService.sendPlanReady(user, plan).catch((error) => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
-      });
-    }
+    // TODO: Re-enable once planReadyNotification field is added to schema
+    // if (user.planReadyNotification) {
+    //   this.emailService.sendPlanReady(user, plan).catch((error) => {
+    //     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    //     this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
+    //   });
+    // }
 
     return plan;
   }

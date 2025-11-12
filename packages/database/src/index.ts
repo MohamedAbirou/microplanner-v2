@@ -18,5 +18,7 @@ if (process.env.NODE_ENV !== 'production') {
 // Re-export PrismaClient class so it can be used in other packages
 export { PrismaClient } from '@prisma/client';
 
-// Export manual types (since Prisma client cannot be generated in this environment)
+// Re-export Prisma-generated types and enums
+// Note: Prisma generates types in the Prisma namespace, not as direct exports
+// So we just re-export everything from manual types which match the schema
 export * from './types';

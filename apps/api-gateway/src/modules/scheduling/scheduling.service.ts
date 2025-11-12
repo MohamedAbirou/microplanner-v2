@@ -95,7 +95,7 @@ export class SchedulingService {
         redirectUrl: createDto.redirectUrl || null,
         confirmationMessage: createDto.confirmationMessage || null,
         availability: defaultAvailability as any,
-        customQuestions: createDto.customQuestions || [],
+        customQuestions: (createDto.customQuestions || []) as any,
         isActive: true,
       },
     });
@@ -175,7 +175,7 @@ export class SchedulingService {
         redirectUrl: updateDto.redirectUrl,
         confirmationMessage: updateDto.confirmationMessage,
         availability: updateDto.availability as any,
-        customQuestions: updateDto.customQuestions,
+        customQuestions: updateDto.customQuestions as any,
       },
     });
 
@@ -428,8 +428,8 @@ export class SchedulingService {
     const updated = await this.prisma.booking.update({
       where: { id: bookingId },
       data: {
-        status: 'cancelled',
-        cancelledAt: new Date(),
+        status: 'canceled',
+        canceledAt: new Date(),
       },
     });
 

@@ -113,18 +113,19 @@ export class PatternRecognitionService {
 
   /**
    * Get cached insights for user (fast)
+   * TODO: Implement once patternInsights field is added to schema
    */
   async getCachedInsights(userId: string): Promise<UserPatternInsights | null> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { patternInsights: true },
-    });
-
-    if (!user?.patternInsights) {
-      return null;
-    }
-
-    return user.patternInsights as unknown as UserPatternInsights;
+    // DISABLED: patternInsights field not yet in schema
+    // const user = await this.prisma.user.findUnique({
+    //   where: { id: userId },
+    //   select: { patternInsights: true },
+    // });
+    // if (!user?.patternInsights) {
+    //   return null;
+    // }
+    // return user.patternInsights as unknown as UserPatternInsights;
+    return null;
   }
 
   /**
@@ -624,14 +625,17 @@ export class PatternRecognitionService {
 
   /**
    * Cache insights in database
+   * TODO: Implement once patternInsights field is added to schema
    */
   private async cacheInsights(userId: string, insights: UserPatternInsights): Promise<void> {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        patternInsights: insights as any,
-      },
-    });
+    // DISABLED: patternInsights field not yet in schema
+    // await this.prisma.user.update({
+    //   where: { id: userId },
+    //   data: {
+    //     patternInsights: insights as any,
+    //   },
+    // });
+    this.logger.debug(`Pattern insights generated for user ${userId} (caching disabled)`);
   }
 
   /**
