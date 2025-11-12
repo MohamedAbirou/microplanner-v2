@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm install && pnpm run vercel-build",
+  "buildCommand": "cd ../.. && pnpm install && cd apps/api-gateway && pnpm run vercel-build",
   "outputDirectory": "dist",
   "installCommand": "echo 'Skipping default install - handled in buildCommand'"
 }
