@@ -162,6 +162,9 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
+      webpack-node-externals:
+        specifier: ^3.0.0
+        version: 3.0.0
       winston:
         specifier: ^3.11.0
         version: 3.18.3
