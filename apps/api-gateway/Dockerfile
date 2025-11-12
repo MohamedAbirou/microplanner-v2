@@ -54,8 +54,12 @@ RUN pnpm install --frozen-lockfile --prod
 # Copy built application
 COPY --from=build /app/apps/api-gateway/dist ./apps/api-gateway/dist
 
-# Copy packages with generated Prisma client (includes the generated client)
+# Copy packages with generated Prisma client
 COPY --from=build /app/packages ./packages
+
+# Copy Prisma schema and generated binaries
+COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 
 WORKDIR /app/apps/api-gateway
 
