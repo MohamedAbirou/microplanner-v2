@@ -83,13 +83,21 @@ async function bootstrap() {
     return origin?.includes('.vercel.app');
   };
 
+  // Allow Railway/Render deployments
+  const isAllowedPlatform = (origin: string) => {
+    return origin?.includes('.vercel.app') ||
+           origin?.includes('.railway.app') ||
+           origin?.includes('.render.com') ||
+           origin?.includes('localhost');
+  };
+
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
 
-      // Allow Vercel preview deployments
-      if (process.env.NODE_ENV === 'production' && isVercelPreview(origin)) {
+      // Allow all deployment platforms
+      if (isAllowedPlatform(origin)) {
         return callback(null, true);
       }
 
