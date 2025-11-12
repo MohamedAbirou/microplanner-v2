@@ -7,7 +7,12 @@
       "src": "api/index.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["dist/**"]
+        "includeFiles": [
+          "dist/**",
+          "../../node_modules/.prisma/**",
+          "../../node_modules/@prisma/**",
+          "../../packages/database/prisma/schema.prisma"
+        ]
       }
     }
   ],
