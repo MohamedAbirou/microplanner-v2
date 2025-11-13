@@ -20,6 +20,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.0",
     "@apollo/server": "^4.10.0",
+    "@as-integrations/express5": "^1.0.0",
     "@microplanner/config": "workspace:*",
     "@microplanner/database": "workspace:*",
     "@microplanner/types": "workspace:*",

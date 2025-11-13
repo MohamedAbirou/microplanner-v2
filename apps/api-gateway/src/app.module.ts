@@ -62,16 +62,50 @@ import { WaitlistModule } from './modules/waitlist/waitlist.module';
       ],
     }),
 
-    // Bull Queue (Redis)
+    // Bull Queue (Redis) - Optional, gracefully degrades if Redis unavailable
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        redis: {
-          host: configService.get('REDIS_HOST') || 'localhost',
-          port: configService.get('REDIS_PORT') || 6379,
-        },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        // Parse REDIS_URL if provided, otherwise use individual config vars
+        const redisUrl = configService.get('REDIS_URL');
+        let redisConfig: any;
+
+        if (redisUrl) {
+          try {
+            const url = new URL(redisUrl);
+            redisConfig = {
+              host: url.hostname,
+              port: parseInt(url.port) || 6379,
+              password: url.password || configService.get('REDIS_PASSWORD'),
+            };
+          } catch (error) {
+            redisConfig = {
+              host: configService.get('REDIS_HOST') || 'localhost',
+              port: configService.get('REDIS_PORT') || 6379,
+              password: configService.get('REDIS_PASSWORD'),
+            };
+          }
+        } else {
+          redisConfig = {
+            host: configService.get('REDIS_HOST') || 'localhost',
+            port: configService.get('REDIS_PORT') || 6379,
+            password: configService.get('REDIS_PASSWORD'),
+          };
+        }
+
+        return {
+          redis: {
+            ...redisConfig,
+            maxRetriesPerRequest: 3,
+            enableOfflineQueue: false,
+            retryStrategy: (times: number) => {
+              if (times > 3) return null; // Give up after 3 retries
+              return Math.min(times * 50, 200);
+            },
+          },
+        };
+      },
     }),
 
     // Database
