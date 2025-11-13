@@ -88,7 +88,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                 </span>
               </Link>
               <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-                AI-powered weekly planning that actually works.
+                The AI that plans your life for you.
               </p>
             </div>
 
