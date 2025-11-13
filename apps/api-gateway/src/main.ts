@@ -1,3 +1,7 @@
+import crypto from 'crypto';
+// Make crypto globally available for @nestjs/schedule
+(globalThis as any).crypto = crypto;
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
