@@ -1,8 +1,8 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { WaitlistStatus } from '@microplanner/database';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { JoinWaitlistInput } from './dto/join-waitlist.input';
 import { JoinWaitlistResult, WaitlistStats } from './dto/waitlist.types';
-import { WaitlistStatus } from '@microplanner/database';
 
 @Injectable()
 export class WaitlistService {

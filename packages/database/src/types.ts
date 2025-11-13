@@ -9,7 +9,7 @@ export const SubscriptionTier = {
   PREMIUM: 'PREMIUM',
 } as const;
 
-export type SubscriptionTier = typeof SubscriptionTier[keyof typeof SubscriptionTier];
+export type SubscriptionTierType = typeof SubscriptionTier[keyof typeof SubscriptionTier];
 
 export const SubscriptionStatus = {
   ACTIVE: 'ACTIVE',
@@ -19,7 +19,7 @@ export const SubscriptionStatus = {
   TRIALING: 'TRIALING',
 } as const;
 
-export type SubscriptionStatus = typeof SubscriptionStatus[keyof typeof SubscriptionStatus];
+export type SubscriptionStatusType = typeof SubscriptionStatus[keyof typeof SubscriptionStatus];
 
 export const EnergyPattern = {
   MORNING_PERSON: 'MORNING_PERSON',
@@ -27,7 +27,15 @@ export const EnergyPattern = {
   BALANCED: 'BALANCED',
 } as const;
 
-export type EnergyPattern = typeof EnergyPattern[keyof typeof EnergyPattern];
+export type EnergyPatternType = typeof EnergyPattern[keyof typeof EnergyPattern];
+
+export const WaitlistStatus = {
+  PENDING: 'PENDING',
+  INVITED: 'INVITED',
+  CONVERTED: 'CONVERTED'
+} as const;
+
+export type WaitlistStatusType = typeof WaitlistStatus[keyof typeof WaitlistStatus];
 
 export interface User {
   id: string;
@@ -38,10 +46,10 @@ export interface User {
   timezone: string;
 
   // Subscription
-  tier: SubscriptionTier;
+  tier: SubscriptionTierType;
   stripeCustomerId: string | null;
   subscriptionId: string | null;
-  subscriptionStatus: SubscriptionStatus;
+  subscriptionStatus: SubscriptionStatusType;
 
   // Embedded preferences
   wakeTime: string;
@@ -49,7 +57,7 @@ export interface User {
   workStartTime: string;
   workEndTime: string;
   productivityPeaks: string[];
-  energyPattern: EnergyPattern | null;
+  energyPattern: EnergyPatternType | null;
   blockedTimes: any | null; // Json type
 
   // Device tokens
@@ -108,7 +116,7 @@ export const PlanStatus = {
   ARCHIVED: 'ARCHIVED',
 } as const;
 
-export type PlanStatus = typeof PlanStatus[keyof typeof PlanStatus];
+export type PlanStatusType = typeof PlanStatus[keyof typeof PlanStatus];
 
 export interface WeeklyPlan {
   id: string;
@@ -123,7 +131,7 @@ export interface WeeklyPlan {
   reasoning: any | null; // Json type
 
   // Status
-  status: PlanStatus;
+  status: PlanStatusType;
   acceptedAt: Date | null;
   appliedAt: Date | null;
   archivedAt: Date | null;
@@ -159,7 +167,7 @@ export const SyncStatus = {
   CONFLICT: 'CONFLICT',
 } as const;
 
-export type SyncStatus = typeof SyncStatus[keyof typeof SyncStatus];
+export type SyncStatusType = typeof SyncStatus[keyof typeof SyncStatus];
 
 export interface Task {
   id: string;
@@ -196,7 +204,7 @@ export interface Task {
   calendarEventId: string | null;
   calendarProvider: string | null;
   syncedAt: Date | null;
-  syncStatus: SyncStatus;
+  syncStatus: SyncStatusType;
   syncError: string | null;
 
   // Offline support

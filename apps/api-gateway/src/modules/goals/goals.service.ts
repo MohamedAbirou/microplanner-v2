@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
-import type { Goal, User } from '@microplanner/database';
+import type { Goal, SubscriptionTierType } from '@microplanner/database';
 import { SubscriptionTier } from '@microplanner/database';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../database/prisma.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
-import { UpdateGoalDto } from './dto/update-goal.dto';
 import { QueryGoalsDto } from './dto/query-goals.dto';
+import { UpdateGoalDto } from './dto/update-goal.dto';
 
 // Tier limits for goals
 const TIER_LIMITS = {
@@ -22,7 +22,11 @@ export class GoalsService {
   /**
    * Create a new goal with tier limit validation
    */
-  async create(userId: string, createGoalDto: CreateGoalDto, userTier: SubscriptionTier): Promise<Goal> {
+  async create(
+    userId: string,
+    createGoalDto: CreateGoalDto,
+    userTier: SubscriptionTierType
+  ): Promise<Goal> {
     // Check tier limits
     await this.checkTierLimit(userId, userTier);
 
@@ -47,7 +51,10 @@ export class GoalsService {
   /**
    * Find all goals for a user with filters and pagination
    */
-  async findAll(userId: string, query: QueryGoalsDto): Promise<{ goals: Goal[]; total: number; page: number; limit: number }> {
+  async findAll(
+    userId: string,
+    query: QueryGoalsDto
+  ): Promise<{ goals: Goal[]; total: number; page: number; limit: number }> {
     const { isActive, isPaused, page = 1, limit = 20 } = query;
 
     const where: any = { userId };
@@ -67,10 +74,7 @@ export class GoalsService {
         where,
         skip,
         take: limit,
-        orderBy: [
-          { priority: 'desc' },
-          { createdAt: 'desc' },
-        ],
+        orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
       }),
       this.prisma.goal.count({ where }),
     ]);
@@ -201,7 +205,9 @@ export class GoalsService {
       } else {
         const prevDate = completedTasks[i - 1].scheduledDate;
         const currDate = completedTasks[i].scheduledDate;
-        const daysDiff = Math.floor((prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysDiff = Math.floor(
+          (prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
 
         if (daysDiff <= 7) {
           tempStreak++;
@@ -234,7 +240,7 @@ export class GoalsService {
   /**
    * Check if user can create more goals based on tier limits
    */
-  private async checkTierLimit(userId: string, userTier: SubscriptionTier): Promise<void> {
+  private async checkTierLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
     const limit = TIER_LIMITS[userTier];
 
     const activeGoalsCount = await this.prisma.goal.count({

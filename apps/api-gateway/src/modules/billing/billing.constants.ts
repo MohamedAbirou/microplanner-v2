@@ -1,7 +1,7 @@
-import { SubscriptionTier } from '@microplanner/database';
+import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
 
 export interface PricingPlan {
-  tier: SubscriptionTier;
+  tier: SubscriptionTierType;
   name: string;
   price: number;
   priceId: string; // Stripe price ID

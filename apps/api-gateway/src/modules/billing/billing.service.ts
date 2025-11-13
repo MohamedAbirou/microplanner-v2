@@ -1,8 +1,8 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { SubscriptionStatus, SubscriptionStatusType, SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../database/prisma.service';
 import Stripe from 'stripe';
-import { SubscriptionTier, SubscriptionStatus } from '@microplanner/database';
+import { PrismaService } from '../../database/prisma.service';
 import { PRICING_PLANS, TIER_LIMITS } from './billing.constants';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 
@@ -240,7 +240,7 @@ export class BillingService {
    */
   private async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const userId = session.metadata?.userId;
-    const tier = session.metadata?.tier as SubscriptionTier;
+    const tier = session.metadata?.tier as SubscriptionTierType;
 
     if (!userId || !tier) {
       this.logger.error('Missing userId or tier in checkout session metadata');
@@ -267,14 +267,14 @@ export class BillingService {
    */
   private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     const userId = subscription.metadata?.userId;
-    const tier = subscription.metadata?.tier as SubscriptionTier;
+    const tier = subscription.metadata?.tier as SubscriptionTierType;
 
     if (!userId) {
       this.logger.error('Missing userId in subscription metadata');
       return;
     }
 
-    let status: SubscriptionStatus;
+    let status: SubscriptionStatusType;
     switch (subscription.status) {
       case 'active':
         status = SubscriptionStatus.ACTIVE;

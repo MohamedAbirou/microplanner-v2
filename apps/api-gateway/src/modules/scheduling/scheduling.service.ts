@@ -1,17 +1,22 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
-import { SubscriptionTier } from '@microplanner/database';
-import * as crypto from 'crypto';
+import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
 import {
-  SchedulingLink,
-  Booking,
-  CreateSchedulingLinkDto,
-  UpdateSchedulingLinkDto,
-  CreateBookingDto,
-  BookingStatus,
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import * as crypto from 'crypto';
+import { PrismaService } from '../../database/prisma.service';
+import {
   AvailabilitySettings,
-  TimeSlot as AvailableTimeSlot,
-  WeeklySchedule,
+  Booking,
+  BookingStatus,
+  CreateBookingDto,
+  CreateSchedulingLinkDto,
+  SchedulingLink,
+  UpdateSchedulingLinkDto,
+  WeeklySchedule
 } from './types/scheduling.types';
 
 // Internal time slot type for getAvailableSlots return
@@ -44,7 +49,7 @@ export class SchedulingService {
   async createSchedulingLink(
     userId: string,
     createDto: CreateSchedulingLinkDto,
-    userTier: SubscriptionTier,
+    userTier: SubscriptionTierType
   ): Promise<SchedulingLink> {
     if (userTier !== SubscriptionTier.PRO && userTier !== SubscriptionTier.PREMIUM) {
       throw new ForbiddenException('Scheduling links are only available for PRO and PREMIUM users');
@@ -147,7 +152,7 @@ export class SchedulingService {
   async updateSchedulingLink(
     linkId: string,
     userId: string,
-    updateDto: UpdateSchedulingLinkDto,
+    updateDto: UpdateSchedulingLinkDto
   ): Promise<SchedulingLink> {
     const link = await this.prisma.schedulingLink.findFirst({
       where: { id: linkId, userId },
@@ -213,11 +218,7 @@ export class SchedulingService {
   /**
    * Get available time slots for a scheduling link
    */
-  async getAvailableSlots(
-    slug: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<TimeSlot[]> {
+  async getAvailableSlots(slug: string, startDate: Date, endDate: Date): Promise<TimeSlot[]> {
     const link = await this.getSchedulingLinkBySlug(slug);
     const availability = link.availability as unknown as AvailabilitySettings;
 
@@ -236,7 +237,15 @@ export class SchedulingService {
     const slots: TimeSlot[] = [];
     const currentDate = new Date(startDate);
 
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+    const dayNames = [
+      'sunday',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+    ] as const;
 
     while (currentDate <= endDate) {
       const dayOfWeek = currentDate.getDay();
@@ -246,7 +255,7 @@ export class SchedulingService {
       if (daySchedule && daySchedule.length > 0) {
         // Check for date overrides
         const override = availability.overrides?.find(
-          (o) => new Date(o.date).toDateString() === currentDate.toDateString(),
+          o => new Date(o.date).toDateString() === currentDate.toDateString()
         );
 
         if (override && !override.available) {
@@ -278,7 +287,7 @@ export class SchedulingService {
               slotEnd,
               calendarEvents,
               existingBookings,
-              link,
+              link
             );
 
             if (isAvailable) {
@@ -316,13 +325,12 @@ export class SchedulingService {
     const availableSlots = await this.getAvailableSlots(
       slug,
       new Date(startTime.getTime() - 24 * 60 * 60000), // 1 day before
-      new Date(startTime.getTime() + 24 * 60 * 60000), // 1 day after
+      new Date(startTime.getTime() + 24 * 60 * 60000) // 1 day after
     );
 
     const isSlotAvailable = availableSlots.some(
-      (slot) =>
-        slot.start.getTime() === startTime.getTime() &&
-        slot.end.getTime() === endTime.getTime(),
+      slot =>
+        slot.start.getTime() === startTime.getTime() && slot.end.getTime() === endTime.getTime()
     );
 
     if (!isSlotAvailable) {
@@ -383,7 +391,7 @@ export class SchedulingService {
   async updateBookingStatus(
     bookingId: string,
     userId: string,
-    status: BookingStatus,
+    status: BookingStatus
   ): Promise<Booking> {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
@@ -466,7 +474,7 @@ export class SchedulingService {
   private async getUserCalendarEvents(
     userId: string,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<Array<{ start: Date; end: Date }>> {
     // TODO: Integrate with CalendarService to fetch actual calendar events
     // For now, return empty array
@@ -478,7 +486,7 @@ export class SchedulingService {
     slotEnd: Date,
     calendarEvents: Array<{ start: Date; end: Date }>,
     existingBookings: any[],
-    link: any, // SchedulingLink
+    link: any // SchedulingLink
   ): boolean {
     // Check min notice
     const now = new Date();

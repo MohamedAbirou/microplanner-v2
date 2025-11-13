@@ -1,17 +1,17 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../database/prisma.service';
-import { firstValueFrom } from 'rxjs';
-import type { WeeklyPlan, User, Goal } from '@microplanner/database';
+import type { Goal, SubscriptionTierType, User, WeeklyPlan } from '@microplanner/database';
 import { PlanStatus, SubscriptionTier } from '@microplanner/database';
+import { HttpService } from '@nestjs/axios';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
+import { PrismaService } from '../../database/prisma.service';
+import { CalendarService } from '../calendar/calendar.service';
+import { EmailService } from '../email/email.service';
 import { GeneratePlanDto } from './dto/generate-plan.dto';
 import { QueryPlansDto } from './dto/query-plans.dto';
-import { RuleBasedPlannerService } from './strategies/rule-based-planner.service';
-import { GPT4oMiniPlannerService } from './strategies/gpt-4o-mini-planner.service';
 import { ClaudeSonnetPlannerService } from './strategies/claude-sonnet-planner.service';
-import { EmailService } from '../email/email.service';
-import { CalendarService } from '../calendar/calendar.service';
+import { GPT4oMiniPlannerService } from './strategies/gpt-4o-mini-planner.service';
+import { RuleBasedPlannerService } from './strategies/rule-based-planner.service';
 
 // Tier limits for plan generation per week
 const TIER_PLAN_LIMITS = {
@@ -405,7 +405,7 @@ export class PlansService {
   /**
    * Check if user has reached weekly plan generation limit
    */
-  private async checkWeeklyLimit(userId: string, userTier: SubscriptionTier): Promise<void> {
+  private async checkWeeklyLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
     const limit = TIER_PLAN_LIMITS[userTier];
     const { weekStartDate } = this.calculateWeekBoundaries();
 
