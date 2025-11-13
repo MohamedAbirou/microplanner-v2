@@ -1,4 +1,4 @@
-import { ArrowRight, Github, Linkedin, Twitter } from 'lucide-react';
+import { ArrowRight, Github, Linkedin } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -184,7 +184,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               <ul className="space-y-2.5 text-sm">
                 <li>
                   <Link
-                    href="/privacy"
+                    href="/legal/privacy"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Privacy
@@ -192,7 +192,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                 </li>
                 <li>
                   <Link
-                    href="/terms"
+                    href="/legal/terms"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Terms
@@ -200,10 +200,18 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                 </li>
                 <li>
                   <Link
-                    href="/security"
+                    href="/legal/security"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Security
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/legal/disclosure"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Disclosure
                   </Link>
                 </li>
               </ul>
@@ -217,14 +225,14 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             </p>
 
             <div className="flex items-center gap-5">
-              <a
+              {/* <a
                 href="https://twitter.com/microplanner"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Twitter className="h-5 w-5" />
-              </a>
+              </a> */}
               <a
                 href="https://github.com/MohamedAbirou"
                 target="_blank"

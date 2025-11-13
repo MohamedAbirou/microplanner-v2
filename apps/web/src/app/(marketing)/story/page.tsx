@@ -257,7 +257,7 @@ export default function StoryPage() {
                     </Button>
                   </Link>
                   <a
-                    href="https://linkedin.com/in/mohamed-abirou"
+                    href="https://linkedin.com/in/mohamed-abirou-34ba39241/"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
