@@ -3,6 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { join } from 'path';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -24,6 +27,7 @@ import { SchedulingModule } from './modules/scheduling/scheduling.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ProductivityModule } from './modules/productivity/productivity.module';
 import { RedisModule } from './redis/redis.module';
+import { WaitlistModule } from './modules/waitlist/waitlist.module';
 
 @Module({
   imports: [
@@ -35,6 +39,16 @@ import { RedisModule } from './redis/redis.module';
 
     // Cron Jobs
     ScheduleModule.forRoot(),
+
+    // GraphQL
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      sortSchema: true,
+      playground: true,
+      introspection: true,
+      context: ({ req }) => ({ req }),
+    }),
 
     // Rate limiting
     ThrottlerModule.forRootAsync({
@@ -81,6 +95,7 @@ import { RedisModule } from './redis/redis.module';
     ProductivityModule,
     HealthModule,
     EmailModule,
+    WaitlistModule,
   ],
   controllers: [AppController],
   providers: [
