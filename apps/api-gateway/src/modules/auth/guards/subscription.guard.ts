@@ -1,8 +1,7 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import type { SubscriptionTierType, User } from '@microplanner/database';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { SubscriptionTier } from '@microplanner/database';
 import { REQUIRED_TIERS_KEY } from '../decorators/require-subscription.decorator';
-import type { User } from '@microplanner/database';
 
 /**
  * Subscription Tier Guard
@@ -18,7 +17,7 @@ export class SubscriptionGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     // Get required tiers from decorator metadata
-    const requiredTiers = this.reflector.getAllAndOverride<SubscriptionTier[]>(
+    const requiredTiers = this.reflector.getAllAndOverride<SubscriptionTierType[]>(
       REQUIRED_TIERS_KEY,
       [context.getHandler(), context.getClass()],
     );

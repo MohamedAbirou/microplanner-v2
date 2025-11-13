@@ -1,6 +1,6 @@
-import { IsEnum, IsOptional } from 'class-validator';
+import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
 import { ApiProperty } from '@nestjs/swagger';
-import { SubscriptionTier } from '@microplanner/database';
+import { IsEnum, IsOptional } from 'class-validator';
 
 export class CreateCheckoutDto {
   @ApiProperty({
@@ -9,7 +9,7 @@ export class CreateCheckoutDto {
     enum: SubscriptionTier,
   })
   @IsEnum(SubscriptionTier)
-  tier!: SubscriptionTier;
+  tier!: SubscriptionTierType;
 
   @ApiProperty({
     example: 'http://localhost:3000/dashboard',

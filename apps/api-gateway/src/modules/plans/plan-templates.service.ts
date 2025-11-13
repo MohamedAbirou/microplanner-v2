@@ -1,15 +1,21 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
-import { SubscriptionTier } from '@microplanner/database';
+import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
 import {
-  PlanTemplate,
-  TemplateTask,
-  TemplateCategory,
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../../database/prisma.service';
+import {
   CreateTemplateDto,
-  UpdateTemplateDto,
-  QueryTemplatesDto,
   GenerateFromTemplateDto,
+  PlanTemplate,
+  QueryTemplatesDto,
+  TemplateCategory,
   TemplateStats,
+  TemplateTask,
+  UpdateTemplateDto,
 } from './types/plan-template.types';
 
 /**
@@ -32,7 +38,11 @@ export class PlanTemplatesService {
    * Create a new plan template
    * PRO/PREMIUM only
    */
-  async create(userId: string, createDto: CreateTemplateDto, userTier: SubscriptionTier): Promise<PlanTemplate> {
+  async create(
+    userId: string,
+    createDto: CreateTemplateDto,
+    userTier: SubscriptionTierType
+  ): Promise<PlanTemplate> {
     // Validate tier
     if (userTier !== SubscriptionTier.PRO && userTier !== SubscriptionTier.PREMIUM) {
       throw new ForbiddenException('Plan templates are only available for PRO/PREMIUM users');
@@ -44,7 +54,8 @@ export class PlanTemplatesService {
     }
 
     // Calculate metadata
-    const estimatedTotalHours = createDto.tasks.reduce((sum, task) => sum + task.durationMinutes, 0) / 60;
+    const estimatedTotalHours =
+      createDto.tasks.reduce((sum, task) => sum + task.durationMinutes, 0) / 60;
     const tasksPerDay = this.calculateTasksPerDay(createDto.tasks);
 
     // If setting as default, unset other defaults
@@ -82,7 +93,12 @@ export class PlanTemplatesService {
   /**
    * Create template from existing weekly plan
    */
-  async createFromPlan(userId: string, planId: string, templateName: string, templateDescription?: string): Promise<PlanTemplate> {
+  async createFromPlan(
+    userId: string,
+    planId: string,
+    templateName: string,
+    templateDescription?: string
+  ): Promise<PlanTemplate> {
     // Fetch the plan
     const plan = await this.prisma.weeklyPlan.findFirst({
       where: { id: planId, userId },
@@ -102,7 +118,7 @@ export class PlanTemplatesService {
     }
 
     // Convert tasks to template tasks
-    const templateTasks: TemplateTask[] = plan.tasks.map((task) => {
+    const templateTasks: TemplateTask[] = plan.tasks.map(task => {
       const scheduledDate = new Date(task.scheduledDate);
       const dayOfWeek = scheduledDate.getDay();
 
@@ -134,20 +150,31 @@ export class PlanTemplatesService {
         isPublic: false,
         tags: ['from-plan'],
       },
-      user!.tier as SubscriptionTier,
+      user!.tier as SubscriptionTierType
     );
   }
 
   /**
    * Get all templates for a user (including public templates)
    */
-  async findAll(userId: string, query: QueryTemplatesDto): Promise<{
+  async findAll(
+    userId: string,
+    query: QueryTemplatesDto
+  ): Promise<{
     templates: PlanTemplate[];
     total: number;
     page: number;
     limit: number;
   }> {
-    const { page = 1, limit = 20, category, isPublic, search, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+    const {
+      page = 1,
+      limit = 20,
+      category,
+      isPublic,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -220,7 +247,11 @@ export class PlanTemplatesService {
   /**
    * Update a template
    */
-  async update(templateId: string, userId: string, updateDto: UpdateTemplateDto): Promise<PlanTemplate> {
+  async update(
+    templateId: string,
+    userId: string,
+    updateDto: UpdateTemplateDto
+  ): Promise<PlanTemplate> {
     // Verify ownership
     const template = await this.prisma.planTemplate.findFirst({
       where: { id: templateId, userId }, // Only owner can update
@@ -243,7 +274,8 @@ export class PlanTemplatesService {
     let tasksPerDay = template.tasksPerDay;
 
     if (updateDto.tasks) {
-      estimatedTotalHours = updateDto.tasks.reduce((sum, task) => sum + task.durationMinutes, 0) / 60;
+      estimatedTotalHours =
+        updateDto.tasks.reduce((sum, task) => sum + task.durationMinutes, 0) / 60;
       tasksPerDay = this.calculateTasksPerDay(updateDto.tasks);
     }
 
@@ -255,7 +287,11 @@ export class PlanTemplatesService {
         ...(updateDto.name && { name: updateDto.name }),
         ...(updateDto.description !== undefined && { description: updateDto.description }),
         ...(updateDto.category && { category: updateDto.category }),
-        ...(updateDto.tasks && { tasks: updateDto.tasks as any, estimatedTotalHours, tasksPerDay: tasksPerDay as any }),
+        ...(updateDto.tasks && {
+          tasks: updateDto.tasks as any,
+          estimatedTotalHours,
+          tasksPerDay: tasksPerDay as any,
+        }),
         ...(updateDto.isPublic !== undefined && { isPublic: updateDto.isPublic }),
         ...(updateDto.isDefault !== undefined && { isDefault: updateDto.isDefault }),
         ...(updateDto.tags && { tags: updateDto.tags }),
@@ -292,16 +328,18 @@ export class PlanTemplatesService {
   async generateTasksFromTemplate(
     templateId: string,
     userId: string,
-    generateDto: GenerateFromTemplateDto,
-  ): Promise<Array<{
-    title: string;
-    notes: string | null;
-    scheduledDate: Date;
-    startTime: string;
-    endTime: string;
-    durationMinutes: number;
-    goalId: string | null;
-  }>> {
+    generateDto: GenerateFromTemplateDto
+  ): Promise<
+    Array<{
+      title: string;
+      notes: string | null;
+      scheduledDate: Date;
+      startTime: string;
+      endTime: string;
+      durationMinutes: number;
+      goalId: string | null;
+    }>
+  > {
     // Fetch template
     const template = await this.findOne(templateId, userId);
 
@@ -321,42 +359,44 @@ export class PlanTemplatesService {
     const filterDays = generateDto.adjustments?.filterDays;
 
     // Generate tasks
-    const tasks = template.tasks.map((templateTask: any) => {
-      let dayOfWeek = templateTask.dayOfWeek + shiftDays;
+    const tasks = template.tasks
+      .map((templateTask: any) => {
+        let dayOfWeek = templateTask.dayOfWeek + shiftDays;
 
-      // Handle day wrapping
-      dayOfWeek = ((dayOfWeek % 7) + 7) % 7;
+        // Handle day wrapping
+        dayOfWeek = ((dayOfWeek % 7) + 7) % 7;
 
-      // Filter days if specified
-      if (filterDays && !filterDays.includes(dayOfWeek)) {
-        return null;
-      }
+        // Filter days if specified
+        if (filterDays && !filterDays.includes(dayOfWeek)) {
+          return null;
+        }
 
-      // Calculate scheduled date
-      const scheduledDate = new Date(weekStart);
-      // Adjust from week start (Monday = 1) to day of week (Sunday = 0)
-      const daysFromStart = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      scheduledDate.setDate(weekStart.getDate() + daysFromStart);
+        // Calculate scheduled date
+        const scheduledDate = new Date(weekStart);
+        // Adjust from week start (Monday = 1) to day of week (Sunday = 0)
+        const daysFromStart = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        scheduledDate.setDate(weekStart.getDate() + daysFromStart);
 
-      // Scale duration
-      const durationMinutes = Math.round(templateTask.durationMinutes * scaleDuration);
+        // Scale duration
+        const durationMinutes = Math.round(templateTask.durationMinutes * scaleDuration);
 
-      // Map goal title to goal ID
-      let goalId: string | null = null;
-      if (templateTask.goalTitle && generateDto.goalMappings) {
-        goalId = generateDto.goalMappings[templateTask.goalTitle] || null;
-      }
+        // Map goal title to goal ID
+        let goalId: string | null = null;
+        if (templateTask.goalTitle && generateDto.goalMappings) {
+          goalId = generateDto.goalMappings[templateTask.goalTitle] || null;
+        }
 
-      return {
-        title: templateTask.title,
-        notes: templateTask.notes || null,
-        scheduledDate,
-        startTime: templateTask.startTime,
-        endTime: templateTask.endTime,
-        durationMinutes,
-        goalId,
-      };
-    }).filter(Boolean); // Remove null entries
+        return {
+          title: templateTask.title,
+          notes: templateTask.notes || null,
+          scheduledDate,
+          startTime: templateTask.startTime,
+          endTime: templateTask.endTime,
+          durationMinutes,
+          goalId,
+        };
+      })
+      .filter(Boolean); // Remove null entries
 
     this.logger.log(`Generated ${tasks.length} tasks from template ${templateId}`);
 
@@ -372,14 +412,14 @@ export class PlanTemplatesService {
     });
 
     const totalTemplates = templates.length;
-    const publicTemplates = templates.filter((t) => t.isPublic).length;
+    const publicTemplates = templates.filter(t => t.isPublic).length;
     const privateTemplates = totalTemplates - publicTemplates;
     const totalUsage = templates.reduce((sum, t) => sum + t.usageCount, 0);
 
     // Category counts
     const categoryCounts: Record<string, number> = {};
     for (const category of Object.values(TemplateCategory)) {
-      categoryCounts[category] = templates.filter((t) => t.category === category).length;
+      categoryCounts[category] = templates.filter(t => t.category === category).length;
     }
 
     // Average tasks per template

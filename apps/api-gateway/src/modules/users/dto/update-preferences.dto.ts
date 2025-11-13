@@ -1,6 +1,6 @@
-import { IsString, IsOptional, IsArray, IsEnum, IsObject } from 'class-validator';
+import { EnergyPattern, EnergyPatternType } from '@microplanner/database';
 import { ApiProperty } from '@nestjs/swagger';
-import { EnergyPattern } from '@microplanner/database';
+import { IsArray, IsEnum, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class UpdatePreferencesDto {
   @ApiProperty({ example: '07:00', description: 'Wake up time in HH:MM format' })
@@ -39,7 +39,7 @@ export class UpdatePreferencesDto {
   })
   @IsOptional()
   @IsEnum(EnergyPattern)
-  energyPattern?: EnergyPattern;
+  energyPattern?: EnergyPatternType;
 
   @ApiProperty({
     example: [{ day: 'monday', start: '12:00', end: '13:00' }],

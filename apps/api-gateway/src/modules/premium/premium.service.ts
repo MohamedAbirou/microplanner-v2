@@ -1,20 +1,23 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
-import { SubscriptionTier } from '@microplanner/database';
-import * as crypto from 'crypto';
+import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
 import {
-  Team,
-  TeamMember,
-  TeamInvitation,
-  TeamRole,
-  MemberStatus,
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import * as crypto from 'crypto';
+import { PrismaService } from '../../database/prisma.service';
+import {
   ApiKey,
-  ApiScope,
-  CreateTeamDto,
-  UpdateTeamDto,
-  InviteMemberDto,
-  CreateApiKeyDto,
   ApiKeyResponse,
+  ApiScope,
+  CreateApiKeyDto,
+  CreateTeamDto,
+  InviteMemberDto,
+  Team,
+  TeamInvitation,
+  TeamMember,
 } from './types/premium.types';
 
 /**
@@ -35,7 +38,11 @@ export class PremiumService {
   /**
    * Create a new team (PREMIUM only)
    */
-  async createTeam(userId: string, createDto: CreateTeamDto, userTier: SubscriptionTier): Promise<Team> {
+  async createTeam(
+    userId: string,
+    createDto: CreateTeamDto,
+    userTier: SubscriptionTierType
+  ): Promise<Team> {
     if (userTier !== SubscriptionTier.PREMIUM) {
       throw new ForbiddenException('Team workspaces are only available for PREMIUM users');
     }
@@ -85,7 +92,7 @@ export class PremiumService {
       include: { team: true },
     });
 
-    return memberships.map((m) => m.team) as unknown as Team[];
+    return memberships.map(m => m.team) as unknown as Team[];
   }
 
   /**
@@ -117,7 +124,11 @@ export class PremiumService {
   /**
    * Invite member to team
    */
-  async inviteMember(teamId: string, userId: string, inviteDto: InviteMemberDto): Promise<TeamInvitation> {
+  async inviteMember(
+    teamId: string,
+    userId: string,
+    inviteDto: InviteMemberDto
+  ): Promise<TeamInvitation> {
     // Verify user is admin/owner
     const membership = await this.prisma.teamMember.findFirst({
       where: { teamId, userId, role: { in: ['owner', 'admin'] } },
@@ -214,7 +225,11 @@ export class PremiumService {
   /**
    * Create API key (PREMIUM only)
    */
-  async createApiKey(userId: string, createDto: CreateApiKeyDto, userTier: SubscriptionTier): Promise<ApiKeyResponse> {
+  async createApiKey(
+    userId: string,
+    createDto: CreateApiKeyDto,
+    userTier: SubscriptionTierType
+  ): Promise<ApiKeyResponse> {
     if (userTier !== SubscriptionTier.PREMIUM) {
       throw new ForbiddenException('API access is only available for PREMIUM users');
     }
@@ -269,7 +284,7 @@ export class PremiumService {
     });
 
     // Don't return the actual key
-    return keys.map((key) => ({
+    return keys.map(key => ({
       ...key,
       key: '***', // Masked
     })) as unknown as ApiKey[];
