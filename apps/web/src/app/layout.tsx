@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Providers } from './providers';
+import { UserSync } from '@/components/auth/user-sync';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -97,7 +98,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <body className="min-h-screen bg-background font-sans antialiased">
-          <Providers>{children}</Providers>
+          <Providers>
+            <UserSync />
+            {children}
+          </Providers>
         </body>
       </html>
     </ClerkProvider>
