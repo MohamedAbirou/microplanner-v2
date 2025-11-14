@@ -39,11 +39,11 @@ export function UserSync() {
           return;
         }
 
-        // Call the backend /api/auth/me endpoint
+        // Call the backend /api/v1/auth/me endpoint
         // This triggers the ClerkAuthGuard which validates the token
         // and calls AuthService.validateClerkUser which does JIT creation
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        const response = await fetch(`${apiUrl}/api/auth/me`, {
+        const response = await fetch(`${apiUrl}/api/v1/auth/me`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
