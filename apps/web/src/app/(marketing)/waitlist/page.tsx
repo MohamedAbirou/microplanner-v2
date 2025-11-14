@@ -67,9 +67,18 @@ export default function WaitlistPage() {
       } else {
         setErrorMessage(data?.joinWaitlist.message || 'Failed to join waitlist. Please try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error joining waitlist:', error);
-      setErrorMessage('An error occurred. Please try again later.');
+
+      // Extract the actual error message from GraphQL errors
+      if (error.graphQLErrors && error.graphQLErrors.length > 0) {
+        const graphQLError = error.graphQLErrors[0];
+        setErrorMessage(graphQLError.message || 'Failed to join waitlist. Please try again.');
+      } else if (error.networkError) {
+        setErrorMessage('Network error. Please check your connection and try again.');
+      } else {
+        setErrorMessage('An error occurred. Please try again later.');
+      }
     }
   };
 
