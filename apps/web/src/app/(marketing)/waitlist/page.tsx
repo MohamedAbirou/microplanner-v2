@@ -14,6 +14,7 @@ import { ArrowRight, CheckCircle2, Sparkles, TrendingUp, Users, Zap } from 'luci
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function WaitlistPage() {
   const [email, setEmail] = useState('');
@@ -111,7 +112,20 @@ export default function WaitlistPage() {
                 <Button variant="outline">Back to Home</Button>
               </Link>
 
-              <Button>
+              <Button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'MicroPlanner',
+                      text: 'Try out this AI-powered planner!',
+                      url: window.location.href,
+                    });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.info("Link copied to clipboard!");
+                  }
+                }}
+              >
                 <Sparkles className="h-4 w-4" />
                 Share with Friends
               </Button>

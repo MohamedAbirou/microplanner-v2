@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.0",
-    "@apollo/server": "^4.10.0",
+    "@apollo/server": "^4.12.2",
     "@microplanner/config": "workspace:*",
     "@microplanner/database": "workspace:*",
     "@microplanner/types": "workspace:*",
