@@ -1,11 +1,12 @@
 'use client';
 
-import * as React from 'react';
-import { ThemeProvider } from 'next-themes';
+import { createApolloClient } from '@/lib/apollo/client';
 import { ApolloProvider } from '@apollo/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Analytics } from '@vercel/analytics/next';
+import { ThemeProvider } from 'next-themes';
+import * as React from 'react';
 import { Toaster } from 'sonner';
-import { createApolloClient } from '@/lib/apollo/client';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,22 +21,12 @@ const apolloClient = createApolloClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <ApolloProvider client={apolloClient}>
         <QueryClientProvider client={queryClient}>
           {children}
-          <Toaster
-            position="top-right"
-            expand={false}
-            richColors
-            closeButton
-            theme="dark"
-          />
+          <Toaster position="top-right" expand={false} richColors closeButton theme="dark" />
+          <Analytics />
         </QueryClientProvider>
       </ApolloProvider>
     </ThemeProvider>
