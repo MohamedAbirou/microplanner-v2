@@ -323,6 +323,50 @@ export class EmailService {
   }
 
   /**
+   * Send waitlist welcome email
+   *
+   * @param email - Email address of the new waitlist member
+   * @param name - Name of the new waitlist member
+   * @param position - Position on the waitlist
+   */
+  async sendWaitlistWelcome(
+    email: string,
+    name: string,
+    position: number,
+  ): Promise<void> {
+    if (!this.isEnabled) {
+      this.logger.debug('Email service disabled, skipping waitlist welcome');
+      return;
+    }
+
+    try {
+      const template = await this.loadTemplate('waitlist-welcome.html');
+
+      // Render template
+      const html = this.renderTemplate(template, {
+        userName: name || 'there',
+        email,
+        position,
+        appUrl: this.appUrl,
+      });
+
+      // Send email
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: email,
+        subject: '🎉 Welcome to MicroPlanner Waitlist - You\'re #' + position + '!',
+        html,
+      });
+
+      this.logger.log(`Waitlist welcome email sent to ${email} (position: ${position})`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to send waitlist welcome email: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
+      // Don't throw - email failures shouldn't break the waitlist signup
+    }
+  }
+
+  /**
    * Check if email service is enabled
    */
   isEmailEnabled(): boolean {

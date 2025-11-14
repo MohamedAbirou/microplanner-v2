@@ -20,6 +20,7 @@ export default function WaitlistPage() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
+  const [emailConsent, setEmailConsent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [position, setPosition] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -227,6 +228,21 @@ export default function WaitlistPage() {
                         <option value="developer">Developer</option>
                         <option value="other">Other</option>
                       </select>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        id="emailConsent"
+                        checked={emailConsent}
+                        onChange={e => setEmailConsent(e.target.checked)}
+                        required
+                        className="mt-1 h-4 w-4 rounded border-border bg-background text-primary-500 focus:ring-2 focus:ring-primary-500"
+                      />
+                      <Label htmlFor="emailConsent" className="cursor-pointer text-sm">
+                        I agree to receive emails from MicroPlanner about product updates, early access,
+                        and launch notifications. You can unsubscribe anytime. *
+                      </Label>
                     </div>
 
                     {errorMessage && (

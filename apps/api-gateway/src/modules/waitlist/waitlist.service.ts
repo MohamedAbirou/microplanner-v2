@@ -1,12 +1,18 @@
 import { WaitlistStatus } from '@microplanner/database';
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { EmailService } from '../email/email.service';
 import { JoinWaitlistInput } from './dto/join-waitlist.input';
 import { JoinWaitlistResult, WaitlistStats } from './dto/waitlist.types';
 
 @Injectable()
 export class WaitlistService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(WaitlistService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async joinWaitlist(input: JoinWaitlistInput): Promise<JoinWaitlistResult> {
     // Check if email already exists
@@ -36,6 +42,15 @@ export class WaitlistService {
         position: newPosition,
         status: WaitlistStatus.PENDING,
       },
+    });
+
+    // Send welcome email (async, don't wait for it)
+    this.emailService.sendWaitlistWelcome(
+      entry.email,
+      entry.name || '',
+      entry.position,
+    ).catch((error) => {
+      this.logger.error(`Failed to send waitlist welcome email: ${error.message}`);
     });
 
     return {
