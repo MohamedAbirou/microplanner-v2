@@ -18,9 +18,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
-    // Skip GraphQL errors - let GraphQL's formatError handle them
-    if (host.getType() === 'graphql' || host.getType<string>() === 'graphql') {
-      // Don't handle GraphQL errors here, let GraphQL error formatter handle them
+    // Check if this is an HTTP context (not GraphQL, WebSocket, etc.)
+    const contextType = host.getType();
+
+    // Only handle HTTP exceptions, let GraphQL handle its own errors
+    if (contextType !== 'http') {
+      // Re-throw to let the appropriate handler (GraphQL, WebSocket, etc.) handle it
       throw exception;
     }
 
@@ -28,7 +31,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    // Skip if request is undefined (GraphQL context)
+    // Double-check we have valid HTTP objects
     if (!request || !response) {
       throw exception;
     }
