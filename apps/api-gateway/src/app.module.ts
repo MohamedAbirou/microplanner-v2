@@ -7,6 +7,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { APP_GUARD } from '@nestjs/core';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
@@ -29,6 +30,34 @@ import { ProductivityModule } from './modules/productivity/productivity.module';
 import { RedisModule } from './redis/redis.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
 
+/**
+ * Maps HTTP status codes to GraphQL error codes
+ */
+function getGraphQLErrorCode(statusCode: number): string {
+  switch (statusCode) {
+    case 400:
+      return 'BAD_REQUEST';
+    case 401:
+      return 'UNAUTHENTICATED';
+    case 403:
+      return 'FORBIDDEN';
+    case 404:
+      return 'NOT_FOUND';
+    case 409:
+      return 'CONFLICT';
+    case 422:
+      return 'UNPROCESSABLE_ENTITY';
+    case 429:
+      return 'TOO_MANY_REQUESTS';
+    case 500:
+      return 'INTERNAL_SERVER_ERROR';
+    case 503:
+      return 'SERVICE_UNAVAILABLE';
+    default:
+      return 'INTERNAL_SERVER_ERROR';
+  }
+}
+
 @Module({
   imports: [
     // Configuration
@@ -48,6 +77,34 @@ import { WaitlistModule } from './modules/waitlist/waitlist.module';
       playground: true,
       introspection: true,
       context: ({ req }) => ({ req }),
+      formatError: (error: GraphQLError): GraphQLFormattedError => {
+        // Extract the original error from NestJS
+        const originalError = error.extensions?.originalError as any;
+
+        // Handle NestJS HTTP exceptions (ConflictException, BadRequestException, etc.)
+        if (originalError?.statusCode) {
+          return {
+            message: originalError.message || error.message,
+            extensions: {
+              code: getGraphQLErrorCode(originalError.statusCode),
+              statusCode: originalError.statusCode,
+              error: originalError.error || 'Error',
+            },
+            locations: error.locations,
+            path: error.path,
+          };
+        }
+
+        // Default error formatting
+        return {
+          message: error.message,
+          extensions: {
+            code: error.extensions?.code || 'INTERNAL_SERVER_ERROR',
+          },
+          locations: error.locations,
+          path: error.path,
+        };
+      },
     }),
 
     // Rate limiting
