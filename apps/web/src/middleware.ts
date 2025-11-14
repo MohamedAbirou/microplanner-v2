@@ -1,19 +1,90 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
-// All routes are public for now (pre-launch, waitlist only)
-// When we launch Phase 1, we'll protect /dashboard, /goals, etc.
+/**
+ * Public routes that don't require authentication
+ */
 const isPublicRoute = createRouteMatcher([
-  '/(.*)', // Everything is public
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/about(.*)',
+  '/features(.*)',
+  '/pricing(.*)',
+  '/blog(.*)',
+  '/legal(.*)',
+  '/help(.*)',
+  '/contact(.*)',
+  '/how-it-works(.*)',
+  '/roadmap(.*)',
+  '/story(.*)',
+  '/changelog(.*)',
+  '/glossary(.*)',
+  '/waitlist(.*)',
 ]);
 
-export default clerkMiddleware((auth, req) => {
-  // For now, all routes are accessible (waitlist-only mode)
+/**
+ * Onboarding route - requires auth but special handling
+ */
+const isOnboardingRoute = createRouteMatcher([
+  '/onboarding(.*)',
+]);
+
+/**
+ * Protected app routes - require authentication and completed onboarding
+ */
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/goals(.*)',
+  '/tasks(.*)',
+  '/plans(.*)',
+  '/projects(.*)',
+  '/analytics(.*)',
+  '/productivity(.*)',
+  '/scheduling(.*)',
+  '/integrations(.*)',
+  '/settings(.*)',
+  '/billing(.*)',
+  '/book(.*)',
+]);
+
+export default clerkMiddleware(async (auth, req) => {
+  const { userId } = await auth();
+  const { pathname } = req.nextUrl;
+
+  // Public routes - allow access
   if (isPublicRoute(req)) {
-    return;
+    return NextResponse.next();
   }
 
-  // Future: When launching Phase 1, uncomment this:
-  // auth().protect();
+  // Onboarding route - require auth but allow access
+  if (isOnboardingRoute(req)) {
+    if (!userId) {
+      return NextResponse.redirect(new URL('/sign-in', req.url));
+    }
+    return NextResponse.next();
+  }
+
+  // Protected routes - require auth and completed onboarding
+  if (isProtectedRoute(req) || pathname.startsWith('/app')) {
+    if (!userId) {
+      return NextResponse.redirect(new URL('/sign-in', req.url));
+    }
+
+    // TODO: Check if onboarding is completed
+    // For now, redirect to onboarding if user just signed up
+    // This will be enhanced with actual DB check
+    // const user = await fetchUserFromDB(userId);
+    // if (!user.onboardingCompleted) {
+    //   return NextResponse.redirect(new URL('/onboarding', req.url));
+    // }
+
+    return NextResponse.next();
+  }
+
+  // Default: protect route
+  await auth.protect();
+  return NextResponse.next();
 });
 
 export const config = {
