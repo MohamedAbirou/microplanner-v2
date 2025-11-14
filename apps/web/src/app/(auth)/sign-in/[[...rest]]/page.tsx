@@ -35,21 +35,34 @@ export default function SignInPage() {
           <SignIn
             appearance={{
               elements: {
-                formButtonPrimary:
-                  'bg-primary hover:bg-primary/90 text-sm normal-case',
-                card: 'shadow-none',
+                rootBox: 'mx-auto',
+                card: 'bg-transparent shadow-none',
                 headerTitle: 'hidden',
                 headerSubtitle: 'hidden',
                 socialButtonsBlockButton:
-                  'border-border hover:bg-accent hover:text-accent-foreground',
-                socialButtonsBlockButtonText: 'font-medium',
+                  'bg-card border-border text-card-foreground hover:bg-accent hover:text-accent-foreground',
+                socialButtonsBlockButtonText: 'font-medium text-sm',
+                formButtonPrimary:
+                  'bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium',
                 formFieldInput:
-                  'border-input bg-background ring-offset-background focus-visible:ring-ring',
+                  'bg-card border-border text-foreground placeholder:text-muted-foreground focus:ring-primary',
+                formFieldLabel: 'text-foreground',
                 footerActionLink: 'text-primary hover:text-primary/80',
+                identityPreviewText: 'text-foreground',
+                formFieldInputShowPasswordButton: 'text-muted-foreground hover:text-foreground',
+                formResendCodeLink: 'text-primary hover:text-primary/80',
+                otpCodeFieldInput: 'bg-card border-border text-foreground',
+              },
+              variables: {
+                colorPrimary: 'hsl(var(--primary))',
+                colorBackground: 'hsl(var(--background))',
+                colorInputBackground: 'hsl(var(--card))',
+                colorInputText: 'hsl(var(--foreground))',
+                colorText: 'hsl(var(--foreground))',
+                colorTextSecondary: 'hsl(var(--muted-foreground))',
+                borderRadius: '0.5rem',
               },
             }}
-            routing="path"
-            path="/sign-in"
             signUpUrl="/sign-up"
             fallbackRedirectUrl="/onboarding"
           />
