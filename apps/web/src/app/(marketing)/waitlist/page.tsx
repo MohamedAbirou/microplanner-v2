@@ -61,6 +61,8 @@ export default function WaitlistPage() {
         },
       });
 
+      console.log("Data: ", data?.joinWaitlist);
+
       if (data?.joinWaitlist.success) {
         setPosition(data.joinWaitlist.position);
         setSubmitted(true);
@@ -69,6 +71,8 @@ export default function WaitlistPage() {
       }
     } catch (error: any) {
       console.error('Error joining waitlist:', error);
+
+      console.log("Error: ", error);
 
       // Extract the actual error message from GraphQL errors
       if (error.graphQLErrors && error.graphQLErrors.length > 0) {
