@@ -22,16 +22,19 @@ module.exports = function (options, webpack) {
         '@microplanner/config': path.resolve(__dirname, '../../packages/config/src'),
         '@microplanner/types': path.resolve(__dirname, '../../packages/types/src'),
       },
-      // Don't polyfill Node.js globals - use native Node.js features
-      fallback: {
-        crypto: false,
-      },
     },
-    // Disable crypto polyfill warning
+    // Increase webpack memory limit
+    optimization: {
+      ...options.optimization,
+      minimize: false, // Disable minification in development
+    },
+    // Add banner to prevent crypto polyfill
     plugins: [
       ...(options.plugins || []),
-      new webpack.DefinePlugin({
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      new webpack.BannerPlugin({
+        banner: '// Fix crypto polyfill issue\nif (typeof crypto === "undefined") { globalThis.crypto = require("crypto"); }',
+        raw: true,
+        entryOnly: true,
       }),
     ],
   };

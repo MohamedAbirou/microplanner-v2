@@ -1,6 +1,7 @@
 import { SignIn } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -12,8 +13,22 @@ export default function SignInPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Left side - Auth Form */}
-      <div className="flex flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="flex flex-col items-center justify-center bg-card px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full max-w-sm space-y-8">
+          {/* Logo */}
+          <div className="flex justify-center">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/logo-icon.svg"
+                alt="MicroPlanner"
+                width={40}
+                height={40}
+                className="h-10 w-10"
+              />
+              <span className="text-2xl font-bold">MicroPlanner</span>
+            </Link>
+          </div>
+
           {/* Back link */}
           <Link
             href="/"
@@ -40,23 +55,23 @@ export default function SignInPage() {
                 headerTitle: 'hidden',
                 headerSubtitle: 'hidden',
                 socialButtonsBlockButton:
-                  'bg-card border-border text-card-foreground hover:bg-accent hover:text-accent-foreground',
+                  'bg-background border-border text-foreground hover:bg-accent hover:text-accent-foreground',
                 socialButtonsBlockButtonText: 'font-medium text-sm',
                 formButtonPrimary:
                   'bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium',
                 formFieldInput:
-                  'bg-card border-border text-foreground placeholder:text-muted-foreground focus:ring-primary',
+                  'bg-background border-border text-foreground placeholder:text-muted-foreground focus:ring-primary',
                 formFieldLabel: 'text-foreground',
                 footerActionLink: 'text-primary hover:text-primary/80',
                 identityPreviewText: 'text-foreground',
                 formFieldInputShowPasswordButton: 'text-muted-foreground hover:text-foreground',
                 formResendCodeLink: 'text-primary hover:text-primary/80',
-                otpCodeFieldInput: 'bg-card border-border text-foreground',
+                otpCodeFieldInput: 'bg-background border-border text-foreground',
               },
               variables: {
                 colorPrimary: 'hsl(var(--primary))',
-                colorBackground: 'hsl(var(--background))',
-                colorInputBackground: 'hsl(var(--card))',
+                colorBackground: 'hsl(var(--card))',
+                colorInputBackground: 'hsl(var(--background))',
                 colorInputText: 'hsl(var(--foreground))',
                 colorText: 'hsl(var(--foreground))',
                 colorTextSecondary: 'hsl(var(--muted-foreground))',
