@@ -103,14 +103,20 @@ export class EmailService {
       });
 
       // Send email
-      await this.resend.emails.send({
+      const response = await this.resend.emails.send({
         from: this.fromEmail,
         to: user.email,
         subject: `⏰ Reminder: ${task.title} ${reminderType === '1_day_before' ? 'tomorrow' : 'in 1 hour'}`,
         html,
       });
 
-      this.logger.log(`Task reminder sent: ${task.id} to ${user.email} (${reminderType})`);
+      // Check for errors in response
+      if (response.error) {
+        this.logger.error(`Failed to send task reminder: ${JSON.stringify(response.error)}`);
+        return;
+      }
+
+      this.logger.log(`Task reminder sent: ${task.id} to ${user.email} (${reminderType}) - Email ID: ${response.data?.id}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to send task reminder: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
@@ -165,14 +171,20 @@ export class EmailService {
       });
 
       // Send email
-      await this.resend.emails.send({
+      const response = await this.resend.emails.send({
         from: this.fromEmail,
         to: user.email,
         subject: `📊 Your Weekly Summary: ${Math.round(summary.completionRate)}% completion rate`,
         html,
       });
 
-      this.logger.log(`Weekly summary sent to ${user.email}`);
+      // Check for errors in response
+      if (response.error) {
+        this.logger.error(`Failed to send weekly summary: ${JSON.stringify(response.error)}`);
+        return;
+      }
+
+      this.logger.log(`Weekly summary sent to ${user.email} - Email ID: ${response.data?.id}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to send weekly summary: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
@@ -225,14 +237,20 @@ export class EmailService {
       });
 
       // Send email
-      await this.resend.emails.send({
+      const response = await this.resend.emails.send({
         from: this.fromEmail,
         to: user.email,
         subject: `✨ Your Weekly Plan is Ready (Quality Score: ${qualityScore}/100)`,
         html,
       });
 
-      this.logger.log(`Plan ready notification sent: ${plan.id} to ${user.email}`);
+      // Check for errors in response
+      if (response.error) {
+        this.logger.error(`Failed to send plan ready notification: ${JSON.stringify(response.error)}`);
+        return;
+      }
+
+      this.logger.log(`Plan ready notification sent: ${plan.id} to ${user.email} - Email ID: ${response.data?.id}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to send plan ready notification: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
@@ -351,14 +369,20 @@ export class EmailService {
       });
 
       // Send email
-      await this.resend.emails.send({
+      const response = await this.resend.emails.send({
         from: this.fromEmail,
         to: email,
         subject: '🎉 Welcome to MicroPlanner Waitlist - You\'re #' + position + '!',
         html,
       });
 
-      this.logger.log(`Waitlist welcome email sent to ${email} (position: ${position})`);
+      // Check for errors in response
+      if (response.error) {
+        this.logger.error(`Failed to send waitlist welcome email: ${JSON.stringify(response.error)}`);
+        return;
+      }
+
+      this.logger.log(`Waitlist welcome email sent to ${email} (position: ${position}) - Email ID: ${response.data?.id}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to send waitlist welcome email: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
