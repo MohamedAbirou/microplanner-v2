@@ -18,18 +18,55 @@ export class RedisService implements OnModuleDestroy {
   private subscriber: Redis | null = null;
 
   constructor(private config: ConfigService) {
+    // Parse REDIS_URL if provided, otherwise use individual config vars
+    const redisUrl = config.get('REDIS_URL');
+    let redisConfig: any;
+
+    if (redisUrl) {
+      // Parse REDIS_URL (e.g., redis://host:port or redis://user:pass@host:port)
+      try {
+        const url = new URL(redisUrl);
+        redisConfig = {
+          host: url.hostname,
+          port: parseInt(url.port) || 6379,
+          password: url.password || config.get('REDIS_PASSWORD'),
+        };
+      } catch (error) {
+        this.logger.warn('Invalid REDIS_URL, falling back to defaults');
+        redisConfig = {
+          host: config.get('REDIS_HOST', 'localhost'),
+          port: config.get('REDIS_PORT', 6379),
+          password: config.get('REDIS_PASSWORD'),
+        };
+      }
+    } else {
+      redisConfig = {
+        host: config.get('REDIS_HOST', 'localhost'),
+        port: config.get('REDIS_PORT', 6379),
+        password: config.get('REDIS_PASSWORD'),
+      };
+    }
+
     this.client = new Redis({
-      host: config.get('REDIS_HOST', 'localhost'),
-      port: config.get('REDIS_PORT', 6379),
-      password: config.get('REDIS_PASSWORD'),
+      ...redisConfig,
       retryStrategy: (times) => {
+        // Only retry 10 times, then give up
+        if (times > 10) {
+          this.logger.warn('⚠️ Redis unavailable - running without cache');
+          return null;
+        }
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
       maxRetriesPerRequest: 3,
       enableReadyCheck: true,
-      enableOfflineQueue: true,
-      lazyConnect: false,
+      enableOfflineQueue: false, // Don't queue commands if Redis is down
+      lazyConnect: true, // Don't connect immediately
+    });
+
+    // Attempt to connect, but don't crash if it fails
+    this.client.connect().catch((error) => {
+      this.logger.warn('⚠️ Redis connection failed - running without cache:', error.message);
     });
 
     this.client.on('connect', () => {
@@ -37,7 +74,7 @@ export class RedisService implements OnModuleDestroy {
     });
 
     this.client.on('error', (error) => {
-      this.logger.error('❌ Redis connection error:', error);
+      this.logger.warn('⚠️ Redis error (non-critical):', error.message);
     });
 
     this.client.on('ready', () => {
