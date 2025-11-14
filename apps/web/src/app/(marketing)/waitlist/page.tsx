@@ -51,7 +51,7 @@ export default function WaitlistPage() {
     setErrorMessage('');
 
     try {
-      const { data } = await joinWaitlist({
+      const { data, errors } = await joinWaitlist({
         variables: {
           input: {
             email,
@@ -61,7 +61,11 @@ export default function WaitlistPage() {
         },
       });
 
-      console.log("Data: ", data?.joinWaitlist);
+      // Check for GraphQL errors first (e.g., validation errors, conflicts)
+      if (errors && errors.length > 0) {
+        setErrorMessage(errors[0].message || 'Failed to join waitlist. Please try again.');
+        return;
+      }
 
       if (data?.joinWaitlist.success) {
         setPosition(data.joinWaitlist.position);
@@ -71,8 +75,6 @@ export default function WaitlistPage() {
       }
     } catch (error: any) {
       console.error('Error joining waitlist:', error);
-
-      console.log("Error: ", error);
 
       // Extract the actual error message from GraphQL errors
       if (error.graphQLErrors && error.graphQLErrors.length > 0) {
