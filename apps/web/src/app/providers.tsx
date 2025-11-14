@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { ThemeProvider } from 'next-themes';
 import { ApolloProvider } from '@apollo/client';
+import { Analytics } from '@vercel/analytics/next';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { createApolloClient } from '@/lib/apollo/client';
@@ -36,6 +37,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             closeButton
             theme="dark"
           />
+          <Analytics />
         </QueryClientProvider>
       </ApolloProvider>
     </ThemeProvider>
