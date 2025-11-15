@@ -1,8 +1,8 @@
 import { SignIn } from '@clerk/nextjs';
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
+import type { Metadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Sign In',
@@ -15,20 +15,6 @@ export default function SignInPage() {
       {/* Left side - Auth Form */}
       <div className="flex flex-col items-center justify-center bg-card px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full max-w-sm space-y-8">
-          {/* Logo */}
-          <div className="flex justify-center">
-            <Link href="/" className="flex items-center gap-3">
-              <Image
-                src="/logo-icon.svg"
-                alt="MicroPlanner"
-                width={40}
-                height={40}
-                className="h-10 w-10"
-              />
-              <span className="text-2xl font-bold">MicroPlanner</span>
-            </Link>
-          </div>
-
           {/* Back link */}
           <Link
             href="/"
@@ -89,15 +75,21 @@ export default function SignInPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-background" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/40 via-transparent to-transparent" />
 
-        <div className="relative flex h-full flex-col justify-center px-12">
+        <div className="relative flex h-full flex-col items-center justify-center px-12">
           <div className="space-y-6">
+            {/* Logo */}
+            <Image
+              src="/logo-icon.svg"
+              alt="MicroPlanner"
+              width={40}
+              height={40}
+              className="h-20 w-20"
+            />
             <div className="space-y-2">
               <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
                 AI-Powered Planning
               </div>
-              <h2 className="text-4xl font-bold tracking-tight">
-                Plan smarter, not harder
-              </h2>
+              <h2 className="text-4xl font-bold tracking-tight">Plan smarter, not harder</h2>
               <p className="text-xl text-muted-foreground">
                 Let AI handle your weekly planning while you focus on what matters.
               </p>
@@ -122,18 +114,13 @@ export default function SignInPage() {
                     'Turn your goals into actionable weekly plans with smart prioritization',
                 },
               ].map((feature, index) => (
-                <div
-                  key={index}
-                  className="flex gap-3"
-                >
+                <div key={index} className="flex gap-3">
                   <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
                     <div className="h-2 w-2 rounded-full bg-primary" />
                   </div>
                   <div className="space-y-1">
                     <p className="font-medium">{feature.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {feature.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{feature.description}</p>
                   </div>
                 </div>
               ))}
