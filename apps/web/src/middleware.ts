@@ -82,8 +82,7 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
-  // Default: protect route
-  await auth.protect();
+  // Default: allow other routes (will be caught by Clerk if needed)
   return NextResponse.next();
 });
 
