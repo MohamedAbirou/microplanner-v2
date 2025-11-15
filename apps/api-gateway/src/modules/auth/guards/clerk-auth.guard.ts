@@ -1,12 +1,14 @@
 import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 /**
  * Clerk Authentication Guard
  * Protects routes requiring authenticated users
+ * Works for both HTTP (REST) and GraphQL contexts
  *
  * Applied globally to all routes. Use @Public() decorator to bypass authentication.
  *
@@ -17,11 +19,30 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
  *
  * @Get('protected-route')  // <-- Requires authentication (default)
  * protectedRoute(@CurrentUser() user: User) { ... }
+ *
+ * @Query()  // <-- GraphQL query (requires authentication)
+ * someQuery(@CurrentUser() user: User) { ... }
  */
 @Injectable()
 export class ClerkAuthGuard extends AuthGuard('clerk') {
   constructor(private reflector: Reflector) {
     super();
+  }
+
+  /**
+   * Extract request from both HTTP and GraphQL contexts
+   */
+  getRequest(context: ExecutionContext) {
+    const contextType = context.getType();
+
+    if (contextType === 'graphql') {
+      // For GraphQL requests
+      const gqlContext = GqlExecutionContext.create(context);
+      return gqlContext.getContext().req;
+    } else {
+      // For HTTP requests (REST)
+      return context.switchToHttp().getRequest();
+    }
   }
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
