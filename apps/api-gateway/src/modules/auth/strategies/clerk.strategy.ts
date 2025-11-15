@@ -1,10 +1,10 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, ExtractJwt } from 'passport-jwt';
-import { ConfigService } from '@nestjs/config';
-import { AuthService, ClerkPayload } from '../auth.service';
 import type { User } from '@microplanner/database';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PassportStrategy } from '@nestjs/passport';
 import * as jwksClient from 'jwks-rsa';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { AuthService, ClerkPayload } from '../auth.service';
 
 /**
  * Clerk JWT Strategy
@@ -20,7 +20,6 @@ export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
   ) {
     const clerkDomain = configService.get('CLERK_DOMAIN');
     const clerkJwksUrl = `https://${clerkDomain}/.well-known/jwks.json`;
-    const clerkAudience = configService.get('CLERK_AUDIENCE');
 
     // Build strategy options
     const strategyOptions: any = {
@@ -35,17 +34,10 @@ export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
       algorithms: ['RS256'],
     };
 
-    // Only add audience if it's configured
-    // Clerk tokens don't include audience by default, so this is optional
-    if (clerkAudience) {
-      strategyOptions.audience = clerkAudience;
-    }
-
     super(strategyOptions);
 
     this.logger.log('Clerk JWT Strategy initialized');
     this.logger.debug(`JWKS URL: ${clerkJwksUrl}`);
-    this.logger.debug(`Audience: ${clerkAudience || 'not configured (optional)'}`);
   }
 
   /**

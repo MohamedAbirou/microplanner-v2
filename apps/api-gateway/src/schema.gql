@@ -1,0 +1,126 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CalculateSleepInput {
+  timezone: String!
+  wakeTime: String!
+}
+
+input CompleteOnboardingInput {
+  context: UserContext!
+  firstGoalDescription: String
+  firstGoalTitle: String!
+  focusAreas: [FocusArea!]!
+  timezone: String!
+  wakeTime: String!
+}
+
+enum EnergyPattern {
+  BALANCED
+  MORNING_PERSON
+  NIGHT_OWL
+}
+
+enum FocusArea {
+  BUSINESS
+  CAREER
+  CREATIVE
+  FAMILY
+  HEALTH
+  HOBBIES
+  HOME
+  JOB_SEARCH
+  LEARNING
+  WRITING
+}
+
+input GetGoalSuggestionsInput {
+  context: UserContext!
+  focusAreas: [FocusArea!]!
+}
+
+type GoalSuggestion {
+  context: UserContext!
+  description: String!
+  focusArea: FocusArea!
+  title: String!
+}
+
+input JoinWaitlistInput {
+  email: String!
+  name: String
+  referralSource: String
+  useCase: String
+}
+
+type JoinWaitlistResult {
+  email: String!
+  message: String!
+  position: Int
+  success: Boolean!
+}
+
+type Mutation {
+  completeOnboarding(input: CompleteOnboardingInput!): OnboardingResult!
+  joinWaitlist(input: JoinWaitlistInput!): JoinWaitlistResult!
+  updateOnboardingProgress(input: UpdateOnboardingProgressInput!): Boolean!
+}
+
+type OnboardingResult {
+  message: String
+  success: Boolean!
+}
+
+type ProductivityWindow {
+  end: String!
+  peak: String!
+  start: String!
+}
+
+type Query {
+  calculateSleepRecommendation(input: CalculateSleepInput!): SleepRecommendationOutput!
+  getGoalSuggestions(input: GetGoalSuggestionsInput!): [GoalSuggestion!]!
+  waitlistStats: WaitlistStats!
+}
+
+type SleepRecommendationOutput {
+  benefits: [String!]!
+  cycles: Float!
+  energyPattern: EnergyPattern!
+  explanation: String!
+  optimalSleepTime: String!
+  productivityWindow: ProductivityWindow!
+  tips: [String!]!
+  totalSleepHours: Float!
+  wakeTime: String!
+  windDownTime: String!
+}
+
+input UpdateOnboardingProgressInput {
+  context: UserContext
+  focusAreas: [FocusArea!]
+  step: Float!
+  timezone: String
+  wakeTime: String
+}
+
+enum UserContext {
+  BETWEEN_OPPORTUNITIES
+  EMPLOYED_FULLTIME
+  EMPLOYED_PARTTIME
+  FREELANCER
+  OTHER
+  PARENT_CAREGIVER
+  RETIRED
+  STUDENT
+}
+
+type WaitlistStats {
+  approved: Int!
+  averageWaitDays: Int
+  converted: Int!
+  invited: Int!
+  pending: Int!
+  total: Int!
+}

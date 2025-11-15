@@ -1,14 +1,14 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { UserContext } from '@/graphql/onboarding.graphql';
+import { motion } from 'framer-motion';
 import {
+  Armchair,
   Briefcase,
   GraduationCap,
+  Heart,
   Laptop,
   Search,
-  Armchair,
-  Heart,
   Sparkles,
 } from 'lucide-react';
 
@@ -155,7 +155,7 @@ export function ContextStep({ value, onChange, onNext }: ContextStepProps) {
 
                 {/* Text */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground mb-1">
+                  <h3 className="text-xl font-semibold text-foreground mb-1">
                     {context.label}
                   </h3>
                   <p className="text-sm text-muted-foreground">
