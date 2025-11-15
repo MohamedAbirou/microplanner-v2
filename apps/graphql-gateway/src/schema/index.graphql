@@ -13,7 +13,7 @@ type Subscription {
   _empty: String
 }
 
-# User type
+# User type (Phase 0 & 1 - simplified)
 type User {
   id: ID!
   clerkId: String!
@@ -23,14 +23,14 @@ type User {
   timezone: String!
   tier: SubscriptionTier!
 
-  # Relations
-  goals: [Goal!]!
-  tasks: [Task!]!
-  projects: [Project!]!
+  # Relations - commented out until features are implemented
+  # goals: [Goal!]!
+  # tasks: [Task!]!
+  # projects: [Project!]!
 
-  # Settings
-  workHours: WorkHours
-  focusTimeBlocks: [FocusTimeBlock!]!
+  # Settings - commented out until features are implemented
+  # workHours: WorkHours
+  # focusTimeBlocks: [FocusTimeBlock!]!
 
   createdAt: DateTime!
   updatedAt: DateTime!

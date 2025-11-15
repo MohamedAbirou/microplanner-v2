@@ -200,10 +200,11 @@ export const productivityResolvers = {
     // },
 
     // ==================== TRAVEL TIME ====================
-    calculateTravelTime: async (_: any, { input }: any, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.productivityAPI.calculateTravelTime(user.userId, input);
-    },
+    // Commented out until schema is defined
+    // calculateTravelTime: async (_: any, { input }: any, { dataSources, user }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    //   return dataSources.productivityAPI.calculateTravelTime(user.userId, input);
+    // },
 
     // ==================== KANBAN BOARDS ====================
     createKanbanBoard: async (_: any, { input }: any, { dataSources, user, pubsub }: any) => {

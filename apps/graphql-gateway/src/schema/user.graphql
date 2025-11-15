@@ -40,9 +40,9 @@ enum Theme {
 }
 
 enum EnergyPattern {
-  MORNING
-  EVENING
-  FLEXIBLE
+  MORNING_PERSON
+  BALANCED
+  NIGHT_OWL
 }
 
 # Queries
@@ -73,28 +73,12 @@ extend type Mutation {
 }
 
 # Complete onboarding with all data at once
-input CompleteOnboardingInput {
-  # Profile
-  firstName: String
-  lastName: String
-
-  # Work preferences
-  timezone: String!
-  workDays: [Int!]!
-  workStartTime: String!
-  workEndTime: String!
-  maxMeetingsPerDay: Int
-  energyPattern: EnergyPattern
-
-  # Initial goals
-  goals: [CreateGoalInput!]
-}
+# Note: Input types are defined in onboarding.graphql
+# This mutation uses the CompleteOnboardingInput from onboarding.graphql
 
 type OnboardingResult {
   success: Boolean!
-  user: User!
-  settings: UserSettings!
-  goals: [Goal!]!
+  message: String
 }
 
 # Update user profile input

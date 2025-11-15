@@ -80,7 +80,13 @@ extend type Mutation {
 
 # Subscriptions
 extend type Subscription {
-  projectUpdated(userId: ID!): Project!
+  projectCreated: Project!
+  projectUpdated: Project!
+  projectDeleted: DeletedProject!
+}
+
+type DeletedProject {
+  id: ID!
 }
 
 # Inputs

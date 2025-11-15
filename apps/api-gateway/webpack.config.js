@@ -23,5 +23,19 @@ module.exports = function (options, webpack) {
         '@microplanner/types': path.resolve(__dirname, '../../packages/types/src'),
       },
     },
+    // Increase webpack memory limit
+    optimization: {
+      ...options.optimization,
+      minimize: false, // Disable minification in development
+    },
+    // Add banner to prevent crypto polyfill
+    plugins: [
+      ...(options.plugins || []),
+      new webpack.BannerPlugin({
+        banner: '// Fix crypto polyfill issue\nif (typeof crypto === "undefined") { globalThis.crypto = require("crypto"); }',
+        raw: true,
+        entryOnly: true,
+      }),
+    ],
   };
 };

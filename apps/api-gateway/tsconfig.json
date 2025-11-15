@@ -10,7 +10,7 @@
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "../../",
+    "baseUrl": "./src",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,
@@ -20,11 +20,11 @@
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true,
     "paths": {
-      "@microplanner/types": ["packages/types/src"],
-      "@microplanner/config": ["packages/config/src"],
-      "@microplanner/database": ["packages/database/src"]
+      "@microplanner/types": ["../../../packages/types/src"],
+      "@microplanner/config": ["../../../packages/config/src"],
+      "@microplanner/database": ["../../../packages/database/src"]
     }
   },
-  "include": ["src/**/*", "../../packages/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
 }

@@ -48,6 +48,8 @@ model User {
   onboardingCompleted Boolean          @default(false)
   onboardingStep    Int                @default(0)
   language          String             @default("en")
+  context           String?            // User context: employed_fulltime, student, freelancer, etc.
+  focusAreas        String[]           @default([]) // Focus areas: career, learning, health, etc.
 
   // Relations
   goals             Goal[]

@@ -146,16 +146,33 @@ const cache = new InMemoryCache({
 });
 
 /**
+ * Token getter function - will be set by ClerkApolloProvider
+ * This allows us to inject the token from useAuth() hook
+ */
+let tokenGetter: (() => Promise<string | null>) | null = null;
+
+/**
+ * Set the token getter function
+ * Called by ClerkApolloProvider to inject Clerk's getToken function
+ */
+export function setTokenGetter(getter: () => Promise<string | null>) {
+  tokenGetter = getter;
+}
+
+/**
  * Get authentication token from Clerk
  * Note: This is a client-side only function
  */
 async function getAuthToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
 
-  try {
-    // For now, return null - will be implemented with Clerk client-side hooks
-    // In production, use useAuth() hook from @clerk/nextjs
+  if (!tokenGetter) {
     return null;
+  }
+
+  try {
+    const token = await tokenGetter();
+    return token;
   } catch (error) {
     console.error('Failed to get auth token:', error);
     return null;

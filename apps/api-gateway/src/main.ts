@@ -1,6 +1,9 @@
 import crypto from 'crypto';
-// Make crypto globally available for @nestjs/schedule
-(globalThis as any).crypto = crypto;
+// Make crypto globally available for @nestjs/schedule (only if it doesn't exist)
+// In Node.js 24+, crypto is already available on globalThis
+if (typeof (globalThis as any).crypto === 'undefined') {
+  (globalThis as any).crypto = crypto;
+}
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';

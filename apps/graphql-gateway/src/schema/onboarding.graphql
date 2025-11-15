@@ -1,0 +1,113 @@
+# ==========================================
+# ONBOARDING TYPES
+# ==========================================
+
+enum UserContext {
+  EMPLOYED_FULLTIME
+  EMPLOYED_PARTTIME
+  STUDENT
+  FREELANCER
+  BETWEEN_OPPORTUNITIES
+  RETIRED
+  PARENT_CAREGIVER
+  OTHER
+}
+
+enum FocusArea {
+  CAREER
+  LEARNING
+  HEALTH
+  CREATIVE
+  BUSINESS
+  JOB_SEARCH
+  FAMILY
+  HOME
+  WRITING
+  HOBBIES
+}
+
+# EnergyPattern enum is defined in user.graphql
+
+type ProductivityWindow {
+  start: String!
+  end: String!
+  peak: String!
+}
+
+type SleepRecommendation {
+  wakeTime: String!
+  optimalSleepTime: String!
+  totalSleepHours: Float!
+  cycles: Int!
+  energyPattern: EnergyPattern!
+  productivityWindow: ProductivityWindow!
+  windDownTime: String!
+  explanation: String!
+  benefits: [String!]!
+  tips: [String!]!
+}
+
+type GoalSuggestion {
+  title: String!
+  description: String!
+  focusArea: FocusArea!
+  context: UserContext!
+}
+
+# ==========================================
+# ONBOARDING INPUTS
+# ==========================================
+
+input CalculateSleepInput {
+  wakeTime: String!
+  timezone: String!
+}
+
+input GetGoalSuggestionsInput {
+  context: UserContext!
+  focusAreas: [FocusArea!]!
+}
+
+input UpdateOnboardingProgressInput {
+  step: Int!
+  context: UserContext
+  focusAreas: [FocusArea!]
+  wakeTime: String
+  timezone: String
+}
+
+input CompleteOnboardingInput {
+  context: UserContext!
+  focusAreas: [FocusArea!]!
+  wakeTime: String!
+  timezone: String!
+  firstGoalTitle: String!
+  firstGoalDescription: String
+}
+
+# ==========================================
+# ONBOARDING QUERIES
+# ==========================================
+
+extend type Query {
+  """
+  Calculate optimal sleep schedule based on wake time
+  """
+  calculateSleepRecommendation(input: CalculateSleepInput!): SleepRecommendation!
+
+  """
+  Get AI-powered goal suggestions based on user context
+  """
+  getGoalSuggestions(input: GetGoalSuggestionsInput!): [GoalSuggestion!]!
+}
+
+# ==========================================
+# ONBOARDING MUTATIONS
+# ==========================================
+
+extend type Mutation {
+  """
+  Update onboarding progress (auto-save)
+  """
+  updateOnboardingProgress(input: UpdateOnboardingProgressInput!): Boolean!
+}

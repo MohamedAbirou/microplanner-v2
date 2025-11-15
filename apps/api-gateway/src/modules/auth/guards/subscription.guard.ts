@@ -1,11 +1,13 @@
 import type { SubscriptionTierType, User } from '@microplanner/database';
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { REQUIRED_TIERS_KEY } from '../decorators/require-subscription.decorator';
 
 /**
  * Subscription Tier Guard
  * Checks if user has required subscription tier to access the route
+ * Works for both HTTP (REST) and GraphQL contexts
  *
  * Usage:
  * Apply globally or use @UseGuards(SubscriptionGuard)
@@ -27,9 +29,20 @@ export class SubscriptionGuard implements CanActivate {
       return true;
     }
 
-    // Get user from request
-    const request = context.switchToHttp().getRequest();
-    const user: User = request.user;
+    // Get user from request (support both HTTP and GraphQL)
+    const contextType = context.getType() as string;
+    let user: User;
+
+    if (contextType === 'graphql') {
+      // For GraphQL requests
+      const gqlContext = GqlExecutionContext.create(context);
+      const { req } = gqlContext.getContext();
+      user = req.user;
+    } else {
+      // For HTTP requests (REST)
+      const request = context.switchToHttp().getRequest();
+      user = request.user;
+    }
 
     if (!user) {
       throw new ForbiddenException('User not authenticated');
