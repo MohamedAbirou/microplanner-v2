@@ -5,13 +5,17 @@ import Redis from 'ioredis';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { typeDefs } from './schema/schema';
 import { resolvers as allResolvers } from './resolvers';
-import { WaitlistAPI, UserAPI, GoalsAPI, TasksAPI, ProductivityAPI, ProjectsAPI, OnboardingAPI } from './datasources/rest-api';
-import {
-  createTaskLoader,
-  createGoalLoader,
-  createProjectLoader,
-  createTaskByGoalLoader,
-} from './datasources/dataloaders';
+// Phase 0 & 1 datasources only
+import { WaitlistAPI, UserAPI, OnboardingAPI } from './datasources/rest-api';
+
+// Commented out until features are implemented
+// import { GoalsAPI, TasksAPI, ProductivityAPI, ProjectsAPI } from './datasources/rest-api';
+// import {
+//   createTaskLoader,
+//   createGoalLoader,
+//   createProjectLoader,
+//   createTaskByGoalLoader,
+// } from './datasources/dataloaders';
 import * as jwt from 'jsonwebtoken';
 import 'dotenv/config';
 
@@ -61,12 +65,13 @@ const resolvers = {
   Subscription: {
     ...allResolvers.Subscription,
   },
-  // Type resolvers
-  Goal: allResolvers.Goal,
-  Task: allResolvers.Task,
-  TaskDependency: allResolvers.TaskDependency,
-  Project: allResolvers.Project,
-  KanbanBoard: allResolvers.KanbanBoard,
+
+  // Type resolvers - commented out until features are implemented
+  // Goal: allResolvers.Goal,
+  // Task: allResolvers.Task,
+  // TaskDependency: allResolvers.TaskDependency,
+  // Project: allResolvers.Project,
+  // KanbanBoard: allResolvers.KanbanBoard,
 
   // Custom scalars
   DateTime: {
@@ -128,20 +133,10 @@ async function startServer() {
       const user = verifyToken(token);
       const userId = user?.userId || user?.sub || '';
 
-      // Create data sources
+      // Create data sources (Phase 0 & 1 only)
       const waitlistAPI = new WaitlistAPI(token);
       const userAPI = new UserAPI(token);
-      const goalsAPI = new GoalsAPI(token);
-      const tasksAPI = new TasksAPI(token);
-      const productivityAPI = new ProductivityAPI(token);
-      const projectsAPI = new ProjectsAPI(token);
       const onboardingAPI = new OnboardingAPI(token);
-
-      // Create DataLoaders (for batching)
-      const taskByGoalLoader = createTaskByGoalLoader(tasksAPI);
-      const taskLoader = createTaskLoader(tasksAPI, userId);
-      const goalLoader = createGoalLoader(goalsAPI, userId);
-      const projectLoader = createProjectLoader(projectsAPI, userId);
 
       return {
         user,
@@ -151,17 +146,8 @@ async function startServer() {
         dataSources: {
           waitlistAPI,
           userAPI,
-          goalsAPI,
-          tasksAPI,
-          productivityAPI,
-          projectsAPI,
           onboardingAPI,
         },
-        // DataLoaders
-        taskByGoalLoader,
-        taskLoader,
-        goalLoader,
-        projectLoader,
       };
     },
   });

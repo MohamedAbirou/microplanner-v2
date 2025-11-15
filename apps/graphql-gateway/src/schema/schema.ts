@@ -7,23 +7,20 @@ const scalarsSchema = readFileSync(join(__dirname, 'scalars.graphql'), 'utf-8');
 const indexSchema = readFileSync(join(__dirname, 'index.graphql'), 'utf-8');
 const userSchema = readFileSync(join(__dirname, 'user.graphql'), 'utf-8');
 const waitlistSchema = readFileSync(join(__dirname, 'waitlist.graphql'), 'utf-8');
-const dashboardSchema = readFileSync(join(__dirname, 'dashboard.graphql'), 'utf-8');
-const goalSchema = readFileSync(join(__dirname, 'goal.graphql'), 'utf-8');
-const taskSchema = readFileSync(join(__dirname, 'task.graphql'), 'utf-8');
-const projectSchema = readFileSync(join(__dirname, 'project.graphql'), 'utf-8');
-const productivitySchema = readFileSync(join(__dirname, 'productivity.graphql'), 'utf-8');
 const onboardingSchema = readFileSync(join(__dirname, 'onboarding.graphql'), 'utf-8');
 
-// Combine all schemas
+// Phase 0 & 1 only - Commented out unused schemas until features are implemented
+// const dashboardSchema = readFileSync(join(__dirname, 'dashboard.graphql'), 'utf-8');
+// const goalSchema = readFileSync(join(__dirname, 'goal.graphql'), 'utf-8');
+// const taskSchema = readFileSync(join(__dirname, 'task.graphql'), 'utf-8');
+// const projectSchema = readFileSync(join(__dirname, 'project.graphql'), 'utf-8');
+// const productivitySchema = readFileSync(join(__dirname, 'productivity.graphql'), 'utf-8');
+
+// Combine all schemas (only active features)
 export const typeDefs = gql`
   ${scalarsSchema}
   ${indexSchema}
   ${userSchema}
   ${waitlistSchema}
-  ${dashboardSchema}
-  ${goalSchema}
-  ${taskSchema}
-  ${projectSchema}
-  ${productivitySchema}
   ${onboardingSchema}
 `;
