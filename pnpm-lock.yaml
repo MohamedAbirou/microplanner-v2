@@ -241,6 +241,9 @@ importers:
       '@apollo/utils.keyvaluecache':
         specifier: ^3.1.0
         version: 3.1.0
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
       axios:
         specifier: ^1.6.5
         version: 1.13.2
@@ -256,6 +259,9 @@ importers:
       dotenv:
         specifier: ^16.4.1
         version: 16.4.7
+      express:
+        specifier: ^5.1.0
+        version: 5.1.0
       graphql:
         specifier: ^16.8.1
         version: 16.12.0
@@ -285,7 +291,7 @@ importers:
         specifier: ^1.7.5
         version: 1.8.1
       '@types/cors':
-        specifier: ^2.8.17
+        specifier: ^2.8.19
         version: 2.8.19
       '@types/node':
         specifier: ^20.11.5

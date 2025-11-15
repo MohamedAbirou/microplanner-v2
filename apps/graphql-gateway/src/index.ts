@@ -1,5 +1,9 @@
 import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
 import { GraphQLError } from 'graphql';
 import Redis from 'ioredis';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
@@ -92,68 +96,102 @@ const resolvers = {
   },
 };
 
-// Create Apollo Server
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-
-  // Performance optimizations
-  cache: 'bounded',
-  persistedQueries: {
-    ttl: 900, // 15 minutes
-  },
-
-  // Error handling
-  formatError: (formattedError, error) => {
-    // Don't leak internal errors
-    if (formattedError.extensions?.code === 'INTERNAL_SERVER_ERROR') {
-      console.error('Internal error:', error);
-      return new GraphQLError('Internal server error');
-    }
-    return formattedError;
-  },
-
-  // Production settings
-  introspection: process.env.NODE_ENV !== 'production',
-
-  // Enable subscriptions
-  plugins: [
-    // Add plugins here (Sentry, logging, etc.)
-  ],
-});
-
-// Start server
+// Start server with Express and CORS
 async function startServer() {
-  const { url } = await startStandaloneServer(server, {
-    listen: { port: parseInt(process.env.PORT || '4000') },
+  // Create Express app
+  const app = express();
+  const httpServer = http.createServer(app);
 
-    // Context function - runs for every request
-    context: async ({ req }) => {
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      const user = verifyToken(token);
-      const userId = user?.userId || user?.sub || '';
+  // Create Apollo Server
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
 
-      // Create data sources (Phase 0 & 1 only)
-      const waitlistAPI = new WaitlistAPI(token);
-      const userAPI = new UserAPI(token);
-      const onboardingAPI = new OnboardingAPI(token);
-
-      return {
-        user,
-        token,
-        redis,
-        pubsub,
-        dataSources: {
-          waitlistAPI,
-          userAPI,
-          onboardingAPI,
-        },
-      };
+    // Performance optimizations
+    cache: 'bounded',
+    persistedQueries: {
+      ttl: 900, // 15 minutes
     },
+
+    // Error handling
+    formatError: (formattedError, error) => {
+      // Don't leak internal errors
+      if (formattedError.extensions?.code === 'INTERNAL_SERVER_ERROR') {
+        console.error('Internal error:', error);
+        return new GraphQLError('Internal server error');
+      }
+      return formattedError;
+    },
+
+    // Production settings
+    introspection: process.env.NODE_ENV !== 'production',
+
+    // Drain HTTP server on shutdown
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
-  console.log(`🚀 GraphQL Gateway ready at ${url}`);
-  console.log(`📊 GraphQL Playground: ${url}`);
+  // Start Apollo Server
+  await server.start();
+
+  // CORS configuration for credentials
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean);
+
+  app.use(
+    '/graphql',
+    cors({
+      origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          console.warn(`CORS blocked origin: ${origin}`);
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+      credentials: true, // Allow credentials (cookies, authorization headers)
+    }),
+    express.json(),
+    expressMiddleware(server, {
+      context: async ({ req }) => {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        const user = verifyToken(token);
+        const userId = user?.userId || user?.sub || '';
+
+        // Create data sources (Phase 0 & 1 only)
+        const waitlistAPI = new WaitlistAPI(token);
+        const userAPI = new UserAPI(token);
+        const onboardingAPI = new OnboardingAPI(token);
+
+        return {
+          user,
+          token,
+          redis,
+          pubsub,
+          dataSources: {
+            waitlistAPI,
+            userAPI,
+            onboardingAPI,
+          },
+        };
+      },
+    })
+  );
+
+  const PORT = parseInt(process.env.PORT || '4000');
+
+  await new Promise<void>((resolve) => httpServer.listen({ port: PORT }, resolve));
+
+  console.log(`🚀 GraphQL Gateway ready at http://localhost:${PORT}/graphql`);
+  console.log(`📊 GraphQL Playground: http://localhost:${PORT}/graphql`);
+  console.log(`✅ CORS enabled for: ${allowedOrigins.join(', ')}`);
 }
 
 // Handle graceful shutdown
