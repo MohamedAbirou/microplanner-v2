@@ -5,7 +5,7 @@ import Redis from 'ioredis';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { typeDefs } from './schema/schema';
 import { resolvers as allResolvers } from './resolvers';
-import { WaitlistAPI, UserAPI, GoalsAPI, TasksAPI, ProductivityAPI, ProjectsAPI } from './datasources/rest-api';
+import { WaitlistAPI, UserAPI, GoalsAPI, TasksAPI, ProductivityAPI, ProjectsAPI, OnboardingAPI } from './datasources/rest-api';
 import {
   createTaskLoader,
   createGoalLoader,
@@ -135,6 +135,7 @@ async function startServer() {
       const tasksAPI = new TasksAPI(token);
       const productivityAPI = new ProductivityAPI(token);
       const projectsAPI = new ProjectsAPI(token);
+      const onboardingAPI = new OnboardingAPI(token);
 
       // Create DataLoaders (for batching)
       const taskByGoalLoader = createTaskByGoalLoader(tasksAPI);
@@ -154,6 +155,7 @@ async function startServer() {
           tasksAPI,
           productivityAPI,
           projectsAPI,
+          onboardingAPI,
         },
         // DataLoaders
         taskByGoalLoader,

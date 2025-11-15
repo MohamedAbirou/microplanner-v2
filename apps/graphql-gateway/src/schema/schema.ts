@@ -12,6 +12,7 @@ const goalSchema = readFileSync(join(__dirname, 'goal.graphql'), 'utf-8');
 const taskSchema = readFileSync(join(__dirname, 'task.graphql'), 'utf-8');
 const projectSchema = readFileSync(join(__dirname, 'project.graphql'), 'utf-8');
 const productivitySchema = readFileSync(join(__dirname, 'productivity.graphql'), 'utf-8');
+const onboardingSchema = readFileSync(join(__dirname, 'onboarding.graphql'), 'utf-8');
 
 // Combine all schemas
 export const typeDefs = gql`
@@ -24,4 +25,5 @@ export const typeDefs = gql`
   ${taskSchema}
   ${projectSchema}
   ${productivitySchema}
+  ${onboardingSchema}
 `;
