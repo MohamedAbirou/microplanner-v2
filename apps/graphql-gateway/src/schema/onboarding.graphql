@@ -26,11 +26,7 @@ enum FocusArea {
   HOBBIES
 }
 
-enum EnergyPattern {
-  MORNING_PERSON
-  BALANCED
-  NIGHT_OWL
-}
+# EnergyPattern enum is defined in user.graphql
 
 type ProductivityWindow {
   start: String!
@@ -114,9 +110,4 @@ extend type Mutation {
   Update onboarding progress (auto-save)
   """
   updateOnboardingProgress(input: UpdateOnboardingProgressInput!): Boolean!
-
-  """
-  Complete onboarding and create first goal
-  """
-  completeOnboarding(input: CompleteOnboardingInput!): Boolean!
 }

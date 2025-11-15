@@ -48,7 +48,10 @@ export const UPDATE_ONBOARDING_PROGRESS = gql`
 // Complete Onboarding
 export const COMPLETE_ONBOARDING = gql`
   mutation CompleteOnboarding($input: CompleteOnboardingInput!) {
-    completeOnboarding(input: $input)
+    completeOnboarding(input: $input) {
+      success
+      message
+    }
   }
 `;
 

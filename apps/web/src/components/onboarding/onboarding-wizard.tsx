@@ -70,7 +70,7 @@ export function OnboardingWizard() {
     if (currentStep === TOTAL_STEPS) {
       // Complete onboarding
       try {
-        await completeOnboarding({
+        const result = await completeOnboarding({
           variables: {
             input: {
               context: data.context!,
@@ -83,8 +83,13 @@ export function OnboardingWizard() {
           },
         });
 
-        // Redirect to dashboard
-        router.push('/dashboard');
+        // Check if successful
+        if (result.data?.completeOnboarding?.success) {
+          // Redirect to dashboard
+          router.push('/dashboard');
+        } else {
+          console.error('Onboarding failed:', result.data?.completeOnboarding?.message);
+        }
       } catch (error) {
         console.error('Failed to complete onboarding:', error);
       }

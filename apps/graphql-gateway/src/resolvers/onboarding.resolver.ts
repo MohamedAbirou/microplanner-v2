@@ -29,7 +29,14 @@ export const onboardingResolvers = {
     // ==================== COMPLETE ONBOARDING ====================
     completeOnboarding: async (_: any, { input }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.onboardingAPI.completeOnboarding(input);
+
+      const success = await dataSources.onboardingAPI.completeOnboarding(input);
+
+      return {
+        success,
+        user: null, // User data is managed by NestJS
+        message: success ? 'Onboarding completed successfully' : 'Failed to complete onboarding',
+      };
     },
   },
 };
