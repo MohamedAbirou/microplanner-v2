@@ -5,6 +5,9 @@ import { useAuth } from '@clerk/nextjs';
 import { ThemeProvider } from 'next-themes';
 import { ApolloProvider } from '@apollo/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Analytics } from '@vercel/analytics/next';
+import { ThemeProvider } from 'next-themes';
+import * as React from 'react';
 import { Toaster } from 'sonner';
 import { createApolloClient, setTokenGetter } from '@/lib/apollo/client';
 
@@ -47,13 +50,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ClerkApolloProvider>
         <QueryClientProvider client={queryClient}>
           {children}
-          <Toaster
-            position="top-right"
-            expand={false}
-            richColors
-            closeButton
-            theme="dark"
-          />
+          <Toaster position="top-right" expand={false} richColors closeButton theme="dark" />
+          <Analytics />
         </QueryClientProvider>
       </ClerkApolloProvider>
     </ThemeProvider>
