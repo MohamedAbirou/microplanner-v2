@@ -14,6 +14,7 @@ import {
   GetGoalSuggestionsInput,
   CompleteOnboardingInput,
   UpdateOnboardingProgressInput,
+  OnboardingResult,
   UserContext,
   FocusArea,
 } from './dto/onboarding.dto';
@@ -81,49 +82,62 @@ export class OnboardingResolver {
   /**
    * Complete onboarding and create first goal
    */
-  @Mutation(() => Boolean, { name: 'completeOnboarding' })
+  @Mutation(() => OnboardingResult, { name: 'completeOnboarding' })
   async completeOnboarding(
     @CurrentUser() user: User,
     @Args('input') input: CompleteOnboardingInput,
-  ): Promise<boolean> {
+  ): Promise<OnboardingResult> {
     this.logger.log(`Completing onboarding for user ${user.id}`);
 
-    // Calculate sleep recommendations
-    const sleepRec = this.sleepScienceService.calculateSleepRecommendation(
-      input.wakeTime,
-      input.timezone,
-    );
+    try {
+      // Calculate sleep recommendations
+      const sleepRec = this.sleepScienceService.calculateSleepRecommendation(
+        input.wakeTime,
+        input.timezone,
+      );
 
-    // Update user profile with onboarding data
-    await this.usersService.updateOnboarding(user.id, {
-      context: input.context,
-      focusAreas: input.focusAreas,
-      timezone: input.timezone,
-      wakeTime: input.wakeTime,
-      sleepTime: sleepRec.optimalSleepTime,
-      energyPattern: sleepRec.energyPattern,
-      productivityPeaks: [sleepRec.productivityWindow.peak],
-      onboardingCompleted: true,
-      onboardingStep: 5,
-    });
+      // Update user profile with onboarding data
+      const updatedUser = await this.usersService.updateOnboarding(user.id, {
+        context: input.context,
+        focusAreas: input.focusAreas,
+        timezone: input.timezone,
+        wakeTime: input.wakeTime,
+        sleepTime: sleepRec.optimalSleepTime,
+        energyPattern: sleepRec.energyPattern,
+        productivityPeaks: [sleepRec.productivityWindow.peak],
+        onboardingCompleted: true,
+        onboardingStep: 5,
+      });
 
-    // Create first goal (using existing GoalsService pattern)
-    await this.goalsService.create(
-      user.id,
-      {
-        title: input.firstGoalTitle,
-        description: input.firstGoalDescription || '',
-        emoji: '🎯',
-        color: '#3B82F6',
-        frequencyPerWeek: 3,
-        durationMinutes: 60,
-        priority: 8, // High priority for first goal
-      },
-      user.tier, // Pass user's subscription tier
-    );
+      // Create first goal (using existing GoalsService pattern)
+      await this.goalsService.create(
+        user.id,
+        {
+          title: input.firstGoalTitle,
+          description: input.firstGoalDescription || '',
+          emoji: '🎯',
+          color: '#3B82F6',
+          frequencyPerWeek: 3,
+          durationMinutes: 60,
+          priority: 8, // High priority for first goal
+        },
+        user.tier, // Pass user's subscription tier
+      );
 
-    this.logger.log(`Onboarding completed for user ${user.id}`);
-    return true;
+      this.logger.log(`Onboarding completed for user ${user.id}`);
+
+      return {
+        success: true,
+        message: 'Onboarding completed successfully!',
+        user: updatedUser,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to complete onboarding for user ${user.id}:`, error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to complete onboarding',
+      };
+    }
   }
 
 }

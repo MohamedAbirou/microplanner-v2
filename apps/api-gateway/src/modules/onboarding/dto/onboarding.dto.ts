@@ -1,6 +1,7 @@
 import { InputType, Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { IsEnum, IsArray, IsString, IsOptional, Matches, IsInt, Min, Max } from 'class-validator';
 import { EnergyPattern } from '@microplanner/database';
+import { User } from '../users/entities/user.entity';
 
 // User context (life situation)
 export enum UserContext {
@@ -193,4 +194,19 @@ export class UpdateOnboardingProgressInput {
   @IsOptional()
   @IsString()
   timezone?: string;
+}
+
+/**
+ * Onboarding Result
+ */
+@ObjectType()
+export class OnboardingResult {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  message?: string;
+
+  @Field(() => User, { nullable: true })
+  user?: User;
 }

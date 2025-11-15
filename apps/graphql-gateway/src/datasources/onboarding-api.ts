@@ -103,7 +103,15 @@ export class OnboardingAPI {
   async completeOnboarding(input: any) {
     const mutation = `
       mutation CompleteOnboarding($input: CompleteOnboardingInput!) {
-        completeOnboarding(input: $input)
+        completeOnboarding(input: $input) {
+          success
+          message
+          user {
+            id
+            email
+            name
+          }
+        }
       }
     `;
 
