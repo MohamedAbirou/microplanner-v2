@@ -23,16 +23,21 @@ export class OnboardingAPI {
    * Call NestJS GraphQL endpoint
    */
   private async query(query: string, variables?: any) {
-    const { data } = await this.client.post('', {
+    const response = await this.client.post('', {
       query,
       variables,
     });
 
-    if (data.errors) {
-      throw new Error(data.errors[0].message);
+    const { data } = response;
+
+    // Handle GraphQL errors
+    if (data?.errors && data.errors.length > 0) {
+      const errorMessage = data.errors[0]?.message || 'Unknown GraphQL error';
+      console.error('[OnboardingAPI] GraphQL Error:', data.errors);
+      throw new Error(errorMessage);
     }
 
-    return data.data;
+    return data?.data;
   }
 
   /**
@@ -106,11 +111,6 @@ export class OnboardingAPI {
         completeOnboarding(input: $input) {
           success
           message
-          user {
-            id
-            email
-            name
-          }
         }
       }
     `;

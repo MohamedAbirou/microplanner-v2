@@ -78,7 +78,6 @@ extend type Mutation {
 
 type OnboardingResult {
   success: Boolean!
-  user: User
   message: String
 }
 

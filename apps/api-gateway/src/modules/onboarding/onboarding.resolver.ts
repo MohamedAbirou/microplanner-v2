@@ -129,7 +129,6 @@ export class OnboardingResolver {
       return {
         success: true,
         message: 'Onboarding completed successfully!',
-        user: updatedUser,
       };
     } catch (error) {
       this.logger.error(`Failed to complete onboarding for user ${user.id}:`, error);
