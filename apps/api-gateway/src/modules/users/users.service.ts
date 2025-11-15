@@ -127,6 +127,28 @@ export class UsersService {
   }
 
   /**
+   * Update onboarding data (progress and completion)
+   */
+  async updateOnboarding(userId: string, data: {
+    onboardingStep?: number;
+    context?: string;
+    focusAreas?: string[];
+    timezone?: string;
+    wakeTime?: string;
+    sleepTime?: string;
+    energyPattern?: EnergyPattern;
+    productivityPeaks?: string[];
+    onboardingCompleted?: boolean;
+  }): Promise<User> {
+    this.logger.log(`Updating onboarding for user: ${userId}`);
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+  }
+
+  /**
    * Delete user account (GDPR compliance)
    */
   async deleteAccount(userId: string): Promise<void> {

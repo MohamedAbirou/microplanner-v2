@@ -1,5 +1,6 @@
 import { InputType, Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { IsEnum, IsArray, IsString, IsOptional, Matches, IsInt, Min, Max } from 'class-validator';
+import { EnergyPattern } from '@microplanner/database';
 
 // User context (life situation)
 export enum UserContext {
@@ -27,18 +28,10 @@ export enum FocusArea {
   HOBBIES = 'hobbies',
 }
 
-// Chronotype
-export enum Chronotype {
-  EARLY_RISER = 'early_riser',
-  MODERATE = 'moderate',
-  LATE_RISER = 'late_riser',
-  NIGHT_OWL = 'night_owl',
-}
-
 // Register enums for GraphQL
 registerEnumType(UserContext, { name: 'UserContext' });
 registerEnumType(FocusArea, { name: 'FocusArea' });
-registerEnumType(Chronotype, { name: 'Chronotype' });
+registerEnumType(EnergyPattern, { name: 'EnergyPattern' });
 
 /**
  * Sleep Recommendation Output
@@ -69,8 +62,8 @@ export class SleepRecommendationOutput {
   @Field()
   cycles: number;
 
-  @Field(() => Chronotype)
-  chronotype: Chronotype;
+  @Field(() => EnergyPattern)
+  energyPattern: EnergyPattern;
 
   @Field(() => ProductivityWindow)
   productivityWindow: ProductivityWindow;

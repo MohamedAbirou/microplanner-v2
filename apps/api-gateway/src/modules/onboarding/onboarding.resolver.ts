@@ -14,6 +14,8 @@ import {
   GetGoalSuggestionsInput,
   CompleteOnboardingInput,
   UpdateOnboardingProgressInput,
+  UserContext,
+  FocusArea,
 } from './dto/onboarding.dto';
 
 /**
@@ -65,7 +67,7 @@ export class OnboardingResolver {
   ): Promise<boolean> {
     this.logger.debug(`Updating onboarding progress for user ${user.id}, step: ${input.step}`);
 
-    await this.usersService.update(user.id, {
+    await this.usersService.updateOnboarding(user.id, {
       onboardingStep: input.step,
       ...(input.context && { context: input.context }),
       ...(input.focusAreas && { focusAreas: input.focusAreas }),
@@ -93,36 +95,35 @@ export class OnboardingResolver {
     );
 
     // Update user profile with onboarding data
-    await this.usersService.update(user.id, {
+    await this.usersService.updateOnboarding(user.id, {
       context: input.context,
       focusAreas: input.focusAreas,
       timezone: input.timezone,
       wakeTime: input.wakeTime,
       sleepTime: sleepRec.optimalSleepTime,
-      energyPattern: sleepRec.chronotype,
+      energyPattern: sleepRec.energyPattern,
       productivityPeaks: [sleepRec.productivityWindow.peak],
       onboardingCompleted: true,
       onboardingStep: 5,
     });
 
-    // Create first goal
-    await this.goalsService.create(user.id, {
-      title: input.firstGoalTitle,
-      description: input.firstGoalDescription || '',
-      targetDate: this.calculateTargetDate(), // 2 weeks from now
-      priority: 'high',
-    });
+    // Create first goal (using existing GoalsService pattern)
+    await this.goalsService.create(
+      user.id,
+      {
+        title: input.firstGoalTitle,
+        description: input.firstGoalDescription || '',
+        emoji: '🎯',
+        color: '#3B82F6',
+        frequencyPerWeek: 3,
+        durationMinutes: 60,
+        priority: 8, // High priority for first goal
+      },
+      user.tier, // Pass user's subscription tier
+    );
 
     this.logger.log(`Onboarding completed for user ${user.id}`);
     return true;
   }
 
-  /**
-   * Calculate default target date (2 weeks from now)
-   */
-  private calculateTargetDate(): Date {
-    const date = new Date();
-    date.setDate(date.getDate() + 14);
-    return date;
-  }
 }

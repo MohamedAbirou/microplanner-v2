@@ -1,18 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-
-export enum Chronotype {
-  EARLY_RISER = 'early_riser',   // 5-7 AM wakers
-  MODERATE = 'moderate',          // 7-9 AM wakers
-  LATE_RISER = 'late_riser',      // 9-11 AM wakers
-  NIGHT_OWL = 'night_owl',        // 11+ AM wakers
-}
+import { EnergyPattern } from '@microplanner/database';
 
 export interface SleepRecommendation {
   wakeTime: string;
   optimalSleepTime: string;
   totalSleepHours: number;
   cycles: number;
-  chronotype: Chronotype;
+  energyPattern: EnergyPattern; // Use existing enum
   productivityWindow: {
     start: string;
     end: string;
@@ -47,10 +41,10 @@ export class SleepScienceService {
     this.logger.debug(`Calculating sleep recommendation for wake time: ${wakeTimeStr}, timezone: ${timezone}`);
 
     const wakeTime = this.parseTime(wakeTimeStr);
-    const chronotype = this.inferChronotype(wakeTime.hour);
+    const energyPattern = this.inferEnergyPattern(wakeTime.hour);
 
     // Calculate optimal sleep time (5 complete cycles = 7.5 hours)
-    const cycles = this.getOptimalCycles(chronotype);
+    const cycles = this.getOptimalCycles(energyPattern);
     const sleepMinutes = cycles * 90; // 90-minute cycles
     const fallAsleepBuffer = 15; // Time to fall asleep
     const totalMinutes = sleepMinutes + fallAsleepBuffer;
@@ -76,24 +70,24 @@ export class SleepScienceService {
     const optimalSleepTime = this.formatTime(finalSleepHour, finalSleepMinute);
     const totalSleepHours = sleepMinutes / 60;
 
-    // Calculate productivity window based on chronotype
-    const productivityWindow = this.calculateProductivityWindow(chronotype);
+    // Calculate productivity window based on energy pattern
+    const productivityWindow = this.calculateProductivityWindow(energyPattern);
 
     // Calculate wind-down time (2 hours before sleep)
     const windDownHour = finalSleepHour - 2;
     const windDownTime = this.formatTime(windDownHour < 0 ? 24 + windDownHour : windDownHour, finalSleepMinute);
 
     // Build explanation and recommendations
-    const explanation = this.buildExplanation(wakeTimeStr, optimalSleepTime, totalSleepHours, cycles, chronotype);
-    const benefits = this.getBenefits(chronotype, totalSleepHours);
-    const tips = this.getTips(chronotype);
+    const explanation = this.buildExplanation(wakeTimeStr, optimalSleepTime, totalSleepHours, cycles, energyPattern);
+    const benefits = this.getBenefits(energyPattern, totalSleepHours);
+    const tips = this.getTips(energyPattern);
 
     return {
       wakeTime: wakeTimeStr,
       optimalSleepTime,
       totalSleepHours,
       cycles,
-      chronotype,
+      energyPattern,
       productivityWindow,
       windDownTime,
       explanation,
@@ -103,62 +97,56 @@ export class SleepScienceService {
   }
 
   /**
-   * Infer chronotype from wake time
+   * Infer energy pattern from wake time
    */
-  private inferChronotype(wakeHour: number): Chronotype {
-    if (wakeHour <= 7) return Chronotype.EARLY_RISER;
-    if (wakeHour <= 9) return Chronotype.MODERATE;
-    if (wakeHour <= 11) return Chronotype.LATE_RISER;
-    return Chronotype.NIGHT_OWL;
+  private inferEnergyPattern(wakeHour: number): EnergyPattern {
+    // Map wake time to existing EnergyPattern enum
+    if (wakeHour <= 8) return EnergyPattern.MORNING_PERSON; // Early risers (5-8 AM)
+    if (wakeHour >= 10) return EnergyPattern.NIGHT_OWL;     // Late risers/night owls (10 AM+)
+    return EnergyPattern.BALANCED;                            // Moderates (8-10 AM)
   }
 
   /**
-   * Get optimal sleep cycles based on chronotype
+   * Get optimal sleep cycles based on energy pattern
    */
-  private getOptimalCycles(chronotype: Chronotype): number {
-    // Early risers and moderates do well with 5 cycles
-    // Late risers and night owls may need 6 cycles
-    switch (chronotype) {
-      case Chronotype.EARLY_RISER:
-      case Chronotype.MODERATE:
+  private getOptimalCycles(energyPattern: EnergyPattern): number {
+    // Morning people tend to do well with 5 cycles (7.5 hours)
+    // Night owls may need 6 cycles (9 hours)
+    switch (energyPattern) {
+      case EnergyPattern.MORNING_PERSON:
         return 5; // 7.5 hours
-      case Chronotype.LATE_RISER:
-      case Chronotype.NIGHT_OWL:
+      case EnergyPattern.NIGHT_OWL:
         return 6; // 9 hours
+      case EnergyPattern.BALANCED:
       default:
-        return 5;
+        return 5; // 7.5 hours
     }
   }
 
   /**
-   * Calculate productivity window based on chronotype
+   * Calculate productivity window based on energy pattern
    * Based on circadian rhythm research
    */
-  private calculateProductivityWindow(chronotype: Chronotype): { start: string; end: string; peak: string } {
+  private calculateProductivityWindow(energyPattern: EnergyPattern): { start: string; end: string; peak: string } {
     const windows = {
-      [Chronotype.EARLY_RISER]: {
+      [EnergyPattern.MORNING_PERSON]: {
         start: '09:00',
         end: '13:00',
         peak: 'Morning (9 AM - 1 PM)',
       },
-      [Chronotype.MODERATE]: {
-        start: '11:00',
-        end: '15:00',
-        peak: 'Midday (11 AM - 3 PM)',
+      [EnergyPattern.BALANCED]: {
+        start: '10:00',
+        end: '14:00',
+        peak: 'Late Morning (10 AM - 2 PM)',
       },
-      [Chronotype.LATE_RISER]: {
+      [EnergyPattern.NIGHT_OWL]: {
         start: '14:00',
         end: '18:00',
         peak: 'Afternoon (2 PM - 6 PM)',
       },
-      [Chronotype.NIGHT_OWL]: {
-        start: '20:00',
-        end: '00:00',
-        peak: 'Evening (8 PM - Midnight)',
-      },
     };
 
-    return windows[chronotype];
+    return windows[energyPattern];
   }
 
   /**
@@ -169,91 +157,80 @@ export class SleepScienceService {
     sleepTime: string,
     hours: number,
     cycles: number,
-    chronotype: Chronotype
+    energyPattern: EnergyPattern
   ): string {
-    const chronotypeNames = {
-      [Chronotype.EARLY_RISER]: 'an Early Riser',
-      [Chronotype.MODERATE]: 'a Moderate',
-      [Chronotype.LATE_RISER]: 'a Late Riser',
-      [Chronotype.NIGHT_OWL]: 'a Night Owl',
+    const energyPatternNames = {
+      [EnergyPattern.MORNING_PERSON]: 'a Morning Person',
+      [EnergyPattern.BALANCED]: 'Balanced',
+      [EnergyPattern.NIGHT_OWL]: 'a Night Owl',
     };
 
-    return `Based on your wake time of ${wakeTime}, you're ${chronotypeNames[chronotype]}. ` +
+    return `Based on your wake time of ${wakeTime}, you're ${energyPatternNames[energyPattern]}. ` +
       `To get ${cycles} complete sleep cycles (${hours} hours of restorative sleep), ` +
       `you should aim to be asleep by ${sleepTime}. This aligns with your natural circadian rhythm ` +
       `and maximizes deep sleep, which is crucial for memory consolidation, muscle recovery, and cognitive performance.`;
   }
 
   /**
-   * Get benefits specific to chronotype and sleep duration
+   * Get benefits specific to energy pattern and sleep duration
    */
-  private getBenefits(chronotype: Chronotype, hours: number): string[] {
+  private getBenefits(energyPattern: EnergyPattern, hours: number): string[] {
     const baseBenefits = [
       `${hours} hours of quality sleep for optimal brain function`,
       'Complete sleep cycles prevent grogginess from waking mid-cycle',
       'Consistent schedule regulates your circadian rhythm',
     ];
 
-    const chronotypeBenefits = {
-      [Chronotype.EARLY_RISER]: [
+    const energyPatternBenefits = {
+      [EnergyPattern.MORNING_PERSON]: [
         'Peak productivity during morning hours when focus is sharpest',
-        'Natural alignment with traditional work schedules',
+        'Natural alignment with traditional schedules',
         'More daylight exposure for better mood and vitamin D',
       ],
-      [Chronotype.MODERATE]: [
+      [EnergyPattern.BALANCED]: [
         'Balanced energy throughout the day',
         'Flexibility to handle both morning and afternoon tasks',
         'Optimal for most people\'s natural rhythm',
       ],
-      [Chronotype.LATE_RISER]: [
-        'Peak creativity and problem-solving in afternoons',
-        'Better suited for flexible or evening work schedules',
-        'Natural energy boost in late afternoon',
-      ],
-      [Chronotype.NIGHT_OWL]: [
-        'Maximum focus during evening hours',
-        'Ideal for creative work and deep thinking at night',
-        'Perfect for global collaboration across time zones',
+      [EnergyPattern.NIGHT_OWL]: [
+        'Peak creativity and problem-solving in afternoons/evenings',
+        'Better suited for flexible work schedules',
+        'Natural energy boost in late afternoon and evening',
       ],
     };
 
-    return [...baseBenefits, ...chronotypeBenefits[chronotype]];
+    return [...baseBenefits, ...energyPatternBenefits[energyPattern]];
   }
 
   /**
-   * Get personalized tips based on chronotype
+   * Get personalized tips based on energy pattern
    */
-  private getTips(chronotype: Chronotype): string[] {
+  private getTips(energyPattern: EnergyPattern): string[] {
     const baseTips = [
       'Avoid screens 1 hour before bedtime',
       'Keep your bedroom cool (65-68°F / 18-20°C)',
       'Maintain the same sleep schedule on weekends',
     ];
 
-    const chronotypeTips = {
-      [Chronotype.EARLY_RISER]: [
+    const energyPatternTips = {
+      [EnergyPattern.MORNING_PERSON]: [
         'Schedule your most important work between 9 AM - 1 PM',
         'Get natural sunlight exposure early in the morning',
         'Avoid caffeine after 2 PM',
       ],
-      [Chronotype.MODERATE]: [
+      [EnergyPattern.BALANCED]: [
         'Plan deep work sessions for late morning',
         'Take a short walk after lunch to boost afternoon energy',
         'Limit caffeine after 3 PM',
       ],
-      [Chronotype.LATE_RISER]: [
-        'Use mornings for routine tasks, afternoons for complex work',
-        'Consider a morning workout to help wake up',
-        'Limit caffeine after 4 PM',
-      ],
-      [Chronotype.NIGHT_OWL]: [
-        'Save your hardest work for evening hours',
+      [EnergyPattern.NIGHT_OWL]: [
+        'Save your hardest work for afternoon/evening hours',
         'Use blue light blocking glasses if working late',
-        'Avoid caffeine after 6 PM to ensure sleep quality',
+        'Avoid caffeine after 4 PM to ensure sleep quality',
       ],
     };
 
-    return [...baseTips, ...chronotypeTips[chronotype]];
+    return [...baseTips, ...energyPatternTips[energyPattern]];
   }
 
   /**

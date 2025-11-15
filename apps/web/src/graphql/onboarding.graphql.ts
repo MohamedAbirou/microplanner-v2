@@ -12,7 +12,7 @@ export const CALCULATE_SLEEP_RECOMMENDATION = gql`
       optimalSleepTime
       totalSleepHours
       cycles
-      chronotype
+      energyPattern
       productivityWindow {
         start
         end
@@ -80,11 +80,10 @@ export enum FocusArea {
   HOBBIES = 'hobbies',
 }
 
-export enum Chronotype {
-  EARLY_RISER = 'early_riser',
-  MODERATE = 'moderate',
-  LATE_RISER = 'late_riser',
-  NIGHT_OWL = 'night_owl',
+export enum EnergyPattern {
+  MORNING_PERSON = 'MORNING_PERSON',
+  BALANCED = 'BALANCED',
+  NIGHT_OWL = 'NIGHT_OWL',
 }
 
 export interface SleepRecommendation {
@@ -92,7 +91,7 @@ export interface SleepRecommendation {
   optimalSleepTime: string;
   totalSleepHours: number;
   cycles: number;
-  chronotype: Chronotype;
+  energyPattern: EnergyPattern;
   productivityWindow: {
     start: string;
     end: string;
