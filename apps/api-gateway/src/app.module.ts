@@ -29,6 +29,7 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ProductivityModule } from './modules/productivity/productivity.module';
 import { RedisModule } from './redis/redis.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
 
 /**
  * Maps HTTP status codes to GraphQL error codes
@@ -187,6 +188,7 @@ function getGraphQLErrorCode(statusCode: number): string {
     HealthModule,
     EmailModule,
     WaitlistModule,
+    OnboardingModule,
   ],
   controllers: [AppController],
   providers: [
