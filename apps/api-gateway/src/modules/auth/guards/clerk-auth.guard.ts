@@ -1,7 +1,7 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthGuard } from '@nestjs/passport';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
@@ -33,7 +33,7 @@ export class ClerkAuthGuard extends AuthGuard('clerk') {
    * Extract request from both HTTP and GraphQL contexts
    */
   getRequest(context: ExecutionContext) {
-    const contextType = context.getType();
+    const contextType = context.getType() as string;
 
     if (contextType === 'graphql') {
       // For GraphQL requests

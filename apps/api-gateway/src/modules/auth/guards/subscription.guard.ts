@@ -30,7 +30,7 @@ export class SubscriptionGuard implements CanActivate {
     }
 
     // Get user from request (support both HTTP and GraphQL)
-    const contextType = context.getType();
+    const contextType = context.getType() as string;
     let user: User;
 
     if (contextType === 'graphql') {

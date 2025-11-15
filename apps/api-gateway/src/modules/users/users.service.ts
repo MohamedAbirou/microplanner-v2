@@ -1,9 +1,9 @@
+import type { EnergyPatternType, User } from '@microplanner/database';
+import { SubscriptionTier } from '@microplanner/database';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import type { User } from '@microplanner/database';
-import { SubscriptionTier, EnergyPattern } from '@microplanner/database';
-import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 interface CreateUserFromClerkDto {
   clerkId: string;
@@ -129,17 +129,20 @@ export class UsersService {
   /**
    * Update onboarding data (progress and completion)
    */
-  async updateOnboarding(userId: string, data: {
-    onboardingStep?: number;
-    context?: string;
-    focusAreas?: string[];
-    timezone?: string;
-    wakeTime?: string;
-    sleepTime?: string;
-    energyPattern?: EnergyPattern;
-    productivityPeaks?: string[];
-    onboardingCompleted?: boolean;
-  }): Promise<User> {
+  async updateOnboarding(
+    userId: string,
+    data: {
+      onboardingStep?: number;
+      context?: string;
+      focusAreas?: string[];
+      timezone?: string;
+      wakeTime?: string;
+      sleepTime?: string;
+      energyPattern?: EnergyPatternType;
+      productivityPeaks?: string[];
+      onboardingCompleted?: boolean;
+    }
+  ): Promise<User> {
     this.logger.log(`Updating onboarding for user: ${userId}`);
 
     return this.prisma.user.update({

@@ -1,12 +1,12 @@
+import { EnergyPattern, EnergyPatternType } from '@microplanner/database';
 import { Injectable, Logger } from '@nestjs/common';
-import { EnergyPattern } from '@microplanner/database';
 
 export interface SleepRecommendation {
   wakeTime: string;
   optimalSleepTime: string;
   totalSleepHours: number;
   cycles: number;
-  energyPattern: EnergyPattern; // Use existing enum
+  energyPattern: EnergyPatternType; // Use existing enum
   productivityWindow: {
     start: string;
     end: string;
@@ -38,7 +38,9 @@ export class SleepScienceService {
    * Calculate optimal sleep schedule based on desired wake time
    */
   calculateSleepRecommendation(wakeTimeStr: string, timezone: string): SleepRecommendation {
-    this.logger.debug(`Calculating sleep recommendation for wake time: ${wakeTimeStr}, timezone: ${timezone}`);
+    this.logger.debug(
+      `Calculating sleep recommendation for wake time: ${wakeTimeStr}, timezone: ${timezone}`
+    );
 
     const wakeTime = this.parseTime(wakeTimeStr);
     const energyPattern = this.inferEnergyPattern(wakeTime.hour);
@@ -75,10 +77,19 @@ export class SleepScienceService {
 
     // Calculate wind-down time (2 hours before sleep)
     const windDownHour = finalSleepHour - 2;
-    const windDownTime = this.formatTime(windDownHour < 0 ? 24 + windDownHour : windDownHour, finalSleepMinute);
+    const windDownTime = this.formatTime(
+      windDownHour < 0 ? 24 + windDownHour : windDownHour,
+      finalSleepMinute
+    );
 
     // Build explanation and recommendations
-    const explanation = this.buildExplanation(wakeTimeStr, optimalSleepTime, totalSleepHours, cycles, energyPattern);
+    const explanation = this.buildExplanation(
+      wakeTimeStr,
+      optimalSleepTime,
+      totalSleepHours,
+      cycles,
+      energyPattern
+    );
     const benefits = this.getBenefits(energyPattern, totalSleepHours);
     const tips = this.getTips(energyPattern);
 
@@ -99,17 +110,17 @@ export class SleepScienceService {
   /**
    * Infer energy pattern from wake time
    */
-  private inferEnergyPattern(wakeHour: number): EnergyPattern {
+  private inferEnergyPattern(wakeHour: number): EnergyPatternType {
     // Map wake time to existing EnergyPattern enum
     if (wakeHour <= 8) return EnergyPattern.MORNING_PERSON; // Early risers (5-8 AM)
-    if (wakeHour >= 10) return EnergyPattern.NIGHT_OWL;     // Late risers/night owls (10 AM+)
-    return EnergyPattern.BALANCED;                            // Moderates (8-10 AM)
+    if (wakeHour >= 10) return EnergyPattern.NIGHT_OWL; // Late risers/night owls (10 AM+)
+    return EnergyPattern.BALANCED; // Moderates (8-10 AM)
   }
 
   /**
    * Get optimal sleep cycles based on energy pattern
    */
-  private getOptimalCycles(energyPattern: EnergyPattern): number {
+  private getOptimalCycles(energyPattern: EnergyPatternType): number {
     // Morning people tend to do well with 5 cycles (7.5 hours)
     // Night owls may need 6 cycles (9 hours)
     switch (energyPattern) {
@@ -127,7 +138,11 @@ export class SleepScienceService {
    * Calculate productivity window based on energy pattern
    * Based on circadian rhythm research
    */
-  private calculateProductivityWindow(energyPattern: EnergyPattern): { start: string; end: string; peak: string } {
+  private calculateProductivityWindow(energyPattern: EnergyPatternType): {
+    start: string;
+    end: string;
+    peak: string;
+  } {
     const windows = {
       [EnergyPattern.MORNING_PERSON]: {
         start: '09:00',
@@ -157,7 +172,7 @@ export class SleepScienceService {
     sleepTime: string,
     hours: number,
     cycles: number,
-    energyPattern: EnergyPattern
+    energyPattern: EnergyPatternType
   ): string {
     const energyPatternNames = {
       [EnergyPattern.MORNING_PERSON]: 'a Morning Person',
@@ -165,16 +180,18 @@ export class SleepScienceService {
       [EnergyPattern.NIGHT_OWL]: 'a Night Owl',
     };
 
-    return `Based on your wake time of ${wakeTime}, you're ${energyPatternNames[energyPattern]}. ` +
+    return (
+      `Based on your wake time of ${wakeTime}, you're ${energyPatternNames[energyPattern]}. ` +
       `To get ${cycles} complete sleep cycles (${hours} hours of restorative sleep), ` +
       `you should aim to be asleep by ${sleepTime}. This aligns with your natural circadian rhythm ` +
-      `and maximizes deep sleep, which is crucial for memory consolidation, muscle recovery, and cognitive performance.`;
+      `and maximizes deep sleep, which is crucial for memory consolidation, muscle recovery, and cognitive performance.`
+    );
   }
 
   /**
    * Get benefits specific to energy pattern and sleep duration
    */
-  private getBenefits(energyPattern: EnergyPattern, hours: number): string[] {
+  private getBenefits(energyPattern: EnergyPatternType, hours: number): string[] {
     const baseBenefits = [
       `${hours} hours of quality sleep for optimal brain function`,
       'Complete sleep cycles prevent grogginess from waking mid-cycle',
@@ -190,7 +207,7 @@ export class SleepScienceService {
       [EnergyPattern.BALANCED]: [
         'Balanced energy throughout the day',
         'Flexibility to handle both morning and afternoon tasks',
-        'Optimal for most people\'s natural rhythm',
+        "Optimal for most people's natural rhythm",
       ],
       [EnergyPattern.NIGHT_OWL]: [
         'Peak creativity and problem-solving in afternoons/evenings',
@@ -205,7 +222,7 @@ export class SleepScienceService {
   /**
    * Get personalized tips based on energy pattern
    */
-  private getTips(energyPattern: EnergyPattern): string[] {
+  private getTips(energyPattern: EnergyPatternType): string[] {
     const baseTips = [
       'Avoid screens 1 hour before bedtime',
       'Keep your bedroom cool (65-68°F / 18-20°C)',

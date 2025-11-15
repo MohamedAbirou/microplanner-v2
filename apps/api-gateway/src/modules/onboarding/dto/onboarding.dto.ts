@@ -1,6 +1,6 @@
-import { InputType, Field, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { IsEnum, IsArray, IsString, IsOptional, Matches, IsInt, Min, Max } from 'class-validator';
-import { EnergyPattern } from '@microplanner/database';
+import { EnergyPattern, EnergyPatternType } from '@microplanner/database';
+import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { IsArray, IsEnum, IsInt, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
 
 // User context (life situation)
 export enum UserContext {
@@ -63,7 +63,7 @@ export class SleepRecommendationOutput {
   cycles: number;
 
   @Field(() => EnergyPattern)
-  energyPattern: EnergyPattern;
+  energyPattern: EnergyPatternType;
 
   @Field(() => ProductivityWindow)
   productivityWindow: ProductivityWindow;
