@@ -250,3 +250,19 @@ input MoveTaskInKanbanInput {
   toColumnId: ID!
   newOrder: Int!
 }
+
+# ==========================================
+# SUBSCRIPTIONS
+# ==========================================
+
+extend type Subscription {
+  # Work Hours
+  workHoursUpdated: WorkHours!
+
+  # Focus Time
+  focusTimeCreated: FocusTimeBlock!
+  focusTimeUpdated: FocusTimeBlock!
+
+  # Kanban Boards
+  kanbanBoardUpdated: KanbanBoard!
+}
