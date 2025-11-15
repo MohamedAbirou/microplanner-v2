@@ -4,28 +4,28 @@ import { EnergyPattern } from '@microplanner/database';
 
 // User context (life situation)
 export enum UserContext {
-  EMPLOYED_FULLTIME = 'employed_fulltime',
-  EMPLOYED_PARTTIME = 'employed_parttime',
-  STUDENT = 'student',
-  FREELANCER = 'freelancer',
-  BETWEEN_OPPORTUNITIES = 'between_opportunities',
-  RETIRED = 'retired',
-  PARENT_CAREGIVER = 'parent_caregiver',
-  OTHER = 'other',
+  EMPLOYED_FULLTIME = 'EMPLOYED_FULLTIME',
+  EMPLOYED_PARTTIME = 'EMPLOYED_PARTTIME',
+  STUDENT = 'STUDENT',
+  FREELANCER = 'FREELANCER',
+  BETWEEN_OPPORTUNITIES = 'BETWEEN_OPPORTUNITIES',
+  RETIRED = 'RETIRED',
+  PARENT_CAREGIVER = 'PARENT_CAREGIVER',
+  OTHER = 'OTHER',
 }
 
 // Focus areas
 export enum FocusArea {
-  CAREER = 'career',
-  LEARNING = 'learning',
-  HEALTH = 'health',
-  CREATIVE = 'creative',
-  BUSINESS = 'business',
-  JOB_SEARCH = 'job_search',
-  FAMILY = 'family',
-  HOME = 'home',
-  WRITING = 'writing',
-  HOBBIES = 'hobbies',
+  CAREER = 'CAREER',
+  LEARNING = 'LEARNING',
+  HEALTH = 'HEALTH',
+  CREATIVE = 'CREATIVE',
+  BUSINESS = 'BUSINESS',
+  JOB_SEARCH = 'JOB_SEARCH',
+  FAMILY = 'FAMILY',
+  HOME = 'HOME',
+  WRITING = 'WRITING',
+  HOBBIES = 'HOBBIES',
 }
 
 // Register enums for GraphQL
