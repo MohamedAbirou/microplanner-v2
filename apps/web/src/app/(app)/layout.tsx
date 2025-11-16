@@ -1,12 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { AppHeader } from '@/components/layout/app-header';
 import { CommandPalette } from '@/components/command-palette';
 import { QuickAddTaskModal, type TaskFormData } from '@/components/tasks/quick-add-task-modal';
+import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog';
+import { ErrorBoundaryWrapper } from '@/components/error-boundary';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function AppLayout({
   children,
@@ -14,9 +18,17 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const { isLoaded, user } = useUser();
+  const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+
+  // Listen for quick add task event from keyboard shortcuts
+  useEffect(() => {
+    const handleQuickAdd = () => setQuickAddOpen(true);
+    window.addEventListener('open-quick-add-task', handleQuickAdd);
+    return () => window.removeEventListener('open-quick-add-task', handleQuickAdd);
+  }, []);
 
   // Mock goals - will be replaced with GraphQL query
   const mockGoals = [
@@ -40,45 +52,50 @@ export default function AppLayout({
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Command Palette */}
-      <CommandPalette
-        open={commandPaletteOpen}
-        onOpenChange={setCommandPaletteOpen}
-        onQuickAddClick={() => setQuickAddOpen(true)}
-      />
+    <ErrorBoundaryWrapper>
+      <div className="min-h-screen bg-background">
+        {/* Command Palette */}
+        <CommandPalette
+          open={commandPaletteOpen}
+          onOpenChange={setCommandPaletteOpen}
+          onQuickAddClick={() => setQuickAddOpen(true)}
+        />
 
-      {/* Quick Add Task Modal */}
-      <QuickAddTaskModal
-        open={quickAddOpen}
-        onOpenChange={setQuickAddOpen}
-        goals={mockGoals}
-        onSubmit={handleQuickAddSubmit}
-      />
+        {/* Quick Add Task Modal */}
+        <QuickAddTaskModal
+          open={quickAddOpen}
+          onOpenChange={setQuickAddOpen}
+          goals={mockGoals}
+          onSubmit={handleQuickAddSubmit}
+        />
 
-      {/* Sidebar */}
-      <AppSidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        userTier={userTier}
-      />
+        {/* Keyboard Shortcuts Dialog */}
+        <KeyboardShortcutsDialog />
 
-      {/* Header */}
-      <AppHeader
-        onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        onCommandClick={() => setCommandPaletteOpen(true)}
-        onQuickAddClick={() => setQuickAddOpen(true)}
-      />
+        {/* Sidebar */}
+        <AppSidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          userTier={userTier}
+        />
 
-      {/* Main Content */}
-      <main
-        className="pt-14 transition-all duration-300"
-        style={{
-          marginLeft: sidebarCollapsed ? '60px' : '240px',
-        }}
-      >
-        {children}
-      </main>
-    </div>
+        {/* Header */}
+        <AppHeader
+          onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onCommandClick={() => setCommandPaletteOpen(true)}
+          onQuickAddClick={() => setQuickAddOpen(true)}
+        />
+
+        {/* Main Content */}
+        <main
+          className="pt-14 transition-all duration-300"
+          style={{
+            marginLeft: sidebarCollapsed ? '60px' : '240px',
+          }}
+        >
+          {children}
+        </main>
+      </div>
+    </ErrorBoundaryWrapper>
   );
 }
