@@ -1,6 +1,6 @@
 'use client';
 
-import { WeekCalendar } from '@/components/calendar/week-calendar';
+import { WeekCalendarDnd } from '@/components/calendar/week-calendar-dnd';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
@@ -134,17 +134,19 @@ export default function WeekPage() {
     // TODO: Open task detail modal
   };
 
-  const handleTimeSlotClick = (date: Date, hour: number) => {
-    console.log('Time slot clicked:', date, hour);
-    // TODO: Open quick add task modal with pre-filled date/time
+  const handleTaskReschedule = async (taskId: string, newDate: string, newStartTime: string) => {
+    console.log('Task rescheduled:', { taskId, newDate, newStartTime });
+    // TODO: GraphQL mutation to update task date and time
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 500));
   };
 
   return (
     <div className="h-[calc(100vh-3.5rem)] p-6">
-      <WeekCalendar
+      <WeekCalendarDnd
         tasks={mockWeekTasks}
         onTaskClick={handleTaskClick}
-        onTimeSlotClick={handleTimeSlotClick}
+        onTaskReschedule={handleTaskReschedule}
       />
     </div>
   );
