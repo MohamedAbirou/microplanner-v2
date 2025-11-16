@@ -30,7 +30,9 @@ interface NavItem {
 
 const primaryNav: NavItem[] = [
   { label: 'Today', href: '/app/dashboard', icon: CalendarDays, hotkey: '1' },
+  { label: 'Day', href: '/app/day', icon: CalendarDays, hotkey: 'D' },
   { label: 'Week', href: '/app/week', icon: Calendar, hotkey: '2' },
+  { label: 'Month', href: '/app/month', icon: Calendar, hotkey: 'M' },
   { label: 'Goals', href: '/app/goals', icon: Target, hotkey: '3' },
   { label: 'Plans', href: '/app/plans', icon: Sparkles, hotkey: '4' },
 ];
