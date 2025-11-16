@@ -4,77 +4,50 @@ import { Plus, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { GoalCard } from '@/components/goals/goal-card';
-
-// Mock goals - will be replaced with GraphQL query
-const mockActiveGoals = [
-  {
-    id: '1',
-    emoji: '💼',
-    title: 'Career Growth',
-    description: 'Focus on professional development and skill building',
-    color: '#3B82F6',
-    frequencyPerWeek: 5,
-    durationMinutes: 60,
-    completionRate: 85,
-    currentStreak: 7,
-    longestStreak: 14,
-    isPaused: false,
-    isActive: true,
-  },
-  {
-    id: '2',
-    emoji: '💪',
-    title: 'Fitness',
-    description: 'Stay active and maintain a healthy lifestyle',
-    color: '#10B981',
-    frequencyPerWeek: 4,
-    durationMinutes: 45,
-    completionRate: 92,
-    currentStreak: 12,
-    longestStreak: 18,
-    isPaused: false,
-    isActive: true,
-  },
-  {
-    id: '3',
-    emoji: '📚',
-    title: 'Learning',
-    description: 'Read books and learn new skills',
-    color: '#EC4899',
-    frequencyPerWeek: 3,
-    durationMinutes: 30,
-    completionRate: 78,
-    currentStreak: 4,
-    longestStreak: 9,
-    isPaused: false,
-    isActive: true,
-  },
-  {
-    id: '4',
-    emoji: '🎨',
-    title: 'Creative Projects',
-    description: 'Work on personal creative projects',
-    color: '#8B5CF6',
-    frequencyPerWeek: 2,
-    durationMinutes: 90,
-    completionRate: 65,
-    currentStreak: 2,
-    longestStreak: 5,
-    isPaused: false,
-    isActive: true,
-  },
-];
+import { useGoals, useUpdateGoal } from '@/hooks/use-graphql';
 
 export default function GoalsPage() {
-  const handlePause = (goalId: string) => {
-    console.log('Pause goal:', goalId);
-    // TODO: GraphQL mutation
+  // Fetch goals from GraphQL
+  const { goals, loading, refetch } = useGoals({ isActive: true });
+  const { updateGoal } = useUpdateGoal();
+
+  const handlePause = async (goalId: string) => {
+    try {
+      await updateGoal({
+        variables: {
+          id: goalId,
+          input: { isPaused: true },
+        },
+      });
+      refetch();
+    } catch (error) {
+      console.error('Failed to pause goal:', error);
+    }
   };
 
-  const handleResume = (goalId: string) => {
-    console.log('Resume goal:', goalId);
-    // TODO: GraphQL mutation
+  const handleResume = async (goalId: string) => {
+    try {
+      await updateGoal({
+        variables: {
+          id: goalId,
+          input: { isPaused: false },
+        },
+      });
+      refetch();
+    } catch (error) {
+      console.error('Failed to resume goal:', error);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6 p-6 max-w-7xl mx-auto">
+        <div className="text-center py-12 text-muted-foreground">
+          Loading goals...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
@@ -95,9 +68,9 @@ export default function GoalsPage() {
       </div>
 
       {/* Active Goals */}
-      {mockActiveGoals.length > 0 ? (
+      {goals.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2">
-          {mockActiveGoals.map((goal) => (
+          {goals.map((goal) => (
             <GoalCard
               key={goal.id}
               goal={goal}

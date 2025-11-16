@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { format, addDays, startOfWeek } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
 import { Check, RefreshCw, ChevronLeft, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlanQualityScore } from '@/components/plans/plan-quality-score';
 import { WeekCalendar } from '@/components/calendar/week-calendar';
+import { usePlans, useTasks } from '@/hooks/use-graphql';
 
 // Mock data - will be replaced with GraphQL query from generated plan
 const mockQualityMetrics = [
@@ -56,91 +57,27 @@ const mockQualityMetrics = [
   },
 ];
 
-const mockWeekTasks = [
-  {
-    id: '1',
-    title: 'Morning workout',
-    notes: 'Cardio + strength training',
-    goal: { id: '2', emoji: '💪', title: 'Fitness', color: '#10B981' },
-    startTime: '07:00',
-    endTime: '08:00',
-    scheduledDate: addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 0).toISOString(),
-    durationMinutes: 60,
-    isCompleted: false,
-    priority: 1,
-  },
-  {
-    id: '2',
-    title: 'Deep work: Project planning',
-    notes: 'Plan Q4 roadmap',
-    goal: { id: '1', emoji: '💼', title: 'Career Growth', color: '#3B82F6' },
-    startTime: '09:00',
-    endTime: '11:00',
-    scheduledDate: addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 0).toISOString(),
-    durationMinutes: 120,
-    isCompleted: false,
-    priority: 1,
-  },
-  {
-    id: '3',
-    title: 'Read for 30 minutes',
-    notes: 'Continue "Atomic Habits"',
-    goal: { id: '4', emoji: '📚', title: 'Learning', color: '#EC4899' },
-    startTime: '20:00',
-    endTime: '20:30',
-    scheduledDate: addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 0).toISOString(),
-    durationMinutes: 30,
-    isCompleted: false,
-    priority: 2,
-  },
-  // Tuesday
-  {
-    id: '4',
-    title: 'Yoga session',
-    notes: 'Flexibility and mindfulness',
-    goal: { id: '2', emoji: '💪', title: 'Fitness', color: '#10B981' },
-    startTime: '07:00',
-    endTime: '08:00',
-    scheduledDate: addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 1).toISOString(),
-    durationMinutes: 60,
-    isCompleted: false,
-    priority: 1,
-  },
-  {
-    id: '5',
-    title: 'Client presentation prep',
-    notes: 'Prepare slides and talking points',
-    goal: { id: '1', emoji: '💼', title: 'Career Growth', color: '#3B82F6' },
-    startTime: '09:00',
-    endTime: '10:30',
-    scheduledDate: addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 1).toISOString(),
-    durationMinutes: 90,
-    isCompleted: false,
-    priority: 1,
-  },
-  {
-    id: '6',
-    title: 'Team meeting',
-    notes: null,
-    goal: { id: '1', emoji: '💼', title: 'Work', color: '#F59E0B' },
-    startTime: '10:30',
-    endTime: '11:30',
-    scheduledDate: addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 1).toISOString(),
-    durationMinutes: 60,
-    isCompleted: false,
-    priority: 2,
-  },
-  // Add more days...
-];
-
 export default function PlanReviewPage() {
   const router = useRouter();
   const [isAccepting, setIsAccepting] = React.useState(false);
   const [isRegenerating, setIsRegenerating] = React.useState(false);
 
+  // Fetch active plan and tasks for the week
+  const { plans, loading: plansLoading } = usePlans({ status: 'active' });
+  const activePlan = plans.find((p: any) => p.status === 'active');
+
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+
+  const { tasks: weekTasks, loading: tasksLoading } = useTasks({
+    dateRange: { start: weekStart, end: weekEnd },
+  });
+
+  const loading = plansLoading || tasksLoading;
+
   const overallScore = mockQualityMetrics.reduce((sum, m) => sum + m.score, 0);
   const maxScore = mockQualityMetrics.reduce((sum, m) => sum + m.maxScore, 0);
-  const scorePercentage = Math.round((overallScore / maxScore) * 100);
+  const scorePercentage = activePlan?.qualityScore || Math.round((overallScore / maxScore) * 100);
 
   const handleAcceptPlan = async () => {
     setIsAccepting(true);
@@ -182,7 +119,15 @@ export default function PlanReviewPage() {
     }
   };
 
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  if (loading) {
+    return (
+      <div className="space-y-6 p-6 max-w-7xl mx-auto">
+        <div className="text-center py-12 text-muted-foreground">
+          Loading plan review...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
@@ -232,13 +177,13 @@ export default function PlanReviewPage() {
             <CardHeader>
               <CardTitle>Weekly Schedule</CardTitle>
               <CardDescription>
-                {mockWeekTasks.length} tasks scheduled across {new Set(mockWeekTasks.map(t => t.scheduledDate)).size} days
+                {weekTasks.length} tasks scheduled across {new Set(weekTasks.map(t => t.scheduledDate)).size} days
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[600px]">
                 <WeekCalendar
-                  tasks={mockWeekTasks}
+                  tasks={weekTasks}
                   onTaskClick={(task) => console.log('Task clicked:', task)}
                 />
               </div>
@@ -250,12 +195,12 @@ export default function PlanReviewPage() {
         <TabsContent value="list" className="mt-6">
           <div className="space-y-4">
             {Object.entries(
-              mockWeekTasks.reduce((acc, task) => {
+              weekTasks.reduce((acc, task) => {
                 const day = format(new Date(task.scheduledDate), 'EEEE, MMM d');
                 if (!acc[day]) acc[day] = [];
                 acc[day].push(task);
                 return acc;
-              }, {} as Record<string, typeof mockWeekTasks>)
+              }, {} as Record<string, typeof weekTasks>)
             ).map(([day, dayTasks]) => (
               <Card key={day}>
                 <CardHeader>

@@ -24,100 +24,29 @@ import {
 } from '@/lib/filters';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-
-// Mock data - will be replaced with GraphQL
-const mockTasks = [
-  {
-    id: '1',
-    title: 'Review project proposal',
-    notes: 'Review the Q4 proposal and provide feedback',
-    goal: { id: '1', emoji: '💼', title: 'Career Growth', color: '#3B82F6' },
-    startTime: '09:00',
-    endTime: '10:00',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 60,
-    isCompleted: false,
-    priority: 1,
-  },
-  {
-    id: '2',
-    title: 'Morning workout',
-    notes: 'Cardio + strength training',
-    goal: { id: '2', emoji: '💪', title: 'Fitness', color: '#10B981' },
-    startTime: '07:00',
-    endTime: '08:00',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 60,
-    isCompleted: true,
-    priority: 1,
-  },
-  {
-    id: '3',
-    title: 'Team standup meeting',
-    notes: null,
-    goal: { id: '1', emoji: '💼', title: 'Work', color: '#F59E0B' },
-    startTime: '10:00',
-    endTime: '10:30',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 30,
-    isCompleted: true,
-    priority: 2,
-  },
-  {
-    id: '4',
-    title: 'Deep work: Code review',
-    notes: 'Review PRs from the team',
-    goal: { id: '3', emoji: '⚡', title: 'Development', color: '#8B5CF6' },
-    startTime: '14:00',
-    endTime: '16:00',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 120,
-    isCompleted: false,
-    priority: 1,
-  },
-  {
-    id: '5',
-    title: 'Read for 30 minutes',
-    notes: 'Continue reading "Atomic Habits"',
-    goal: { id: '4', emoji: '📚', title: 'Learning', color: '#EC4899' },
-    startTime: '20:00',
-    endTime: '20:30',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 30,
-    isCompleted: false,
-    priority: 2,
-  },
-  {
-    id: '6',
-    title: 'Plan tomorrow',
-    notes: 'Review schedule and priorities',
-    goal: { id: '1', emoji: '📋', title: 'Productivity', color: '#6366F1' },
-    startTime: '21:00',
-    endTime: '21:15',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 15,
-    isCompleted: false,
-    priority: 3,
-  },
-];
-
-const mockGoals = [
-  { id: '1', emoji: '💼', title: 'Career Growth' },
-  { id: '2', emoji: '💪', title: 'Fitness' },
-  { id: '3', emoji: '⚡', title: 'Development' },
-  { id: '4', emoji: '📚', title: 'Learning' },
-];
+import { useTasks, useGoals, useUpdateTask, useBulkUpdateTasks, useBulkDeleteTasks } from '@/hooks/use-graphql';
+import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 
 export default function TasksPage() {
   const [filters, setFilters] = React.useState<TaskFilters>(clearAllFilters());
   const [sort, setSort] = React.useState<TaskSort>(SORT_PRESETS.DATE_ASC);
   const [view, setView] = React.useState<'grid' | 'list'>('grid');
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  // Fetch data from GraphQL
+  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasks();
+  const { goals, loading: goalsLoading } = useGoals();
+  const { updateTask } = useUpdateTask();
+  const { bulkUpdateTasks } = useBulkUpdateTasks();
+  const { bulkDeleteTasks } = useBulkDeleteTasks();
+
+  const loading = tasksLoading || goalsLoading;
 
   // Filter and sort tasks
   const filteredAndSortedTasks = React.useMemo(() => {
-    return filterAndSortTasks(mockTasks, filters, sort);
-  }, [filters, sort]);
+    return filterAndSortTasks(allTasks, filters, sort);
+  }, [allTasks, filters, sort]);
 
   // Set available task IDs for selection
   const taskSelection = useTaskSelection({
@@ -139,38 +68,69 @@ export default function TasksPage() {
 
   // Handlers
   const handleTaskResize = React.useCallback(
-    (taskId: string, newDuration: number, newStartTime?: string) => {
-      console.log('Resize task:', taskId, 'to', newDuration, 'minutes', newStartTime || '');
-      toast.success('Task duration updated', {
-        description: `New duration: ${newDuration} minutes`,
-      });
-      // TODO: GraphQL mutation
+    async (taskId: string, newDuration: number, newStartTime?: string) => {
+      try {
+        await updateTask({
+          variables: {
+            id: taskId,
+            input: {
+              durationMinutes: newDuration,
+              ...(newStartTime && { startTime: newStartTime }),
+            },
+          },
+        });
+        refetch();
+      } catch (error) {
+        console.error('Failed to resize task:', error);
+      }
     },
-    []
+    [updateTask, refetch]
   );
 
-  const handleBulkComplete = React.useCallback(() => {
-    const count = taskSelection.selectedCount;
-    toast.success(`Marked ${count} task${count !== 1 ? 's' : ''} as complete`);
-    taskSelection.deselectAll();
-    // TODO: GraphQL mutation
-  }, [taskSelection]);
+  const handleBulkComplete = React.useCallback(async () => {
+    try {
+      await bulkUpdateTasks({
+        variables: {
+          ids: taskSelection.selectedTaskIds,
+          input: { isCompleted: true },
+        },
+      });
+      taskSelection.deselectAll();
+      refetch();
+    } catch (error) {
+      console.error('Failed to complete tasks:', error);
+    }
+  }, [taskSelection, bulkUpdateTasks, refetch]);
 
-  const handleBulkDelete = React.useCallback(() => {
-    const count = taskSelection.selectedCount;
-    toast.success(`Deleted ${count} task${count !== 1 ? 's' : ''}`);
-    taskSelection.deselectAll();
-    // TODO: GraphQL mutation
-  }, [taskSelection]);
+  const handleBulkDelete = React.useCallback(async () => {
+    try {
+      await bulkDeleteTasks({
+        variables: {
+          ids: taskSelection.selectedTaskIds,
+        },
+      });
+      taskSelection.deselectAll();
+      refetch();
+    } catch (error) {
+      console.error('Failed to delete tasks:', error);
+    }
+  }, [taskSelection, bulkDeleteTasks, refetch]);
 
   const handleBulkPriority = React.useCallback(
-    (priority: number) => {
-      const count = taskSelection.selectedCount;
-      const label = priority === 1 ? 'High' : priority === 2 ? 'Medium' : 'Low';
-      toast.success(`Changed ${count} task${count !== 1 ? 's' : ''} to ${label} priority`);
-      // TODO: GraphQL mutation
+    async (priority: number) => {
+      try {
+        await bulkUpdateTasks({
+          variables: {
+            ids: taskSelection.selectedTaskIds,
+            input: { priority },
+          },
+        });
+        refetch();
+      } catch (error) {
+        console.error('Failed to update priority:', error);
+      }
     },
-    [taskSelection]
+    [taskSelection, bulkUpdateTasks, refetch]
   );
 
   return (
@@ -212,7 +172,7 @@ export default function TasksPage() {
       {/* Filters and View Toggle */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
-          <TaskFiltersPanel filters={filters} onFiltersChange={setFilters} goals={mockGoals} />
+          <TaskFiltersPanel filters={filters} onFiltersChange={setFilters} goals={goals} />
         </div>
         <div className="flex items-center gap-2">
           <TaskSortMenu sort={sort} onSortChange={setSort} />
@@ -245,9 +205,9 @@ export default function TasksPage() {
             <div>
               <CardTitle>Your Tasks</CardTitle>
               <CardDescription>
-                {filteredAndSortedTasks.length === mockTasks.length
+                {filteredAndSortedTasks.length === allTasks.length
                   ? 'All tasks'
-                  : `${filteredAndSortedTasks.length} of ${mockTasks.length} tasks`}
+                  : `${filteredAndSortedTasks.length} of ${allTasks.length} tasks`}
               </CardDescription>
             </div>
             {taskSelection.isAnySelected && (
@@ -264,17 +224,23 @@ export default function TasksPage() {
               view === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'flex flex-col'
             )}
           >
-            {filteredAndSortedTasks.map((task) => (
-              <ResizableTaskCard
-                key={task.id}
-                task={task}
-                onClick={() => console.log('Open task:', task.id)}
-                onResize={handleTaskResize}
-                showCheckbox={taskSelection.isAnySelected || undefined}
-                isSelected={taskSelection.isSelected(task.id)}
-                onToggleSelect={() => taskSelection.toggleTask(task.id)}
-              />
-            ))}
+            {loading ? (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                Loading tasks...
+              </div>
+            ) : (
+              filteredAndSortedTasks.map((task) => (
+                <ResizableTaskCard
+                  key={task.id}
+                  task={task}
+                  onClick={() => setSelectedTaskId(task.id)}
+                  onResize={handleTaskResize}
+                  showCheckbox={taskSelection.isAnySelected || undefined}
+                  isSelected={taskSelection.isSelected(task.id)}
+                  onToggleSelect={() => taskSelection.toggleTask(task.id)}
+                />
+              ))
+            )}
           </div>
 
           {filteredAndSortedTasks.length === 0 && (
@@ -296,6 +262,16 @@ export default function TasksPage() {
         onChangePriority={handleBulkPriority}
         onClearSelection={taskSelection.deselectAll}
       />
+
+      {/* Task Detail Modal */}
+      {selectedTaskId && (
+        <TaskDetailModal
+          taskId={selectedTaskId}
+          open={!!selectedTaskId}
+          onClose={() => setSelectedTaskId(null)}
+          onUpdate={() => refetch()}
+        />
+      )}
     </div>
   );
 }

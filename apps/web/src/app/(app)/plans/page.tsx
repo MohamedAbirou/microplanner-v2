@@ -19,67 +19,74 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-// Mock data - will be replaced with GraphQL queries
-const mockActivePlan = {
-  id: '1',
-  weekStart: startOfWeek(new Date(), { weekStartsOn: 1 }),
-  weekEnd: addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 6),
-  qualityScore: 92,
-  totalTasks: 28,
-  completedTasks: 18,
-  aiModel: 'Claude Sonnet 3.5',
-  goals: [
-    { id: '1', emoji: '💼', title: 'Career Growth', taskCount: 10, color: '#3B82F6' },
-    { id: '2', emoji: '💪', title: 'Fitness', taskCount: 8, color: '#10B981' },
-    { id: '3', emoji: '📚', title: 'Learning', taskCount: 6, color: '#EC4899' },
-    { id: '4', emoji: '🎨', title: 'Creative', taskCount: 4, color: '#8B5CF6' },
-  ],
-  createdAt: new Date().toISOString(),
-  status: 'active' as const,
-};
-
-const mockPlanHistory = [
-  {
-    id: '2',
-    weekStart: startOfWeek(addDays(new Date(), -7), { weekStartsOn: 1 }),
-    weekEnd: addDays(startOfWeek(addDays(new Date(), -7), { weekStartsOn: 1 }), 6),
-    qualityScore: 88,
-    totalTasks: 26,
-    completedTasks: 24,
-    completionRate: 92,
-    aiModel: 'Claude Sonnet 3.5',
-    status: 'completed' as const,
-  },
-  {
-    id: '3',
-    weekStart: startOfWeek(addDays(new Date(), -14), { weekStartsOn: 1 }),
-    weekEnd: addDays(startOfWeek(addDays(new Date(), -14), { weekStartsOn: 1 }), 6),
-    qualityScore: 85,
-    totalTasks: 25,
-    completedTasks: 22,
-    completionRate: 88,
-    aiModel: 'GPT-4o',
-    status: 'completed' as const,
-  },
-  {
-    id: '4',
-    weekStart: startOfWeek(addDays(new Date(), -21), { weekStartsOn: 1 }),
-    weekEnd: addDays(startOfWeek(addDays(new Date(), -21), { weekStartsOn: 1 }), 6),
-    qualityScore: 90,
-    totalTasks: 27,
-    completedTasks: 25,
-    completionRate: 93,
-    aiModel: 'Claude Sonnet 3.5',
-    status: 'completed' as const,
-  },
-];
+import { usePlans } from '@/hooks/use-graphql';
 
 export default function PlansPage() {
   const router = useRouter();
-  const completionPercentage = Math.round(
-    (mockActivePlan.completedTasks / mockActivePlan.totalTasks) * 100
-  );
+
+  // Fetch plans from GraphQL
+  const { plans, loading } = usePlans();
+
+  // Separate active and completed plans
+  const activePlan = plans.find((p: any) => p.status === 'active');
+  const planHistory = plans.filter((p: any) => p.status === 'completed');
+
+  const completionPercentage = activePlan
+    ? Math.round((activePlan.completedTasks / activePlan.totalTasks) * 100)
+    : 0;
+
+  // Calculate stats
+  const avgCompletion = planHistory.length > 0
+    ? Math.round(
+        planHistory.reduce((acc: number, p: any) => acc + p.completionRate, 0) /
+          planHistory.length
+      )
+    : 0;
+
+  const avgQuality = planHistory.length > 0
+    ? Math.round(
+        planHistory.reduce((acc: number, p: any) => acc + p.qualityScore, 0) /
+          planHistory.length
+      )
+    : 0;
+
+  if (loading) {
+    return (
+      <div className="space-y-6 p-6 max-w-7xl mx-auto">
+        <div className="text-center py-12 text-muted-foreground">
+          Loading plans...
+        </div>
+      </div>
+    );
+  }
+
+  if (!activePlan) {
+    return (
+      <div className="space-y-6 p-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Weekly Plans</h1>
+            <p className="text-muted-foreground mt-1">AI-generated weekly schedules</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="pt-6 text-center py-12">
+            <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">No Active Plan</h3>
+            <p className="text-muted-foreground mb-4">
+              Generate your first AI-powered weekly plan
+            </p>
+            <Link href="/app/plans/generate">
+              <Button>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Generate New Plan
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
@@ -107,8 +114,8 @@ export default function PlansPage() {
                 <Badge variant="default">Current Week</Badge>
               </div>
               <CardDescription>
-                {format(mockActivePlan.weekStart, 'MMM d')} -{' '}
-                {format(mockActivePlan.weekEnd, 'MMM d, yyyy')}
+                {format(new Date(activePlan.weekStart), 'MMM d')} -{' '}
+                {format(new Date(activePlan.weekEnd), 'MMM d, yyyy')}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -140,7 +147,7 @@ export default function PlansPage() {
             </div>
             <Progress value={completionPercentage} className="h-3" />
             <p className="text-xs text-muted-foreground mt-2">
-              {mockActivePlan.completedTasks} of {mockActivePlan.totalTasks} tasks completed
+              {activePlan.completedTasks} of {activePlan.totalTasks} tasks completed
             </p>
           </div>
 
@@ -151,7 +158,7 @@ export default function PlansPage() {
                 <Target className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{mockActivePlan.qualityScore}</div>
+                <div className="text-2xl font-bold">{activePlan.qualityScore}</div>
                 <div className="text-xs text-muted-foreground">Quality Score</div>
               </div>
             </div>
@@ -161,7 +168,7 @@ export default function PlansPage() {
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{mockActivePlan.completedTasks}</div>
+                <div className="text-2xl font-bold">{activePlan.completedTasks}</div>
                 <div className="text-xs text-muted-foreground">Completed</div>
               </div>
             </div>
@@ -171,7 +178,7 @@ export default function PlansPage() {
                 <Clock className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{mockActivePlan.totalTasks}</div>
+                <div className="text-2xl font-bold">{activePlan.totalTasks}</div>
                 <div className="text-xs text-muted-foreground">Total Tasks</div>
               </div>
             </div>
@@ -181,7 +188,7 @@ export default function PlansPage() {
                 <Sparkles className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <div className="text-sm font-bold">{mockActivePlan.aiModel}</div>
+                <div className="text-sm font-bold">{activePlan.aiModel}</div>
                 <div className="text-xs text-muted-foreground">AI Model</div>
               </div>
             </div>
@@ -191,7 +198,7 @@ export default function PlansPage() {
           <div>
             <h4 className="text-sm font-medium mb-3">Goal Breakdown</h4>
             <div className="grid gap-2 md:grid-cols-2">
-              {mockActivePlan.goals.map((goal) => (
+              {activePlan.goals.map((goal) => (
                 <div
                   key={goal.id}
                   className="flex items-center justify-between p-3 rounded-lg border"
@@ -233,7 +240,7 @@ export default function PlansPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockPlanHistory.map((plan) => (
+                {planHistory.map((plan) => (
                   <div
                     key={plan.id}
                     className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
@@ -245,8 +252,8 @@ export default function PlansPage() {
                       </div>
                       <div className="flex-1">
                         <div className="font-medium mb-1">
-                          {format(plan.weekStart, 'MMM d')} -{' '}
-                          {format(plan.weekEnd, 'MMM d, yyyy')}
+                          {format(new Date(plan.weekStart), 'MMM d')} -{' '}
+                          {format(new Date(plan.weekEnd), 'MMM d, yyyy')}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>
@@ -285,9 +292,9 @@ export default function PlansPage() {
                 <CardTitle className="text-sm font-medium">Average Completion</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600">91%</div>
+                <div className="text-3xl font-bold text-green-600">{avgCompletion}%</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Across {mockPlanHistory.length} plans
+                  Across {planHistory.length} plans
                 </p>
               </CardContent>
             </Card>
@@ -297,7 +304,7 @@ export default function PlansPage() {
                 <CardTitle className="text-sm font-medium">Average Quality</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-blue-600">88</div>
+                <div className="text-3xl font-bold text-blue-600">{avgQuality}</div>
                 <p className="text-xs text-muted-foreground mt-1">Quality score</p>
               </CardContent>
             </Card>
@@ -308,7 +315,7 @@ export default function PlansPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-purple-600">
-                  {mockPlanHistory.length + 1}
+                  {planHistory.length + 1}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Plans generated</p>
               </CardContent>

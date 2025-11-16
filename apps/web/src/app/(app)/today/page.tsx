@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { CheckCircle2, Plus, Calendar as CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { calculateCompletionPercentage } from '@/lib/utils';
 import { TaskFiltersPanel } from '@/components/filters/task-filters-panel';
 import { TaskSortMenu } from '@/components/filters/task-sort-menu';
+import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 import {
   TaskFilters,
   TaskSort,
@@ -19,99 +20,36 @@ import {
   SORT_PRESETS,
   getTaskStatistics,
 } from '@/lib/filters';
-
-// Mock data - will be replaced with GraphQL query
-const mockTodayTasks = [
-  {
-    id: '1',
-    title: 'Review project proposal',
-    notes: 'Review the Q4 proposal and provide feedback',
-    goal: { id: '1', emoji: '💼', title: 'Career Growth', color: '#3B82F6' },
-    startTime: '09:00',
-    endTime: '10:00',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 60,
-    isCompleted: true,
-    priority: 1,
-  },
-  {
-    id: '2',
-    title: 'Morning workout',
-    notes: 'Cardio + strength training',
-    goal: { id: '2', emoji: '💪', title: 'Fitness', color: '#10B981' },
-    startTime: '07:00',
-    endTime: '08:00',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 60,
-    isCompleted: true,
-    priority: 1,
-  },
-  {
-    id: '3',
-    title: 'Team standup meeting',
-    notes: null,
-    goal: { id: '1', emoji: '💼', title: 'Work', color: '#F59E0B' },
-    startTime: '10:00',
-    endTime: '10:30',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 30,
-    isCompleted: true,
-    priority: 2,
-  },
-  {
-    id: '4',
-    title: 'Deep work: Code review',
-    notes: 'Review PRs from the team',
-    goal: { id: '3', emoji: '⚡', title: 'Development', color: '#8B5CF6' },
-    startTime: '14:00',
-    endTime: '16:00',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 120,
-    isCompleted: false,
-    priority: 1,
-  },
-  {
-    id: '5',
-    title: 'Read for 30 minutes',
-    notes: 'Continue reading "Atomic Habits"',
-    goal: { id: '4', emoji: '📚', title: 'Learning', color: '#EC4899' },
-    startTime: '20:00',
-    endTime: '20:30',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 30,
-    isCompleted: false,
-    priority: 2,
-  },
-  {
-    id: '6',
-    title: 'Plan tomorrow',
-    notes: 'Review schedule and priorities',
-    goal: { id: '1', emoji: '📋', title: 'Productivity', color: '#6366F1' },
-    startTime: '21:00',
-    endTime: '21:15',
-    scheduledDate: new Date().toISOString(),
-    durationMinutes: 15,
-    isCompleted: false,
-    priority: 3,
-  },
-];
-
-// Mock goals for filters
-const mockGoals = [
-  { id: '1', emoji: '💼', title: 'Career Growth' },
-  { id: '2', emoji: '💪', title: 'Fitness' },
-  { id: '3', emoji: '⚡', title: 'Development' },
-  { id: '4', emoji: '📚', title: 'Learning' },
-];
+import { useTasks, useGoals, useCompleteTask, useDeleteTask } from '@/hooks/use-graphql';
 
 export default function TodayPage() {
   const [filters, setFilters] = React.useState<TaskFilters>(clearAllFilters());
   const [sort, setSort] = React.useState<TaskSort>(SORT_PRESETS.DATE_ASC);
+  const [deleteTaskId, setDeleteTaskId] = React.useState<string | null>(null);
+
+  // Fetch today's tasks from GraphQL
+  const today = new Date();
+  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasks(
+    {
+      dateRange: {
+        start: startOfDay(today),
+        end: endOfDay(today),
+      },
+    },
+    sort
+  );
+
+  // Fetch goals for filters
+  const { goals, loading: goalsLoading } = useGoals();
+
+  // GraphQL mutations
+  const { completeTask } = useCompleteTask();
+  const { deleteTask, loading: deleting } = useDeleteTask();
 
   // Apply filters and sorting
   const filteredAndSortedTasks = React.useMemo(() => {
-    return filterAndSortTasks(mockTodayTasks, filters, sort);
-  }, [filters, sort]);
+    return filterAndSortTasks(allTasks, filters, sort);
+  }, [allTasks, filters, sort]);
 
   // Calculate statistics from filtered tasks
   const stats = React.useMemo(() => {
@@ -120,19 +58,26 @@ export default function TodayPage() {
 
   const completionPercentage = stats.completionRate;
 
-  const handleComplete = (taskId: string) => {
-    console.log('Complete task:', taskId);
-    // TODO: GraphQL mutation
+  const handleComplete = async (taskId: string) => {
+    await completeTask({ variables: { id: taskId } });
+    refetch();
   };
 
   const handleEdit = (taskId: string) => {
+    // TODO: Open task detail modal
     console.log('Edit task:', taskId);
-    // TODO: Open edit modal
   };
 
   const handleDelete = (taskId: string) => {
-    console.log('Delete task:', taskId);
-    // TODO: GraphQL mutation with confirmation
+    setDeleteTaskId(taskId);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteTaskId) {
+      await deleteTask({ variables: { id: deleteTaskId } });
+      setDeleteTaskId(null);
+      refetch();
+    }
   };
 
   return (
@@ -186,7 +131,7 @@ export default function TodayPage() {
             <TaskFiltersPanel
               filters={filters}
               onFiltersChange={setFilters}
-              goals={mockGoals}
+              goals={goals}
             />
           </div>
           <TaskSortMenu sort={sort} onSortChange={setSort} />
@@ -200,12 +145,12 @@ export default function TodayPage() {
             <div>
               <CardTitle>Your Tasks</CardTitle>
               <CardDescription>
-                {filteredAndSortedTasks.length === mockTodayTasks.length
+                {filteredAndSortedTasks.length === allTasks.length
                   ? 'All tasks scheduled for today'
-                  : `${filteredAndSortedTasks.length} of ${mockTodayTasks.length} tasks`}
+                  : `${filteredAndSortedTasks.length} of ${allTasks.length} tasks`}
               </CardDescription>
             </div>
-            {filteredAndSortedTasks.length !== mockTodayTasks.length && (
+            {filteredAndSortedTasks.length !== allTasks.length && (
               <Button variant="ghost" size="sm" onClick={() => setFilters(clearAllFilters())}>
                 Clear filters
               </Button>
@@ -253,6 +198,26 @@ export default function TodayPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteTaskId !== null}
+        onOpenChange={(open) => !open && setDeleteTaskId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Task"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+        loading={deleting}
+      />
+
+      {/* Loading State */}
+      {(tasksLoading || goalsLoading) && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading tasks...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
