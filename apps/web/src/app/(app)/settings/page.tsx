@@ -24,6 +24,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
+import {
+  exportTasksToCSV,
+  exportGoalsToCSV,
+  exportPlansToCSV,
+  exportTasksToJSON,
+  exportGoalsToJSON,
+  exportPlansToJSON,
+  exportAllDataToJSON,
+} from '@/lib/export';
 
 export default function SettingsPage() {
   const { user } = useUser();
@@ -103,15 +112,126 @@ export default function SettingsPage() {
     }
   };
 
-  const handleExportData = async () => {
+  // Mock data for export - will be replaced with GraphQL queries
+  const mockTasks = [
+    {
+      id: '1',
+      title: 'Morning workout',
+      notes: 'Cardio + strength training',
+      scheduledDate: '2025-11-17',
+      startTime: '07:00',
+      endTime: '08:00',
+      durationMinutes: 60,
+      isCompleted: true,
+      priority: 1,
+      goal: { id: '2', title: 'Fitness', emoji: '💪' },
+      createdAt: '2025-11-10T10:00:00Z',
+      completedAt: '2025-11-17T08:00:00Z',
+    },
+    {
+      id: '2',
+      title: 'Review project proposal',
+      notes: 'Review the Q4 proposal and provide feedback',
+      scheduledDate: '2025-11-17',
+      startTime: '09:00',
+      endTime: '10:00',
+      durationMinutes: 60,
+      isCompleted: false,
+      priority: 1,
+      goal: { id: '1', title: 'Career Growth', emoji: '💼' },
+      createdAt: '2025-11-15T14:30:00Z',
+      completedAt: null,
+    },
+  ];
+
+  const mockGoals = [
+    {
+      id: '1',
+      title: 'Career Growth',
+      emoji: '💼',
+      color: '#3B82F6',
+      description: 'Advance my career through skill development and networking',
+      targetDate: '2025-12-31',
+      progress: 65,
+      createdAt: '2025-01-01T00:00:00Z',
+    },
+    {
+      id: '2',
+      title: 'Fitness',
+      emoji: '💪',
+      color: '#10B981',
+      description: 'Get fit and healthy through regular exercise',
+      targetDate: '2025-12-31',
+      progress: 45,
+      createdAt: '2025-01-01T00:00:00Z',
+    },
+  ];
+
+  const mockPlans = [
+    {
+      id: '1',
+      title: 'Q4 Project Launch',
+      description: 'Launch the new product feature by end of Q4',
+      status: 'IN_PROGRESS',
+      createdAt: '2025-10-01T00:00:00Z',
+      completedAt: null,
+    },
+    {
+      id: '2',
+      title: 'Fitness Challenge 2025',
+      description: '30-day fitness challenge',
+      status: 'COMPLETED',
+      createdAt: '2025-01-15T00:00:00Z',
+      completedAt: '2025-02-15T00:00:00Z',
+    },
+  ];
+
+  const handleExportData = async (format: 'csv' | 'json', dataType: 'all' | 'tasks' | 'goals' | 'plans') => {
     try {
       toast.info('Preparing your data export...', {
-        description: 'This may take a few moments',
-      });
-      // TODO: Actually export data
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      toast.success('Data exported successfully!', {
         description: 'Your download will begin shortly',
+      });
+
+      // Simulate API call to fetch data
+      // TODO: Replace with actual GraphQL queries
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      if (format === 'csv') {
+        if (dataType === 'tasks') {
+          exportTasksToCSV(mockTasks);
+        } else if (dataType === 'goals') {
+          exportGoalsToCSV(mockGoals);
+        } else if (dataType === 'plans') {
+          exportPlansToCSV(mockPlans);
+        } else {
+          // Export all as separate CSV files
+          exportTasksToCSV(mockTasks);
+          exportGoalsToCSV(mockGoals);
+          exportPlansToCSV(mockPlans);
+        }
+      } else {
+        if (dataType === 'tasks') {
+          exportTasksToJSON(mockTasks);
+        } else if (dataType === 'goals') {
+          exportGoalsToJSON(mockGoals);
+        } else if (dataType === 'plans') {
+          exportPlansToJSON(mockPlans);
+        } else {
+          exportAllDataToJSON({
+            tasks: mockTasks,
+            goals: mockGoals,
+            plans: mockPlans,
+            user: {
+              id: user?.id,
+              email: user?.primaryEmailAddress?.emailAddress,
+              name: user?.fullName,
+            },
+          });
+        }
+      }
+
+      toast.success('Data exported successfully!', {
+        description: `Your ${dataType} data has been downloaded`,
       });
     } catch (error) {
       console.error('Failed to export data:', error);
@@ -569,11 +689,109 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h4 className="font-medium mb-2">Data Export</h4>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Download a copy of all your data including tasks, goals, and plans
+                <h4 className="font-medium mb-4">Data Export</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Download a copy of your data in CSV or JSON format
                 </p>
-                <Button variant="outline" onClick={handleExportData}>Export Data</Button>
+
+                <div className="space-y-4">
+                  {/* Export All Data */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h5 className="font-medium">Complete Backup</h5>
+                        <p className="text-sm text-muted-foreground">
+                          Export all your tasks, goals, and plans
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExportData('csv', 'all')}
+                      >
+                        Export as CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExportData('json', 'all')}
+                      >
+                        Export as JSON
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Export Individual Data Types */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="border rounded-lg p-3">
+                      <h6 className="font-medium text-sm mb-2">Tasks</h6>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleExportData('csv', 'tasks')}
+                        >
+                          CSV
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleExportData('json', 'tasks')}
+                        >
+                          JSON
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-3">
+                      <h6 className="font-medium text-sm mb-2">Goals</h6>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleExportData('csv', 'goals')}
+                        >
+                          CSV
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleExportData('json', 'goals')}
+                        >
+                          JSON
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-3">
+                      <h6 className="font-medium text-sm mb-2">Plans</h6>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleExportData('csv', 'plans')}
+                        >
+                          CSV
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleExportData('json', 'plans')}
+                        >
+                          JSON
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <Separator />
