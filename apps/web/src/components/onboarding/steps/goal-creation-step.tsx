@@ -133,7 +133,7 @@ export function GoalCreationStep({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          Create your first goal
+          Let's create your first goal together
         </motion.h2>
         <motion.p
           className="text-lg text-muted-foreground"
@@ -141,7 +141,7 @@ export function GoalCreationStep({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          Choose an AI suggestion or create your own
+          Our AI will break it down into actionable tasks — watch the magic! ✨
         </motion.p>
       </div>
 
@@ -283,6 +283,20 @@ export function GoalCreationStep({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Encouraging message when goal is entered */}
+      {canProceed && showCustomInput && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center p-4 rounded-lg bg-primary/5 border border-primary/20"
+        >
+          <p className="text-sm font-medium text-primary flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            Perfect! Your first AI-powered plan is taking shape
+          </p>
+        </motion.div>
+      )}
 
       {/* Navigation */}
       <div className="flex justify-between pt-4">

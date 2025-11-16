@@ -98,12 +98,12 @@ export function SleepIntelligenceStep({
       {/* Header */}
       <div className="text-center space-y-3">
         <motion.div
-          className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 mb-4"
+          className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 mb-4"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.1, type: 'spring', bounce: 0.5 }}
         >
-          <Moon className="w-8 h-8 text-white" />
+          <Sun className="w-8 h-8 text-white" />
         </motion.div>
 
         <motion.h2
@@ -112,7 +112,7 @@ export function SleepIntelligenceStep({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          Let's optimize your schedule
+          When do you do your best work?
         </motion.h2>
         <motion.p
           className="text-lg text-muted-foreground"
@@ -120,7 +120,16 @@ export function SleepIntelligenceStep({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          Tell us when you wake up, and we'll calculate your optimal sleep schedule
+          We'll schedule tasks during your peak energy hours
+          <button
+            onClick={() => {
+              onChange('07:00'); // Default wake time
+              onNext();
+            }}
+            className="ml-2 text-sm text-primary hover:underline"
+          >
+            Skip for now
+          </button>
         </motion.p>
       </div>
 

@@ -27,6 +27,15 @@ export interface OnboardingData {
 
 const TOTAL_STEPS = 5;
 
+// Time estimates for each step in seconds
+const STEP_TIME_ESTIMATES = {
+  1: 30, // Context selection
+  2: 60, // First goal (Aha moment!)
+  3: 30, // Focus areas
+  4: 45, // Productivity profile
+  5: 30, // Completion
+};
+
 export function OnboardingWizard() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -122,16 +131,26 @@ export function OnboardingWizard() {
       case 1:
         return !!data.context;
       case 2:
-        return data.focusAreas.length > 0;
+        return !!data.firstGoalTitle; // Goal creation moved to step 2
       case 3:
-        return !!data.wakeTime;
+        return data.focusAreas.length > 0; // Focus areas moved to step 3
       case 4:
-        return !!data.firstGoalTitle;
+        return !!data.wakeTime; // Sleep/productivity moved to step 4
       case 5:
         return true;
       default:
         return false;
     }
+  };
+
+  // Calculate remaining time
+  const calculateRemainingTime = () => {
+    let totalRemaining = 0;
+    for (let i = currentStep; i <= TOTAL_STEPS; i++) {
+      totalRemaining += STEP_TIME_ESTIMATES[i as keyof typeof STEP_TIME_ESTIMATES];
+    }
+    const minutes = Math.ceil(totalRemaining / 60);
+    return minutes === 1 ? '1 minute' : `${minutes} minutes`;
   };
 
   return (
@@ -143,8 +162,8 @@ export function OnboardingWizard() {
             <span className="text-sm font-medium text-muted-foreground">
               Step {currentStep} of {TOTAL_STEPS}
             </span>
-            <span className="text-sm font-medium text-muted-foreground">
-              {Math.round((currentStep / TOTAL_STEPS) * 100)}%
+            <span className="text-sm font-medium text-primary">
+              ~{calculateRemainingTime()} remaining
             </span>
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -165,6 +184,7 @@ export function OnboardingWizard() {
           transition={{ duration: 0.5 }}
         >
           <AnimatePresence mode="wait">
+            {/* Step 1: Context Selection */}
             {currentStep === 1 && (
               <ContextStep
                 key="context"
@@ -173,26 +193,9 @@ export function OnboardingWizard() {
                 onNext={handleNext}
               />
             )}
+
+            {/* Step 2: First Goal (Aha Moment!) */}
             {currentStep === 2 && (
-              <FocusAreasStep
-                key="focus-areas"
-                value={data.focusAreas}
-                onChange={(focusAreas) => updateData({ focusAreas })}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
-            {currentStep === 3 && (
-              <SleepIntelligenceStep
-                key="sleep"
-                wakeTime={data.wakeTime}
-                timezone={data.timezone}
-                onChange={(wakeTime) => updateData({ wakeTime })}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
-            {currentStep === 4 && (
               <GoalCreationStep
                 key="goal"
                 context={data.context!}
@@ -204,6 +207,31 @@ export function OnboardingWizard() {
                 onBack={handleBack}
               />
             )}
+
+            {/* Step 3: Focus Areas */}
+            {currentStep === 3 && (
+              <FocusAreasStep
+                key="focus-areas"
+                value={data.focusAreas}
+                onChange={(focusAreas) => updateData({ focusAreas })}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
+
+            {/* Step 4: Productivity Profile (Sleep Intelligence) */}
+            {currentStep === 4 && (
+              <SleepIntelligenceStep
+                key="sleep"
+                wakeTime={data.wakeTime}
+                timezone={data.timezone}
+                onChange={(wakeTime) => updateData({ wakeTime })}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
+
+            {/* Step 5: Completion */}
             {currentStep === 5 && (
               <CompletionStep
                 key="completion"

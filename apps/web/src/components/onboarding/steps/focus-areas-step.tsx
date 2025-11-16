@@ -123,7 +123,7 @@ export function FocusAreasStep({ value, onChange, onNext, onBack }: FocusAreasSt
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          What do you want to focus on?
+          What matters most to you?
         </motion.h2>
         <motion.p
           className="text-lg text-muted-foreground"
@@ -131,7 +131,7 @@ export function FocusAreasStep({ value, onChange, onNext, onBack }: FocusAreasSt
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          Select all that apply — we'll help you achieve them all
+          Select 2-3 areas to focus on (you can always adjust later)
         </motion.p>
         {value.length > 0 && (
           <motion.p
@@ -139,7 +139,9 @@ export function FocusAreasStep({ value, onChange, onNext, onBack }: FocusAreasSt
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            {value.length} selected
+            {value.length === 1 && 'Great start! Add 1-2 more for balanced growth'}
+            {value.length === 2 && 'Perfect! One more would be ideal 👌'}
+            {value.length >= 3 && `Excellent! ${value.length} areas selected`}
           </motion.p>
         )}
       </div>
