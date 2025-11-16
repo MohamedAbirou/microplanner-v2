@@ -308,6 +308,30 @@ export const GENERATE_PLAN = gql`
   }
 `;
 
+export const UPDATE_PLAN = gql`
+  mutation UpdatePlan($id: ID!, $input: UpdatePlanInput!) {
+    updatePlan(id: $id, input: $input) {
+      id
+      title
+      description
+      status
+      qualityScore
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const ACCEPT_PLAN = gql`
+  mutation AcceptPlan($id: ID!) {
+    acceptPlan(id: $id) {
+      id
+      status
+      updatedAt
+    }
+  }
+`;
+
 // ============================================================================
 // DEPENDENCY OPERATIONS
 // ============================================================================

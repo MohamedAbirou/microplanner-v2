@@ -244,6 +244,38 @@ export function useGeneratePlan() {
   return { generatePlan, loading, error };
 }
 
+export function useUpdatePlan() {
+  const [updatePlan, { loading, error }] = useMutation(operations.UPDATE_PLAN, {
+    refetchQueries: [{ query: operations.GET_PLANS }],
+    onCompleted: () => {
+      toast.success('Plan updated successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to update plan', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { updatePlan, loading, error };
+}
+
+export function useAcceptPlan() {
+  const [acceptPlan, { loading, error }] = useMutation(operations.ACCEPT_PLAN, {
+    refetchQueries: [{ query: operations.GET_PLANS }],
+    onCompleted: () => {
+      toast.success('Plan accepted successfully!');
+    },
+    onError: (error) => {
+      toast.error('Failed to accept plan', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { acceptPlan, loading, error };
+}
+
 // ============================================================================
 // DEPENDENCIES
 // ============================================================================

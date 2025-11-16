@@ -12,6 +12,7 @@ import { calculateCompletionPercentage } from '@/lib/utils';
 import { TaskFiltersPanel } from '@/components/filters/task-filters-panel';
 import { TaskSortMenu } from '@/components/filters/task-sort-menu';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
+import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import {
   TaskFilters,
   TaskSort,
@@ -26,6 +27,7 @@ export default function TodayPage() {
   const [filters, setFilters] = React.useState<TaskFilters>(clearAllFilters());
   const [sort, setSort] = React.useState<TaskSort>(SORT_PRESETS.DATE_ASC);
   const [deleteTaskId, setDeleteTaskId] = React.useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
 
   // Fetch today's tasks from GraphQL
   const today = new Date();
@@ -64,8 +66,7 @@ export default function TodayPage() {
   };
 
   const handleEdit = (taskId: string) => {
-    // TODO: Open task detail modal
-    console.log('Edit task:', taskId);
+    setSelectedTaskId(taskId);
   };
 
   const handleDelete = (taskId: string) => {
@@ -198,6 +199,16 @@ export default function TodayPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Task Detail Modal */}
+      {selectedTaskId && (
+        <TaskDetailModal
+          taskId={selectedTaskId}
+          open={!!selectedTaskId}
+          onClose={() => setSelectedTaskId(null)}
+          onUpdate={() => refetch()}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog

@@ -5,15 +5,19 @@ import { GoalForm } from '@/components/goals/goal-form';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useCreateGoal } from '@/hooks/use-graphql';
 
 export default function NewGoalPage() {
   const router = useRouter();
+  const { createGoal, loading } = useCreateGoal();
 
   const handleSubmit = async (data: any) => {
-    console.log('Creating goal:', data);
-    // TODO: GraphQL mutation to create goal
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    router.push('/app/goals');
+    try {
+      await createGoal({ variables: { input: data } });
+      router.push('/app/goals');
+    } catch (error) {
+      console.error('Failed to create goal:', error);
+    }
   };
 
   return (

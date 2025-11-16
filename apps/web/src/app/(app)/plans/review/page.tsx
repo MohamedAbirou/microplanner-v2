@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlanQualityScore } from '@/components/plans/plan-quality-score';
 import { WeekCalendar } from '@/components/calendar/week-calendar';
-import { usePlans, useTasks } from '@/hooks/use-graphql';
+import { usePlans, useTasks, useAcceptPlan } from '@/hooks/use-graphql';
 
 // Mock data - will be replaced with GraphQL query from generated plan
 const mockQualityMetrics = [
@@ -60,11 +60,11 @@ const mockQualityMetrics = [
 export default function PlanReviewPage() {
   const router = useRouter();
   const [isAccepting, setIsAccepting] = React.useState(false);
-  const [isRegenerating, setIsRegenerating] = React.useState(false);
 
   // Fetch active plan and tasks for the week
   const { plans, loading: plansLoading } = usePlans({ status: 'active' });
   const activePlan = plans.find((p: any) => p.status === 'active');
+  const { acceptPlan } = useAcceptPlan();
 
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
   const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
@@ -80,43 +80,27 @@ export default function PlanReviewPage() {
   const scorePercentage = activePlan?.qualityScore || Math.round((overallScore / maxScore) * 100);
 
   const handleAcceptPlan = async () => {
+    if (!activePlan) {
+      toast.error('No active plan to accept');
+      return;
+    }
+
     setIsAccepting(true);
 
     try {
-      console.log('Accepting plan...');
-      // TODO: GraphQL mutation to accept and save plan
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success('Plan accepted successfully!', {
-        description: 'Your weekly schedule is now active and ready to go',
-      });
+      await acceptPlan({ variables: { id: activePlan.id } });
       router.push('/app/week');
     } catch (error) {
       console.error('Failed to accept plan:', error);
-      toast.error('Failed to accept plan', {
-        description: 'Please try again or contact support if the problem persists',
-      });
       setIsAccepting(false);
     }
   };
 
-  const handleRegenerate = async () => {
-    setIsRegenerating(true);
-
-    try {
-      console.log('Regenerating plan...');
-      // TODO: Go back to customize step or regenerate with same settings
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.info('Regenerating your plan', {
-        description: 'Creating a new optimized schedule based on your preferences',
-      });
-      router.push('/app/plans/generate');
-    } catch (error) {
-      console.error('Failed to regenerate plan:', error);
-      toast.error('Failed to regenerate plan', {
-        description: 'Please try again or contact support if the problem persists',
-      });
-      setIsRegenerating(false);
-    }
+  const handleRegenerate = () => {
+    toast.info('Regenerating your plan', {
+      description: 'Creating a new optimized schedule based on your preferences',
+    });
+    router.push('/app/plans/generate');
   };
 
   if (loading) {
@@ -147,9 +131,9 @@ export default function PlanReviewPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleRegenerate} disabled={isRegenerating}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
-            {isRegenerating ? 'Regenerating...' : 'Regenerate'}
+          <Button variant="outline" onClick={handleRegenerate}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Regenerate
           </Button>
           <Button onClick={handleAcceptPlan} disabled={isAccepting}>
             <Check className="mr-2 h-4 w-4" />

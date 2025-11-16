@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { useGeneratePlan } from '@/hooks/use-graphql';
 
 interface GeneratingStepProps {
   selectedGoals: string[];
@@ -23,6 +24,7 @@ const stages = [
 export function GeneratingStep({ selectedGoals, preferences, onComplete }: GeneratingStepProps) {
   const [currentStage, setCurrentStage] = useState(0);
   const [progress, setProgress] = useState(0);
+  const { generatePlan } = useGeneratePlan();
 
   useEffect(() => {
     // Simulate plan generation
@@ -50,14 +52,18 @@ export function GeneratingStep({ selectedGoals, preferences, onComplete }: Gener
       clearInterval(progressInterval);
 
       try {
-        // TODO: Actually call GraphQL mutation to generate plan
-        // const result = await generatePlan({ selectedGoals, preferences });
-        // onComplete(result.id);
-
-        toast.success('Weekly plan generated successfully!', {
-          description: 'Your optimized schedule is ready for review',
+        const result = await generatePlan({
+          variables: {
+            input: {
+              goalIds: selectedGoals,
+              preferences,
+            },
+          },
         });
-        onComplete('generated-plan-id');
+
+        if (result.data?.generatePlan) {
+          onComplete(result.data.generatePlan.id);
+        }
       } catch (error) {
         console.error('Failed to generate plan:', error);
         toast.error('Failed to generate plan', {
@@ -71,7 +77,7 @@ export function GeneratingStep({ selectedGoals, preferences, onComplete }: Gener
       clearInterval(progressInterval);
       clearTimeout(timeout);
     };
-  }, [onComplete]);
+  }, [generatePlan, selectedGoals, preferences, onComplete]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[600px] space-y-8">
