@@ -41,7 +41,8 @@ export default function GeneratePlanPage() {
   };
 
   const handlePlanGenerated = (planId: string) => {
-    router.push(`/app/plans/${planId}`);
+    // Redirect to review page to see quality scores and accept/regenerate
+    router.push('/app/plans/review');
   };
 
   const handleBack = () => {

@@ -1,0 +1,392 @@
+'use client';
+
+import * as React from 'react';
+import { format } from 'date-fns';
+import {
+  Calendar,
+  Clock,
+  Target,
+  Flag,
+  Trash2,
+  Edit2,
+  CheckCircle2,
+  Circle,
+  X,
+} from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+
+interface Goal {
+  id: string;
+  emoji: string;
+  title: string;
+  color: string;
+}
+
+interface Task {
+  id: string;
+  title: string;
+  notes?: string | null;
+  goal: Goal;
+  scheduledDate: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  isCompleted: boolean;
+  priority: number;
+}
+
+interface TaskDetailModalProps {
+  task: Task | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  goals?: Goal[];
+  onUpdate?: (taskId: string, updates: Partial<Task>) => void | Promise<void>;
+  onDelete?: (taskId: string) => void | Promise<void>;
+  onToggleComplete?: (taskId: string) => void | Promise<void>;
+}
+
+const DURATION_OPTIONS = [
+  { label: '15 min', value: 15 },
+  { label: '30 min', value: 30 },
+  { label: '45 min', value: 45 },
+  { label: '1 hour', value: 60 },
+  { label: '1.5 hours', value: 90 },
+  { label: '2 hours', value: 120 },
+  { label: '3 hours', value: 180 },
+  { label: '4 hours', value: 240 },
+];
+
+const PRIORITY_OPTIONS = [
+  { label: 'High', value: 1, color: 'destructive' },
+  { label: 'Medium', value: 2, color: 'default' },
+  { label: 'Low', value: 3, color: 'secondary' },
+] as const;
+
+export function TaskDetailModal({
+  task,
+  open,
+  onOpenChange,
+  goals = [],
+  onUpdate,
+  onDelete,
+  onToggleComplete,
+}: TaskDetailModalProps) {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [editedTask, setEditedTask] = React.useState<Partial<Task>>({});
+
+  React.useEffect(() => {
+    if (task && open) {
+      setEditedTask({
+        title: task.title,
+        notes: task.notes || '',
+        goalId: task.goal.id,
+        scheduledDate: format(new Date(task.scheduledDate), 'yyyy-MM-dd'),
+        startTime: task.startTime,
+        durationMinutes: task.durationMinutes,
+        priority: task.priority,
+      } as any);
+      setIsEditing(false);
+    }
+  }, [task, open]);
+
+  if (!task) return null;
+
+  const handleSave = async () => {
+    if (!task.id) return;
+
+    await onUpdate?.(task.id, editedTask);
+    setIsEditing(false);
+  };
+
+  const handleDelete = async () => {
+    if (!task.id || !confirm('Are you sure you want to delete this task?')) return;
+
+    setIsDeleting(true);
+    try {
+      await onDelete?.(task.id);
+      onOpenChange(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleToggleComplete = async () => {
+    if (!task.id) return;
+    await onToggleComplete?.(task.id);
+  };
+
+  const selectedGoal = goals.find((g) => g.id === (editedTask.goalId || task.goal.id));
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              {isEditing ? (
+                <Input
+                  value={editedTask.title as string}
+                  onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+                  className="text-xl font-semibold mb-2"
+                  placeholder="Task title..."
+                />
+              ) : (
+                <DialogTitle className="text-2xl flex items-center gap-2">
+                  {task.isCompleted ? (
+                    <CheckCircle2 className="h-6 w-6 text-green-600" />
+                  ) : (
+                    <Circle className="h-6 w-6 text-muted-foreground" />
+                  )}
+                  <span className={cn(task.isCompleted && 'line-through text-muted-foreground')}>
+                    {task.title}
+                  </span>
+                </DialogTitle>
+              )}
+
+              {!isEditing && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge
+                    variant="outline"
+                    style={{ borderColor: task.goal.color, color: task.goal.color }}
+                  >
+                    <span className="mr-1">{task.goal.emoji}</span>
+                    {task.goal.title}
+                  </Badge>
+                  {task.priority === 1 && (
+                    <Badge variant="destructive">High Priority</Badge>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1">
+              {!isEditing && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <Separator />
+
+        <div className="space-y-4 py-4">
+          {/* Goal Selection (Edit Mode) */}
+          {isEditing && (
+            <div className="space-y-2">
+              <Label htmlFor="goal">
+                <Target className="inline h-3.5 w-3.5 mr-1" />
+                Goal
+              </Label>
+              <Select
+                value={editedTask.goalId as string}
+                onValueChange={(value) => setEditedTask({ ...editedTask, goalId: value } as any)}
+              >
+                <SelectTrigger id="goal">
+                  <SelectValue>
+                    {selectedGoal && (
+                      <div className="flex items-center gap-2">
+                        <span>{selectedGoal.emoji}</span>
+                        <span>{selectedGoal.title}</span>
+                      </div>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {goals.map((goal) => (
+                    <SelectItem key={goal.id} value={goal.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{goal.emoji}</span>
+                        <span>{goal.title}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Date & Time */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date">
+                <Calendar className="inline h-3.5 w-3.5 mr-1" />
+                Date
+              </Label>
+              {isEditing ? (
+                <Input
+                  id="date"
+                  type="date"
+                  value={editedTask.scheduledDate as string}
+                  onChange={(e) => setEditedTask({ ...editedTask, scheduledDate: e.target.value } as any)}
+                />
+              ) : (
+                <div className="text-sm p-2 rounded-md bg-muted">
+                  {format(new Date(task.scheduledDate), 'EEEE, MMM d, yyyy')}
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="time">
+                <Clock className="inline h-3.5 w-3.5 mr-1" />
+                Start Time
+              </Label>
+              {isEditing ? (
+                <Input
+                  id="time"
+                  type="time"
+                  value={editedTask.startTime as string}
+                  onChange={(e) => setEditedTask({ ...editedTask, startTime: e.target.value } as any)}
+                />
+              ) : (
+                <div className="text-sm p-2 rounded-md bg-muted">
+                  {task.startTime} - {task.endTime}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div className="space-y-2">
+            <Label htmlFor="duration">Duration</Label>
+            {isEditing ? (
+              <Select
+                value={(editedTask.durationMinutes || task.durationMinutes).toString()}
+                onValueChange={(value) =>
+                  setEditedTask({ ...editedTask, durationMinutes: parseInt(value) } as any)
+                }
+              >
+                <SelectTrigger id="duration">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DURATION_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value.toString()}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-sm p-2 rounded-md bg-muted">
+                {task.durationMinutes} minutes
+              </div>
+            )}
+          </div>
+
+          {/* Priority (Edit Mode) */}
+          {isEditing && (
+            <div className="space-y-2">
+              <Label>
+                <Flag className="inline h-3.5 w-3.5 mr-1" />
+                Priority
+              </Label>
+              <div className="flex gap-2">
+                {PRIORITY_OPTIONS.map((option) => (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    variant={
+                      (editedTask.priority || task.priority) === option.value
+                        ? option.color
+                        : 'outline'
+                    }
+                    size="sm"
+                    onClick={() => setEditedTask({ ...editedTask, priority: option.value } as any)}
+                    className="flex-1"
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            {isEditing ? (
+              <Textarea
+                id="notes"
+                value={editedTask.notes as string}
+                onChange={(e) => setEditedTask({ ...editedTask, notes: e.target.value } as any)}
+                rows={4}
+                placeholder="Add any additional details..."
+              />
+            ) : task.notes ? (
+              <div className="text-sm p-3 rounded-md bg-muted whitespace-pre-wrap">
+                {task.notes}
+              </div>
+            ) : (
+              <div className="text-sm p-3 rounded-md bg-muted text-muted-foreground italic">
+                No notes
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          {isEditing ? (
+            <>
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave}>Save Changes</Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
+              <Button
+                variant={task.isCompleted ? 'secondary' : 'default'}
+                onClick={handleToggleComplete}
+              >
+                {task.isCompleted ? (
+                  <>
+                    <Circle className="mr-2 h-4 w-4" />
+                    Mark Incomplete
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Mark Complete
+                  </>
+                )}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
