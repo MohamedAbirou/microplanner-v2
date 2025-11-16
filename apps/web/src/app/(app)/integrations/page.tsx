@@ -18,27 +18,12 @@ import { useConnectCalendar, useDisconnectCalendar, useSyncCalendar } from '@/ho
  * - Data import/export
  */
 
-// Mock integrations - will be replaced with GraphQL data
-const mockIntegrations = {
-  GOOGLE: {
-    provider: 'GOOGLE' as CalendarProvider,
-    email: 'user@gmail.com',
-    isConnected: true,
-    lastSyncedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-  },
-  OUTLOOK: {
-    provider: 'OUTLOOK' as CalendarProvider,
-    email: undefined,
-    isConnected: false,
-    lastSyncedAt: undefined,
-  },
-  APPLE: {
-    provider: 'APPLE' as CalendarProvider,
-    email: undefined,
-    isConnected: false,
-    lastSyncedAt: undefined,
-  },
-};
+interface CalendarIntegration {
+  provider: CalendarProvider;
+  email?: string;
+  isConnected: boolean;
+  lastSyncedAt?: string;
+}
 
 export default function IntegrationsPage() {
   const { connectCalendar, loading: connecting } = useConnectCalendar();
@@ -49,16 +34,51 @@ export default function IntegrationsPage() {
   const [disconnectingProvider, setDisconnectingProvider] = React.useState<CalendarProvider | null>(null);
   const [syncingProvider, setSyncingProvider] = React.useState<CalendarProvider | null>(null);
 
+  // State to track calendar integrations (will be replaced with GraphQL query when available)
+  const [integrations, setIntegrations] = React.useState<Record<CalendarProvider, CalendarIntegration>>({
+    GOOGLE: {
+      provider: 'GOOGLE',
+      email: undefined,
+      isConnected: false,
+      lastSyncedAt: undefined,
+    },
+    OUTLOOK: {
+      provider: 'OUTLOOK',
+      email: undefined,
+      isConnected: false,
+      lastSyncedAt: undefined,
+    },
+    APPLE: {
+      provider: 'APPLE',
+      email: undefined,
+      isConnected: false,
+      lastSyncedAt: undefined,
+    },
+  });
+
   const handleConnect = async (provider: CalendarProvider) => {
     setConnectingProvider(provider);
     try {
       // Note: In real implementation, authCode comes from OAuth callback
-      await connectCalendar({
+      const result = await connectCalendar({
         variables: {
           provider,
           authCode: 'mock-auth-code', // Replace with actual code from OAuth
         },
       });
+
+      // Update local state on successful connection
+      if (result.data?.connectCalendar) {
+        setIntegrations((prev) => ({
+          ...prev,
+          [provider]: {
+            provider,
+            email: result.data.connectCalendar.email,
+            isConnected: true,
+            lastSyncedAt: new Date().toISOString(),
+          },
+        }));
+      }
     } finally {
       setConnectingProvider(null);
     }
@@ -70,6 +90,17 @@ export default function IntegrationsPage() {
       await disconnectCalendar({
         variables: { provider },
       });
+
+      // Update local state on successful disconnection
+      setIntegrations((prev) => ({
+        ...prev,
+        [provider]: {
+          provider,
+          email: undefined,
+          isConnected: false,
+          lastSyncedAt: undefined,
+        },
+      }));
     } finally {
       setDisconnectingProvider(null);
     }
@@ -81,6 +112,15 @@ export default function IntegrationsPage() {
       await syncCalendar({
         variables: { provider },
       });
+
+      // Update last synced time
+      setIntegrations((prev) => ({
+        ...prev,
+        [provider]: {
+          ...prev[provider],
+          lastSyncedAt: new Date().toISOString(),
+        },
+      }));
     } finally {
       setSyncingProvider(null);
     }
@@ -126,7 +166,7 @@ export default function IntegrationsPage() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <CalendarSyncCard
               provider="GOOGLE"
-              integration={mockIntegrations.GOOGLE}
+              integration={integrations.GOOGLE}
               onConnect={handleConnect}
               onDisconnect={handleDisconnect}
               onSync={handleSync}
@@ -137,7 +177,7 @@ export default function IntegrationsPage() {
 
             <CalendarSyncCard
               provider="OUTLOOK"
-              integration={mockIntegrations.OUTLOOK}
+              integration={integrations.OUTLOOK}
               onConnect={handleConnect}
               onDisconnect={handleDisconnect}
               onSync={handleSync}
@@ -148,7 +188,7 @@ export default function IntegrationsPage() {
 
             <CalendarSyncCard
               provider="APPLE"
-              integration={mockIntegrations.APPLE}
+              integration={integrations.APPLE}
               onConnect={handleConnect}
               onDisconnect={handleDisconnect}
               onSync={handleSync}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronRight, AlertTriangle } from 'lucide-react';
+import { ChevronRight, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,42 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useTier } from '@/contexts/tier-context';
-
-// Mock goals - will be replaced with GraphQL query
-const mockGoals = [
-  {
-    id: '1',
-    emoji: '💼',
-    title: 'Career Growth',
-    description: 'Focus on professional development',
-    frequencyPerWeek: 5,
-    durationMinutes: 60,
-  },
-  {
-    id: '2',
-    emoji: '💪',
-    title: 'Fitness',
-    description: 'Stay active and healthy',
-    frequencyPerWeek: 4,
-    durationMinutes: 45,
-  },
-  {
-    id: '3',
-    emoji: '📚',
-    title: 'Learning',
-    description: 'Read and learn new skills',
-    frequencyPerWeek: 3,
-    durationMinutes: 30,
-  },
-  {
-    id: '4',
-    emoji: '🎨',
-    title: 'Creative Projects',
-    description: 'Work on side projects',
-    frequencyPerWeek: 2,
-    durationMinutes: 90,
-  },
-];
+import { useGoals } from '@/hooks/use-graphql';
 
 interface SelectGoalsStepProps {
   selectedGoals: string[];
@@ -54,14 +19,43 @@ interface SelectGoalsStepProps {
 export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }: SelectGoalsStepProps) {
   const [selectedGoals, setSelectedGoals] = useState<string[]>(initialSelectedGoals);
   const { tier, limits } = useTier();
+  const { goals, loading } = useGoals();
 
   const maxGoalsPerPlan = limits.maxGoalsPerPlan;
+
+  // Filter for active goals only
+  const activeGoals = goals?.filter((goal) => goal.isActive) || [];
 
   const toggleGoalSelection = (goalId: string) => {
     setSelectedGoals((prev) =>
       prev.includes(goalId) ? prev.filter((id) => id !== goalId) : [...prev, goalId]
     );
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-3 text-muted-foreground">Loading your goals...</span>
+      </div>
+    );
+  }
+
+  if (!activeGoals || activeGoals.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">No goals found</h1>
+          <p className="text-muted-foreground">
+            You need to create some goals first before generating a plan.
+          </p>
+        </div>
+        <Button onClick={() => window.location.href = '/app/goals/new'}>
+          Create Your First Goal
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -76,7 +70,7 @@ export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }:
 
       {/* Goals Grid */}
       <div className="grid gap-4 md:grid-cols-2">
-        {mockGoals.map((goal) => (
+        {activeGoals.map((goal) => (
           <Card
             key={goal.id}
             className={cn(
