@@ -71,6 +71,7 @@ export function QuickAddTaskModal({
   onSubmit,
 }: QuickAddTaskModalProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [formData, setFormData] = React.useState<TaskFormData>({
     title: '',
     notes: '',
@@ -93,6 +94,7 @@ export function QuickAddTaskModal({
         durationMinutes: 60,
         priority: 2,
       });
+      setErrors({});
     }
   }, [open, defaultDate, defaultTime, goals]);
 
@@ -104,11 +106,77 @@ export function QuickAddTaskModal({
     }
   }, [open]);
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate title
+    if (!formData.title.trim()) {
+      newErrors.title = 'Task title is required';
+    } else if (formData.title.length > 200) {
+      newErrors.title = 'Task title must be less than 200 characters';
+    }
+
+    // Validate goal
+    if (!formData.goalId) {
+      newErrors.goalId = 'Please select a goal';
+    }
+
+    // Validate date
+    if (!formData.scheduledDate) {
+      newErrors.scheduledDate = 'Date is required';
+    } else {
+      const selectedDate = new Date(formData.scheduledDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Allow past dates but warn if more than 1 year in past
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+      if (selectedDate < oneYearAgo) {
+        newErrors.scheduledDate = 'Date seems too far in the past';
+      }
+
+      // Warn if more than 1 year in future
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(today.getFullYear() + 1);
+
+      if (selectedDate > oneYearFromNow) {
+        newErrors.scheduledDate = 'Date seems too far in the future';
+      }
+    }
+
+    // Validate time
+    if (!formData.startTime) {
+      newErrors.startTime = 'Start time is required';
+    } else {
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(formData.startTime)) {
+        newErrors.startTime = 'Invalid time format (use HH:MM)';
+      }
+    }
+
+    // Validate duration
+    if (!formData.durationMinutes || formData.durationMinutes <= 0) {
+      newErrors.durationMinutes = 'Duration must be greater than 0';
+    } else if (formData.durationMinutes > 1440) {
+      newErrors.durationMinutes = 'Duration cannot exceed 24 hours';
+    }
+
+    // Validate notes length
+    if (formData.notes && formData.notes.length > 1000) {
+      newErrors.notes = 'Notes must be less than 1000 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title.trim()) {
-      toast.error('Please enter a task title');
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
       return;
     }
 
@@ -151,9 +219,16 @@ export function QuickAddTaskModal({
                 id="title"
                 placeholder="e.g., Morning workout, Team meeting..."
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, title: e.target.value });
+                  if (errors.title) setErrors({ ...errors, title: '' });
+                }}
                 required
+                className={errors.title ? 'border-destructive' : ''}
               />
+              {errors.title && (
+                <p className="text-sm text-destructive">{errors.title}</p>
+              )}
             </div>
 
             {/* Goal Selection */}
@@ -161,9 +236,12 @@ export function QuickAddTaskModal({
               <Label htmlFor="goal">Goal *</Label>
               <Select
                 value={formData.goalId}
-                onValueChange={(value) => setFormData({ ...formData, goalId: value })}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, goalId: value });
+                  if (errors.goalId) setErrors({ ...errors, goalId: '' });
+                }}
               >
-                <SelectTrigger id="goal">
+                <SelectTrigger id="goal" className={errors.goalId ? 'border-destructive' : ''}>
                   <SelectValue placeholder="Select a goal">
                     {selectedGoal && (
                       <div className="flex items-center gap-2">
@@ -184,6 +262,9 @@ export function QuickAddTaskModal({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.goalId && (
+                <p className="text-sm text-destructive">{errors.goalId}</p>
+              )}
             </div>
 
             {/* Date & Time */}
@@ -197,9 +278,16 @@ export function QuickAddTaskModal({
                   id="date"
                   type="date"
                   value={formData.scheduledDate}
-                  onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, scheduledDate: e.target.value });
+                    if (errors.scheduledDate) setErrors({ ...errors, scheduledDate: '' });
+                  }}
                   required
+                  className={errors.scheduledDate ? 'border-destructive' : ''}
                 />
+                {errors.scheduledDate && (
+                  <p className="text-sm text-destructive">{errors.scheduledDate}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="time">
@@ -210,9 +298,16 @@ export function QuickAddTaskModal({
                   id="time"
                   type="time"
                   value={formData.startTime}
-                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, startTime: e.target.value });
+                    if (errors.startTime) setErrors({ ...errors, startTime: '' });
+                  }}
                   required
+                  className={errors.startTime ? 'border-destructive' : ''}
                 />
+                {errors.startTime && (
+                  <p className="text-sm text-destructive">{errors.startTime}</p>
+                )}
               </div>
             </div>
 
@@ -221,9 +316,12 @@ export function QuickAddTaskModal({
               <Label htmlFor="duration">Duration</Label>
               <Select
                 value={formData.durationMinutes.toString()}
-                onValueChange={(value) => setFormData({ ...formData, durationMinutes: parseInt(value) })}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, durationMinutes: parseInt(value) });
+                  if (errors.durationMinutes) setErrors({ ...errors, durationMinutes: '' });
+                }}
               >
-                <SelectTrigger id="duration">
+                <SelectTrigger id="duration" className={errors.durationMinutes ? 'border-destructive' : ''}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -234,6 +332,9 @@ export function QuickAddTaskModal({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.durationMinutes && (
+                <p className="text-sm text-destructive">{errors.durationMinutes}</p>
+              )}
             </div>
 
             {/* Priority */}
@@ -260,14 +361,28 @@ export function QuickAddTaskModal({
 
             {/* Notes */}
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes (optional)</Label>
+              <Label htmlFor="notes">
+                Notes (optional)
+                {formData.notes && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {formData.notes.length}/1000
+                  </span>
+                )}
+              </Label>
               <Textarea
                 id="notes"
                 placeholder="Add any additional details..."
                 value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, notes: e.target.value });
+                  if (errors.notes) setErrors({ ...errors, notes: '' });
+                }}
                 rows={3}
+                className={errors.notes ? 'border-destructive' : ''}
               />
+              {errors.notes && (
+                <p className="text-sm text-destructive">{errors.notes}</p>
+              )}
             </div>
           </div>
 
