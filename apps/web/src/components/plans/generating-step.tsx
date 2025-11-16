@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -44,11 +45,25 @@ export function GeneratingStep({ selectedGoals, preferences, onComplete }: Gener
     }, 150);
 
     // Complete after 8 seconds
-    const timeout = setTimeout(() => {
+    const timeout = setTimeout(async () => {
       clearInterval(interval);
       clearInterval(progressInterval);
-      // TODO: Actually call GraphQL mutation to generate plan
-      onComplete('generated-plan-id');
+
+      try {
+        // TODO: Actually call GraphQL mutation to generate plan
+        // const result = await generatePlan({ selectedGoals, preferences });
+        // onComplete(result.id);
+
+        toast.success('Weekly plan generated successfully!', {
+          description: 'Your optimized schedule is ready for review',
+        });
+        onComplete('generated-plan-id');
+      } catch (error) {
+        console.error('Failed to generate plan:', error);
+        toast.error('Failed to generate plan', {
+          description: 'Please try again or contact support if the problem persists',
+        });
+      }
     }, 8000);
 
     return () => {

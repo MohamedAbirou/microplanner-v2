@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useUser } from '@clerk/nextjs';
+import { toast } from 'sonner';
 import {
   User,
   Bell,
@@ -22,10 +23,12 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 
 export default function SettingsPage() {
   const { user } = useUser();
   const [isSaving, setIsSaving] = React.useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
   // Mock settings - will be replaced with GraphQL queries
   const [profileSettings, setProfileSettings] = React.useState({
@@ -52,10 +55,105 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
-    console.log('Saving profile:', profileSettings);
-    // TODO: GraphQL mutation
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
+
+    try {
+      console.log('Saving profile:', profileSettings);
+      // TODO: GraphQL mutation
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success('Profile updated successfully!', {
+        description: 'Your settings have been saved',
+      });
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      toast.error('Failed to save profile', {
+        description: 'Please try again or contact support if the problem persists',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleNotificationChange = async (key: keyof typeof notificationSettings, value: boolean) => {
+    setNotificationSettings({ ...notificationSettings, [key]: value });
+
+    try {
+      // TODO: GraphQL mutation to save notification settings
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      toast.success('Notification preferences updated');
+    } catch (error) {
+      console.error('Failed to update notification settings:', error);
+      toast.error('Failed to update notification preferences');
+      // Revert on error
+      setNotificationSettings({ ...notificationSettings, [key]: !value });
+    }
+  };
+
+  const handleAppearanceChange = async (key: keyof typeof appearanceSettings, value: any) => {
+    setAppearanceSettings({ ...appearanceSettings, [key]: value });
+
+    try {
+      // TODO: GraphQL mutation to save appearance settings
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      toast.success('Appearance updated');
+    } catch (error) {
+      console.error('Failed to update appearance:', error);
+      toast.error('Failed to update appearance');
+      // Revert on error
+      setAppearanceSettings({ ...appearanceSettings, [key]: value });
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      toast.info('Preparing your data export...', {
+        description: 'This may take a few moments',
+      });
+      // TODO: Actually export data
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      toast.success('Data exported successfully!', {
+        description: 'Your download will begin shortly',
+      });
+    } catch (error) {
+      console.error('Failed to export data:', error);
+      toast.error('Failed to export data', {
+        description: 'Please try again or contact support if the problem persists',
+      });
+    }
+  };
+
+  const handleConnectCalendar = async (provider: string) => {
+    try {
+      toast.info(`Connecting to ${provider}...`);
+      // TODO: OAuth flow for calendar integration
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      toast.success(`${provider} connected successfully!`, {
+        description: 'Your calendar is now synced with MicroPlanner',
+      });
+    } catch (error) {
+      console.error(`Failed to connect ${provider}:`, error);
+      toast.error(`Failed to connect ${provider}`, {
+        description: 'Please try again or contact support if the problem persists',
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      toast.info('Deleting your account...', {
+        description: 'This may take a few moments',
+      });
+      // TODO: Actually delete account via GraphQL mutation
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      toast.success('Account deleted successfully', {
+        description: 'We\'re sorry to see you go. You can create a new account anytime.',
+      });
+      // TODO: Sign out and redirect to landing page
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      toast.error('Failed to delete account', {
+        description: 'Please try again or contact support if the problem persists',
+      });
+    }
   };
 
   return (
@@ -204,9 +302,7 @@ export default function SettingsPage() {
                 <Switch
                   id="email-notifications"
                   checked={notificationSettings.emailNotifications}
-                  onCheckedChange={(checked) =>
-                    setNotificationSettings({ ...notificationSettings, emailNotifications: checked })
-                  }
+                  onCheckedChange={(checked) => handleNotificationChange('emailNotifications', checked)}
                 />
               </div>
 
@@ -222,9 +318,7 @@ export default function SettingsPage() {
                 <Switch
                   id="push-notifications"
                   checked={notificationSettings.pushNotifications}
-                  onCheckedChange={(checked) =>
-                    setNotificationSettings({ ...notificationSettings, pushNotifications: checked })
-                  }
+                  onCheckedChange={(checked) => handleNotificationChange('pushNotifications', checked)}
                 />
               </div>
 
@@ -240,9 +334,7 @@ export default function SettingsPage() {
                 <Switch
                   id="weekly-plan"
                   checked={notificationSettings.weeklyPlanReminder}
-                  onCheckedChange={(checked) =>
-                    setNotificationSettings({ ...notificationSettings, weeklyPlanReminder: checked })
-                  }
+                  onCheckedChange={(checked) => handleNotificationChange('weeklyPlanReminder', checked)}
                 />
               </div>
 
@@ -258,9 +350,7 @@ export default function SettingsPage() {
                 <Switch
                   id="daily-task"
                   checked={notificationSettings.dailyTaskReminder}
-                  onCheckedChange={(checked) =>
-                    setNotificationSettings({ ...notificationSettings, dailyTaskReminder: checked })
-                  }
+                  onCheckedChange={(checked) => handleNotificationChange('dailyTaskReminder', checked)}
                 />
               </div>
 
@@ -276,9 +366,7 @@ export default function SettingsPage() {
                 <Switch
                   id="goal-milestones"
                   checked={notificationSettings.goalMilestones}
-                  onCheckedChange={(checked) =>
-                    setNotificationSettings({ ...notificationSettings, goalMilestones: checked })
-                  }
+                  onCheckedChange={(checked) => handleNotificationChange('goalMilestones', checked)}
                 />
               </div>
             </CardContent>
@@ -310,7 +398,7 @@ export default function SettingsPage() {
                 {userTier === 'FREE' ? (
                   <Badge variant="secondary">PRO Feature</Badge>
                 ) : (
-                  <Button>Connect</Button>
+                  <Button onClick={() => handleConnectCalendar('Google Calendar')}>Connect</Button>
                 )}
               </div>
 
@@ -329,7 +417,7 @@ export default function SettingsPage() {
                 {userTier === 'FREE' ? (
                   <Badge variant="secondary">PRO Feature</Badge>
                 ) : (
-                  <Button>Connect</Button>
+                  <Button onClick={() => handleConnectCalendar('Outlook Calendar')}>Connect</Button>
                 )}
               </div>
 
@@ -371,7 +459,7 @@ export default function SettingsPage() {
                   <Button
                     variant={appearanceSettings.theme === 'light' ? 'default' : 'outline'}
                     className="flex-col h-auto py-3"
-                    onClick={() => setAppearanceSettings({ ...appearanceSettings, theme: 'light' })}
+                    onClick={() => handleAppearanceChange('theme', 'light')}
                   >
                     <Sun className="h-5 w-5 mb-1" />
                     <span>Light</span>
@@ -379,7 +467,7 @@ export default function SettingsPage() {
                   <Button
                     variant={appearanceSettings.theme === 'dark' ? 'default' : 'outline'}
                     className="flex-col h-auto py-3"
-                    onClick={() => setAppearanceSettings({ ...appearanceSettings, theme: 'dark' })}
+                    onClick={() => handleAppearanceChange('theme', 'dark')}
                   >
                     <Moon className="h-5 w-5 mb-1" />
                     <span>Dark</span>
@@ -387,7 +475,7 @@ export default function SettingsPage() {
                   <Button
                     variant={appearanceSettings.theme === 'system' ? 'default' : 'outline'}
                     className="flex-col h-auto py-3"
-                    onClick={() => setAppearanceSettings({ ...appearanceSettings, theme: 'system' })}
+                    onClick={() => handleAppearanceChange('theme', 'system')}
                   >
                     <Laptop className="h-5 w-5 mb-1" />
                     <span>System</span>
@@ -407,9 +495,7 @@ export default function SettingsPage() {
                 <Switch
                   id="compact-mode"
                   checked={appearanceSettings.compactMode}
-                  onCheckedChange={(checked) =>
-                    setAppearanceSettings({ ...appearanceSettings, compactMode: checked })
-                  }
+                  onCheckedChange={(checked) => handleAppearanceChange('compactMode', checked)}
                 />
               </div>
             </CardContent>
@@ -487,7 +573,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground mb-3">
                   Download a copy of all your data including tasks, goals, and plans
                 </p>
-                <Button variant="outline">Export Data</Button>
+                <Button variant="outline" onClick={handleExportData}>Export Data</Button>
               </div>
 
               <Separator />
@@ -497,7 +583,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground mb-3">
                   Permanently delete your account and all associated data
                 </p>
-                <Button variant="destructive" onClick={() => alert('Account deletion requires confirmation via email')}>
+                <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
                   Delete Account
                 </Button>
               </div>
@@ -505,6 +591,15 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Account Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        itemName="your account"
+        itemType="account"
+        onConfirm={handleDeleteAccount}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import {
   Calendar,
   Clock,
@@ -28,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 import { cn } from '@/lib/utils';
 
 interface Goal {
@@ -88,6 +90,7 @@ export function TaskDetailModal({
 }: TaskDetailModalProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [editedTask, setEditedTask] = React.useState<Partial<Task>>({});
 
   React.useEffect(() => {
@@ -110,17 +113,35 @@ export function TaskDetailModal({
   const handleSave = async () => {
     if (!task.id) return;
 
-    await onUpdate?.(task.id, editedTask);
-    setIsEditing(false);
+    try {
+      await onUpdate?.(task.id, editedTask);
+      toast.success('Task updated successfully!', {
+        description: 'Your changes have been saved',
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update task:', error);
+      toast.error('Failed to update task', {
+        description: 'Please try again or contact support if the problem persists',
+      });
+    }
   };
 
   const handleDelete = async () => {
-    if (!task.id || !confirm('Are you sure you want to delete this task?')) return;
+    if (!task.id) return;
 
     setIsDeleting(true);
     try {
       await onDelete?.(task.id);
+      toast.success('Task deleted successfully', {
+        description: `"${task.title}" has been removed from your calendar`,
+      });
       onOpenChange(false);
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      toast.error('Failed to delete task', {
+        description: 'Please try again or contact support if the problem persists',
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -128,7 +149,23 @@ export function TaskDetailModal({
 
   const handleToggleComplete = async () => {
     if (!task.id) return;
-    await onToggleComplete?.(task.id);
+
+    try {
+      await onToggleComplete?.(task.id);
+      toast.success(
+        task.isCompleted ? 'Task marked as incomplete' : 'Task completed!',
+        {
+          description: task.isCompleted
+            ? `"${task.title}" has been reopened`
+            : `Great job completing "${task.title}"!`,
+        }
+      );
+    } catch (error) {
+      console.error('Failed to toggle task completion:', error);
+      toast.error('Failed to update task status', {
+        description: 'Please try again or contact support if the problem persists',
+      });
+    }
   };
 
   const selectedGoal = goals.find((g) => g.id === (editedTask.goalId || task.goal.id));
@@ -188,7 +225,7 @@ export function TaskDetailModal({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleDelete}
+                onClick={() => setShowDeleteDialog(true)}
                 disabled={isDeleting}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -387,6 +424,15 @@ export function TaskDetailModal({
           )}
         </DialogFooter>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        itemName={task.title}
+        itemType="task"
+        onConfirm={handleDelete}
+      />
     </Dialog>
   );
 }

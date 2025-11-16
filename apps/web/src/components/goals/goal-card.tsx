@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { Flame, Clock, BarChart3, Pause, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -27,7 +28,7 @@ interface GoalCardProps {
   onResume?: (goalId: string) => void;
 }
 
-export function GoalCard({ goal, compact = false, onPause, onResume }: GoalCardProps) {
+export const GoalCard = React.memo<GoalCardProps>(function GoalCard({ goal, compact = false, onPause, onResume }) {
   if (compact) {
     return (
       <Link href={`/app/goals/${goal.id}`}>
@@ -163,4 +164,4 @@ export function GoalCard({ goal, compact = false, onPause, onResume }: GoalCardP
       </CardContent>
     </Card>
   );
-}
+});

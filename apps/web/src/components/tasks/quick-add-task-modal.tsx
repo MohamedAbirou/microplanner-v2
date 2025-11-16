@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { Calendar, Clock, Target, Flag } from 'lucide-react';
 import {
   Dialog,
@@ -107,15 +108,22 @@ export function QuickAddTaskModal({
     e.preventDefault();
 
     if (!formData.title.trim()) {
+      toast.error('Please enter a task title');
       return;
     }
 
     setIsSubmitting(true);
     try {
       await onSubmit?.(formData);
+      toast.success('Task created successfully!', {
+        description: `"${formData.title}" has been added to your calendar`,
+      });
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to create task:', error);
+      toast.error('Failed to create task', {
+        description: 'Please try again or contact support if the problem persists',
+      });
     } finally {
       setIsSubmitting(false);
     }

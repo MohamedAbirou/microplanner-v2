@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { Check, RefreshCw, ChevronLeft, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -143,18 +144,42 @@ export default function PlanReviewPage() {
 
   const handleAcceptPlan = async () => {
     setIsAccepting(true);
-    console.log('Accepting plan...');
-    // TODO: GraphQL mutation to accept and save plan
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    router.push('/app/week');
+
+    try {
+      console.log('Accepting plan...');
+      // TODO: GraphQL mutation to accept and save plan
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      toast.success('Plan accepted successfully!', {
+        description: 'Your weekly schedule is now active and ready to go',
+      });
+      router.push('/app/week');
+    } catch (error) {
+      console.error('Failed to accept plan:', error);
+      toast.error('Failed to accept plan', {
+        description: 'Please try again or contact support if the problem persists',
+      });
+      setIsAccepting(false);
+    }
   };
 
   const handleRegenerate = async () => {
     setIsRegenerating(true);
-    console.log('Regenerating plan...');
-    // TODO: Go back to customize step or regenerate with same settings
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    router.push('/app/plans/generate');
+
+    try {
+      console.log('Regenerating plan...');
+      // TODO: Go back to customize step or regenerate with same settings
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.info('Regenerating your plan', {
+        description: 'Creating a new optimized schedule based on your preferences',
+      });
+      router.push('/app/plans/generate');
+    } catch (error) {
+      console.error('Failed to regenerate plan:', error);
+      toast.error('Failed to regenerate plan', {
+        description: 'Please try again or contact support if the problem persists',
+      });
+      setIsRegenerating(false);
+    }
   };
 
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });

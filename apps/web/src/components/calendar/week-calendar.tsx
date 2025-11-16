@@ -8,6 +8,11 @@ import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+// Time slots from 6 AM to 11 PM (configurable later)
+const HOUR_START = 6;
+const HOUR_END = 23;
+const HOURS = Array.from({ length: HOUR_END - HOUR_START + 1 }, (_, i) => i + HOUR_START);
+
 interface Task {
   id: string;
   title: string;
@@ -34,10 +39,56 @@ interface WeekCalendarProps {
   onTimeSlotClick?: (date: Date, hour: number) => void;
 }
 
-// Time slots from 6 AM to 11 PM (configurable later)
-const HOUR_START = 6;
-const HOUR_END = 23;
-const HOURS = Array.from({ length: HOUR_END - HOUR_START + 1 }, (_, i) => i + HOUR_START);
+// Memoized task card component for better performance
+const TaskCard = React.memo<{
+  task: Task;
+  top: number;
+  height: number;
+  onClick?: (task: Task) => void;
+}>(({ task, top, height, onClick }) => {
+  return (
+    <div
+      className="absolute left-1 right-1 pointer-events-auto cursor-pointer"
+      style={{
+        top: `${top}%`,
+        height: `${height}%`,
+      }}
+      onClick={() => onClick?.(task)}
+    >
+      <Card
+        className={cn(
+          'h-full p-2 border-l-4 overflow-hidden hover:shadow-md transition-shadow',
+          task.isCompleted && 'opacity-60'
+        )}
+        style={{
+          borderLeftColor: task.goal.color,
+        }}
+      >
+        <div className="flex items-start gap-1 mb-1">
+          <span className="text-sm">{task.goal.emoji}</span>
+          <div className="flex-1 min-w-0">
+            <div className={cn(
+              'text-xs font-medium truncate',
+              task.isCompleted && 'line-through'
+            )}>
+              {task.title}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {task.startTime} - {task.endTime}
+            </div>
+          </div>
+        </div>
+        {task.priority === 1 && (
+          <Badge variant="destructive" className="text-[10px] h-4 px-1">
+            High
+          </Badge>
+        )}
+      </Card>
+    </div>
+  );
+});
+
+TaskCard.displayName = 'TaskCard';
 
 export function WeekCalendar({
   tasks,
@@ -48,40 +99,47 @@ export function WeekCalendar({
 }: WeekCalendarProps) {
   const [selectedDate, setSelectedDate] = React.useState(currentDate);
 
-  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Monday
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekStart = React.useMemo(
+    () => startOfWeek(selectedDate, { weekStartsOn: 1 }),
+    [selectedDate]
+  );
 
-  const handlePreviousWeek = () => {
+  const weekDays = React.useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
+    [weekStart]
+  );
+
+  const handlePreviousWeek = React.useCallback(() => {
     const newDate = subWeeks(selectedDate, 1);
     setSelectedDate(newDate);
     onDateChange?.(newDate);
-  };
+  }, [selectedDate, onDateChange]);
 
-  const handleNextWeek = () => {
+  const handleNextWeek = React.useCallback(() => {
     const newDate = addWeeks(selectedDate, 1);
     setSelectedDate(newDate);
     onDateChange?.(newDate);
-  };
+  }, [selectedDate, onDateChange]);
 
-  const handleToday = () => {
+  const handleToday = React.useCallback(() => {
     const today = new Date();
     setSelectedDate(today);
     onDateChange?.(today);
-  };
+  }, [onDateChange]);
 
   // Convert time string (HH:mm) to position percentage
-  const timeToPosition = (timeStr: string) => {
+  const timeToPosition = React.useCallback((timeStr: string) => {
     const [hours, minutes] = timeStr.split(':').map(Number);
     const totalMinutes = (hours - HOUR_START) * 60 + minutes;
     const totalSlotMinutes = (HOUR_END - HOUR_START + 1) * 60;
     return (totalMinutes / totalSlotMinutes) * 100;
-  };
+  }, []);
 
   // Convert duration to height percentage
-  const durationToHeight = (minutes: number) => {
+  const durationToHeight = React.useCallback((minutes: number) => {
     const totalSlotMinutes = (HOUR_END - HOUR_START + 1) * 60;
     return (minutes / totalSlotMinutes) * 100;
-  };
+  }, []);
 
   // Group tasks by day
   const tasksByDay = React.useMemo(() => {
@@ -195,52 +253,15 @@ export function WeekCalendar({
                   {/* Tasks overlay */}
                   <div className="absolute inset-0 pointer-events-none">
                     <div className="relative h-full">
-                      {dayTasks.map((task) => {
-                        const top = timeToPosition(task.startTime);
-                        const height = durationToHeight(task.durationMinutes);
-
-                        return (
-                          <div
-                            key={task.id}
-                            className="absolute left-1 right-1 pointer-events-auto cursor-pointer"
-                            style={{
-                              top: `${top}%`,
-                              height: `${height}%`,
-                            }}
-                            onClick={() => onTaskClick?.(task)}
-                          >
-                            <Card
-                              className={cn(
-                                'h-full p-2 border-l-4 overflow-hidden hover:shadow-md transition-shadow',
-                                task.isCompleted && 'opacity-60'
-                              )}
-                              style={{
-                                borderLeftColor: task.goal.color,
-                              }}
-                            >
-                              <div className="flex items-start gap-1 mb-1">
-                                <span className="text-sm">{task.goal.emoji}</span>
-                                <div className="flex-1 min-w-0">
-                                  <div className={cn(
-                                    'text-xs font-medium truncate',
-                                    task.isCompleted && 'line-through'
-                                  )}>
-                                    {task.title}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {task.startTime} - {task.endTime}
-                                  </div>
-                                </div>
-                              </div>
-                              {task.priority === 1 && (
-                                <Badge variant="destructive" className="text-[10px] h-4 px-1">
-                                  High
-                                </Badge>
-                              )}
-                            </Card>
-                          </div>
-                        );
-                      })}
+                      {dayTasks.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          top={timeToPosition(task.startTime)}
+                          height={durationToHeight(task.durationMinutes)}
+                          onClick={onTaskClick}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
