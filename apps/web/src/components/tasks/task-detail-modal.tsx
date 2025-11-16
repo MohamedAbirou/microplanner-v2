@@ -14,6 +14,7 @@ import {
   Circle,
   X,
 } from 'lucide-react';
+import { getBlockingTasks, getBlockedTasks } from '@/lib/dependencies';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,9 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TaskDependenciesPanel } from '@/components/dependencies/task-dependencies-panel';
+import { TaskDependency, DependencyType } from '@/lib/dependencies';
 
 interface Goal {
   id: string;
@@ -57,9 +61,13 @@ interface TaskDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   goals?: Goal[];
+  allTasks?: Task[];
+  dependencies?: TaskDependency[];
   onUpdate?: (taskId: string, updates: Partial<Task>) => void | Promise<void>;
   onDelete?: (taskId: string) => void | Promise<void>;
   onToggleComplete?: (taskId: string) => void | Promise<void>;
+  onAddDependency?: (fromTaskId: string, toTaskId: string, type: DependencyType) => Promise<void>;
+  onRemoveDependency?: (dependencyId: string) => Promise<void>;
 }
 
 const DURATION_OPTIONS = [
@@ -84,9 +92,13 @@ export function TaskDetailModal({
   open,
   onOpenChange,
   goals = [],
+  allTasks = [],
+  dependencies = [],
   onUpdate,
   onDelete,
   onToggleComplete,
+  onAddDependency,
+  onRemoveDependency,
 }: TaskDetailModalProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -234,162 +246,184 @@ export function TaskDetailModal({
           </div>
         </DialogHeader>
 
-        <Separator />
+        <Tabs defaultValue="details" className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="dependencies">
+              Dependencies
+              {(getBlockingTasks(task.id, dependencies).length + getBlockedTasks(task.id, dependencies).length) > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {getBlockingTasks(task.id, dependencies).length + getBlockedTasks(task.id, dependencies).length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="space-y-4 py-4">
-          {/* Goal Selection (Edit Mode) */}
-          {isEditing && (
-            <div className="space-y-2">
-              <Label htmlFor="goal">
-                <Target className="inline h-3.5 w-3.5 mr-1" />
-                Goal
-              </Label>
-              <Select
-                value={editedTask.goalId as string}
-                onValueChange={(value) => setEditedTask({ ...editedTask, goalId: value } as any)}
-              >
-                <SelectTrigger id="goal">
-                  <SelectValue>
-                    {selectedGoal && (
-                      <div className="flex items-center gap-2">
-                        <span>{selectedGoal.emoji}</span>
-                        <span>{selectedGoal.title}</span>
-                      </div>
-                    )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {goals.map((goal) => (
-                    <SelectItem key={goal.id} value={goal.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{goal.emoji}</span>
-                        <span>{goal.title}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <TabsContent value="details" className="space-y-4">
+            {/* Goal Selection (Edit Mode) */}
+            {isEditing && (
+              <div className="space-y-2">
+                <Label htmlFor="goal">
+                  <Target className="inline h-3.5 w-3.5 mr-1" />
+                  Goal
+                </Label>
+                <Select
+                  value={editedTask.goalId as string}
+                  onValueChange={(value) => setEditedTask({ ...editedTask, goalId: value } as any)}
+                >
+                  <SelectTrigger id="goal">
+                    <SelectValue>
+                      {selectedGoal && (
+                        <div className="flex items-center gap-2">
+                          <span>{selectedGoal.emoji}</span>
+                          <span>{selectedGoal.title}</span>
+                        </div>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {goals.map((goal) => (
+                      <SelectItem key={goal.id} value={goal.id}>
+                        <div className="flex items-center gap-2">
+                          <span>{goal.emoji}</span>
+                          <span>{goal.title}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Date & Time */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date">
+                  <Calendar className="inline h-3.5 w-3.5 mr-1" />
+                  Date
+                </Label>
+                {isEditing ? (
+                  <Input
+                    id="date"
+                    type="date"
+                    value={editedTask.scheduledDate as string}
+                    onChange={(e) => setEditedTask({ ...editedTask, scheduledDate: e.target.value } as any)}
+                  />
+                ) : (
+                  <div className="text-sm p-2 rounded-md bg-muted">
+                    {format(new Date(task.scheduledDate), 'EEEE, MMM d, yyyy')}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="time">
+                  <Clock className="inline h-3.5 w-3.5 mr-1" />
+                  Start Time
+                </Label>
+                {isEditing ? (
+                  <Input
+                    id="time"
+                    type="time"
+                    value={editedTask.startTime as string}
+                    onChange={(e) => setEditedTask({ ...editedTask, startTime: e.target.value } as any)}
+                  />
+                ) : (
+                  <div className="text-sm p-2 rounded-md bg-muted">
+                    {task.startTime} - {task.endTime}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
 
-          {/* Date & Time */}
-          <div className="grid grid-cols-2 gap-4">
+            {/* Duration */}
             <div className="space-y-2">
-              <Label htmlFor="date">
-                <Calendar className="inline h-3.5 w-3.5 mr-1" />
-                Date
-              </Label>
+              <Label htmlFor="duration">Duration</Label>
               {isEditing ? (
-                <Input
-                  id="date"
-                  type="date"
-                  value={editedTask.scheduledDate as string}
-                  onChange={(e) => setEditedTask({ ...editedTask, scheduledDate: e.target.value } as any)}
-                />
+                <Select
+                  value={(editedTask.durationMinutes || task.durationMinutes).toString()}
+                  onValueChange={(value) =>
+                    setEditedTask({ ...editedTask, durationMinutes: parseInt(value) } as any)
+                  }
+                >
+                  <SelectTrigger id="duration">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DURATION_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
                 <div className="text-sm p-2 rounded-md bg-muted">
-                  {format(new Date(task.scheduledDate), 'EEEE, MMM d, yyyy')}
+                  {task.durationMinutes} minutes
                 </div>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="time">
-                <Clock className="inline h-3.5 w-3.5 mr-1" />
-                Start Time
-              </Label>
-              {isEditing ? (
-                <Input
-                  id="time"
-                  type="time"
-                  value={editedTask.startTime as string}
-                  onChange={(e) => setEditedTask({ ...editedTask, startTime: e.target.value } as any)}
-                />
-              ) : (
-                <div className="text-sm p-2 rounded-md bg-muted">
-                  {task.startTime} - {task.endTime}
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* Duration */}
-          <div className="space-y-2">
-            <Label htmlFor="duration">Duration</Label>
-            {isEditing ? (
-              <Select
-                value={(editedTask.durationMinutes || task.durationMinutes).toString()}
-                onValueChange={(value) =>
-                  setEditedTask({ ...editedTask, durationMinutes: parseInt(value) } as any)
-                }
-              >
-                <SelectTrigger id="duration">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DURATION_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
+            {/* Priority (Edit Mode) */}
+            {isEditing && (
+              <div className="space-y-2">
+                <Label>
+                  <Flag className="inline h-3.5 w-3.5 mr-1" />
+                  Priority
+                </Label>
+                <div className="flex gap-2">
+                  {PRIORITY_OPTIONS.map((option) => (
+                    <Button
+                      key={option.value}
+                      type="button"
+                      variant={
+                        (editedTask.priority || task.priority) === option.value
+                          ? option.color
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => setEditedTask({ ...editedTask, priority: option.value } as any)}
+                      className="flex-1"
+                    >
                       {option.label}
-                    </SelectItem>
+                    </Button>
                   ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className="text-sm p-2 rounded-md bg-muted">
-                {task.durationMinutes} minutes
+                </div>
               </div>
             )}
-          </div>
 
-          {/* Priority (Edit Mode) */}
-          {isEditing && (
+            {/* Notes */}
             <div className="space-y-2">
-              <Label>
-                <Flag className="inline h-3.5 w-3.5 mr-1" />
-                Priority
-              </Label>
-              <div className="flex gap-2">
-                {PRIORITY_OPTIONS.map((option) => (
-                  <Button
-                    key={option.value}
-                    type="button"
-                    variant={
-                      (editedTask.priority || task.priority) === option.value
-                        ? option.color
-                        : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => setEditedTask({ ...editedTask, priority: option.value } as any)}
-                    className="flex-1"
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
+              <Label htmlFor="notes">Notes</Label>
+              {isEditing ? (
+                <Textarea
+                  id="notes"
+                  value={editedTask.notes as string}
+                  onChange={(e) => setEditedTask({ ...editedTask, notes: e.target.value } as any)}
+                  rows={4}
+                  placeholder="Add any additional details..."
+                />
+              ) : task.notes ? (
+                <div className="text-sm p-3 rounded-md bg-muted whitespace-pre-wrap">
+                  {task.notes}
+                </div>
+              ) : (
+                <div className="text-sm p-3 rounded-md bg-muted text-muted-foreground italic">
+                  No notes
+                </div>
+              )}
             </div>
-          )}
+          </TabsContent>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            {isEditing ? (
-              <Textarea
-                id="notes"
-                value={editedTask.notes as string}
-                onChange={(e) => setEditedTask({ ...editedTask, notes: e.target.value } as any)}
-                rows={4}
-                placeholder="Add any additional details..."
-              />
-            ) : task.notes ? (
-              <div className="text-sm p-3 rounded-md bg-muted whitespace-pre-wrap">
-                {task.notes}
-              </div>
-            ) : (
-              <div className="text-sm p-3 rounded-md bg-muted text-muted-foreground italic">
-                No notes
-              </div>
-            )}
-          </div>
-        </div>
+          <TabsContent value="dependencies" className="mt-4">
+            <TaskDependenciesPanel
+              task={task}
+              allTasks={allTasks}
+              dependencies={dependencies}
+              onAddDependency={onAddDependency || (async () => {})}
+              onRemoveDependency={onRemoveDependency || (async () => {})}
+            />
+          </TabsContent>
+        </Tabs>
 
         <DialogFooter>
           {isEditing ? (
