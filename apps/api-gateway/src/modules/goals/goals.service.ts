@@ -2,22 +2,19 @@ import type { Goal, SubscriptionTierType } from '@microplanner/database';
 import { SubscriptionTier } from '@microplanner/database';
 import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { QueryGoalsDto } from './dto/query-goals.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
-
-// Tier limits for goals
-const TIER_LIMITS = {
-  [SubscriptionTier.FREE]: 2,
-  [SubscriptionTier.STARTER]: 5,
-  [SubscriptionTier.PRO]: Infinity,
-};
 
 @Injectable()
 export class GoalsService {
   private readonly logger = new Logger(GoalsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private usageLimitService: UsageLimitService
+  ) {}
 
   /**
    * Create a new goal with tier limit validation
@@ -27,12 +24,12 @@ export class GoalsService {
     createGoalDto: CreateGoalDto,
     userTier: SubscriptionTierType
   ): Promise<Goal> {
-    // Check tier limits
-    await this.checkTierLimit(userId, userTier);
+    // Check tier limits using centralized UsageLimitService
+    await this.usageLimitService.checkGoalLimit(userId, userTier);
 
     this.logger.log(`Creating goal for user ${userId}: ${createGoalDto.title}`);
 
-    return this.prisma.goal.create({
+    const goal = await this.prisma.goal.create({
       data: {
         userId,
         title: createGoalDto.title,
@@ -46,6 +43,11 @@ export class GoalsService {
         priority: createGoalDto.priority || 5,
       },
     });
+
+    // Increment goal counter after successful creation
+    await this.usageLimitService.incrementGoalCount(userId);
+
+    return goal;
   }
 
   /**
@@ -130,6 +132,9 @@ export class GoalsService {
       where: { id: goalId },
       data: { isActive: false },
     });
+
+    // Decrement goal counter after deletion
+    await this.usageLimitService.decrementGoalCount(userId);
   }
 
   /**
@@ -235,23 +240,6 @@ export class GoalsService {
         lastCompletedAt,
       },
     });
-  }
-
-  /**
-   * Check if user can create more goals based on tier limits
-   */
-  private async checkTierLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
-    const limit = TIER_LIMITS[userTier];
-
-    const activeGoalsCount = await this.prisma.goal.count({
-      where: { userId, isActive: true },
-    });
-
-    if (activeGoalsCount >= limit) {
-      throw new ForbiddenException(
-        `Your ${userTier} plan allows maximum ${limit} active goals. Upgrade to create more.`
-      );
-    }
   }
 
   /**

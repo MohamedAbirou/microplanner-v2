@@ -108,4 +108,28 @@ export class GoalsController {
       goal,
     };
   }
+
+  @Get(':id/analytics')
+  @ApiOperation({ summary: 'Get goal analytics and progress metrics' })
+  @ApiResponse({ status: 200, description: 'Analytics retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Goal not found' })
+  async getAnalytics(@CurrentUser() user: User, @Param('id') id: string) {
+    // First verify ownership
+    await this.goalsService.findOne(id, user.id);
+
+    // Calculate and return analytics
+    const goal = await this.goalsService.calculateAnalytics(id);
+
+    return {
+      message: 'Analytics retrieved successfully',
+      analytics: {
+        totalScheduled: goal.totalScheduled,
+        totalCompletions: goal.totalCompletions,
+        completionRate: goal.completionRate,
+        currentStreak: goal.currentStreak,
+        longestStreak: goal.longestStreak,
+        lastCompletedAt: goal.lastCompletedAt,
+      },
+    };
+  }
 }
