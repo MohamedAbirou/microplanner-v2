@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { useTier } from '@/contexts/tier-context';
 
 // Mock goals - will be replaced with GraphQL query
 const mockGoals = [
@@ -52,9 +53,9 @@ interface SelectGoalsStepProps {
 
 export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }: SelectGoalsStepProps) {
   const [selectedGoals, setSelectedGoals] = useState<string[]>(initialSelectedGoals);
+  const { tier, limits } = useTier();
 
-  const maxGoalsPerPlan = 5; // From user tier - TODO: Get from user context
-  const tier = 'FREE'; // TODO: Get from user context
+  const maxGoalsPerPlan = limits.maxGoalsPerPlan;
 
   const toggleGoalSelection = (goalId: string) => {
     setSelectedGoals((prev) =>

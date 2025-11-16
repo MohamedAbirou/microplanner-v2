@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { useTier } from '@/contexts/tier-context';
 
 interface CustomizePreferencesStepProps {
   preferences: {
@@ -32,7 +33,7 @@ export function CustomizePreferencesStep({
   onBack,
 }: CustomizePreferencesStepProps) {
   const [preferences, setPreferences] = useState(initialPreferences);
-  const tier = 'PRO'; // TODO: Get from user context
+  const { tier, limits } = useTier();
 
   const isThisWeek = (date: Date) => {
     const now = new Date();

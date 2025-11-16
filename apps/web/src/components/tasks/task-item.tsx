@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
+import confetti from 'canvas-confetti';
 import {
   Clock,
   Calendar,
@@ -67,7 +68,16 @@ export function TaskItem({
 
     try {
       onComplete?.(task.id);
-      // TODO: Confetti animation on completion
+
+      // Confetti animation on completion
+      if (!task.isCompleted) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B'],
+        });
+      }
     } finally {
       setIsCompleting(false);
     }

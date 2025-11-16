@@ -49,7 +49,7 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
+  const { userId, sessionClaims } = await auth();
   const { pathname } = req.nextUrl;
 
   // Public routes - allow access
@@ -71,13 +71,11 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(new URL('/sign-in', req.url));
     }
 
-    // TODO: Check if onboarding is completed
-    // For now, redirect to onboarding if user just signed up
-    // This will be enhanced with actual DB check
-    // const user = await fetchUserFromDB(userId);
-    // if (!user.onboardingCompleted) {
-    //   return NextResponse.redirect(new URL('/onboarding', req.url));
-    // }
+    // Check if onboarding is completed via Clerk metadata
+    const onboardingCompleted = sessionClaims?.metadata?.onboardingCompleted;
+    if (!onboardingCompleted && !pathname.startsWith('/app/onboarding')) {
+      return NextResponse.redirect(new URL('/app/onboarding', req.url));
+    }
 
     return NextResponse.next();
   }

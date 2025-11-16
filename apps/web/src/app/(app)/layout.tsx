@@ -10,6 +10,7 @@ import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog'
 import { ErrorBoundaryWrapper } from '@/components/error-boundary';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useGoals, useCreateTask } from '@/hooks/use-graphql';
+import { TierProvider } from '@/contexts/tier-context';
 import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 
@@ -52,50 +53,52 @@ export default function AppLayout({
   };
 
   return (
-    <ErrorBoundaryWrapper>
-      <div className="min-h-screen bg-background">
-        {/* Command Palette */}
-        <CommandPalette
-          open={commandPaletteOpen}
-          onOpenChange={setCommandPaletteOpen}
-          onQuickAddClick={() => setQuickAddOpen(true)}
-        />
+    <TierProvider>
+      <ErrorBoundaryWrapper>
+        <div className="min-h-screen bg-background">
+          {/* Command Palette */}
+          <CommandPalette
+            open={commandPaletteOpen}
+            onOpenChange={setCommandPaletteOpen}
+            onQuickAddClick={() => setQuickAddOpen(true)}
+          />
 
-        {/* Quick Add Task Modal */}
-        <QuickAddTaskModal
-          open={quickAddOpen}
-          onOpenChange={setQuickAddOpen}
-          goals={goals}
-          onSubmit={handleQuickAddSubmit}
-        />
+          {/* Quick Add Task Modal */}
+          <QuickAddTaskModal
+            open={quickAddOpen}
+            onOpenChange={setQuickAddOpen}
+            goals={goals}
+            onSubmit={handleQuickAddSubmit}
+          />
 
-        {/* Keyboard Shortcuts Dialog */}
-        <KeyboardShortcutsDialog />
+          {/* Keyboard Shortcuts Dialog */}
+          <KeyboardShortcutsDialog />
 
-        {/* Sidebar */}
-        <AppSidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          userTier={userTier}
-        />
+          {/* Sidebar */}
+          <AppSidebar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+            userTier={userTier}
+          />
 
-        {/* Header */}
-        <AppHeader
-          onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onCommandClick={() => setCommandPaletteOpen(true)}
-          onQuickAddClick={() => setQuickAddOpen(true)}
-        />
+          {/* Header */}
+          <AppHeader
+            onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onCommandClick={() => setCommandPaletteOpen(true)}
+            onQuickAddClick={() => setQuickAddOpen(true)}
+          />
 
-        {/* Main Content */}
-        <main
-          className="pt-14 transition-all duration-300"
-          style={{
-            marginLeft: sidebarCollapsed ? '60px' : '240px',
-          }}
-        >
-          {children}
-        </main>
-      </div>
-    </ErrorBoundaryWrapper>
+          {/* Main Content */}
+          <main
+            className="pt-14 transition-all duration-300"
+            style={{
+              marginLeft: sidebarCollapsed ? '60px' : '240px',
+            }}
+          >
+            {children}
+          </main>
+        </div>
+      </ErrorBoundaryWrapper>
+    </TierProvider>
   );
 }
