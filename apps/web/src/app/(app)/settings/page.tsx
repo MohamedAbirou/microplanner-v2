@@ -2,7 +2,9 @@
 
 import * as React from 'react';
 import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useUserSettings, useUpdateUserSettings, useTasks, useGoals, usePlans, useConnectCalendar } from '@/hooks/use-graphql';
 import {
   User,
   Bell,
@@ -35,30 +37,64 @@ import {
 } from '@/lib/export';
 
 export default function SettingsPage() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [isSaving, setIsSaving] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
-  // Mock settings - will be replaced with GraphQL queries
+  // Fetch user settings from GraphQL
+  const { settings, loading: settingsLoading } = useUserSettings();
+  const { updateSettings } = useUpdateUserSettings();
+  const { connectCalendar } = useConnectCalendar();
+
+  // Fetch data for export
+  const { tasks } = useTasks();
+  const { goals } = useGoals();
+  const { plans } = usePlans();
+
+  // Local state for settings (synced with GraphQL)
   const [profileSettings, setProfileSettings] = React.useState({
     name: user?.fullName || '',
     email: user?.primaryEmailAddress?.emailAddress || '',
-    chronotype: 'lion', // lion, bear, wolf, dolphin
-    timezone: 'America/New_York',
+    chronotype: settings?.chronotype || 'lion',
+    timezone: settings?.timezone || 'America/New_York',
   });
 
   const [notificationSettings, setNotificationSettings] = React.useState({
-    emailNotifications: true,
-    pushNotifications: true,
-    weeklyPlanReminder: true,
-    dailyTaskReminder: true,
-    goalMilestones: true,
+    emailNotifications: settings?.notifications?.email ?? true,
+    pushNotifications: settings?.notifications?.push ?? true,
+    weeklyPlanReminder: settings?.notifications?.weeklyPlan ?? true,
+    dailyTaskReminder: settings?.notifications?.dailyTask ?? true,
+    goalMilestones: settings?.notifications?.goalMilestones ?? true,
   });
 
   const [appearanceSettings, setAppearanceSettings] = React.useState({
-    theme: 'system', // light, dark, system
-    compactMode: false,
+    theme: settings?.appearance?.theme || 'system',
+    compactMode: settings?.appearance?.compactMode ?? false,
   });
+
+  // Update local state when settings are loaded
+  React.useEffect(() => {
+    if (settings) {
+      setProfileSettings({
+        name: user?.fullName || '',
+        email: user?.primaryEmailAddress?.emailAddress || '',
+        chronotype: settings.chronotype || 'lion',
+        timezone: settings.timezone || 'America/New_York',
+      });
+      setNotificationSettings({
+        emailNotifications: settings.notifications?.email ?? true,
+        pushNotifications: settings.notifications?.push ?? true,
+        weeklyPlanReminder: settings.notifications?.weeklyPlan ?? true,
+        dailyTaskReminder: settings.notifications?.dailyTask ?? true,
+        goalMilestones: settings.notifications?.goalMilestones ?? true,
+      });
+      setAppearanceSettings({
+        theme: settings.appearance?.theme || 'system',
+        compactMode: settings.appearance?.compactMode ?? false,
+      });
+    }
+  }, [settings, user]);
 
   const userTier = (user?.publicMetadata?.tier as string) || 'FREE';
 
@@ -66,17 +102,16 @@ export default function SettingsPage() {
     setIsSaving(true);
 
     try {
-      console.log('Saving profile:', profileSettings);
-      // TODO: GraphQL mutation
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success('Profile updated successfully!', {
-        description: 'Your settings have been saved',
+      await updateSettings({
+        variables: {
+          input: {
+            chronotype: profileSettings.chronotype,
+            timezone: profileSettings.timezone,
+          },
+        },
       });
     } catch (error) {
       console.error('Failed to save profile:', error);
-      toast.error('Failed to save profile', {
-        description: 'Please try again or contact support if the problem persists',
-      });
     } finally {
       setIsSaving(false);
     }
@@ -86,12 +121,18 @@ export default function SettingsPage() {
     setNotificationSettings({ ...notificationSettings, [key]: value });
 
     try {
-      // TODO: GraphQL mutation to save notification settings
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      toast.success('Notification preferences updated');
+      await updateSettings({
+        variables: {
+          input: {
+            notifications: {
+              ...notificationSettings,
+              [key]: value,
+            },
+          },
+        },
+      });
     } catch (error) {
       console.error('Failed to update notification settings:', error);
-      toast.error('Failed to update notification preferences');
       // Revert on error
       setNotificationSettings({ ...notificationSettings, [key]: !value });
     }
@@ -101,90 +142,22 @@ export default function SettingsPage() {
     setAppearanceSettings({ ...appearanceSettings, [key]: value });
 
     try {
-      // TODO: GraphQL mutation to save appearance settings
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      toast.success('Appearance updated');
+      await updateSettings({
+        variables: {
+          input: {
+            appearance: {
+              ...appearanceSettings,
+              [key]: value,
+            },
+          },
+        },
+      });
     } catch (error) {
       console.error('Failed to update appearance:', error);
-      toast.error('Failed to update appearance');
       // Revert on error
       setAppearanceSettings({ ...appearanceSettings, [key]: value });
     }
   };
-
-  // Mock data for export - will be replaced with GraphQL queries
-  const mockTasks = [
-    {
-      id: '1',
-      title: 'Morning workout',
-      notes: 'Cardio + strength training',
-      scheduledDate: '2025-11-17',
-      startTime: '07:00',
-      endTime: '08:00',
-      durationMinutes: 60,
-      isCompleted: true,
-      priority: 1,
-      goal: { id: '2', title: 'Fitness', emoji: '💪' },
-      createdAt: '2025-11-10T10:00:00Z',
-      completedAt: '2025-11-17T08:00:00Z',
-    },
-    {
-      id: '2',
-      title: 'Review project proposal',
-      notes: 'Review the Q4 proposal and provide feedback',
-      scheduledDate: '2025-11-17',
-      startTime: '09:00',
-      endTime: '10:00',
-      durationMinutes: 60,
-      isCompleted: false,
-      priority: 1,
-      goal: { id: '1', title: 'Career Growth', emoji: '💼' },
-      createdAt: '2025-11-15T14:30:00Z',
-      completedAt: null,
-    },
-  ];
-
-  const mockGoals = [
-    {
-      id: '1',
-      title: 'Career Growth',
-      emoji: '💼',
-      color: '#3B82F6',
-      description: 'Advance my career through skill development and networking',
-      targetDate: '2025-12-31',
-      progress: 65,
-      createdAt: '2025-01-01T00:00:00Z',
-    },
-    {
-      id: '2',
-      title: 'Fitness',
-      emoji: '💪',
-      color: '#10B981',
-      description: 'Get fit and healthy through regular exercise',
-      targetDate: '2025-12-31',
-      progress: 45,
-      createdAt: '2025-01-01T00:00:00Z',
-    },
-  ];
-
-  const mockPlans = [
-    {
-      id: '1',
-      title: 'Q4 Project Launch',
-      description: 'Launch the new product feature by end of Q4',
-      status: 'IN_PROGRESS',
-      createdAt: '2025-10-01T00:00:00Z',
-      completedAt: null,
-    },
-    {
-      id: '2',
-      title: 'Fitness Challenge 2025',
-      description: '30-day fitness challenge',
-      status: 'COMPLETED',
-      createdAt: '2025-01-15T00:00:00Z',
-      completedAt: '2025-02-15T00:00:00Z',
-    },
-  ];
 
   const handleExportData = async (format: 'csv' | 'json', dataType: 'all' | 'tasks' | 'goals' | 'plans') => {
     try {
@@ -192,35 +165,31 @@ export default function SettingsPage() {
         description: 'Your download will begin shortly',
       });
 
-      // Simulate API call to fetch data
-      // TODO: Replace with actual GraphQL queries
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       if (format === 'csv') {
         if (dataType === 'tasks') {
-          exportTasksToCSV(mockTasks);
+          exportTasksToCSV(tasks);
         } else if (dataType === 'goals') {
-          exportGoalsToCSV(mockGoals);
+          exportGoalsToCSV(goals);
         } else if (dataType === 'plans') {
-          exportPlansToCSV(mockPlans);
+          exportPlansToCSV(plans);
         } else {
           // Export all as separate CSV files
-          exportTasksToCSV(mockTasks);
-          exportGoalsToCSV(mockGoals);
-          exportPlansToCSV(mockPlans);
+          exportTasksToCSV(tasks);
+          exportGoalsToCSV(goals);
+          exportPlansToCSV(plans);
         }
       } else {
         if (dataType === 'tasks') {
-          exportTasksToJSON(mockTasks);
+          exportTasksToJSON(tasks);
         } else if (dataType === 'goals') {
-          exportGoalsToJSON(mockGoals);
+          exportGoalsToJSON(goals);
         } else if (dataType === 'plans') {
-          exportPlansToJSON(mockPlans);
+          exportPlansToJSON(plans);
         } else {
           exportAllDataToJSON({
-            tasks: mockTasks,
-            goals: mockGoals,
-            plans: mockPlans,
+            tasks,
+            goals,
+            plans,
             user: {
               id: user?.id,
               email: user?.primaryEmailAddress?.emailAddress,
@@ -243,17 +212,13 @@ export default function SettingsPage() {
 
   const handleConnectCalendar = async (provider: string) => {
     try {
-      toast.info(`Connecting to ${provider}...`);
-      // TODO: OAuth flow for calendar integration
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success(`${provider} connected successfully!`, {
-        description: 'Your calendar is now synced with MicroPlanner',
+      await connectCalendar({
+        variables: {
+          provider,
+        },
       });
     } catch (error) {
       console.error(`Failed to connect ${provider}:`, error);
-      toast.error(`Failed to connect ${provider}`, {
-        description: 'Please try again or contact support if the problem persists',
-      });
     }
   };
 
@@ -262,12 +227,16 @@ export default function SettingsPage() {
       toast.info('Deleting your account...', {
         description: 'This may take a few moments',
       });
-      // TODO: Actually delete account via GraphQL mutation
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Delete account using Clerk
+      await user?.delete();
+
       toast.success('Account deleted successfully', {
         description: 'We\'re sorry to see you go. You can create a new account anytime.',
       });
-      // TODO: Sign out and redirect to landing page
+
+      // Redirect to landing page
+      router.push('/');
     } catch (error) {
       console.error('Failed to delete account:', error);
       toast.error('Failed to delete account', {

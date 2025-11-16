@@ -9,6 +9,7 @@ import { QuickAddTaskModal, type TaskFormData } from '@/components/tasks/quick-a
 import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog';
 import { ErrorBoundaryWrapper } from '@/components/error-boundary';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { useGoals, useCreateTask } from '@/hooks/use-graphql';
 import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 
@@ -23,20 +24,16 @@ export default function AppLayout({
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
 
+  // Fetch goals from GraphQL
+  const { goals } = useGoals();
+  const { createTask } = useCreateTask();
+
   // Listen for quick add task event from keyboard shortcuts
   useEffect(() => {
     const handleQuickAdd = () => setQuickAddOpen(true);
     window.addEventListener('open-quick-add-task', handleQuickAdd);
     return () => window.removeEventListener('open-quick-add-task', handleQuickAdd);
   }, []);
-
-  // Mock goals - will be replaced with GraphQL query
-  const mockGoals = [
-    { id: '1', emoji: '💼', title: 'Career Growth', color: '#3B82F6' },
-    { id: '2', emoji: '💪', title: 'Fitness', color: '#10B981' },
-    { id: '3', emoji: '📚', title: 'Learning', color: '#EC4899' },
-    { id: '4', emoji: '🎨', title: 'Creative Projects', color: '#8B5CF6' },
-  ];
 
   // Redirect to onboarding if not completed
   if (isLoaded && user && !user.publicMetadata?.onboardingCompleted) {
@@ -46,9 +43,12 @@ export default function AppLayout({
   const userTier = (user?.publicMetadata?.tier as 'FREE' | 'STARTER' | 'PRO' | 'PREMIUM') || 'FREE';
 
   const handleQuickAddSubmit = async (data: TaskFormData) => {
-    console.log('Creating task:', data);
-    // TODO: GraphQL mutation to create task
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      await createTask({ variables: { input: data } });
+      setQuickAddOpen(false);
+    } catch (error) {
+      console.error('Failed to create task:', error);
+    }
   };
 
   return (
@@ -65,7 +65,7 @@ export default function AppLayout({
         <QuickAddTaskModal
           open={quickAddOpen}
           onOpenChange={setQuickAddOpen}
-          goals={mockGoals}
+          goals={goals}
           onSubmit={handleQuickAddSubmit}
         />
 
