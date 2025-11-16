@@ -231,6 +231,59 @@ export function SleepIntelligenceStep({
               </div>
             </div>
 
+            {/* Sleep Cycle Alternatives */}
+            <div className="rounded-xl p-5 bg-card border border-border">
+              <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                <Brain className="w-4 h-4 text-indigo-500" />
+                Alternative Sleep Schedules
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {[4, 5, 6].map((cycles) => {
+                  const hours = cycles * 1.5;
+                  const bedtime = new Date(`2000-01-01T${localWakeTime}:00`);
+                  bedtime.setHours(bedtime.getHours() - hours);
+                  const bedtimeStr = bedtime.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                  });
+                  const isRecommended = cycles === Math.round(recommendation.cycles);
+
+                  return (
+                    <motion.div
+                      key={cycles}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: cycles * 0.05 }}
+                      className={`p-3 rounded-lg border-2 transition-colors ${
+                        isRecommended
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border bg-background'
+                      }`}
+                    >
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            {cycles} cycles
+                          </span>
+                          {isRecommended && (
+                            <CheckCircle2 className="w-3 h-3 text-primary" />
+                          )}
+                        </div>
+                        <span className="text-lg font-bold">{hours}h</span>
+                        <span className="text-xs text-muted-foreground">
+                          Sleep at {bedtimeStr}
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3 text-center">
+                Each sleep cycle is ~90 minutes. We recommend {Math.round(recommendation.cycles)} cycles for optimal rest.
+              </p>
+            </div>
+
             {/* Explanation */}
             <div className="rounded-xl p-5 bg-accent/50 border border-border">
               <div className="flex items-start gap-3">
