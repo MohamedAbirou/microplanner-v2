@@ -2,7 +2,8 @@ import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestEx
 import { PrismaService } from '../../database/prisma.service';
 import { GoalsService } from '../goals/goals.service';
 import { PatternRecognitionService } from '../analytics/pattern-recognition.service';
-import type { Task } from '@microplanner/database';
+import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
+import type { Task, SubscriptionTierType } from '@microplanner/database';
 import { SyncStatus } from '@microplanner/database';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -18,12 +19,16 @@ export class TasksService {
     private prisma: PrismaService,
     private goalsService: GoalsService,
     private patternRecognitionService: PatternRecognitionService,
+    private usageLimitService: UsageLimitService,
   ) {}
 
   /**
    * Create a manual task (user-created, not AI-generated)
    */
-  async create(userId: string, createTaskDto: CreateTaskDto): Promise<Task> {
+  async create(userId: string, createTaskDto: CreateTaskDto, userTier: SubscriptionTierType): Promise<Task> {
+    // Check daily task limit using centralized UsageLimitService
+    await this.usageLimitService.checkTaskLimit(userId, userTier);
+
     this.logger.log(`Creating manual task for user ${userId}`);
 
     // Validate goal ownership if goalId is provided
@@ -59,6 +64,9 @@ export class TasksService {
         syncStatus: SyncStatus.PENDING,
       },
     });
+
+    // Increment task counter after successful creation
+    await this.usageLimitService.incrementTaskCount(userId);
 
     this.logger.log(`Manual task created: ${task.id}`);
     return task as any;
