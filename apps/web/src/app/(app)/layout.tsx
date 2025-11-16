@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { useQuery } from '@apollo/client';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { AppHeader } from '@/components/layout/app-header';
 import { CommandPalette } from '@/components/command-palette';
@@ -11,8 +12,8 @@ import { ErrorBoundaryWrapper } from '@/components/error-boundary';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useGoals, useCreateTask } from '@/hooks/use-graphql';
 import { TierProvider } from '@/contexts/tier-context';
-import { redirect } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { ONBOARDING_STATUS } from '@/graphql/operations';
 
 export default function AppLayout({
   children,
@@ -21,6 +22,7 @@ export default function AppLayout({
 }) {
   const { isLoaded, user } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -29,6 +31,11 @@ export default function AppLayout({
   const { goals } = useGoals();
   const { createTask } = useCreateTask();
 
+  // Check onboarding status from database via GraphQL
+  const { data: onboardingData, loading: onboardingLoading } = useQuery(ONBOARDING_STATUS, {
+    skip: !isLoaded || !user,
+  });
+
   // Listen for quick add task event from keyboard shortcuts
   useEffect(() => {
     const handleQuickAdd = () => setQuickAddOpen(true);
@@ -36,10 +43,17 @@ export default function AppLayout({
     return () => window.removeEventListener('open-quick-add-task', handleQuickAdd);
   }, []);
 
-  // Redirect to onboarding if not completed
-  if (isLoaded && user && !user.publicMetadata?.onboardingCompleted) {
-    redirect('/app/onboarding');
-  }
+  // Redirect to onboarding if not completed (using database data, not Clerk metadata)
+  useEffect(() => {
+    if (isLoaded && user && !onboardingLoading) {
+      const isOnboardingComplete = onboardingData?.onboardingStatus?.completed;
+      const isOnboardingPage = pathname?.startsWith('/app/onboarding');
+
+      if (!isOnboardingComplete && !isOnboardingPage) {
+        router.push('/app/onboarding');
+      }
+    }
+  }, [isLoaded, user, onboardingLoading, onboardingData, pathname, router]);
 
   const userTier = (user?.publicMetadata?.tier as 'FREE' | 'STARTER' | 'PRO' | 'PREMIUM') || 'FREE';
 

@@ -4,13 +4,45 @@ import { gql } from '@apollo/client';
  * GraphQL Operations for MicroPlanner
  *
  * Organized by domain:
+ * - User & Onboarding
  * - Tasks
  * - Goals
  * - Plans
  * - Dependencies
- * - User
  * - Calendar Integrations
  */
+
+// ============================================================================
+// USER & ONBOARDING OPERATIONS
+// ============================================================================
+
+export const ONBOARDING_STATUS = gql`
+  query OnboardingStatus {
+    onboardingStatus {
+      completed
+      completedAt
+      currentStep
+    }
+  }
+`;
+
+export const GET_ME = gql`
+  query GetMe {
+    me {
+      id
+      clerkId
+      email
+      name
+      avatar
+      timezone
+      tier
+      onboardingCompleted
+      onboardingStep
+      createdAt
+      updatedAt
+    }
+  }
+`;
 
 // ============================================================================
 // TASK OPERATIONS
