@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Calendar, Clock, Target, Flag } from 'lucide-react';
+import { Calendar, Clock, Target, Flag, Repeat } from 'lucide-react';
+import { RecurrenceRule, RECURRENCE_PRESETS, getRecurrenceDescription } from '@/lib/recurrence';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,8 @@ export interface TaskFormData {
   startTime: string;
   durationMinutes: number;
   priority: number;
+  isRecurring?: boolean;
+  recurrenceRule?: RecurrenceRule;
 }
 
 const DURATION_OPTIONS = [
@@ -80,7 +83,10 @@ export function QuickAddTaskModal({
     startTime: defaultTime || '09:00',
     durationMinutes: 60,
     priority: 2,
+    isRecurring: false,
+    recurrenceRule: undefined,
   });
+  const [selectedRecurrencePreset, setSelectedRecurrencePreset] = React.useState<string>('none');
 
   // Reset form when opened
   React.useEffect(() => {
@@ -93,7 +99,10 @@ export function QuickAddTaskModal({
         startTime: defaultTime || '09:00',
         durationMinutes: 60,
         priority: 2,
+        isRecurring: false,
+        recurrenceRule: undefined,
       });
+      setSelectedRecurrencePreset('none');
       setErrors({});
     }
   }, [open, defaultDate, defaultTime, goals]);
@@ -172,6 +181,34 @@ export function QuickAddTaskModal({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleRecurrencePresetChange = (value: string) => {
+    setSelectedRecurrencePreset(value);
+
+    if (value === 'none') {
+      setFormData({
+        ...formData,
+        isRecurring: false,
+        recurrenceRule: undefined,
+      });
+    } else if (value === 'custom') {
+      setFormData({
+        ...formData,
+        isRecurring: true,
+        recurrenceRule: { frequency: 'DAILY', interval: 1 },
+      });
+    } else {
+      // Use preset
+      const preset = Object.values(RECURRENCE_PRESETS).find(p => p.label === value);
+      if (preset) {
+        setFormData({
+          ...formData,
+          isRecurring: true,
+          recurrenceRule: { ...preset.rule },
+        });
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -183,8 +220,13 @@ export function QuickAddTaskModal({
     setIsSubmitting(true);
     try {
       await onSubmit?.(formData);
+
+      const recurringText = formData.isRecurring && formData.recurrenceRule
+        ? ` (${getRecurrenceDescription(formData.recurrenceRule)})`
+        : '';
+
       toast.success('Task created successfully!', {
-        description: `"${formData.title}" has been added to your calendar`,
+        description: `"${formData.title}" has been added to your calendar${recurringText}`,
       });
       onOpenChange(false);
     } catch (error) {
@@ -357,6 +399,33 @@ export function QuickAddTaskModal({
                   </Button>
                 ))}
               </div>
+            </div>
+
+            {/* Recurrence */}
+            <div className="space-y-2">
+              <Label htmlFor="recurrence">
+                <Repeat className="inline h-3.5 w-3.5 mr-1" />
+                Repeat
+              </Label>
+              <Select value={selectedRecurrencePreset} onValueChange={handleRecurrencePresetChange}>
+                <SelectTrigger id="recurrence">
+                  <SelectValue placeholder="Does not repeat" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Does not repeat</SelectItem>
+                  {Object.entries(RECURRENCE_PRESETS).map(([key, preset]) => (
+                    <SelectItem key={key} value={preset.label}>
+                      {preset.label}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="custom">Custom...</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.isRecurring && formData.recurrenceRule && (
+                <p className="text-xs text-muted-foreground">
+                  {getRecurrenceDescription(formData.recurrenceRule)}
+                </p>
+              )}
             </div>
 
             {/* Notes */}
