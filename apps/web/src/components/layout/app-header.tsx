@@ -1,7 +1,7 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
-import { Bell, Plus, Command, Menu, LogOut, Settings as SettingsIcon, HelpCircle, Sparkles } from 'lucide-react';
+import { Plus, Command, Menu, LogOut, Settings as SettingsIcon, HelpCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { getInitials } from '@/lib/utils';
+import { NotificationsCenter } from '@/components/notifications-center';
 
 interface AppHeaderProps {
   onMenuClick: () => void;
@@ -57,21 +58,7 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
           </Button>
 
           {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                No new notifications
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NotificationsCenter />
 
           {/* User Profile */}
           <DropdownMenu>
