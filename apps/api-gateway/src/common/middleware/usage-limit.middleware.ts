@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { SubscriptionTier } from '@microplanner/database';
+import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
 
 /**
  * Tier limits configuration matching frontend tier-context.tsx
@@ -43,7 +43,7 @@ export class UsageLimitService {
    * Check if user can create a new goal
    * @throws ForbiddenException if limit exceeded
    */
-  async checkGoalLimit(userId: string, userTier: SubscriptionTier): Promise<void> {
+  async checkGoalLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
     const limit = TIER_LIMITS[userTier].maxActiveGoals;
 
     // Unlimited
@@ -70,7 +70,7 @@ export class UsageLimitService {
    * Check if user can create a new plan this week
    * @throws ForbiddenException if limit exceeded
    */
-  async checkPlanLimit(userId: string, userTier: SubscriptionTier): Promise<void> {
+  async checkPlanLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
     const limit = TIER_LIMITS[userTier].maxPlansPerWeek;
 
     // Unlimited
@@ -115,7 +115,7 @@ export class UsageLimitService {
    * Check if user can create a new task today
    * @throws ForbiddenException if limit exceeded
    */
-  async checkTaskLimit(userId: string, userTier: SubscriptionTier): Promise<void> {
+  async checkTaskLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
     const limit = TIER_LIMITS[userTier].maxTasksPerDay;
 
     // Unlimited
@@ -202,7 +202,7 @@ export class UsageLimitService {
   /**
    * Get current usage stats for a user
    */
-  async getUsageStats(userId: string, userTier: SubscriptionTier) {
+  async getUsageStats(userId: string, userTier: SubscriptionTierType) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
