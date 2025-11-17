@@ -3,7 +3,7 @@
  * Supports various recurrence patterns
  */
 
-import { addDays, addWeeks, addMonths, addYears, format, startOfDay, isBefore, isAfter } from 'date-fns';
+import { addDays, addWeeks, addMonths, addYears, format, startOfDay, isAfter } from 'date-fns';
 
 export type RecurrenceFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'CUSTOM';
 
@@ -36,8 +36,6 @@ export function generateRecurringInstances(
   let sequenceNumber = 1;
 
   // Determine end condition
-  const hasEndDate = rule.endDate !== undefined;
-  const hasOccurrences = rule.occurrences !== undefined;
   const maxDate = rule.endDate ? startOfDay(rule.endDate) : addYears(startDate, 2);
   const maxOccurrencesCount = rule.occurrences || maxInstances;
 
@@ -145,7 +143,7 @@ function getNextMonthDayOccurrence(
   }
 
   // Move to next month cycle
-  let nextMonth = addMonths(currentDate, interval);
+  const nextMonth = addMonths(currentDate, interval);
   nextMonth.setDate(1); // Start of month
 
   // Set to target day (will adjust if day doesn't exist in month)
