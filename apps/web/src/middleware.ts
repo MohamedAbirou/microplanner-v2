@@ -49,7 +49,7 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
   const { pathname } = req.nextUrl;
 
   // Public routes - allow access

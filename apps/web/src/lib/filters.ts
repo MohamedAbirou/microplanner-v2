@@ -141,8 +141,8 @@ export function filterTasks(tasks: Task[], filters: TaskFilters): Task[] {
  */
 export function sortTasks(tasks: Task[], sort: TaskSort): Task[] {
   return [...tasks].sort((a, b) => {
-    let aValue: any;
-    let bValue: any;
+    let aValue: string | number;
+    let bValue: string | number;
 
     switch (sort.field) {
       case 'scheduledDate':

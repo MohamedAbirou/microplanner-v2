@@ -104,9 +104,9 @@ export default function AppLayout({
 
           {/* Main Content */}
           <main
-            className="pt-14 transition-all duration-300"
+            className="pt-16 transition-all duration-300"
             style={{
-              marginLeft: sidebarCollapsed ? '60px' : '240px',
+              marginLeft: sidebarCollapsed ? '70px' : '260px',
             }}
           >
             {children}
