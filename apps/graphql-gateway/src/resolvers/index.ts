@@ -1,34 +1,53 @@
-// Phase 0 & 1 resolvers only
+// All active resolvers
 import { userResolvers } from './user.resolver';
 import { waitlistResolvers } from './waitlist.resolver';
 import { onboardingResolvers } from './onboarding.resolver';
-
-// Commented out until features are implemented in frontend
-// import { goalResolvers } from './goal.resolver';
-// import { taskResolvers } from './task.resolver';
-// import { projectResolvers } from './project.resolver';
-// import { productivityResolvers } from './productivity.resolver';
-// import { dashboardResolvers } from './dashboard.resolver';
+import { goalResolvers } from './goal.resolver';
+import { taskResolvers } from './task.resolver';
+import { projectResolvers } from './project.resolver';
+import { productivityResolvers } from './productivity.resolver';
+import { dashboardResolvers } from './dashboard.resolver';
+import { planResolvers } from './plan.resolver';
 
 /**
- * Merge all resolvers (only active features)
+ * Merge all resolvers
  */
 export const resolvers = {
   Query: {
     ...userResolvers.Query,
     ...waitlistResolvers.Query,
     ...onboardingResolvers.Query,
+    ...goalResolvers.Query,
+    ...taskResolvers.Query,
+    ...projectResolvers.Query,
+    ...productivityResolvers.Query,
+    ...dashboardResolvers.Query,
+    ...planResolvers.Query,
   },
 
   Mutation: {
     ...userResolvers.Mutation,
     ...waitlistResolvers.Mutation,
     ...onboardingResolvers.Mutation,
+    ...goalResolvers.Mutation,
+    ...taskResolvers.Mutation,
+    ...projectResolvers.Mutation,
+    ...productivityResolvers.Mutation,
+    ...dashboardResolvers.Mutation,
+    ...planResolvers.Mutation,
   },
 
   Subscription: {
-    // No subscriptions yet in Phase 0 & 1
+    ...taskResolvers.Subscription,
+    ...goalResolvers.Subscription,
+    ...projectResolvers.Subscription,
+    ...productivityResolvers.Subscription,
+    ...planResolvers.Subscription,
   },
 
-  // Type resolvers - none needed yet
+  // Type resolvers
+  Goal: goalResolvers.Goal,
+  Task: taskResolvers.Task,
+  Plan: planResolvers.Plan,
+  PlanTemplate: planResolvers.PlanTemplate,
 };

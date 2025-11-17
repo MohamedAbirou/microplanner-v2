@@ -9,17 +9,25 @@ import Redis from 'ioredis';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { typeDefs } from './schema/schema';
 import { resolvers as allResolvers } from './resolvers';
-// Phase 0 & 1 datasources only
-import { WaitlistAPI, UserAPI, OnboardingAPI } from './datasources/rest-api';
+// Import all datasources
+import {
+  WaitlistAPI,
+  UserAPI,
+  OnboardingAPI,
+  GoalsAPI,
+  TasksAPI,
+  ProductivityAPI,
+  ProjectsAPI
+} from './datasources/rest-api';
 
-// Commented out until features are implemented
-// import { GoalsAPI, TasksAPI, ProductivityAPI, ProjectsAPI } from './datasources/rest-api';
-// import {
-//   createTaskLoader,
-//   createGoalLoader,
-//   createProjectLoader,
-//   createTaskByGoalLoader,
-// } from './datasources/dataloaders';
+// Import dataloaders for batching
+import {
+  createTaskLoader,
+  createGoalLoader,
+  createProjectLoader,
+  createTaskByGoalLoader,
+  createTaskByPlanLoader,
+} from './datasources/dataloaders';
 import * as jwt from 'jsonwebtoken';
 import 'dotenv/config';
 
@@ -70,12 +78,12 @@ const resolvers = {
     ...allResolvers.Subscription,
   },
 
-  // Type resolvers - commented out until features are implemented
-  // Goal: allResolvers.Goal,
-  // Task: allResolvers.Task,
-  // TaskDependency: allResolvers.TaskDependency,
-  // Project: allResolvers.Project,
-  // KanbanBoard: allResolvers.KanbanBoard,
+  // Type resolvers for field resolution
+  Goal: allResolvers.Goal,
+  Task: allResolvers.Task,
+  Plan: allResolvers.Plan,
+  PlanTemplate: allResolvers.PlanTemplate,
+  Project: allResolvers.Project,
 
   // Custom scalars
   DateTime: {
@@ -165,10 +173,21 @@ async function startServer() {
         const user = verifyToken(token);
         const userId = user?.userId || user?.sub || '';
 
-        // Create data sources (Phase 0 & 1 only)
+        // Create all data sources
         const waitlistAPI = new WaitlistAPI(token);
         const userAPI = new UserAPI(token);
         const onboardingAPI = new OnboardingAPI(token);
+        const goalsAPI = new GoalsAPI(token);
+        const tasksAPI = new TasksAPI(token);
+        const productivityAPI = new ProductivityAPI(token);
+        const projectsAPI = new ProjectsAPI(token);
+
+        // Create DataLoaders for batching (reduces N+1 queries)
+        const taskLoader = createTaskLoader(tasksAPI, userId);
+        const goalLoader = createGoalLoader(goalsAPI, userId);
+        const projectLoader = createProjectLoader(projectsAPI, userId);
+        const taskByGoalLoader = createTaskByGoalLoader(tasksAPI);
+        const taskByPlanLoader = createTaskByPlanLoader(tasksAPI);
 
         return {
           user,
@@ -179,7 +198,17 @@ async function startServer() {
             waitlistAPI,
             userAPI,
             onboardingAPI,
+            goalsAPI,
+            tasksAPI,
+            productivityAPI,
+            projectsAPI,
           },
+          // DataLoaders for field resolvers
+          taskLoader,
+          goalLoader,
+          projectLoader,
+          taskByGoalLoader,
+          taskByPlanLoader,
         };
       },
     })

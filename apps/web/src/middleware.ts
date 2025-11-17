@@ -49,7 +49,7 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
+  const { userId, sessionClaims } = await auth();
   const { pathname } = req.nextUrl;
 
   // Public routes - allow access
@@ -65,19 +65,13 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
-  // Protected routes - require auth and completed onboarding
+  // Protected routes - require auth only
+  // Note: Onboarding check happens in app/(app)/layout.tsx using database data
+  // The middleware can't efficiently query database (edge runtime), so we defer the check
   if (isProtectedRoute(req) || pathname.startsWith('/app')) {
     if (!userId) {
       return NextResponse.redirect(new URL('/sign-in', req.url));
     }
-
-    // TODO: Check if onboarding is completed
-    // For now, redirect to onboarding if user just signed up
-    // This will be enhanced with actual DB check
-    // const user = await fetchUserFromDB(userId);
-    // if (!user.onboardingCompleted) {
-    //   return NextResponse.redirect(new URL('/onboarding', req.url));
-    // }
 
     return NextResponse.next();
   }

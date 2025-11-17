@@ -51,6 +51,14 @@ model User {
   context           String?            // User context: employed_fulltime, student, freelancer, etc.
   focusAreas        String[]           @default([]) // Focus areas: career, learning, health, etc.
 
+  // Usage tracking for tier limits enforcement
+  activeGoalsCount     Int @default(0)     // Current active goals
+  plansCreatedThisWeek Int @default(0)     // Plans created this week
+  tasksCreatedToday    Int @default(0)     // Tasks created today
+  lastPlanCreatedAt    DateTime?           // Last plan generation timestamp
+  weeklyPlanResetAt    DateTime @default(now()) // When to reset weekly plan count
+  dailyTaskResetAt     DateTime @default(now()) // When to reset daily task count
+
   // Relations
   goals             Goal[]
   plans             WeeklyPlan[]

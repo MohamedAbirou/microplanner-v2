@@ -10,6 +10,7 @@ import { ClaudeSonnetPlannerService } from './strategies/claude-sonnet-planner.s
 import { EmailModule } from '../email/email.module';
 import { CalendarModule } from '../calendar/calendar.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
+import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
 
 @Module({
   imports: [HttpModule, EmailModule, CalendarModule, AnalyticsModule],
@@ -21,6 +22,7 @@ import { AnalyticsModule } from '../analytics/analytics.module';
     RuleBasedPlannerService,
     GPT4oMiniPlannerService,
     ClaudeSonnetPlannerService,
+    UsageLimitService,
   ],
   exports: [PlansService, PlanAutomationService, PlanTemplatesService],
 })

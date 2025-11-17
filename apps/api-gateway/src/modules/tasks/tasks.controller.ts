@@ -19,8 +19,9 @@ export class TasksController {
   @ApiOperation({ summary: 'Create a manual task' })
   @ApiResponse({ status: 201, description: 'Task created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input or time validation failed' })
+  @ApiResponse({ status: 403, description: 'Daily task limit exceeded' })
   async create(@CurrentUser() user: User, @Body() createTaskDto: CreateTaskDto) {
-    const task = await this.tasksService.create(user.id, createTaskDto);
+    const task = await this.tasksService.create(user.id, createTaskDto, user.tier);
 
     return {
       message: 'Task created successfully',

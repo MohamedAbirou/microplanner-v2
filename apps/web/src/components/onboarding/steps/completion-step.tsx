@@ -67,7 +67,7 @@ export function CompletionStep({ data, onComplete }: CompletionStepProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          You're all set! 🎉
+          Amazing! You're ready to plan smarter 🎉
         </motion.h2>
 
         <motion.p
@@ -76,7 +76,7 @@ export function CompletionStep({ data, onComplete }: CompletionStepProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          Here's your personalized productivity profile
+          Here's your personalized productivity profile — let's start crushing those goals!
         </motion.p>
       </div>
 

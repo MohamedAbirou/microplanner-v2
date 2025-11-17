@@ -7,19 +7,12 @@ import { firstValueFrom } from 'rxjs';
 import { PrismaService } from '../../database/prisma.service';
 import { CalendarService } from '../calendar/calendar.service';
 import { EmailService } from '../email/email.service';
+import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
 import { GeneratePlanDto } from './dto/generate-plan.dto';
 import { QueryPlansDto } from './dto/query-plans.dto';
 import { ClaudeSonnetPlannerService } from './strategies/claude-sonnet-planner.service';
 import { GPT4oMiniPlannerService } from './strategies/gpt-4o-mini-planner.service';
 import { RuleBasedPlannerService } from './strategies/rule-based-planner.service';
-
-// Tier limits for plan generation per week
-const TIER_PLAN_LIMITS = {
-  [SubscriptionTier.FREE]: 5,
-  [SubscriptionTier.STARTER]: 20,
-  [SubscriptionTier.PRO]: Infinity,
-  [SubscriptionTier.PREMIUM]: Infinity,
-};
 
 // Cost per 1000 tokens (in USD cents)
 const TOKEN_COSTS = {
@@ -43,6 +36,7 @@ export class PlansService {
     private claudeSonnetPlanner: ClaudeSonnetPlannerService,
     private emailService: EmailService,
     private calendarService: CalendarService,
+    private usageLimitService: UsageLimitService,
   ) {
     this.planningServiceUrl =
       this.configService.get('PLANNING_SERVICE_URL') || 'http://localhost:8000';
@@ -55,8 +49,8 @@ export class PlansService {
   async generate(userId: string, generatePlanDto: GeneratePlanDto, user: User): Promise<WeeklyPlan> {
     const startTime = Date.now();
 
-    // 1. Check tier limits
-    await this.checkWeeklyLimit(userId, user.tier);
+    // 1. Check tier limits using centralized UsageLimitService
+    await this.usageLimitService.checkPlanLimit(userId, user.tier);
 
     // 2. Calculate week boundaries
     const { weekStartDate, weekEndDate } = this.calculateWeekBoundaries(
@@ -176,6 +170,9 @@ export class PlansService {
         status: PlanStatus.DRAFT,
       },
     });
+
+    // Increment plan counter after successful creation
+    await this.usageLimitService.incrementPlanCount(userId);
 
     this.logger.log(
       `Plan generated successfully: ${plan.id} (${generationTime.toFixed(2)}s, $${(generationCost / 100).toFixed(4)})`
@@ -400,27 +397,6 @@ export class PlansService {
         archivedAt: new Date(),
       },
     });
-  }
-
-  /**
-   * Check if user has reached weekly plan generation limit
-   */
-  private async checkWeeklyLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
-    const limit = TIER_PLAN_LIMITS[userTier];
-    const { weekStartDate } = this.calculateWeekBoundaries();
-
-    const plansThisWeek = await this.prisma.weeklyPlan.count({
-      where: {
-        userId,
-        createdAt: { gte: weekStartDate },
-      },
-    });
-
-    if (plansThisWeek >= limit) {
-      throw new ForbiddenException(
-        `Your ${userTier} plan allows maximum ${limit} plan generations per week. Upgrade for more.`
-      );
-    }
   }
 
   /**

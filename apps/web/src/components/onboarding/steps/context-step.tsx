@@ -80,10 +80,10 @@ const contexts = [
 export function ContextStep({ value, onChange, onNext }: ContextStepProps) {
   const handleSelect = (context: UserContext) => {
     onChange(context);
-    // Auto-advance after selection with a slight delay
+    // Auto-advance after selection with a slight delay (allows user to see selection animation)
     setTimeout(() => {
       onNext();
-    }, 400);
+    }, 600); // Slightly longer to show encouraging message
   };
 
   return (
@@ -190,6 +190,19 @@ export function ContextStep({ value, onChange, onNext }: ContextStepProps) {
           );
         })}
       </div>
+
+      {/* Encouraging message on selection */}
+      {value && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <p className="text-sm font-medium text-primary">
+            Great choice! Let's personalize your experience...
+          </p>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

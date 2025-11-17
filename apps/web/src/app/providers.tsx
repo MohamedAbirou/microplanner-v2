@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from 'sonner';
 import { createApolloClient, setTokenGetter } from '@/lib/apollo/client';
+import { NotificationsProvider } from '@/contexts/notifications-context';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,9 +48,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       <ClerkApolloProvider>
         <QueryClientProvider client={queryClient}>
-          {children}
-          <Toaster position="top-right" expand={false} richColors closeButton theme="dark" />
-          <Analytics />
+          <NotificationsProvider>
+            {children}
+            <Toaster position="top-right" expand={false} richColors closeButton theme="dark" />
+            <Analytics />
+          </NotificationsProvider>
         </QueryClientProvider>
       </ClerkApolloProvider>
     </ThemeProvider>
