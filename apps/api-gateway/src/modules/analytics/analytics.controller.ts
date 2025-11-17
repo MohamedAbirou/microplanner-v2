@@ -1,12 +1,12 @@
-import { Controller, Post, Get, Body, Query, Logger } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { AnalyticsService } from './analytics.service';
-import { PatternRecognitionService } from './pattern-recognition.service';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequireSubscription } from '../auth/decorators/require-subscription.decorator';
 import type { User } from '@microplanner/database';
 import { SubscriptionTier } from '@microplanner/database';
+import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequireSubscription } from '../auth/decorators/require-subscription.decorator';
+import { AnalyticsService } from './analytics.service';
 import { TrackEventDto } from './dto/track-event.dto';
+import { PatternRecognitionService } from './pattern-recognition.service';
 
 @ApiTags('analytics')
 @ApiBearerAuth()
@@ -43,7 +43,7 @@ export class AnalyticsController {
 
     return {
       message: 'Metrics retrieved successfully',
-      metrics,
+      dashboardStats: metrics,
     };
   }
 

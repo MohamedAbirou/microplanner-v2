@@ -20,39 +20,40 @@ export const analyticsResolvers = {
       return dataSources.analyticsAPI.getProductivityScores(user.userId, startDate, endDate);
     },
 
-    goalAnalytics: async (_: any, { goalId }: any, { dataSources, user }: any) => {
+    goalAnalyticsReport: async (_: any, { goalId }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.analyticsAPI.getGoalAnalytics(goalId, user.userId);
+      return dataSources.analyticsAPI.getGoalAnalyticsReport(goalId, user.userId);
     },
 
-    timeTracking: async (_: any, { startDate, endDate }: any, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.analyticsAPI.getTimeTracking(user.userId, startDate, endDate);
-    },
+    // timeTracking: async (_: any, { startDate, endDate }: any, { dataSources, user }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    //   return dataSources.analyticsAPI.getTimeTracking(user.userId, startDate, endDate);
+    // },
 
     insights: async (_: any, { type, limit }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.analyticsAPI.getInsights(user.userId, type, limit);
     },
 
-    streakHistory: async (_: any, { limit }: any, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.analyticsAPI.getStreakHistory(user.userId, limit);
-    },
+    // commented out until implemented!    
+    // streakHistory: async (_: any, { limit }: any, { dataSources, user }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    //   return dataSources.analyticsAPI.getStreakHistory(user.userId, limit);
+    // },
   },
 
   Mutation: {
     /**
      * Generate AI insights for user's productivity patterns
      */
-    generateInsights: async (_: any, __: any, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.analyticsAPI.generateInsights(user.userId);
-    },
+    // generateInsights: async (_: any, __: any, { dataSources, user }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    //   return dataSources.analyticsAPI.generateInsights(user.userId);
+    // },
 
-    dismissInsight: async (_: any, { id }: any, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.analyticsAPI.dismissInsight(id, user.userId);
-    },
+    // dismissInsight: async (_: any, { id }: any, { dataSources, user }: any) => {
+    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+    //   return dataSources.analyticsAPI.dismissInsight(id, user.userId);
+    // },
   },
 };

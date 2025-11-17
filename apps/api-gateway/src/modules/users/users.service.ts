@@ -54,6 +54,15 @@ export class UsersService {
     });
   }
 
+  async syncUser(data: CreateUserFromClerkDto): Promise<User> {
+    const existingUser = await this.findByClerkId(data.clerkId);
+    if (existingUser) {
+      return this.updateFromClerk(data.clerkId, data);
+    } else {
+      return this.createFromClerk(data);
+    }
+  }
+
   /**
    * Update last seen timestamp
    */

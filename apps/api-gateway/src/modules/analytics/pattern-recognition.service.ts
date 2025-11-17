@@ -1,10 +1,10 @@
+import { SubscriptionTier } from '@microplanner/database';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { SubscriptionTier } from '@microplanner/database';
 import {
-  UserPatternInsights,
-  TaskCompletionEvent,
   PatternAnalysisResult,
+  TaskCompletionEvent,
+  UserPatternInsights,
 } from './types/pattern-insights.types';
 
 /**
@@ -147,7 +147,7 @@ export class PatternRecognitionService {
     }
 
     // Trigger async pattern re-analysis if enough new data
-    // (In production, this would be a queued job)
+    //TODO (In production, this would be a queued job)
     const recentCompletions = await this.prisma.task.count({
       where: {
         userId: task.userId,
@@ -451,7 +451,7 @@ export class PatternRecognitionService {
    */
   private async calculateLongestStreak(userId: string): Promise<number> {
     // Simplified: return current streak for now
-    // Full implementation would scan all history
+    //TODO Full implementation would scan all history
     return this.calculateCurrentStreak(userId);
   }
 
@@ -469,7 +469,7 @@ export class PatternRecognitionService {
    * Detect if user prefers buffer time between tasks
    */
   private detectBufferPreference(events: TaskCompletionEvent[]): boolean {
-    // Analyze if user completes tasks better with gaps
+    //TODO Analyze if user completes tasks better with gaps
     // Simplified: assume true for now
     return true;
   }
@@ -478,7 +478,7 @@ export class PatternRecognitionService {
    * Detect if user prefers clustering similar tasks
    */
   private detectClusteringPreference(events: TaskCompletionEvent[]): boolean {
-    // Analyze if user completes similar tasks in batches
+    //TODO Analyze if user completes similar tasks in batches
     // Simplified: assume false for now
     return false;
   }

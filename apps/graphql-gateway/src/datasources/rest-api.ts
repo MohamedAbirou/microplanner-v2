@@ -792,7 +792,7 @@ export class AnalyticsAPI {
   }
 
   async getDashboardStats(userId: string) {
-    const { data } = await this.client.get('/dashboard', {
+    const { data } = await this.client.get('/metrics', {
       headers: { 'x-user-id': userId },
     });
     return data;
@@ -807,27 +807,28 @@ export class AnalyticsAPI {
   }
 
   async getProductivityScores(userId: string, startDate: string, endDate: string) {
-    const { data } = await this.client.get('/productivity-scores', {
+    const { data } = await this.client.get('/score/range', {
       headers: { 'x-user-id': userId },
       params: { startDate, endDate },
     });
     return data;
   }
 
-  async getGoalAnalytics(goalId: string, userId: string) {
-    const { data } = await this.client.get(`/goals/${goalId}`, {
+  async getGoalAnalyticsReport(goalId: string, userId: string) {
+    const { data } = await this.client.get(`/${goalId}/analytics`, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async getTimeTracking(userId: string, startDate: string, endDate: string) {
-    const { data } = await this.client.get('/time-tracking', {
-      headers: { 'x-user-id': userId },
-      params: { startDate, endDate },
-    });
-    return data;
-  }
+  // commented out until implemented in the backend in analytics module
+  // async getTimeTracking(userId: string, startDate: string, endDate: string) {
+  //   const { data } = await this.client.get('/time-tracking', {
+  //     headers: { 'x-user-id': userId },
+  //     params: { startDate, endDate },
+  //   });
+  //   return data;
+  // }
 
   async getInsights(userId: string, type?: string, limit?: number) {
     const { data } = await this.client.get('/insights', {
@@ -837,27 +838,27 @@ export class AnalyticsAPI {
     return data;
   }
 
-  async getStreakHistory(userId: string, limit?: number) {
-    const { data } = await this.client.get('/streaks', {
-      headers: { 'x-user-id': userId },
-      params: { limit },
-    });
-    return data;
-  }
+  // async getStreakHistory(userId: string, limit?: number) {
+  //   const { data } = await this.client.get('/streaks', {
+  //     headers: { 'x-user-id': userId },
+  //     params: { limit },
+  //   });
+  //   return data;
+  // }
 
-  async generateInsights(userId: string) {
-    const { data } = await this.client.post('/insights/generate', {}, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
-  }
+  // async generateInsights(userId: string) {
+  //   const { data } = await this.client.post('/insights/generate', {}, {
+  //     headers: { 'x-user-id': userId },
+  //   });
+  //   return data;
+  // }
 
-  async dismissInsight(id: string, userId: string) {
-    const { data } = await this.client.delete(`/insights/${id}`, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
-  }
+  // async dismissInsight(id: string, userId: string) {
+  //   const { data } = await this.client.delete(`/insights/${id}`, {
+  //     headers: { 'x-user-id': userId },
+  //   });
+  //   return data;
+  // }
 }
 
 // ==================== CALENDAR API ====================

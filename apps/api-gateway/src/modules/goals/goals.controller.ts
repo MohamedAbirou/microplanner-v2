@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { GoalsService } from './goals.service';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { User } from '@microplanner/database';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateGoalDto } from './dto/create-goal.dto';
-import { UpdateGoalDto } from './dto/update-goal.dto';
 import { QueryGoalsDto } from './dto/query-goals.dto';
+import { UpdateGoalDto } from './dto/update-goal.dto';
+import { GoalsService } from './goals.service';
 
 @ApiTags('goals')
 @ApiBearerAuth()
