@@ -47,10 +47,10 @@ export default function AppLayout({
   useEffect(() => {
     if (isLoaded && user && !onboardingLoading) {
       const isOnboardingComplete = onboardingData?.onboardingStatus?.completed;
-      const isOnboardingPage = pathname?.startsWith('/app/onboarding');
+      const isOnboardingPage = pathname?.startsWith('/onboarding');
 
       if (!isOnboardingComplete && !isOnboardingPage) {
-        router.push('/app/onboarding');
+        router.push('/onboarding');
       }
     }
   }, [isLoaded, user, onboardingLoading, onboardingData, pathname, router]);

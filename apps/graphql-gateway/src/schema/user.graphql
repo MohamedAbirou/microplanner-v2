@@ -1,5 +1,55 @@
 # User Settings and Profile Management
 
+type User {
+  id: ID!
+  clerkId: String!
+  email: String!
+  name: String
+  avatar: String
+  timezone: String!
+
+  # Subscription
+  tier: SubscriptionTier!
+  subscriptionStatus: SubscriptionStatus!
+
+  # Onboarding
+  onboardingCompleted: Boolean!
+  onboardingStep: Int!
+
+  # Metadata
+  language: String!
+  context: String
+  focusAreas: [String!]!
+
+  # Preferences
+  wakeTime: String!
+  sleepTime: String!
+  workStartTime: String!
+  workEndTime: String!
+  productivityPeaks: [String!]!
+  energyPattern: EnergyPattern
+
+  # Timestamps
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastSeenAt: DateTime!
+}
+
+enum SubscriptionTier {
+  FREE
+  STARTER
+  PRO
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
 type UserSettings {
   id: ID!
   userId: ID!
@@ -47,6 +97,9 @@ enum EnergyPattern {
 
 # Queries
 extend type Query {
+  # Get current user
+  me: User
+
   # Get user settings
   userSettings: UserSettings
 
@@ -62,6 +115,9 @@ type OnboardingStatus {
 
 # Mutations
 extend type Mutation {
+  # Sync/create user from Clerk
+  syncUser(input: SyncUserInput!): User!
+
   # Update user profile
   updateUserProfile(input: UpdateUserProfileInput!): User!
 
@@ -79,6 +135,15 @@ extend type Mutation {
 type OnboardingResult {
   success: Boolean!
   message: String
+}
+
+# Sync user input (from Clerk)
+input SyncUserInput {
+  clerkId: String!
+  email: String!
+  name: String
+  avatar: String
+  tier: String
 }
 
 # Update user profile input
