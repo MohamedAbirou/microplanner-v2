@@ -63,6 +63,7 @@ export const resolvers = {
     ...goalResolvers.Subscription,
     ...projectResolvers.Subscription,
     ...productivityResolvers.Subscription,
+    ...productivityFeaturesResolvers.Subscription,
     ...planResolvers.Subscription,
   },
 

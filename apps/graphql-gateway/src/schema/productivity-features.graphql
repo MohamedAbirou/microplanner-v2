@@ -254,23 +254,133 @@ input UpdateKanbanBoardInput {
   isDefault: Boolean
 }
 
-input CreateKanbanColumnInput {
-  boardId: ID!
-  name: String!
-  order: Int!
-  color: String
-}
-
-input UpdateKanbanColumnInput {
-  name: String
-  order: Int
-  color: String
-}
-
-input MoveTaskToColumnInput {
+input MoveTaskInKanbanInput {
   taskId: ID!
-  columnId: ID!
+  fromColumnId: ID
+  toColumnId: ID!
   position: Int
+}
+
+# ============================================
+# SMART 1:1 MEETINGS
+# ============================================
+
+type Smart1on1 {
+  id: ID!
+  userId: ID!
+  title: String!
+  participantEmail: String!
+  frequency: Smart1on1Frequency!
+  duration: Int!
+  preferredDays: [Int!]!
+  preferredTimes: [String!]!
+  agendaTemplate: String
+  isActive: Boolean!
+  lastMeetingDate: DateTime
+  nextMeetingDate: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum Smart1on1Frequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+input CreateSmart1on1Input {
+  title: String!
+  participantEmail: String!
+  frequency: Smart1on1Frequency!
+  duration: Int!
+  preferredDays: [Int!]!
+  preferredTimes: [String!]!
+  agendaTemplate: String
+}
+
+input UpdateSmart1on1Input {
+  title: String
+  participantEmail: String
+  frequency: Smart1on1Frequency
+  duration: Int
+  preferredDays: [Int!]
+  preferredTimes: [String!]
+  agendaTemplate: String
+  isActive: Boolean
+}
+
+# ============================================
+# TRAVEL TIME
+# ============================================
+
+type TravelTime {
+  fromLocation: String!
+  toLocation: String!
+  durationMinutes: Int!
+  distance: String!
+  mode: TravelMode!
+}
+
+enum TravelMode {
+  DRIVING
+  WALKING
+  TRANSIT
+  BICYCLING
+}
+
+input CalculateTravelTimeInput {
+  fromLocation: String!
+  toLocation: String!
+  mode: TravelMode
+  departureTime: DateTime
+}
+
+# ============================================
+# NOTIFICATIONS
+# ============================================
+
+type Notification {
+  id: ID!
+  userId: ID!
+  type: NotificationType!
+  title: String!
+  message: String!
+  metadata: JSON
+  isRead: Boolean!
+  readAt: DateTime
+  createdAt: DateTime!
+}
+
+type NotificationPreferences {
+  id: ID!
+  userId: ID!
+  enableTaskReminders: Boolean!
+  enableGoalMilestones: Boolean!
+  enableWeeklyPlan: Boolean!
+  enableDailyReminders: Boolean!
+  enableOverbookedAlerts: Boolean!
+  enableBreakReminders: Boolean!
+  enableFocusTimeAlerts: Boolean!
+  enableUpcomingMeetings: Boolean!
+  reminderMinutesBefore: Int!
+  quietHoursStart: String
+  quietHoursEnd: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input UpdateNotificationPreferencesInput {
+  enableTaskReminders: Boolean
+  enableGoalMilestones: Boolean
+  enableWeeklyPlan: Boolean
+  enableDailyReminders: Boolean
+  enableOverbookedAlerts: Boolean
+  enableBreakReminders: Boolean
+  enableFocusTimeAlerts: Boolean
+  enableUpcomingMeetings: Boolean
+  reminderMinutesBefore: Int
+  quietHoursStart: String
+  quietHoursEnd: String
 }
 
 # ============================================
@@ -297,6 +407,14 @@ extend type Query {
   # Kanban Boards
   kanbanBoards(projectId: ID): [KanbanBoard!]!
   kanbanBoard(id: ID!): KanbanBoard
+
+  # Smart 1:1 Meetings
+  smart1on1s: [Smart1on1!]!
+  smart1on1(id: ID!): Smart1on1
+
+  # Notifications
+  notifications(unreadOnly: Boolean): [Notification!]!
+  notificationPreferences: NotificationPreferences
 }
 
 # ============================================
@@ -329,10 +447,48 @@ extend type Mutation {
   createKanbanBoard(input: CreateKanbanBoardInput!): KanbanBoard!
   updateKanbanBoard(id: ID!, input: UpdateKanbanBoardInput!): KanbanBoard!
   deleteKanbanBoard(id: ID!): Boolean!
+  moveTaskInKanban(input: MoveTaskInKanbanInput!): Boolean!
 
-  createKanbanColumn(input: CreateKanbanColumnInput!): KanbanColumn!
-  updateKanbanColumn(id: ID!, input: UpdateKanbanColumnInput!): KanbanColumn!
-  deleteKanbanColumn(id: ID!): Boolean!
+  # Smart 1:1 Meetings
+  createSmart1on1(input: CreateSmart1on1Input!): Smart1on1!
+  updateSmart1on1(id: ID!, input: UpdateSmart1on1Input!): Smart1on1!
+  deleteSmart1on1(id: ID!): Boolean!
 
-  moveTaskToColumn(input: MoveTaskToColumnInput!): KanbanColumn!
+  # Travel Time
+  calculateTravelTime(input: CalculateTravelTimeInput!): TravelTime!
+
+  # Notifications
+  markNotificationAsRead(id: ID!): Boolean!
+  updateNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
+}
+
+# ============================================
+# SUBSCRIPTIONS
+# ============================================
+
+extend type Subscription {
+  # Work Hours
+  workHoursUpdated: WorkHours!
+
+  # Focus Time
+  focusTimeCreated: FocusTimeBlock!
+  focusTimeUpdated: FocusTimeBlock!
+  focusTimeDeleted: ID!
+
+  # No Meeting Days
+  noMeetingDayCreated: NoMeetingDay!
+  noMeetingDayDeleted: ID!
+
+  # Kanban
+  kanbanBoardUpdated: KanbanBoard!
+
+  # Smart 1:1
+  smart1on1Created: Smart1on1!
+  smart1on1Updated: Smart1on1!
+  smart1on1Deleted: ID!
+
+  # Notifications
+  notificationReceived: Notification!
+  notificationRead: ID!
+  notificationPreferencesUpdated: NotificationPreferences!
 }
