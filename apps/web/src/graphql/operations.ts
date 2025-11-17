@@ -212,6 +212,24 @@ export const GET_GOALS = gql`
       title
       description
       color
+      # Scheduling fields
+      frequencyPerWeek
+      durationMinutes
+      preferredTimes
+      flexibilityScore
+      priority
+      # Status fields
+      isActive
+      isPaused
+      pausedUntil
+      # Analytics fields
+      completionRate
+      totalCompletions
+      totalScheduled
+      currentStreak
+      longestStreak
+      lastCompletedAt
+      # Legacy fields (for backward compatibility)
       targetMetric
       currentProgress
       targetValue
@@ -231,15 +249,38 @@ export const GET_GOAL = gql`
       title
       description
       color
+      # Scheduling fields
+      frequencyPerWeek
+      durationMinutes
+      preferredTimes
+      flexibilityScore
+      priority
+      # Status fields
+      isActive
+      isPaused
+      pausedUntil
+      # Analytics fields
+      completionRate
+      totalCompletions
+      totalScheduled
+      currentStreak
+      longestStreak
+      lastCompletedAt
+      # Legacy fields (for backward compatibility)
       targetMetric
       currentProgress
       targetValue
       deadline
       isArchived
+      # Relations
       tasks {
         id
         title
         isCompleted
+        scheduledDate
+        startTime
+        endTime
+        durationMinutes
       }
       createdAt
       updatedAt
@@ -293,11 +334,35 @@ export const GET_PLANS = gql`
       description
       status
       qualityScore
+      qualityMetrics
+      aiModel
+      reasoning
+      weekStartDate
+      weekEndDate
+      generationTime
+      totalTasks
+      completedTasks
+      completionRate
+      goals {
+        id
+        emoji
+        title
+        color
+      }
       tasks {
         id
         title
         scheduledDate
+        startTime
+        endTime
+        durationMinutes
         isCompleted
+        goal {
+          id
+          emoji
+          title
+          color
+        }
       }
       createdAt
       updatedAt
@@ -329,13 +394,38 @@ export const GENERATE_PLAN = gql`
       description
       status
       qualityScore
+      qualityMetrics
+      aiModel
+      reasoning
+      weekStartDate
+      weekEndDate
+      generationTime
+      totalTasks
+      completedTasks
+      completionRate
+      goals {
+        id
+        emoji
+        title
+        color
+      }
       tasks {
         id
         title
         scheduledDate
+        startTime
+        endTime
         durationMinutes
+        isCompleted
+        goal {
+          id
+          emoji
+          title
+          color
+        }
       }
       createdAt
+      updatedAt
     }
   }
 `;
