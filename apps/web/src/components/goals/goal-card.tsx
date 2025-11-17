@@ -1,12 +1,12 @@
 'use client';
 
-import * as React from 'react';
-import { Flame, Clock, BarChart3, Pause, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { BarChart3, Clock, Flame, Pause, Play } from 'lucide-react';
 import Link from 'next/link';
+import * as React from 'react';
 
 interface GoalCardProps {
   goal: {
@@ -31,7 +31,7 @@ interface GoalCardProps {
 export const GoalCard = React.memo<GoalCardProps>(function GoalCard({ goal, compact = false, onPause, onResume }) {
   if (compact) {
     return (
-      <Link href={`/app/goals/${goal.id}`}>
+      <Link href={`/goals/${goal.id}`}>
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
@@ -83,7 +83,7 @@ export const GoalCard = React.memo<GoalCardProps>(function GoalCard({ goal, comp
               {goal.emoji}
             </div>
             <div>
-              <Link href={`/app/goals/${goal.id}`}>
+              <Link href={`/goals/${goal.id}`}>
                 <h3 className="font-semibold text-lg hover:underline">{goal.title}</h3>
               </Link>
               {goal.description && (
@@ -154,7 +154,7 @@ export const GoalCard = React.memo<GoalCardProps>(function GoalCard({ goal, comp
           <div className="text-sm text-muted-foreground">
             Longest streak: <span className="font-medium">{goal.longestStreak} days</span>
           </div>
-          <Link href={`/app/goals/${goal.id}`}>
+          <Link href={`/goals/${goal.id}`}>
             <Button variant="ghost" size="sm">
               <BarChart3 className="h-4 w-4 mr-2" />
               View Analytics

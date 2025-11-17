@@ -1,11 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { GoalForm } from '@/components/goals/goal-form';
-import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { useCreateGoal } from '@/hooks/use-graphql';
+import { ChevronLeft } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function NewGoalPage() {
   const router = useRouter();
@@ -14,7 +14,7 @@ export default function NewGoalPage() {
   const handleSubmit = async (data: any) => {
     try {
       await createGoal({ variables: { input: data } });
-      router.push('/app/goals');
+      router.push('/goals');
     } catch (error) {
       console.error('Failed to create goal:', error);
     }
@@ -23,7 +23,7 @@ export default function NewGoalPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Back Button */}
-      <Link href="/app/goals">
+      <Link href="/goals">
         <Button variant="ghost" size="sm">
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to Goals

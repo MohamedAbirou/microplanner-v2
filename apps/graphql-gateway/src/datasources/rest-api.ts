@@ -10,7 +10,7 @@ export class WaitlistAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/waitlist`,
+      baseURL: `${API_BASE_URL}/api/v1/waitlist`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -67,7 +67,7 @@ export class UserAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/users`,
+      baseURL: `${API_BASE_URL}/api/v1/users`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -167,7 +167,7 @@ export class GoalsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/goals`,
+      baseURL: `${API_BASE_URL}/api/v1/goals`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -250,7 +250,7 @@ export class TasksAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/tasks`,
+      baseURL: `${API_BASE_URL}/api/v1/tasks`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -443,7 +443,7 @@ export class ProductivityAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/productivity`,
+      baseURL: `${API_BASE_URL}/api/v1/productivity`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -673,7 +673,7 @@ export class ProjectsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/tasks/advanced/projects`,
+      baseURL: `${API_BASE_URL}/api/v1/tasks/advanced/projects`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -749,7 +749,7 @@ export class PlansAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/plans`,
+      baseURL: `${API_BASE_URL}/api/v1/plans`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -847,7 +847,7 @@ export class AnalyticsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/analytics`,
+      baseURL: `${API_BASE_URL}/api/v1/analytics`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -872,7 +872,7 @@ export class AnalyticsAPI {
   async getProductivityScores(userId: string, startDate: string, endDate: string) {
     // Note: /score/range is in ProductivityAPI, not Analytics API
     const productivityClient = axios.create({
-      baseURL: `${API_BASE_URL}/productivity`,
+      baseURL: `${API_BASE_URL}/api/v1/productivity`,
       headers: this.client.defaults.headers,
     });
     const { data } = await productivityClient.get('/score/range', {
@@ -885,7 +885,7 @@ export class AnalyticsAPI {
   async getGoalAnalyticsReport(goalId: string, userId: string) {
     // Note: Goal analytics is in GoalsAPI at /goals/:id/analytics
     const goalsClient = axios.create({
-      baseURL: `${API_BASE_URL}/goals`,
+      baseURL: `${API_BASE_URL}/api/v1/goals`,
       headers: this.client.defaults.headers,
     });
     const { data } = await goalsClient.get(`/${goalId}/analytics`, {
@@ -940,7 +940,7 @@ export class CalendarAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/calendar`,
+      baseURL: `${API_BASE_URL}/api/v1/calendar`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -1043,7 +1043,7 @@ export class TeamsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/teams`,
+      baseURL: `${API_BASE_URL}/api/v1/teams`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -1164,7 +1164,7 @@ export class SchedulingAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/scheduling`,
+      baseURL: `${API_BASE_URL}/api/v1/scheduling`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -1279,7 +1279,7 @@ export class IntegrationsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/integrations`,
+      baseURL: `${API_BASE_URL}/api/v1/integrations`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -1389,7 +1389,7 @@ export class BillingAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/billing`,
+      baseURL: `${API_BASE_URL}/api/v1/billing`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }

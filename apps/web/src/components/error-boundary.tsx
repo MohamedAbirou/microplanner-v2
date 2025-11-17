@@ -1,10 +1,10 @@
 'use client';
 
-import * as React from 'react';
-import * as Sentry from '@sentry/nextjs';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import * as Sentry from '@sentry/nextjs';
+import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
+import * as React from 'react';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -82,7 +82,7 @@ export class ErrorBoundary extends React.Component<
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => (window.location.href = '/app/dashboard')}
+                  onClick={() => (window.location.href = '/dashboard')}
                   className="flex-1"
                 >
                   <Home className="mr-2 h-4 w-4" />

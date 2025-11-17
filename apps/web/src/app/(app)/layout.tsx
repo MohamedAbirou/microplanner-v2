@@ -1,19 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { useQuery } from '@apollo/client';
-import { AppSidebar } from '@/components/layout/app-sidebar';
-import { AppHeader } from '@/components/layout/app-header';
 import { CommandPalette } from '@/components/command-palette';
-import { QuickAddTaskModal, type TaskFormData } from '@/components/tasks/quick-add-task-modal';
-import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog';
 import { ErrorBoundaryWrapper } from '@/components/error-boundary';
-import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
-import { useGoals, useCreateTask } from '@/hooks/use-graphql';
+import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog';
+import { AppHeader } from '@/components/layout/app-header';
+import { AppSidebar } from '@/components/layout/app-sidebar';
+import { QuickAddTaskModal, type TaskFormData } from '@/components/tasks/quick-add-task-modal';
 import { TierProvider } from '@/contexts/tier-context';
-import { useRouter, usePathname } from 'next/navigation';
 import { ONBOARDING_STATUS } from '@/graphql/operations';
+import { useCreateTask, useGoals } from '@/hooks/use-graphql';
+import { useQuery } from '@apollo/client';
+import { useUser } from '@clerk/nextjs';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function AppLayout({
   children,
@@ -65,6 +64,8 @@ export default function AppLayout({
       console.error('Failed to create task:', error);
     }
   };
+
+  console.log("Collapsed: ", sidebarCollapsed);
 
   return (
     <TierProvider>

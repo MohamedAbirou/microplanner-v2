@@ -1,17 +1,17 @@
 'use client';
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
-import { Check, RefreshCw, ChevronLeft, Download } from 'lucide-react';
+import { WeekCalendar } from '@/components/calendar/week-calendar';
+import { PlanQualityScore } from '@/components/plans/plan-quality-score';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlanQualityScore } from '@/components/plans/plan-quality-score';
-import { WeekCalendar } from '@/components/calendar/week-calendar';
-import { usePlans, useTasks, useAcceptPlan } from '@/hooks/use-graphql';
+import { useAcceptPlan, usePlans, useTasks } from '@/hooks/use-graphql';
+import { addDays, endOfWeek, format, startOfWeek } from 'date-fns';
+import { Check, ChevronLeft, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import * as React from 'react';
+import { toast } from 'sonner';
 
 export default function PlanReviewPage() {
   const router = useRouter();
@@ -94,7 +94,7 @@ export default function PlanReviewPage() {
 
     try {
       await acceptPlan({ variables: { id: activePlan.id } });
-      router.push('/app/week');
+      router.push('/week');
     } catch (error) {
       console.error('Failed to accept plan:', error);
       setIsAccepting(false);
@@ -105,7 +105,7 @@ export default function PlanReviewPage() {
     toast.info('Regenerating your plan', {
       description: 'Creating a new optimized schedule based on your preferences',
     });
-    router.push('/app/plans/generate');
+    router.push('/plans/generate');
   };
 
   if (loading) {

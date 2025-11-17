@@ -1,28 +1,25 @@
 'use client';
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import {
-  Calendar,
-  Target,
-  Sparkles,
-  Plus,
-  Search,
-  Settings,
-  BarChart3,
-  CheckCircle2,
-  Clock,
-  Command as CommandIcon,
-} from 'lucide-react';
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
 } from '@/components/ui/command';
+import {
+    BarChart3,
+    Calendar,
+    CheckCircle2,
+    Plus,
+    Settings,
+    Sparkles,
+    Target
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import * as React from 'react';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -55,27 +52,27 @@ export function CommandPalette({ open, onOpenChange, onQuickAddClick }: CommandP
 
   // Navigation commands
   const navigationCommands = [
-    { icon: Calendar, label: 'Go to Today', action: () => router.push('/app/today'), shortcut: 'G then T' },
-    { icon: Calendar, label: 'Go to Week View', action: () => router.push('/app/week'), shortcut: 'G then W' },
-    { icon: Target, label: 'Go to Goals', action: () => router.push('/app/goals'), shortcut: 'G then G' },
-    { icon: Sparkles, label: 'Go to Plans', action: () => router.push('/app/plans'), shortcut: 'G then P' },
-    { icon: BarChart3, label: 'Go to Analytics', action: () => router.push('/app/analytics'), shortcut: 'G then A' },
-    { icon: Settings, label: 'Go to Settings', action: () => router.push('/app/settings'), shortcut: 'G then S' },
+    { icon: Calendar, label: 'Go to Today', action: () => router.push('/today'), shortcut: 'G then T' },
+    { icon: Calendar, label: 'Go to Week View', action: () => router.push('/week'), shortcut: 'G then W' },
+    { icon: Target, label: 'Go to Goals', action: () => router.push('/goals'), shortcut: 'G then G' },
+    { icon: Sparkles, label: 'Go to Plans', action: () => router.push('/plans'), shortcut: 'G then P' },
+    { icon: BarChart3, label: 'Go to Analytics', action: () => router.push('/analytics'), shortcut: 'G then A' },
+    { icon: Settings, label: 'Go to Settings', action: () => router.push('/settings'), shortcut: 'G then S' },
   ];
 
   // Action commands
   const actionCommands = [
     { icon: Plus, label: 'Create New Task', action: () => onQuickAddClick?.(), shortcut: 'T' },
-    { icon: Target, label: 'Create New Goal', action: () => router.push('/app/goals/new'), shortcut: 'G' },
-    { icon: Sparkles, label: 'Generate Weekly Plan', action: () => router.push('/app/plans/generate'), shortcut: 'P' },
+    { icon: Target, label: 'Create New Goal', action: () => router.push('/goals/new'), shortcut: 'G' },
+    { icon: Sparkles, label: 'Generate Weekly Plan', action: () => router.push('/plans/generate'), shortcut: 'P' },
     { icon: CheckCircle2, label: 'Quick Complete Task', action: () => console.log('Quick complete'), shortcut: 'C' },
   ];
 
   // Recent items (mock - would come from user activity)
   const recentItems = [
-    { icon: Target, label: 'Career Growth', type: 'Goal', action: () => router.push('/app/goals/1') },
+    { icon: Target, label: 'Career Growth', type: 'Goal', action: () => router.push('/goals/1') },
     { icon: CheckCircle2, label: 'Morning workout', type: 'Task', action: () => console.log('Open task') },
-    { icon: Sparkles, label: 'Last Week\'s Plan', type: 'Plan', action: () => router.push('/app/plans/1') },
+    { icon: Sparkles, label: 'Last Week\'s Plan', type: 'Plan', action: () => router.push('/plans/1') },
   ];
 
   return (

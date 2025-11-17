@@ -1,23 +1,22 @@
 'use client';
 
-import * as React from 'react';
-import { useUser } from '@clerk/nextjs';
-import { format, startOfDay, endOfDay } from 'date-fns';
-import {
-  CheckCircle2,
-  Flame,
-  Target,
-  Sparkles,
-  ArrowRight,
-  Plus,
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { useGoals, useTasks } from '@/hooks/use-graphql';
 import { calculateCompletionPercentage } from '@/lib/utils';
-import { useTasks, useGoals } from '@/hooks/use-graphql';
+import { useUser } from '@clerk/nextjs';
+import { endOfDay, format, startOfDay } from 'date-fns';
+import {
+    ArrowRight,
+    CheckCircle2,
+    Flame,
+    Plus,
+    Sparkles,
+    Target,
+} from 'lucide-react';
+import Link from 'next/link';
 
 function getTimeOfDay(): string {
   const hour = new Date().getHours();
@@ -84,7 +83,7 @@ export default function DashboardPage() {
           </h1>
           <p className="text-muted-foreground mt-1">{getMotivationalMessage()}</p>
         </div>
-        <Link href="/app/plans/generate">
+        <Link href="/plans/generate">
           <Button size="lg">
             <Sparkles className="mr-2 h-5 w-5" />
             Generate Plan
@@ -154,7 +153,7 @@ export default function DashboardPage() {
               <CardTitle>Today's Tasks</CardTitle>
               <CardDescription>{format(today, 'EEEE, MMMM d, yyyy')}</CardDescription>
             </div>
-            <Link href="/app/today">
+            <Link href="/today">
               <Button variant="ghost" size="sm">
                 View All
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -198,7 +197,7 @@ export default function DashboardPage() {
             {todayTasks.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <p>No tasks scheduled for today</p>
-                <Link href="/app/today">
+                <Link href="/today">
                   <Button variant="link" className="mt-2">
                     <Plus className="mr-2 h-4 w-4" />
                     Add a task
@@ -218,7 +217,7 @@ export default function DashboardPage() {
               <CardTitle>Active Goals</CardTitle>
               <CardDescription>Track your progress across all goals</CardDescription>
             </div>
-            <Link href="/app/goals">
+            <Link href="/goals">
               <Button variant="ghost" size="sm">
                 View All
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -253,7 +252,7 @@ export default function DashboardPage() {
             {activeGoals.length === 0 && (
               <div className="col-span-full text-center py-8 text-muted-foreground">
                 <p>No active goals</p>
-                <Link href="/app/goals/new">
+                <Link href="/goals/new">
                   <Button variant="link" className="mt-2">
                     <Plus className="mr-2 h-4 w-4" />
                     Create a goal
@@ -267,7 +266,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Link href="/app/today">
+        <Link href="/today">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -283,7 +282,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/app/week">
+        <Link href="/week">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -299,7 +298,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/app/plans/generate">
+        <Link href="/plans/generate">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">

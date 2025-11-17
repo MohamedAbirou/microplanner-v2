@@ -1,25 +1,24 @@
 'use client';
 
-import * as React from 'react';
-import { format, startOfWeek, addDays } from 'date-fns';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePlans } from '@/hooks/use-graphql';
+import { format } from 'date-fns';
 import {
-  Sparkles,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Target,
-  TrendingUp,
-  Eye,
-  RefreshCw,
+    Calendar,
+    CheckCircle2,
+    Clock,
+    Eye,
+    RefreshCw,
+    Sparkles,
+    Target,
+    TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { usePlans } from '@/hooks/use-graphql';
 
 export default function PlansPage() {
   const router = useRouter();
@@ -76,7 +75,7 @@ export default function PlansPage() {
             <p className="text-muted-foreground mb-4">
               Generate your first AI-powered weekly plan
             </p>
-            <Link href="/app/plans/generate">
+            <Link href="/plans/generate">
               <Button>
                 <Sparkles className="mr-2 h-4 w-4" />
                 Generate New Plan
@@ -96,7 +95,7 @@ export default function PlansPage() {
           <h1 className="text-3xl font-bold">Weekly Plans</h1>
           <p className="text-muted-foreground mt-1">AI-generated weekly schedules</p>
         </div>
-        <Link href="/app/plans/generate">
+        <Link href="/plans/generate">
           <Button>
             <Sparkles className="mr-2 h-4 w-4" />
             Generate New Plan
@@ -122,7 +121,7 @@ export default function PlansPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push('/app/plans/review')}
+                onClick={() => router.push('/plans/review')}
               >
                 <Eye className="mr-2 h-4 w-4" />
                 View Details
@@ -130,7 +129,7 @@ export default function PlansPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push('/app/plans/generate')}
+                onClick={() => router.push('/plans/generate')}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Regenerate
@@ -244,7 +243,7 @@ export default function PlansPage() {
                   <div
                     key={plan.id}
                     className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
-                    onClick={() => router.push(`/app/plans/${plan.id}`)}
+                    onClick={() => router.push(`/plans/${plan.id}`)}
                   >
                     <div className="flex items-start gap-4 flex-1">
                       <div className="p-2 rounded-lg bg-muted">

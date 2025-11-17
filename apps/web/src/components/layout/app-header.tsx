@@ -1,9 +1,9 @@
 'use client';
 
-import { useUser } from '@clerk/nextjs';
-import { Plus, Command, Menu, LogOut, Settings as SettingsIcon, HelpCircle, Sparkles, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { NotificationsCenter } from '@/components/notifications-center';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +12,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
 import { getInitials } from '@/lib/utils';
-import { NotificationsCenter } from '@/components/notifications-center';
+import { useUser } from '@clerk/nextjs';
+import { Command, HelpCircle, LogOut, Menu, Plus, Settings as SettingsIcon, Sparkles, User } from 'lucide-react';
 import Link from 'next/link';
 
 interface AppHeaderProps {
@@ -35,7 +35,7 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-16 border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+    <header className="fixed top-0 left-0 right-0 h-14 border-b bg-background/80">
       <div className="flex h-full items-center justify-between px-6">
         {/* Left: Menu (mobile) */}
         <div className="flex items-center gap-4">
@@ -116,7 +116,7 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href="/app/settings">
+              <Link href="/settings">
                 <DropdownMenuItem className="cursor-pointer">
                   <SettingsIcon className="mr-2 h-4 w-4" />
                   Settings
@@ -129,7 +129,7 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
               {(tier === 'FREE' || tier === 'STARTER') && (
                 <>
                   <DropdownMenuSeparator />
-                  <Link href="/app/billing">
+                  <Link href="/billing">
                     <DropdownMenuItem className="cursor-pointer bg-gradient-to-r from-primary/5 to-primary/10 text-primary font-medium">
                       <Sparkles className="mr-2 h-4 w-4" />
                       Upgrade to {tier === 'FREE' ? 'Starter' : 'Pro'}

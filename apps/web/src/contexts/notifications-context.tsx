@@ -35,7 +35,7 @@ const mockNotifications: Notification[] = [
     message: 'Deep work: Code review is starting in 30 minutes',
     timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 min ago
     read: false,
-    actionUrl: '/app/week',
+    actionUrl: '/week',
     actionLabel: 'View task',
     icon: '⏰',
   },
@@ -46,7 +46,7 @@ const mockNotifications: Notification[] = [
     message: 'You\'ve completed 10 tasks for your Fitness goal this week',
     timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
     read: false,
-    actionUrl: '/app/goals',
+    actionUrl: '/goals',
     actionLabel: 'View goals',
     icon: '🎉',
   },
@@ -57,7 +57,7 @@ const mockNotifications: Notification[] = [
     message: 'Your AI-generated plan for next week is ready to review',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
     read: true,
-    actionUrl: '/app/plans/review',
+    actionUrl: '/plans/review',
     actionLabel: 'Review plan',
     icon: '✨',
   },
@@ -68,7 +68,7 @@ const mockNotifications: Notification[] = [
     message: 'You\'ve maintained your fitness routine for 7 days straight',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
     read: true,
-    actionUrl: '/app/analytics',
+    actionUrl: '/analytics',
     actionLabel: 'View analytics',
     icon: '🔥',
   },

@@ -1,13 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Sparkles, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { SelectGoalsStep } from '@/components/plans/select-goals-step';
 import { CustomizePreferencesStep } from '@/components/plans/customize-preferences-step';
 import { GeneratingStep } from '@/components/plans/generating-step';
+import { SelectGoalsStep } from '@/components/plans/select-goals-step';
+import { Progress } from '@/components/ui/progress';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 type Step = 'select-goals' | 'customize' | 'generating';
 
@@ -42,7 +40,7 @@ export default function GeneratePlanPage() {
 
   const handlePlanGenerated = (planId: string) => {
     // Redirect to review page to see quality scores and accept/regenerate
-    router.push('/app/plans/review');
+    router.push('/plans/review');
   };
 
   const handleBack = () => {
