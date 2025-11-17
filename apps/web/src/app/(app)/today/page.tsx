@@ -30,15 +30,16 @@ export default function TodayPage() {
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
 
   // Fetch today's tasks from GraphQL
+  // Note: We filter by single date (not dateRange) in GraphQL, then do client-side filtering
   const today = new Date();
   const { tasks: allTasks, loading: tasksLoading, refetch } = useTasks(
     {
-      dateRange: {
-        start: startOfDay(today),
-        end: endOfDay(today),
-      },
+      scheduledDate: startOfDay(today),
     },
-    sort
+    {
+      field: 'SCHEDULED_DATE',
+      direction: 'ASC',
+    }
   );
 
   // Fetch goals for filters

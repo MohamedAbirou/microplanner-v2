@@ -16,9 +16,17 @@ export default function MonthPage() {
   const monthStart = startOfMonth(today);
   const monthEnd = endOfMonth(today);
 
-  const { tasks, loading, refetch } = useTasks({
-    dateRange: { start: monthStart, end: monthEnd },
-  });
+  // Fetch all tasks and filter client-side (GraphQL doesn't support dateRange)
+  const { tasks: allTasks, loading, refetch } = useTasks();
+
+  // Filter for current month
+  const tasks = React.useMemo(() => {
+    return allTasks.filter((task) => {
+      if (!task.scheduledDate) return false;
+      const taskDate = new Date(task.scheduledDate);
+      return taskDate >= monthStart && taskDate <= monthEnd;
+    });
+  }, [allTasks, monthStart, monthEnd]);
 
   const handleDateClick = (date: Date) => {
     // Navigate to day view for clicked date

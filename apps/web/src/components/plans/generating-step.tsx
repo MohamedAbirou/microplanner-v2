@@ -52,11 +52,20 @@ export function GeneratingStep({ selectedGoals, preferences, onComplete }: Gener
       clearInterval(progressInterval);
 
       try {
+        // Restructure input to match GraphQL schema
+        // weekStartDate and aiModel go at root level, not in preferences
         const result = await generatePlan({
           variables: {
             input: {
               goalIds: selectedGoals,
-              preferences,
+              weekStartDate: preferences.weekStartDate,
+              aiModel: preferences.aiModel,
+              preferences: {
+                prioritizeMornings: preferences.prioritizePeakHours, // Rename to match schema
+                avoidWeekends: preferences.avoidWeekends,
+                bufferTime: preferences.bufferTime,
+                focusBlockDuration: preferences.focusBlockDuration,
+              },
             },
           },
         });

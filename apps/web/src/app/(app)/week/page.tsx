@@ -17,9 +17,18 @@ export default function WeekPage() {
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
   // Fetch tasks for the current week
-  const { tasks, loading, refetch } = useTasks({
-    dateRange: { start: weekStart, end: weekEnd },
-  });
+  // Note: GraphQL schema doesn't support dateRange, so we fetch all tasks and filter client-side
+  // Alternative: We could filter by scheduledDate on server, but that only works for single day
+  const { tasks: allTasks, loading, refetch } = useTasks();
+
+  // Filter tasks for current week on client side
+  const tasks = React.useMemo(() => {
+    return allTasks.filter((task) => {
+      if (!task.scheduledDate) return false;
+      const taskDate = new Date(task.scheduledDate);
+      return taskDate >= weekStart && taskDate <= weekEnd;
+    });
+  }, [allTasks, weekStart, weekEnd]);
 
   const { updateTask } = useUpdateTask();
 
