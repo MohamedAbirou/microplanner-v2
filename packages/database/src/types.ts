@@ -32,10 +32,49 @@ export type EnergyPatternType = typeof EnergyPattern[keyof typeof EnergyPattern]
 export const WaitlistStatus = {
   PENDING: 'PENDING',
   INVITED: 'INVITED',
-  CONVERTED: 'CONVERTED'
+  CONVERTED: 'CONVERTED',
+  DECLINED: 'DECLINED',
+  INVALID: 'INVALID',
 } as const;
 
 export type WaitlistStatusType = typeof WaitlistStatus[keyof typeof WaitlistStatus];
+
+export const PlanStatus = {
+  DRAFT: 'DRAFT',
+  ACCEPTED: 'ACCEPTED',
+  APPLIED: 'APPLIED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+
+export type PlanStatusType = typeof PlanStatus[keyof typeof PlanStatus];
+
+export const SyncStatus = {
+  PENDING: 'PENDING',
+  SYNCING: 'SYNCING',
+  SYNCED: 'SYNCED',
+  FAILED: 'FAILED',
+  CONFLICT: 'CONFLICT',
+} as const;
+
+export type SyncStatusType = typeof SyncStatus[keyof typeof SyncStatus];
+
+export const MemoryType = {
+  TIME_PREFERENCE: 'TIME_PREFERENCE',
+  COMPLETION_PATTERN: 'COMPLETION_PATTERN',
+  ENERGY_INSIGHT: 'ENERGY_INSIGHT',
+  AVOIDANCE_PATTERN: 'AVOIDANCE_PATTERN',
+  CONTEXT_PREFERENCE: 'CONTEXT_PREFERENCE',
+} as const;
+
+export type MemoryTypeType = typeof MemoryType[keyof typeof MemoryType];
+
+export const ReferralStatus = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  EXPIRED: 'EXPIRED',
+} as const;
+
+export type ReferralStatusType = typeof ReferralStatus[keyof typeof ReferralStatus];
 
 export interface User {
   id: string;

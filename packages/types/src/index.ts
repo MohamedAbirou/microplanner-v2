@@ -71,7 +71,49 @@ export type DayOfWeek =
   | 'saturday'
   | 'sunday';
 
-export type SubscriptionTier = 'FREE' | 'STARTER' | 'PRO';
+export type SubscriptionTier = 'FREE' | 'STARTER' | 'PRO' | 'PREMIUM';
+
+export type SubscriptionStatus =
+  | 'ACTIVE'
+  | 'INACTIVE'
+  | 'PAST_DUE'
+  | 'CANCELED'
+  | 'TRIALING';
+
+export type EnergyPattern =
+  | 'MORNING_PERSON'
+  | 'NIGHT_OWL'
+  | 'BALANCED';
+
+export type MemoryType =
+  | 'TIME_PREFERENCE'
+  | 'COMPLETION_PATTERN'
+  | 'ENERGY_INSIGHT'
+  | 'AVOIDANCE_PATTERN'
+  | 'CONTEXT_PREFERENCE';
+
+export type ReferralStatus =
+  | 'PENDING'
+  | 'ACTIVE'
+  | 'EXPIRED';
+
+export type WaitlistStatus =
+  | 'PENDING'
+  | 'INVITED'
+  | 'CONVERTED'
+  | 'DECLINED'
+  | 'INVALID';
+
+export type NotificationType =
+  | 'TASK_DUE'
+  | 'GOAL_MILESTONE'
+  | 'WEEKLY_PLAN'
+  | 'DAILY_REMINDER'
+  | 'OVERBOOKED_ALERT'
+  | 'BREAK_REMINDER'
+  | 'FOCUS_TIME_ALERT'
+  | 'UPCOMING_MEETING';
+
 
 // ============================================
 // Goal Types
@@ -333,3 +375,346 @@ export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclu
   {
     [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
   }[Keys];
+
+// ============================================
+// Project Types
+// ============================================
+
+export interface Project {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  color: string;
+  icon?: string;
+  isArchived: boolean;
+  archivedAt?: string;
+  startDate?: string;
+  targetDate?: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProjectDto {
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  startDate?: string;
+  targetDate?: string;
+}
+
+export interface UpdateProjectDto extends Partial<CreateProjectDto> {
+  isArchived?: boolean;
+  completedAt?: string;
+}
+
+// ============================================
+// Task Dependency Types
+// ============================================
+
+export interface TaskDependency {
+  id: string;
+  dependentTaskId: string;
+  blockingTaskId: string;
+  type: 'finish-to-start' | 'start-to-start' | 'finish-to-finish';
+  createdAt: string;
+}
+
+export interface CreateTaskDependencyDto {
+  dependentTaskId: string;
+  blockingTaskId: string;
+  type?: 'finish-to-start' | 'start-to-start' | 'finish-to-finish';
+}
+
+// ============================================
+// Plan Template Types
+// ============================================
+
+export interface PlanTemplate {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  category: string;
+  isPublic: boolean;
+  isDefault: boolean;
+  usageCount: number;
+  tags: string[];
+  tasks: TemplateTask[];
+  estimatedTotalHours: number;
+  tasksPerDay: Record<DayOfWeek, number>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TemplateTask {
+  title: string;
+  durationMinutes: number;
+  dayOfWeek: DayOfWeek;
+  preferredTime?: string;
+  notes?: string;
+  tags?: string[];
+}
+
+export interface CreatePlanTemplateDto {
+  name: string;
+  description?: string;
+  category?: string;
+  isPublic?: boolean;
+  tags?: string[];
+  tasks: TemplateTask[];
+}
+
+// ============================================
+// Waitlist Types
+// ============================================
+
+export interface WaitlistEntry {
+  id: string;
+  email: string;
+  name?: string;
+  useCase?: string;
+  referralSource?: string;
+  status: WaitlistStatus;
+  position: number;
+  invitedAt?: string;
+  convertedAt?: string;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JoinWaitlistDto {
+  email: string;
+  name?: string;
+  useCase?: string;
+  referralSource?: string;
+}
+
+export interface WaitlistStats {
+  total: number;
+  pending: number;
+  invited: number;
+  converted: number;
+  declined: number;
+  invalid: number;
+  averageWaitDays: number;
+}
+
+// ============================================
+// AI Memory Types
+// ============================================
+
+export interface AIMemory {
+  id: string;
+  userId: string;
+  memoryType: MemoryType;
+  content: Record<string, any>;
+  confidence: number;
+  useCount: number;
+  lastUsedAt?: string;
+  source?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================
+// Referral Types
+// ============================================
+
+export interface Referral {
+  id: string;
+  referrerId: string;
+  referredId: string;
+  status: ReferralStatus;
+  rewardGranted: boolean;
+  referralCode?: string;
+  source?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+// ============================================
+// Productivity Types (Phase 18)
+// ============================================
+
+export interface WorkHours {
+  id: string;
+  userId: string;
+  timezone: string;
+  schedule: Record<DayOfWeek, WorkHoursSchedule>;
+  enforceWorkHours: boolean;
+  maxMeetingsPerDay?: number;
+  maxMeetingHoursPerDay?: number;
+  maxConsecutiveMeetings?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkHoursSchedule {
+  isWorkDay: boolean;
+  startTime: string;
+  endTime: string;
+  breakTimes?: Array<{ start: string; end: string }>;
+}
+
+export interface FocusTimeBlock {
+  id: string;
+  userId: string;
+  title: string;
+  frequency: 'daily' | 'weekdays' | 'weekly' | 'custom';
+  daysOfWeek: number[];
+  startTime?: string;
+  durationMinutes: number;
+  priority: number;
+  protected: boolean;
+  isActive: boolean;
+  autoSchedule: boolean;
+  preferredTimeSlots: string[];
+  color: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KanbanBoard {
+  id: string;
+  userId: string;
+  projectId?: string;
+  name: string;
+  description?: string;
+  isDefault: boolean;
+  columns: KanbanColumn[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KanbanColumn {
+  id: string;
+  boardId: string;
+  name: string;
+  order: number;
+  color: string;
+  taskIds: string[];
+}
+
+export interface ProductivityScore {
+  id: string;
+  userId: string;
+  date: string;
+  overallScore: number;
+  focusTimeScore: number;
+  taskCompletionScore: number;
+  meetingEfficiencyScore: number;
+  workLifeBalanceScore: number;
+  totalFocusMinutes: number;
+  totalMeetingMinutes: number;
+  totalTaskMinutes: number;
+  totalBreakMinutes: number;
+  insights: string[];
+  recommendations: string[];
+  createdAt: string;
+}
+
+// ============================================
+// Team Types (Premium)
+// ============================================
+
+export interface Team {
+  id: string;
+  name: string;
+  description?: string;
+  ownerId: string;
+  plan: 'premium' | 'enterprise';
+  maxMembers: number;
+  logoUrl?: string;
+  settings: TeamSettings;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamSettings {
+  allowMemberInvites: boolean;
+  requireApproval: boolean;
+  sharedCalendar: boolean;
+  sharedGoals: boolean;
+}
+
+export interface TeamMember {
+  id: string;
+  teamId: string;
+  userId: string;
+  role: 'owner' | 'admin' | 'member' | 'viewer';
+  status: 'active' | 'invited' | 'suspended';
+  invitedBy?: string;
+  joinedAt: string;
+}
+
+// ============================================
+// Scheduling Types (Premium)
+// ============================================
+
+export interface SchedulingLink {
+  id: string;
+  userId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  duration: number;
+  bufferBefore: number;
+  bufferAfter: number;
+  meetingType: string;
+  location?: string;
+  color: string;
+  isActive: boolean;
+  isPublic: boolean;
+  requiresConfirmation: boolean;
+  maxBookingsPerDay?: number;
+  noticeTime: number;
+  availability: AvailabilitySettings;
+  customQuestions: CustomQuestion[];
+  redirectUrl?: string;
+  confirmationMessage?: string;
+  bookingCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AvailabilitySettings {
+  timezone: string;
+  schedule: Record<DayOfWeek, AvailabilitySlot[]>;
+}
+
+export interface AvailabilitySlot {
+  start: string;
+  end: string;
+}
+
+export interface CustomQuestion {
+  id: string;
+  label: string;
+  type: 'text' | 'email' | 'phone' | 'select' | 'textarea';
+  required: boolean;
+  options?: string[];
+}
+
+export interface Booking {
+  id: string;
+  linkId: string;
+  attendeeName: string;
+  attendeeEmail: string;
+  attendeePhone?: string;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+  status: 'pending' | 'confirmed' | 'canceled' | 'completed';
+  canceledAt?: string;
+  cancelReason?: string;
+  customResponses: Record<string, string>;
+  meetingUrl?: string;
+  calendarEventId?: string;
+  reminderSent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
