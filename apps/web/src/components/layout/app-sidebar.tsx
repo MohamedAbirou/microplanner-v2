@@ -1,26 +1,26 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
-  CalendarDays,
-  Calendar,
-  Target,
-  Sparkles,
-  Search,
   BarChart3,
-  Settings,
+  Calendar,
+  CalendarDays,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Zap,
-  TrendingUp,
-  Crown,
-  CheckCircle2,
   Clock,
+  Crown,
+  Search,
+  Settings,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Zap,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface NavItem {
   label: string;
@@ -31,18 +31,18 @@ interface NavItem {
 }
 
 const primaryNav: NavItem[] = [
-  { label: 'Today', href: '/app/dashboard', icon: CalendarDays, hotkey: '1' },
-  { label: 'Day', href: '/app/day', icon: Clock, hotkey: 'D' },
-  { label: 'Week', href: '/app/week', icon: Calendar, hotkey: '2' },
-  { label: 'Month', href: '/app/month', icon: Calendar, hotkey: 'M' },
-  { label: 'Goals', href: '/app/goals', icon: Target, hotkey: '3' },
-  { label: 'Plans', href: '/app/plans', icon: Sparkles, hotkey: '4' },
+  { label: 'Today', href: '/dashboard', icon: CalendarDays, hotkey: '1' },
+  { label: 'Day', href: '/day', icon: Clock, hotkey: 'D' },
+  { label: 'Week', href: '/week', icon: Calendar, hotkey: '2' },
+  { label: 'Month', href: '/month', icon: Calendar, hotkey: 'M' },
+  { label: 'Goals', href: '/goals', icon: Target, hotkey: '3' },
+  { label: 'Plans', href: '/plans', icon: Sparkles, hotkey: '4' },
 ];
 
 const secondaryNav: NavItem[] = [
-  { label: 'Search', href: '/app/search', icon: Search, hotkey: '/' },
-  { label: 'Analytics', href: '/app/analytics', icon: BarChart3 },
-  { label: 'Settings', href: '/app/settings', icon: Settings },
+  { label: 'Search', href: '/search', icon: Search, hotkey: '/' },
+  { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
 const tierConfig = {
@@ -71,7 +71,7 @@ export function AppSidebar({ collapsed, onToggle, userTier = 'FREE' }: AppSideba
       )}
     >
       {/* Logo/Brand Header */}
-      <div className="flex h-16 items-center border-b border-border/40 px-4 justify-between backdrop-blur-sm bg-background/50">
+      <div className="flex h-14 items-center border-b border-border/40 px-4 justify-between backdrop-blur-sm bg-background/50">
         {!collapsed && (
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
@@ -86,7 +86,7 @@ export function AppSidebar({ collapsed, onToggle, userTier = 'FREE' }: AppSideba
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="h-8 w-8 hover:bg-accent/50 transition-colors"
+          className="h-8 w-8 hover:bg-accent/50 transition-colors "
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>

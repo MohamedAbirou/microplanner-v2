@@ -5,6 +5,7 @@ type User {
   clerkId: String!
   email: String!
   name: String
+  fullName: String
   avatar: String
   timezone: String!
 
@@ -29,6 +30,9 @@ type User {
   productivityPeaks: [String!]!
   energyPattern: EnergyPattern
 
+  # Settings (nested for frontend compatibility)
+  settings: UserSettings
+
   # Timestamps
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -51,35 +55,62 @@ enum SubscriptionStatus {
 }
 
 type UserSettings {
-  id: ID!
-  userId: ID!
+  id: ID
+  userId: ID
 
   # Profile
   firstName: String
   lastName: String
 
   # Preferences
-  theme: Theme!
+  theme: Theme
   energyPattern: EnergyPattern
 
+  # Working hours
+  workingHours: WorkingHours
+  defaultTaskDuration: Int
+
   # Notifications
-  notifications: NotificationSettings!
+  notifications: NotificationSettings
+
+  # Calendar integrations
+  calendarIntegrations: [CalendarIntegration!]
 
   # Onboarding
-  onboardingCompleted: Boolean!
+  onboardingCompleted: Boolean
   onboardingCompletedAt: DateTime
 
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type WorkingHours {
+  start: String!
+  end: String!
 }
 
 type NotificationSettings {
-  email: Boolean!
-  weeklySummary: Boolean!
-  planReminders: Boolean!
-  taskReminders: Boolean!
-  goalMilestones: Boolean!
-  productivityInsights: Boolean!
+  email: Boolean
+  push: Boolean
+  reminders: Boolean
+  weeklySummary: Boolean
+  planReminders: Boolean
+  taskReminders: Boolean
+  goalMilestones: Boolean
+  productivityInsights: Boolean
+}
+
+type CalendarIntegration {
+  provider: CalendarProvider!
+  email: String
+  isConnected: Boolean!
+  lastSyncedAt: DateTime
+}
+
+enum CalendarProvider {
+  GOOGLE
+  OUTLOOK
+  APPLE
 }
 
 # Enums

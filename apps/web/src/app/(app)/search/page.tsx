@@ -1,16 +1,16 @@
 'use client';
 
-import * as React from 'react';
-import { Search, Calendar, Target, Sparkles, Clock, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
 import { NoSearchResultsEmptyState } from '@/components/empty-states';
-import { format } from 'date-fns';
-import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useGoals, usePlans, useTasks } from '@/hooks/use-graphql';
 import { cn } from '@/lib/utils';
-import { useTasks, useGoals, usePlans } from '@/hooks/use-graphql';
+import { format } from 'date-fns';
+import { Calendar, Clock, Search, Sparkles, Target, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import * as React from 'react';
 
 export default function SearchPage() {
   const router = useRouter();
@@ -70,15 +70,15 @@ export default function SearchPage() {
     filteredResults.plans.length;
 
   const handleTaskClick = (taskId: string) => {
-    router.push(`/app/today`); // Navigate to today view (task will be there)
+    router.push(`/today`); // Navigate to today view (task will be there)
   };
 
   const handleGoalClick = (goalId: string) => {
-    router.push(`/app/goals`);
+    router.push(`/goals`);
   };
 
   const handlePlanClick = (planId: string) => {
-    router.push(`/app/plans`);
+    router.push(`/plans`);
   };
 
   const handleClearSearch = () => {

@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronRight, AlertTriangle, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { cn } from '@/lib/utils';
 import { useTier } from '@/contexts/tier-context';
 import { useGoals } from '@/hooks/use-graphql';
+import { cn } from '@/lib/utils';
+import { AlertTriangle, ChevronRight, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface SelectGoalsStepProps {
   selectedGoals: string[];
@@ -50,7 +49,7 @@ export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }:
             You need to create some goals first before generating a plan.
           </p>
         </div>
-        <Button onClick={() => window.location.href = '/app/goals/new'}>
+        <Button onClick={() => window.location.href = '/goals/new'}>
           Create Your First Goal
         </Button>
       </div>

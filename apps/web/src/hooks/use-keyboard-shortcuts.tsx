@@ -1,7 +1,7 @@
 'use client';
 
-import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import * as React from 'react';
 
 export interface KeyboardShortcut {
   key: string;
@@ -61,42 +61,42 @@ export function useGlobalKeyboardShortcuts() {
       {
         key: 't',
         description: 'Go to Today',
-        action: () => router.push('/app/today'),
+        action: () => router.push('/today'),
       },
       {
         key: 'd',
         description: 'Go to Dashboard',
-        action: () => router.push('/app/dashboard'),
+        action: () => router.push('/dashboard'),
       },
       {
         key: 'w',
         description: 'Go to Week',
-        action: () => router.push('/app/week'),
+        action: () => router.push('/week'),
       },
       {
         key: 'm',
         description: 'Go to Month',
-        action: () => router.push('/app/month'),
+        action: () => router.push('/month'),
       },
       {
         key: 'g',
         description: 'Go to Goals',
-        action: () => router.push('/app/goals'),
+        action: () => router.push('/goals'),
       },
       {
         key: 'p',
         description: 'Go to Plans',
-        action: () => router.push('/app/plans'),
+        action: () => router.push('/plans'),
       },
       {
         key: 'a',
         description: 'Go to Analytics',
-        action: () => router.push('/app/analytics'),
+        action: () => router.push('/analytics'),
       },
       {
         key: 's',
         description: 'Go to Settings',
-        action: () => router.push('/app/settings'),
+        action: () => router.push('/settings'),
       },
       // Quick Actions
       {

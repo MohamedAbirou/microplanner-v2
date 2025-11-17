@@ -8,24 +8,31 @@ type Goal {
   emoji: String
   color: String
 
+  # Target tracking (compatible with frontend)
+  targetMetric: String
+  currentProgress: Float
+  targetValue: Float
+  deadline: DateTime
+  isArchived: Boolean
+
   # Scheduling parameters
-  frequencyPerWeek: Int!
-  durationMinutes: Int!
-  preferredTimes: [String!]!
-  flexibilityScore: Int!
+  frequencyPerWeek: Int
+  durationMinutes: Int
+  preferredTimes: [String!]
+  flexibilityScore: Int
 
   # Priority & status
-  priority: Int!
-  isActive: Boolean!
-  isPaused: Boolean!
+  priority: Int
+  isActive: Boolean
+  isPaused: Boolean
   pausedUntil: DateTime
 
   # Analytics
-  completionRate: Float!
-  totalCompletions: Int!
-  totalScheduled: Int!
-  currentStreak: Int!
-  longestStreak: Int!
+  completionRate: Float
+  totalCompletions: Int
+  totalScheduled: Int
+  currentStreak: Int
+  longestStreak: Int
   lastCompletedAt: DateTime
 
   # Relations

@@ -3,13 +3,13 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  Target,
-  Calendar,
-  Sparkles,
-  Plus,
-  CheckCircle2,
-  BarChart3,
-  Inbox,
+    BarChart3,
+    Calendar,
+    CheckCircle2,
+    Inbox,
+    Plus,
+    Sparkles,
+    Target,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -75,7 +75,7 @@ export function NoGoalsEmptyState() {
       description="Create your first goal to start tracking your progress and building better habits."
       action={{
         label: 'Create Your First Goal',
-        href: '/app/goals/new',
+        href: '/goals/new',
       }}
     />
   );
@@ -89,7 +89,7 @@ export function NoPlansEmptyState() {
       description="Generate your first AI-powered weekly plan to optimize your schedule and achieve your goals faster."
       action={{
         label: 'Generate Your First Plan',
-        href: '/app/plans/generate',
+        href: '/plans/generate',
       }}
     />
   );
@@ -149,7 +149,7 @@ export function UpgradeToPro({ feature }: { feature: string }) {
         <p className="text-muted-foreground mb-6 max-w-md">
           {feature} is a PRO feature. Upgrade your plan to unlock unlimited goals, calendar sync, advanced AI models, and more!
         </p>
-        <Link href="/app/settings?tab=billing">
+        <Link href="/settings?tab=billing">
           <Button size="lg">
             View Plans
           </Button>

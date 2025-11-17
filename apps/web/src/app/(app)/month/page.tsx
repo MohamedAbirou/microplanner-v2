@@ -1,11 +1,11 @@
 'use client';
 
-import * as React from 'react';
 import { MonthCalendar } from '@/components/calendar/month-calendar';
-import { startOfMonth, endOfMonth } from 'date-fns';
-import { useTasks } from '@/hooks/use-graphql';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
+import { useTasks } from '@/hooks/use-graphql';
+import { endOfMonth, startOfMonth } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import * as React from 'react';
 
 export default function MonthPage() {
   const router = useRouter();
@@ -22,7 +22,7 @@ export default function MonthPage() {
 
   const handleDateClick = (date: Date) => {
     // Navigate to day view for clicked date
-    router.push(`/app/day?date=${date.toISOString()}`);
+    router.push(`/day?date=${date.toISOString()}`);
   };
 
   const handleTaskClick = (task: any) => {

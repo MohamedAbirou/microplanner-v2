@@ -1,22 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import * as z from 'zod';
 
 const goalSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
@@ -72,7 +63,7 @@ export function GoalForm({ initialData, onSubmit, submitLabel = 'Create Goal' }:
 
     try {
       await onSubmit(formData);
-      router.push('/app/goals');
+      router.push('/goals');
     } catch (error) {
       console.error('Failed to submit goal:', error);
     } finally {

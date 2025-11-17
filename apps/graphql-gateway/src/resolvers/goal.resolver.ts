@@ -76,5 +76,26 @@ export const goalResolvers = {
       if (!goal.projectId) return null;
       return projectLoader.load(goal.projectId);
     },
+
+    // Compatibility fields for frontend
+    targetMetric: (goal: any) => goal.targetMetric || null,
+    currentProgress: (goal: any) => goal.currentProgress || goal.completionRate || 0,
+    targetValue: (goal: any) => goal.targetValue || 100,
+    deadline: (goal: any) => goal.deadline || null,
+    isArchived: (goal: any) => goal.isArchived || !goal.isActive || false,
+
+    // Ensure required fields have defaults
+    frequencyPerWeek: (goal: any) => goal.frequencyPerWeek || 0,
+    durationMinutes: (goal: any) => goal.durationMinutes || 0,
+    preferredTimes: (goal: any) => goal.preferredTimes || [],
+    flexibilityScore: (goal: any) => goal.flexibilityScore || 0,
+    priority: (goal: any) => goal.priority || 0,
+    isActive: (goal: any) => goal.isActive !== undefined ? goal.isActive : true,
+    isPaused: (goal: any) => goal.isPaused || false,
+    completionRate: (goal: any) => goal.completionRate || 0,
+    totalCompletions: (goal: any) => goal.totalCompletions || 0,
+    totalScheduled: (goal: any) => goal.totalScheduled || 0,
+    currentStreak: (goal: any) => goal.currentStreak || 0,
+    longestStreak: (goal: any) => goal.longestStreak || 0,
   },
 };

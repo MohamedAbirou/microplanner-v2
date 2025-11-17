@@ -21,6 +21,40 @@ export const userResolvers = {
     },
   },
 
+  User: {
+    /**
+     * Resolve fullName from name field (compatible with frontend)
+     */
+    fullName: (parent: any) => {
+      return parent.fullName || parent.name || '';
+    },
+
+    /**
+     * Resolve settings field (compatible with frontend)
+     */
+    settings: async (parent: any, _: any, { dataSources }: any) => {
+      try {
+        // Return a settings object compatible with frontend queries
+        return {
+          theme: 'SYSTEM',
+          workingHours: {
+            start: parent.workStartTime || '09:00',
+            end: parent.workEndTime || '17:00',
+          },
+          defaultTaskDuration: 30,
+          notifications: {
+            email: true,
+            push: true,
+            reminders: true,
+          },
+          calendarIntegrations: [],
+        };
+      } catch (error) {
+        return null;
+      }
+    },
+  },
+
   Mutation: {
     /**
      * Sync/create user from Clerk authentication

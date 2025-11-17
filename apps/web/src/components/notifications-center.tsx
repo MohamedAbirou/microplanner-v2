@@ -1,23 +1,20 @@
 'use client';
 
-import * as React from 'react';
-import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
-import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
 import { useNotifications } from '@/contexts/notifications-context';
+import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react';
+import Link from 'next/link';
+import * as React from 'react';
 
 export function NotificationsCenter() {
   const {
@@ -190,7 +187,7 @@ export function NotificationsCenter() {
           <>
             <Separator />
             <div className="p-2">
-              <Link href="/app/notifications" onClick={() => setOpen(false)}>
+              <Link href="/notifications" onClick={() => setOpen(false)}>
                 <Button variant="ghost" className="w-full justify-center text-xs">
                   View all notifications
                 </Button>

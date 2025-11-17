@@ -1,10 +1,10 @@
 'use client';
 
-import { Plus, Target } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { GoalCard } from '@/components/goals/goal-card';
+import { Button } from '@/components/ui/button';
 import { useGoals, useUpdateGoal } from '@/hooks/use-graphql';
+import { Plus, Target } from 'lucide-react';
+import Link from 'next/link';
 
 export default function GoalsPage() {
   // Fetch goals from GraphQL
@@ -59,7 +59,7 @@ export default function GoalsPage() {
             Track your progress and achievements
           </p>
         </div>
-        <Link href="/app/goals/new">
+        <Link href="/goals/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Create Goal
@@ -86,7 +86,7 @@ export default function GoalsPage() {
           <p className="text-muted-foreground mb-6 max-w-md">
             Create your first goal to start tracking your progress and building better habits.
           </p>
-          <Link href="/app/goals/new">
+          <Link href="/goals/new">
             <Button size="lg">
               <Plus className="mr-2 h-5 w-5" />
               Create Your First Goal

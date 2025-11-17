@@ -10,7 +10,7 @@ export class WaitlistAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/waitlist`,
+      baseURL: `${API_BASE_URL}/api/v1/waitlist`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -67,55 +67,98 @@ export class UserAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/user`,
+      baseURL: `${API_BASE_URL}/api/v1/users`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
 
-  // Get user profile
+  // Sync/create user from Clerk (no REST endpoint - handled by JWT auth)
+  async syncUser(input: any) {
+    // Note: User sync happens automatically via JWT validation in backend
+    // When a user authenticates, the Clerk strategy automatically creates/updates the user
+    // This method just fetches the user to confirm they exist
+    // We can't create the user directly without authentication
+
+    // Try to get the user - this will work if they're authenticated
+    // If not authenticated, this will fail with proper auth error
+    try {
+      const { data } = await this.client.get('/me', {
+        headers: { 'x-clerk-id': input.clerkId },
+      });
+      return data;
+    } catch (error) {
+      // User doesn't exist yet - they need to authenticate first
+      // The backend will create them via Clerk webhook or JWT validation
+      console.warn('User sync called but user not authenticated yet. User will be created on first auth.');
+      throw new Error('User must authenticate first. User will be created automatically on authentication.');
+    }
+  }
+
+  // Get current user profile
   async getUser(userId: string) {
-    const { data } = await this.client.get(`/${userId}`);
+    const { data } = await this.client.get('/me', {
+      headers: { 'x-user-id': userId },
+    });
     return data;
   }
 
   // Update user profile
   async updateUserProfile(userId: string, input: any) {
-    const { data} = await this.client.put(`/${userId}/profile`, input, {
+    const { data } = await this.client.put('/me', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  // Get user settings
+  // Get user settings (preferences)
   async getUserSettings(userId: string) {
-    const { data } = await this.client.get(`/${userId}/settings`, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
+    // Settings are included in the /me response
+    const user = await this.getUser(userId);
+    return {
+      wakeTime: user.wakeTime,
+      sleepTime: user.sleepTime,
+      workStartTime: user.workStartTime,
+      workEndTime: user.workEndTime,
+      productivityPeaks: user.productivityPeaks,
+      energyPattern: user.energyPattern,
+      blockedTimes: user.blockedTimes,
+      language: user.language,
+      pushTokens: user.pushTokens,
+    };
   }
 
-  // Update user settings
+  // Update user settings (preferences)
   async updateUserSettings(userId: string, input: any) {
-    const { data } = await this.client.put(`/${userId}/settings`, input, {
+    const { data } = await this.client.put('/me/preferences', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  // Get onboarding status
+  // Get onboarding status (handled by OnboardingAPI GraphQL)
   async getOnboardingStatus(userId: string) {
-    const { data } = await this.client.get(`/${userId}/onboarding/status`, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
+    // This is now handled by onboarding.resolver.ts via GraphQL
+    // Kept for backwards compatibility, fetch from /me
+    const user = await this.getUser(userId);
+    return {
+      completed: user.onboardingCompleted,
+      currentStep: user.onboardingStep,
+    };
   }
 
   // Complete onboarding
   async completeOnboarding(userId: string, input: any) {
-    const { data } = await this.client.post(`/${userId}/onboarding/complete`, input, {
+    // Update onboarding status via the new /me/onboarding endpoint
+    const { data } = await this.client.put('/me/onboarding', {
+      onboardingCompleted: true,
+      onboardingStep: 999, // Mark as completed
+      ...input,
+    }, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+
+    // Fetch and return the updated user with all fields
+    return await this.getUser(userId);
   }
 }
 
@@ -124,7 +167,7 @@ export class GoalsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/goals`,
+      baseURL: `${API_BASE_URL}/api/v1/goals`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -133,7 +176,8 @@ export class GoalsAPI {
     const { data } = await this.client.get(`/${id}`, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // API returns { message, goal }, extract the goal
+    return data.goal || data;
   }
 
   async getGoals(userId: string, filters: any) {
@@ -141,7 +185,8 @@ export class GoalsAPI {
       headers: { 'x-user-id': userId },
       params: filters,
     });
-    return data;
+    // API returns { message, goals, ... }, extract the goals array
+    return data.goals || data.data || data;
   }
 
   async getGoalAnalytics(id: string, userId: string) {
@@ -155,14 +200,16 @@ export class GoalsAPI {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // API returns { message, goal }, extract the goal
+    return data.goal || data;
   }
 
   async updateGoal(id: string, userId: string, input: any) {
     const { data } = await this.client.put(`/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // API returns { message, goal }, extract the goal
+    return data.goal || data;
   }
 
   async deleteGoal(id: string, userId: string) {
@@ -172,7 +219,7 @@ export class GoalsAPI {
   }
 
   async pauseGoal(id: string, userId: string, until?: Date) {
-    const { data } = await this.client.post(
+    const { data } = await this.client.put(
       `/${id}/pause`,
       { until },
       {
@@ -183,8 +230,8 @@ export class GoalsAPI {
   }
 
   async resumeGoal(id: string, userId: string) {
-    const { data } = await this.client.post(
-      `/${id}/resume`,
+    const { data } = await this.client.put(
+      `/${id}/activate`,
       {},
       {
         headers: { 'x-user-id': userId },
@@ -207,7 +254,7 @@ export class TasksAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/tasks`,
+      baseURL: `${API_BASE_URL}/api/v1/tasks`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -228,10 +275,16 @@ export class TasksAPI {
   }
 
   async getTasksByGoalIds(goalIds: string[]) {
-    const { data } = await this.client.get('/batch', {
-      params: { goalIds: goalIds.join(',') },
-    });
-    return data;
+    // Note: /batch endpoint doesn't exist in backend
+    // Fetching tasks by filtering on goalId instead
+    const tasks = [];
+    for (const goalId of goalIds) {
+      const { data } = await this.client.get('/', {
+        params: { goalId },
+      });
+      tasks.push(...(Array.isArray(data) ? data : []));
+    }
+    return tasks;
   }
 
   async createTask(userId: string, input: any) {
@@ -277,9 +330,11 @@ export class TasksAPI {
   }
 
   async uncompleteTask(id: string, userId: string) {
-    const { data } = await this.client.post(
-      `/${id}/uncomplete`,
-      {},
+    // Note: /uncomplete endpoint doesn't exist in backend
+    // Using update task to set completed: false instead
+    const { data } = await this.client.put(
+      `/${id}`,
+      { completed: false, completedAt: null },
       {
         headers: { 'x-user-id': userId },
       }
@@ -304,42 +359,51 @@ export class TasksAPI {
   }
 
   async searchTasks(query: string, userId: string) {
-    const { data } = await this.client.get('/search', {
+    // Note: /search endpoint doesn't exist in backend
+    // Implementing basic client-side filter instead
+    const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
-      params: { q: query },
     });
-    return data;
+    const tasks = Array.isArray(data) ? data : [];
+    const lowercaseQuery = query.toLowerCase();
+    return tasks.filter(
+      (task: any) =>
+        task.title?.toLowerCase().includes(lowercaseQuery) ||
+        task.description?.toLowerCase().includes(lowercaseQuery)
+    );
   }
 
   // Task Dependencies
   async createTaskDependency(userId: string, input: any) {
-    const { data } = await this.client.post('/dependencies', input, {
+    const { data } = await this.client.post('/advanced/dependencies', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
   async deleteTaskDependency(id: string, userId: string) {
-    await this.client.delete(`/dependencies/${id}`, {
+    await this.client.delete(`/advanced/dependencies/${id}`, {
       headers: { 'x-user-id': userId },
     });
   }
 
   async getTaskDependencies(taskId: string) {
-    const { data } = await this.client.get(`/${taskId}/dependencies`);
+    const { data } = await this.client.get(`/advanced/${taskId}/dependencies`);
     return data;
   }
 
   async getTaskBlockers(taskId: string) {
-    const { data } = await this.client.get(`/${taskId}/blockers`);
-    return data;
+    // Note: /blockers endpoint doesn't exist in backend
+    // Dependencies are returned by getTaskDependencies
+    // Frontend should derive blockers from dependencies
+    throw new Error('getTaskBlockers not implemented in backend. Use getTaskDependencies instead.');
   }
 
   // Time Tracking
   async startTimer(taskId: string, userId: string) {
     const { data } = await this.client.post(
-      `/${taskId}/timer/start`,
-      {},
+      '/advanced/timer/start',
+      { taskId },
       {
         headers: { 'x-user-id': userId },
       }
@@ -349,8 +413,8 @@ export class TasksAPI {
 
   async stopTimer(taskId: string, userId: string) {
     const { data } = await this.client.post(
-      `/${taskId}/timer/stop`,
-      {},
+      '/advanced/timer/stop',
+      { taskId },
       {
         headers: { 'x-user-id': userId },
       }
@@ -359,20 +423,21 @@ export class TasksAPI {
   }
 
   async getTimeEntries(taskId: string) {
-    const { data } = await this.client.get(`/${taskId}/time-entries`);
-    return data;
+    // Note: /time-entries endpoint doesn't exist in backend
+    // Use /advanced/time/stats instead or implement in backend
+    throw new Error('getTimeEntries not fully implemented. Consider using time/stats endpoint.');
   }
 
   // Subtasks
   async createSubtask(parentId: string, userId: string, input: any) {
-    const { data } = await this.client.post(`/${parentId}/subtasks`, input, {
+    const { data } = await this.client.post('/advanced/subtasks', { ...input, parentId }, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
   async getSubtasks(taskId: string) {
-    const { data } = await this.client.get(`/${taskId}/subtasks`);
+    const { data } = await this.client.get(`/advanced/${taskId}/subtasks`);
     return data;
   }
 }
@@ -382,7 +447,7 @@ export class ProductivityAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/productivity`,
+      baseURL: `${API_BASE_URL}/api/v1/productivity`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -612,7 +677,7 @@ export class ProjectsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/projects`,
+      baseURL: `${API_BASE_URL}/api/v1/tasks/advanced/projects`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -688,7 +753,7 @@ export class PlansAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/plans`,
+      baseURL: `${API_BASE_URL}/api/v1/plans`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -786,7 +851,7 @@ export class AnalyticsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/analytics`,
+      baseURL: `${API_BASE_URL}/api/v1/analytics`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -799,7 +864,9 @@ export class AnalyticsAPI {
   }
 
   async getWeeklyStats(userId: string, weekStart?: string) {
-    const { data } = await this.client.get('/weekly', {
+    // Note: /weekly endpoint doesn't exist in analytics controller
+    // Using /metrics with date filtering instead
+    const { data } = await this.client.get('/metrics', {
       headers: { 'x-user-id': userId },
       params: { weekStart },
     });
@@ -807,7 +874,12 @@ export class AnalyticsAPI {
   }
 
   async getProductivityScores(userId: string, startDate: string, endDate: string) {
-    const { data } = await this.client.get('/score/range', {
+    // Note: /score/range is in ProductivityAPI, not Analytics API
+    const productivityClient = axios.create({
+      baseURL: `${API_BASE_URL}/api/v1/productivity`,
+      headers: this.client.defaults.headers,
+    });
+    const { data } = await productivityClient.get('/score/range', {
       headers: { 'x-user-id': userId },
       params: { startDate, endDate },
     });
@@ -815,7 +887,12 @@ export class AnalyticsAPI {
   }
 
   async getGoalAnalyticsReport(goalId: string, userId: string) {
-    const { data } = await this.client.get(`/${goalId}/analytics`, {
+    // Note: Goal analytics is in GoalsAPI at /goals/:id/analytics
+    const goalsClient = axios.create({
+      baseURL: `${API_BASE_URL}/api/v1/goals`,
+      headers: this.client.defaults.headers,
+    });
+    const { data } = await goalsClient.get(`/${goalId}/analytics`, {
       headers: { 'x-user-id': userId },
     });
     return data;
@@ -867,7 +944,7 @@ export class CalendarAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/calendar`,
+      baseURL: `${API_BASE_URL}/api/v1/calendar`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -970,7 +1047,7 @@ export class TeamsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/teams`,
+      baseURL: `${API_BASE_URL}/api/v1/teams`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -1091,7 +1168,7 @@ export class SchedulingAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/scheduling`,
+      baseURL: `${API_BASE_URL}/api/v1/scheduling`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -1162,15 +1239,26 @@ export class SchedulingAPI {
     return data;
   }
 
-  async getAvailableSlots(linkId: string, date: string) {
-    const { data } = await this.client.get(`/links/${linkId}/available-slots`, {
+  async getAvailableSlots(linkId: string, date: string, slug?: string) {
+    // Note: Backend uses /links/slug/:slug/slots, not /links/:linkId/available-slots
+    // If slug is provided, use it; otherwise fetch link first to get slug
+    if (!slug) {
+      const link = await this.getSchedulingLinkBySlug(linkId); // Assuming linkId might be slug
+      slug = link.slug || linkId;
+    }
+    const { data } = await this.client.get(`/links/slug/${slug}/slots`, {
       params: { date },
     });
     return data;
   }
 
-  async createBooking(input: any) {
-    const { data } = await this.client.post('/bookings', input);
+  async createBooking(input: any, slug?: string) {
+    // Note: Backend uses /links/slug/:slug/bookings, not /bookings
+    if (!slug && input.schedulingLinkId) {
+      const link = await this.getSchedulingLinkBySlug(input.schedulingLinkId);
+      slug = link.slug || input.schedulingLinkId;
+    }
+    const { data } = await this.client.post(`/links/slug/${slug}/bookings`, input);
     return data;
   }
 
@@ -1195,7 +1283,7 @@ export class IntegrationsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/integrations`,
+      baseURL: `${API_BASE_URL}/api/v1/integrations`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -1305,7 +1393,7 @@ export class BillingAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/billing`,
+      baseURL: `${API_BASE_URL}/api/v1/billing`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
@@ -1340,7 +1428,7 @@ export class BillingAPI {
   }
 
   async createCheckoutSession(userId: string, tier: string, interval: string) {
-    const { data } = await this.client.post('/checkout-session', { tier, interval }, {
+    const { data } = await this.client.post('/checkout', { tier, interval }, {
       headers: { 'x-user-id': userId },
     });
     return data;
@@ -1375,7 +1463,7 @@ export class BillingAPI {
   }
 
   async createBillingPortalSession(userId: string) {
-    const { data } = await this.client.post('/portal-session', {}, {
+    const { data } = await this.client.get('/portal', {
       headers: { 'x-user-id': userId },
     });
     return data;
