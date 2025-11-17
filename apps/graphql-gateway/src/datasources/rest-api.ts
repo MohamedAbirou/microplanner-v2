@@ -67,55 +67,68 @@ export class UserAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/user`,
+      baseURL: `${API_BASE_URL}/users`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }
 
-  // Get user profile
+  // Get current user profile
   async getUser(userId: string) {
-    const { data } = await this.client.get(`/${userId}`);
+    const { data } = await this.client.get('/me', {
+      headers: { 'x-user-id': userId },
+    });
     return data;
   }
 
   // Update user profile
   async updateUserProfile(userId: string, input: any) {
-    const { data} = await this.client.put(`/${userId}/profile`, input, {
+    const { data } = await this.client.put('/me', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  // Get user settings
+  // Get user settings (preferences)
   async getUserSettings(userId: string) {
-    const { data } = await this.client.get(`/${userId}/settings`, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
+    // Settings are included in the /me response
+    const user = await this.getUser(userId);
+    return {
+      wakeTime: user.wakeTime,
+      sleepTime: user.sleepTime,
+      workStartTime: user.workStartTime,
+      workEndTime: user.workEndTime,
+      productivityPeaks: user.productivityPeaks,
+      energyPattern: user.energyPattern,
+      blockedTimes: user.blockedTimes,
+      language: user.language,
+      pushTokens: user.pushTokens,
+    };
   }
 
-  // Update user settings
+  // Update user settings (preferences)
   async updateUserSettings(userId: string, input: any) {
-    const { data } = await this.client.put(`/${userId}/settings`, input, {
+    const { data } = await this.client.put('/me/preferences', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  // Get onboarding status
+  // Get onboarding status (handled by OnboardingAPI GraphQL)
   async getOnboardingStatus(userId: string) {
-    const { data } = await this.client.get(`/${userId}/onboarding/status`, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
+    // This is now handled by onboarding.resolver.ts via GraphQL
+    // Kept for backwards compatibility, fetch from /me
+    const user = await this.getUser(userId);
+    return {
+      completed: user.onboardingCompleted,
+      currentStep: user.onboardingStep,
+    };
   }
 
-  // Complete onboarding
+  // Complete onboarding (handled by OnboardingAPI GraphQL)
   async completeOnboarding(userId: string, input: any) {
-    const { data } = await this.client.post(`/${userId}/onboarding/complete`, input, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
+    // This is now handled by onboarding.resolver.ts via GraphQL
+    // This method should not be called, but kept for backwards compatibility
+    throw new Error('completeOnboarding should use GraphQL onboarding.resolver.ts');
   }
 }
 
@@ -172,7 +185,7 @@ export class GoalsAPI {
   }
 
   async pauseGoal(id: string, userId: string, until?: Date) {
-    const { data } = await this.client.post(
+    const { data } = await this.client.put(
       `/${id}/pause`,
       { until },
       {
@@ -183,8 +196,8 @@ export class GoalsAPI {
   }
 
   async resumeGoal(id: string, userId: string) {
-    const { data } = await this.client.post(
-      `/${id}/resume`,
+    const { data } = await this.client.put(
+      `/${id}/activate`,
       {},
       {
         headers: { 'x-user-id': userId },
@@ -228,10 +241,16 @@ export class TasksAPI {
   }
 
   async getTasksByGoalIds(goalIds: string[]) {
-    const { data } = await this.client.get('/batch', {
-      params: { goalIds: goalIds.join(',') },
-    });
-    return data;
+    // Note: /batch endpoint doesn't exist in backend
+    // Fetching tasks by filtering on goalId instead
+    const tasks = [];
+    for (const goalId of goalIds) {
+      const { data } = await this.client.get('/', {
+        params: { goalId },
+      });
+      tasks.push(...(Array.isArray(data) ? data : []));
+    }
+    return tasks;
   }
 
   async createTask(userId: string, input: any) {
@@ -277,9 +296,11 @@ export class TasksAPI {
   }
 
   async uncompleteTask(id: string, userId: string) {
-    const { data } = await this.client.post(
-      `/${id}/uncomplete`,
-      {},
+    // Note: /uncomplete endpoint doesn't exist in backend
+    // Using update task to set completed: false instead
+    const { data } = await this.client.put(
+      `/${id}`,
+      { completed: false, completedAt: null },
       {
         headers: { 'x-user-id': userId },
       }
@@ -304,42 +325,51 @@ export class TasksAPI {
   }
 
   async searchTasks(query: string, userId: string) {
-    const { data } = await this.client.get('/search', {
+    // Note: /search endpoint doesn't exist in backend
+    // Implementing basic client-side filter instead
+    const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
-      params: { q: query },
     });
-    return data;
+    const tasks = Array.isArray(data) ? data : [];
+    const lowercaseQuery = query.toLowerCase();
+    return tasks.filter(
+      (task: any) =>
+        task.title?.toLowerCase().includes(lowercaseQuery) ||
+        task.description?.toLowerCase().includes(lowercaseQuery)
+    );
   }
 
   // Task Dependencies
   async createTaskDependency(userId: string, input: any) {
-    const { data } = await this.client.post('/dependencies', input, {
+    const { data } = await this.client.post('/advanced/dependencies', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
   async deleteTaskDependency(id: string, userId: string) {
-    await this.client.delete(`/dependencies/${id}`, {
+    await this.client.delete(`/advanced/dependencies/${id}`, {
       headers: { 'x-user-id': userId },
     });
   }
 
   async getTaskDependencies(taskId: string) {
-    const { data } = await this.client.get(`/${taskId}/dependencies`);
+    const { data } = await this.client.get(`/advanced/${taskId}/dependencies`);
     return data;
   }
 
   async getTaskBlockers(taskId: string) {
-    const { data } = await this.client.get(`/${taskId}/blockers`);
-    return data;
+    // Note: /blockers endpoint doesn't exist in backend
+    // Dependencies are returned by getTaskDependencies
+    // Frontend should derive blockers from dependencies
+    throw new Error('getTaskBlockers not implemented in backend. Use getTaskDependencies instead.');
   }
 
   // Time Tracking
   async startTimer(taskId: string, userId: string) {
     const { data } = await this.client.post(
-      `/${taskId}/timer/start`,
-      {},
+      '/advanced/timer/start',
+      { taskId },
       {
         headers: { 'x-user-id': userId },
       }
@@ -349,8 +379,8 @@ export class TasksAPI {
 
   async stopTimer(taskId: string, userId: string) {
     const { data } = await this.client.post(
-      `/${taskId}/timer/stop`,
-      {},
+      '/advanced/timer/stop',
+      { taskId },
       {
         headers: { 'x-user-id': userId },
       }
@@ -359,20 +389,21 @@ export class TasksAPI {
   }
 
   async getTimeEntries(taskId: string) {
-    const { data } = await this.client.get(`/${taskId}/time-entries`);
-    return data;
+    // Note: /time-entries endpoint doesn't exist in backend
+    // Use /advanced/time/stats instead or implement in backend
+    throw new Error('getTimeEntries not fully implemented. Consider using time/stats endpoint.');
   }
 
   // Subtasks
   async createSubtask(parentId: string, userId: string, input: any) {
-    const { data } = await this.client.post(`/${parentId}/subtasks`, input, {
+    const { data } = await this.client.post('/advanced/subtasks', { ...input, parentId }, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
   async getSubtasks(taskId: string) {
-    const { data } = await this.client.get(`/${taskId}/subtasks`);
+    const { data } = await this.client.get(`/advanced/${taskId}/subtasks`);
     return data;
   }
 }
@@ -612,7 +643,7 @@ export class ProjectsAPI {
 
   constructor(token?: string) {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/projects`,
+      baseURL: `${API_BASE_URL}/tasks/advanced/projects`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }

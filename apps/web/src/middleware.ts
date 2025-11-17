@@ -52,12 +52,24 @@ export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   const { pathname } = req.nextUrl;
 
-  // Public routes - allow access
+  // Special handling for root path "/"
+  // Authenticated users -> dashboard, Unauthenticated -> marketing page
+  if (pathname === '/') {
+    if (userId) {
+      // Redirect authenticated users to dashboard
+      // Note: Onboarding check happens in app/(app)/layout.tsx using database data
+      return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
+    // Unauthenticated users see marketing page (client-side redirect to /home)
+    return NextResponse.next();
+  }
+
+  // Public routes - allow access for everyone
   if (isPublicRoute(req)) {
     return NextResponse.next();
   }
 
-  // Onboarding route - require auth but allow access
+  // Onboarding route - require auth
   if (isOnboardingRoute(req)) {
     if (!userId) {
       return NextResponse.redirect(new URL('/sign-in', req.url));
@@ -65,18 +77,21 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
-  // Protected routes - require auth only
+  // Protected app routes - require auth
   // Note: Onboarding check happens in app/(app)/layout.tsx using database data
   // The middleware can't efficiently query database (edge runtime), so we defer the check
-  if (isProtectedRoute(req) || pathname.startsWith('/')) {
+  if (isProtectedRoute(req)) {
     if (!userId) {
       return NextResponse.redirect(new URL('/sign-in', req.url));
     }
-
     return NextResponse.next();
   }
 
-  // Default: allow other routes (will be caught by Clerk if needed)
+  // Default: Require auth for all other routes (secure by default)
+  if (!userId) {
+    return NextResponse.redirect(new URL('/sign-in', req.url));
+  }
+
   return NextResponse.next();
 });
 
