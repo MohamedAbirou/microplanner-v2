@@ -46,6 +46,7 @@ type Task {
   subtasks: [Task!]!
   dependencies: [TaskDependency!]!
   blockedBy: [TaskDependency!]!
+  timeEntries: [TimeEntry!]!
 
   # Timestamps
   createdAt: DateTime!

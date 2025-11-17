@@ -48,6 +48,8 @@ export const resolvers = {
   // Type resolvers
   Goal: goalResolvers.Goal,
   Task: taskResolvers.Task,
+  TaskDependency: taskResolvers.TaskDependency,
   Plan: planResolvers.Plan,
   PlanTemplate: planResolvers.PlanTemplate,
+  Project: projectResolvers.Project,
 };

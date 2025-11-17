@@ -208,8 +208,8 @@ export const taskResolvers = {
       return taskLoader.load(dependency.dependentTaskId);
     },
 
-    dependsOnTask: async (dependency: any, _: any, { dataSources, taskLoader }: any) => {
-      return taskLoader.load(dependency.dependsOnTaskId);
+    blockingTask: async (dependency: any, _: any, { dataSources, taskLoader }: any) => {
+      return taskLoader.load(dependency.blockingTaskId);
     },
   },
 };
