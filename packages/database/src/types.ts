@@ -148,15 +148,6 @@ export interface Goal {
   updatedAt: Date;
 }
 
-export const PlanStatus = {
-  DRAFT: 'DRAFT',
-  ACCEPTED: 'ACCEPTED',
-  APPLIED: 'APPLIED',
-  ARCHIVED: 'ARCHIVED',
-} as const;
-
-export type PlanStatusType = typeof PlanStatus[keyof typeof PlanStatus];
-
 export interface WeeklyPlan {
   id: string;
   userId: string;
@@ -197,16 +188,6 @@ export interface WeeklyPlan {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export const SyncStatus = {
-  PENDING: 'PENDING',
-  SYNCING: 'SYNCING',
-  SYNCED: 'SYNCED',
-  FAILED: 'FAILED',
-  CONFLICT: 'CONFLICT',
-} as const;
-
-export type SyncStatusType = typeof SyncStatus[keyof typeof SyncStatus];
 
 export interface Task {
   id: string;

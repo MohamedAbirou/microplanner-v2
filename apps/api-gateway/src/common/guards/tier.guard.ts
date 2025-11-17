@@ -7,13 +7,13 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { SubscriptionTier } from '@microplanner/database';
+import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
 
 /**
  * Tier hierarchy for access control
  * Higher tiers include access to lower tier features
  */
-const TIER_HIERARCHY: Record<SubscriptionTier, number> = {
+const TIER_HIERARCHY: Record<SubscriptionTierType, number> = {
   FREE: 0,
   STARTER: 1,
   PRO: 2,
@@ -24,7 +24,7 @@ const TIER_HIERARCHY: Record<SubscriptionTier, number> = {
  * Decorator to specify minimum tier required for a resolver/controller
  * @example @RequireTier('PRO')
  */
-export const RequireTier = (tier: SubscriptionTier) => SetMetadata('tier', tier);
+export const RequireTier = (tier: SubscriptionTierType) => SetMetadata('tier', tier);
 
 /**
  * Guard to enforce tier-based access control
@@ -36,7 +36,7 @@ export class TierGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     // Get required tier from decorator
-    const requiredTier = this.reflector.get<SubscriptionTier>('tier', context.getHandler());
+    const requiredTier = this.reflector.get<SubscriptionTierType>('tier', context.getHandler());
 
     // If no tier requirement, allow access
     if (!requiredTier) {
@@ -84,7 +84,7 @@ export class TierGuard implements CanActivate {
 /**
  * Helper function to check tier access programmatically
  */
-export function checkTierAccess(userTier: SubscriptionTier, requiredTier: SubscriptionTier): boolean {
+export function checkTierAccess(userTier: SubscriptionTierType, requiredTier: SubscriptionTierType): boolean {
   const userLevel = TIER_HIERARCHY[userTier] || 0;
   const requiredLevel = TIER_HIERARCHY[requiredTier];
   return userLevel >= requiredLevel;
