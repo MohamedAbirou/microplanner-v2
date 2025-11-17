@@ -61,18 +61,17 @@ extend type Query {
   # Get all calendar connections
   calendarConnections: [CalendarConnection!]!
 
+  # Get specific calendar connection
+  calendarConnection(id: ID!): CalendarConnection!
+
+  # Get all calendar events
+  calendarEvents: [CalendarEvent!]!
+
   # Get upcoming calendar events
-  upcomingEvents(
-    limit: Int
-    startDate: DateTime
-    endDate: DateTime
-  ): [CalendarEvent!]!
+  upcomingEvents(limit: Int, startDate: DateTime, endDate: DateTime): [CalendarEvent!]!
 
   # Get calendar busy slots
-  busySlots(
-    startDate: DateTime!
-    endDate: DateTime!
-  ): [BusySlot!]!
+  busySlots(startDate: DateTime!, endDate: DateTime!): [BusySlot!]!
 }
 
 type BusySlot {
@@ -87,28 +86,57 @@ type BusySlot {
 
 extend type Mutation {
   # Connect calendar
-  connectCalendar(
-    provider: CalendarProvider!
-    authCode: String!
-  ): CalendarConnection!
+  connectCalendar(provider: CalendarProvider!, authCode: String!): CalendarConnection!
 
   # Disconnect calendar
   disconnectCalendar(provider: CalendarProvider!): Boolean!
 
+  # Initiate calendar auth flow
+  initiateCalendarAuth(provider: CalendarProvider!): String!
+
   # Manually trigger sync
   syncCalendar(provider: CalendarProvider!): SyncResult!
 
+  # Sync all connected calendars
+  syncAllCalendars: [SyncResult!]!
+
   # Sync plan to calendar
-  syncPlanToCalendar(
-    planId: ID!
-    provider: CalendarProvider!
-  ): SyncResult!
+  syncPlanToCalendar(planId: ID!, provider: CalendarProvider!): SyncResult!
 
   # Update sync settings
-  updateCalendarSync(
+  updateCalendarSync(provider: CalendarProvider!, enabled: Boolean!): CalendarConnection!
+
+  # Create a new calendar event
+  createCalendarEvent(
     provider: CalendarProvider!
-    enabled: Boolean!
-  ): CalendarConnection!
+    title: String!
+    description: String
+    start: DateTime!
+    end: DateTime!
+    allDay: Boolean
+    attendees: [String!]
+    location: String
+  ): CalendarEvent!
+
+  # Update an existing calendar event
+  updateCalendarEvent(
+    provider: CalendarProvider!
+    eventId: String!
+    title: String
+    description: String
+    start: DateTime
+    end: DateTime
+    allDay: Boolean
+    attendees: [String!]
+    location: String
+  ): CalendarEvent!
+
+  # Delete a calendar event
+  deleteCalendarEvent(provider: CalendarProvider!, eventId: String!): Boolean!
+}
+
+extend type CalendarConnection {
+  events(limit: Int, startDate: DateTime, endDate: DateTime): [CalendarEvent!]!
 }
 
 # ============================================

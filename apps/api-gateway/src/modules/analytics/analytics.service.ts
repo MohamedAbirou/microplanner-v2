@@ -1,17 +1,20 @@
+import type { AnalyticsEvent, LLMUsage } from '@microplanner/database';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import type { AnalyticsEvent, LLMUsage } from '@microplanner/database';
 import { TrackEventDto } from './dto/track-event.dto';
 
 export interface UserMetrics {
-  totalGoals: number;
+  todayTasks: number;
+  todayCompleted: number;
+  todayCompletionRate: number;
+  weekTasks: number;
+  weekCompleted: number;
+  weekCompletionRate: number;
+  activeGoals: number;
+  currentStreak: Promise<number>;
+  longestStreak: Promise<number>;
   totalPlans: number;
-  totalTasks: number;
-  tasksCompleted: number;
-  planAcceptanceRate: number;
-  calendarConnected: boolean;
-  llmCostTotal: number;
-  avgTaskCompletionRate: number;
+  averagePlanQuality: number;
 }
 
 export interface WeeklyInsights {
@@ -60,37 +63,111 @@ export class AnalyticsService {
    * Get user metrics for dashboard
    */
   async getUserMetrics(userId: string): Promise<UserMetrics> {
+    // Calculate current week boundaries (Monday-Sunday)
+    const { weekStartDate, weekEndDate } = this.calculateCurrentWeekBoundaries();
+
     const [
-      totalGoals,
+      todayTasks,
+      todayCompleted,
+      weekTasks,
+      weekCompleted,
+      activeGoals,
       totalPlans,
-      totalTasks,
-      tasksCompleted,
-      plansAccepted,
-      calendarToken,
-      llmUsageRecords,
+      avgAggregate,
     ] = await Promise.all([
-      this.prisma.goal.count({ where: { userId } }),
-      this.prisma.weeklyPlan.count({ where: { userId } }),
-      this.prisma.task.count({ where: { userId } }),
-      this.prisma.task.count({ where: { userId, isCompleted: true } }),
-      this.prisma.weeklyPlan.count({ where: { userId, status: 'ACCEPTED' } }),
-      this.prisma.calendarToken.findFirst({ where: { userId } }),
-      this.prisma.lLMUsage.findMany({ where: { userId } }),
+      this.prisma.task.count({ where: { userId, scheduledDate: Date.now().toLocaleString() } }),
+      this.prisma.task.count({
+        where: { userId, scheduledDate: Date.now().toLocaleString(), isCompleted: true },
+      }),
+      this.prisma.task.count({
+        where: {
+          userId,
+          scheduledDate: { gte: weekStartDate, lte: weekEndDate },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          userId,
+          isCompleted: true,
+          completedAt: { gte: weekStartDate, lte: weekEndDate },
+        },
+      }),
+      this.prisma.goal.count({
+        where: { userId, isActive: true },
+      }),
+      this.prisma.weeklyPlan.count({
+        where: { userId },
+      }),
+      this.prisma.weeklyPlan.aggregate({
+        where: { userId },
+        _avg: { qualityScore: true },
+      }),
     ]);
 
-    const planAcceptanceRate = totalPlans > 0 ? (plansAccepted / totalPlans) * 100 : 0;
-    const avgTaskCompletionRate = totalTasks > 0 ? (tasksCompleted / totalTasks) * 100 : 0;
-    const llmCostTotal = llmUsageRecords.reduce((sum, record) => sum + record.cost, 0) / 100; // Convert cents to dollars
+    const averagePlanQuality = Number(avgAggregate?._avg?.qualityScore ?? 0);
+
+    const todayCompletionRate = todayTasks > 0 ? (todayCompleted / todayTasks) * 100 : 0;
+    const weekCompletionRate = weekTasks > 0 ? (weekCompleted / weekTasks) * 100 : 0;
+    const streaksPromise = (async () => {
+      // Fetch all completed task timestamps for the user
+      const completed = await this.prisma.task.findMany({
+        where: { userId, isCompleted: true, completedAt: { not: null } },
+        select: { completedAt: true },
+      });
+
+      const DAY_MS = 24 * 60 * 60 * 1000;
+
+      // Normalize to UTC-local midnight (date-only) and build a set of unique day timestamps
+      const daysSet = new Set<number>();
+      for (const row of completed) {
+        const d = new Date(row.completedAt as Date);
+        d.setHours(0, 0, 0, 0);
+        daysSet.add(d.getTime());
+      }
+
+      // Compute longest streak by scanning sorted unique days
+      const days = Array.from(daysSet).sort((a, b) => a - b);
+      let longest = 0;
+      let run = 0;
+      let prev: number | null = null;
+      for (const dayMs of days) {
+        if (prev === null || dayMs - prev === DAY_MS) {
+          run++;
+        } else {
+          run = 1;
+        }
+        if (run > longest) longest = run;
+        prev = dayMs;
+      }
+
+      // Compute current streak by walking backwards from today
+      let current = 0;
+      const cursor = new Date();
+      cursor.setHours(0, 0, 0, 0);
+      while (daysSet.has(cursor.getTime())) {
+        current++;
+        cursor.setDate(cursor.getDate() - 1);
+        cursor.setHours(0, 0, 0, 0);
+      }
+
+      return { current, longest };
+    })();
+
+    const currentStreak = streaksPromise.then(s => s.current);
+    const longestStreak = streaksPromise.then(s => s.longest);
 
     return {
-      totalGoals,
+      todayTasks,
+      todayCompleted,
+      todayCompletionRate,
+      weekTasks,
+      weekCompleted,
+      weekCompletionRate,
+      activeGoals,
+      currentStreak,
+      longestStreak,
       totalPlans,
-      totalTasks,
-      tasksCompleted,
-      planAcceptanceRate,
-      calendarConnected: !!calendarToken,
-      llmCostTotal,
-      avgTaskCompletionRate,
+      averagePlanQuality,
     };
   }
 
@@ -99,16 +176,7 @@ export class AnalyticsService {
    */
   async getWeeklyInsights(userId: string): Promise<WeeklyInsights> {
     // Calculate current week boundaries (Monday-Sunday)
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const weekStartDate = new Date(now);
-    weekStartDate.setDate(now.getDate() + diff);
-    weekStartDate.setHours(0, 0, 0, 0);
-
-    const weekEndDate = new Date(weekStartDate);
-    weekEndDate.setDate(weekStartDate.getDate() + 6);
-    weekEndDate.setHours(23, 59, 59, 999);
+    const { weekStartDate, weekEndDate } = this.calculateCurrentWeekBoundaries();
 
     // Get this week's data
     const [goalsCreated, plansGenerated, tasksCompleted, allTasks, goalsWithCompletions] =
@@ -170,7 +238,8 @@ export class AnalyticsService {
     } else if (tasksCompleted === 0) {
       recommendation = 'No tasks completed yet this week. Start small and build momentum!';
     } else {
-      recommendation = 'You can do it! Focus on your top priority goals to improve completion rate.';
+      recommendation =
+        'You can do it! Focus on your top priority goals to improve completion rate.';
     }
 
     const topGoals = goalsWithCompletions.map(g => ({
@@ -208,19 +277,23 @@ export class AnalyticsService {
 
     const totalCost = usageRecords.reduce((sum, r) => sum + r.cost, 0) / 100; // Convert cents to dollars
     const totalTokens = usageRecords.reduce((sum, r) => sum + r.totalTokens, 0);
-    const avgLatency = usageRecords.length > 0
-      ? usageRecords.reduce((sum, r) => sum + r.latency, 0) / usageRecords.length
-      : 0;
+    const avgLatency =
+      usageRecords.length > 0
+        ? usageRecords.reduce((sum, r) => sum + r.latency, 0) / usageRecords.length
+        : 0;
 
-    const byModel = usageRecords.reduce((acc, r) => {
-      if (!acc[r.model]) {
-        acc[r.model] = { count: 0, cost: 0, tokens: 0 };
-      }
-      acc[r.model].count++;
-      acc[r.model].cost += r.cost / 100;
-      acc[r.model].tokens += r.totalTokens;
-      return acc;
-    }, {} as Record<string, { count: number; cost: number; tokens: number }>);
+    const byModel = usageRecords.reduce(
+      (acc, r) => {
+        if (!acc[r.model]) {
+          acc[r.model] = { count: 0, cost: 0, tokens: 0 };
+        }
+        acc[r.model].count++;
+        acc[r.model].cost += r.cost / 100;
+        acc[r.model].tokens += r.totalTokens;
+        return acc;
+      },
+      {} as Record<string, { count: number; cost: number; tokens: number }>
+    );
 
     return {
       period: { days, since },
@@ -245,7 +318,7 @@ export class AnalyticsService {
     cost: number,
     latency: number,
     success: boolean = true,
-    errorMessage: string | null = null,
+    errorMessage: string | null = null
   ): Promise<LLMUsage> {
     const usage = await this.prisma.lLMUsage.create({
       data: {
@@ -264,7 +337,7 @@ export class AnalyticsService {
     });
 
     this.logger.log(
-      `Tracked LLM usage: ${model} - ${operation} - ${inputTokens + outputTokens} tokens - $${(cost / 100).toFixed(4)}`,
+      `Tracked LLM usage: ${model} - ${operation} - ${inputTokens + outputTokens} tokens - $${(cost / 100).toFixed(4)}`
     );
 
     return usage;
@@ -346,5 +419,24 @@ export class AnalyticsService {
     this.logger.log(`Analytics aggregation complete: ${processed} users processed`);
 
     return { processed };
+  }
+
+  private calculateCurrentWeekBoundaries(weekStart?: string): {
+    weekStartDate: Date;
+    weekEndDate: Date;
+  } {
+    // Calculate current week boundaries (Monday-Sunday)
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const weekStartDate = weekStart ? new Date(weekStart) : new Date(now);
+    weekStartDate.setDate(now.getDate() + diff);
+    weekStartDate.setHours(0, 0, 0, 0);
+
+    const weekEndDate = new Date(weekStartDate);
+    weekEndDate.setDate(weekStartDate.getDate() + 6);
+    weekEndDate.setHours(23, 59, 59, 999);
+
+    return { weekStartDate, weekEndDate };
   }
 }

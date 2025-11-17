@@ -460,17 +460,16 @@ export interface SmartNotification {
 /**
  * Notification types
  */
-export enum NotificationType {
-  OVERBOOKED_DAY = 'overbooked_day',
-  MISSING_BREAKS = 'missing_breaks',
-  BACK_TO_BACK_MEETINGS = 'back_to_back_meetings',
-  FOCUS_TIME_CONFLICT = 'focus_time_conflict',
-  WORK_HOURS_VIOLATION = 'work_hours_violation',
-  UPCOMING_MEETING = 'upcoming_meeting',
-  TASK_DUE_SOON = 'task_due_soon',
-  GOAL_PROGRESS = 'goal_progress',
-  WEEKLY_SUMMARY = 'weekly_summary',
-}
+export type NotificationType =
+  | 'overbooked_day'
+  | 'missing_breaks'
+  | 'back_to_back_meetings'
+  | 'focus_time_conflict'
+  | 'work_hours_violation'
+  | 'upcoming_meeting'
+  | 'task_due_soon'
+  | 'goal_progress'
+  | 'weekly_summary';
 
 /**
  * Notification preferences

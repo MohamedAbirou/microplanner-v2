@@ -68,7 +68,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Protected routes - require auth only
   // Note: Onboarding check happens in app/(app)/layout.tsx using database data
   // The middleware can't efficiently query database (edge runtime), so we defer the check
-  if (isProtectedRoute(req) || pathname.startsWith('/app')) {
+  if (isProtectedRoute(req) || pathname.startsWith('/')) {
     if (!userId) {
       return NextResponse.redirect(new URL('/sign-in', req.url));
     }

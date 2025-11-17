@@ -53,7 +53,7 @@ type WeeklyStats {
   longestStreak: Int!
 }
 
-type GoalAnalytics {
+type GoalAnalyticsReport {
   goalId: ID!
   goal: Goal!
 
@@ -111,6 +111,9 @@ extend type Query {
   # Weekly analytics
   weeklyStats(weekStart: DateTime): WeeklyStats!
 
+  # insights
+  insights(type: String, limit: String): [String!]!
+
   # Productivity scores
   productivityScores(
     startDate: DateTime!
@@ -118,8 +121,8 @@ extend type Query {
   ): [ProductivityScore!]!
 
   # Goal-specific analytics
-  goalAnalytics(goalId: ID!): GoalAnalytics!
+  goalAnalyticsReport(goalId: ID!): GoalAnalyticsReport!
 
   # All goals analytics
-  allGoalsAnalytics: [GoalAnalytics!]!
+  # allGoalsAnalyticsReport: [GoalAnalyticsReport!]!
 }

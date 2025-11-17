@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
 import gql from 'graphql-tag';
+import { join } from 'path';
 
 // Load all GraphQL schema files
 const scalarsSchema = readFileSync(join(__dirname, 'scalars.graphql'), 'utf-8');
@@ -19,7 +19,6 @@ const planSchema = readFileSync(join(__dirname, 'plan.graphql'), 'utf-8');
 
 // Load advanced features
 const analyticsSchema = readFileSync(join(__dirname, 'analytics.graphql'), 'utf-8');
-const productivityFeaturesSchema = readFileSync(join(__dirname, 'productivity-features.graphql'), 'utf-8');
 
 // Load enterprise features
 const calendarSchema = readFileSync(join(__dirname, 'calendar.graphql'), 'utf-8');
@@ -42,7 +41,6 @@ export const typeDefs = gql`
   ${productivitySchema}
   ${planSchema}
   ${analyticsSchema}
-  ${productivityFeaturesSchema}
   ${calendarSchema}
   ${teamsSchema}
   ${schedulingSchema}
