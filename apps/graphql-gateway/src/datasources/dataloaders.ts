@@ -1,5 +1,5 @@
 import DataLoader from 'dataloader';
-import { TasksAPI, GoalsAPI, ProjectsAPI } from './rest-api';
+import { TasksAPI, GoalsAPI, ProjectsAPI, UserAPI } from './rest-api';
 
 /**
  * DataLoader for batching task queries by goal
@@ -79,5 +79,22 @@ export function createTaskByPlanLoader(tasksAPI: TasksAPI) {
     // Note: This requires implementing getTasksByPlanIds in TasksAPI
     // For now, return empty arrays for each plan
     return planIds.map(() => []);
+  });
+}
+
+/**
+ * DataLoader for batching individual user queries
+ * Used in Team.owner, TeamMember.user, TeamInvitation.inviter, etc.
+ */
+export function createUserLoader(userAPI: UserAPI) {
+  return new DataLoader(async (userIds: readonly string[]) => {
+    try {
+      const users = await Promise.all(
+        userIds.map((id) => userAPI.getUser(id as string).catch(() => null))
+      );
+      return users;
+    } catch {
+      return userIds.map(() => null);
+    }
   });
 }

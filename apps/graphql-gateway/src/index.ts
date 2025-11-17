@@ -34,6 +34,7 @@ import {
   createProjectLoader,
   createTaskByGoalLoader,
   createTaskByPlanLoader,
+  createUserLoader,
 } from './datasources/dataloaders';
 import * as jwt from 'jsonwebtoken';
 import 'dotenv/config';
@@ -212,6 +213,7 @@ async function startServer() {
         const projectLoader = createProjectLoader(projectsAPI, userId);
         const taskByGoalLoader = createTaskByGoalLoader(tasksAPI);
         const taskByPlanLoader = createTaskByPlanLoader(tasksAPI);
+        const userLoader = createUserLoader(userAPI);
 
         return {
           user,
@@ -240,6 +242,7 @@ async function startServer() {
           projectLoader,
           taskByGoalLoader,
           taskByPlanLoader,
+          userLoader,
         };
       },
     })
