@@ -1,0 +1,213 @@
+# Scheduling Links (Calendly-like booking system)
+
+# ============================================
+# SCHEDULING LINKS
+# ============================================
+
+type SchedulingLink {
+  id: ID!
+  userId: ID!
+  user: User!
+  name: String!
+  slug: String!
+  description: String
+  duration: Int!
+  bufferBefore: Int!
+  bufferAfter: Int!
+  meetingType: String!
+  location: String
+  color: String!
+  isActive: Boolean!
+  isPublic: Boolean!
+  requiresConfirmation: Boolean!
+  maxBookingsPerDay: Int
+  noticeTime: Int!
+  availability: AvailabilitySettings!
+  customQuestions: [CustomQuestion!]!
+  redirectUrl: String
+  confirmationMessage: String
+  bookingCount: Int!
+  bookings: [Booking!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type AvailabilitySettings {
+  timezone: String!
+  schedule: AvailabilitySchedule!
+}
+
+type AvailabilitySchedule {
+  monday: [TimeSlot!]!
+  tuesday: [TimeSlot!]!
+  wednesday: [TimeSlot!]!
+  thursday: [TimeSlot!]!
+  friday: [TimeSlot!]!
+  saturday: [TimeSlot!]!
+  sunday: [TimeSlot!]!
+}
+
+type TimeSlot {
+  start: String!
+  end: String!
+}
+
+type CustomQuestion {
+  id: ID!
+  label: String!
+  type: QuestionType!
+  required: Boolean!
+  options: [String!]
+}
+
+enum QuestionType {
+  TEXT
+  EMAIL
+  PHONE
+  SELECT
+  TEXTAREA
+}
+
+type Booking {
+  id: ID!
+  linkId: ID!
+  link: SchedulingLink!
+  attendeeName: String!
+  attendeeEmail: String!
+  attendeePhone: String
+  startTime: DateTime!
+  endTime: DateTime!
+  timezone: String!
+  status: BookingStatus!
+  canceledAt: DateTime
+  cancelReason: String
+  customResponses: JSON
+  meetingUrl: String
+  calendarEventId: String
+  reminderSent: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+  COMPLETED
+}
+
+# ============================================
+# QUERIES
+# ============================================
+
+extend type Query {
+  # Scheduling Links
+  schedulingLinks: [SchedulingLink!]!
+  schedulingLink(id: ID!): SchedulingLink
+  schedulingLinkBySlug(slug: String!): SchedulingLink
+
+  # Bookings
+  bookings(linkId: ID, status: BookingStatus): [Booking!]!
+  booking(id: ID!): Booking
+
+  # Available time slots for booking
+  availableSlots(
+    linkId: ID!
+    date: DateTime!
+  ): [TimeSlot!]!
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+extend type Mutation {
+  # Scheduling Links
+  createSchedulingLink(input: CreateSchedulingLinkInput!): SchedulingLink!
+  updateSchedulingLink(id: ID!, input: UpdateSchedulingLinkInput!): SchedulingLink!
+  deleteSchedulingLink(id: ID!): Boolean!
+  toggleSchedulingLink(id: ID!): SchedulingLink!
+
+  # Bookings
+  createBooking(input: CreateBookingInput!): Booking!
+  confirmBooking(id: ID!): Booking!
+  cancelBooking(id: ID!, reason: String): Booking!
+}
+
+# Inputs
+input CreateSchedulingLinkInput {
+  name: String!
+  slug: String!
+  description: String
+  duration: Int!
+  bufferBefore: Int
+  bufferAfter: Int
+  meetingType: String
+  location: String
+  color: String
+  isPublic: Boolean
+  requiresConfirmation: Boolean
+  maxBookingsPerDay: Int
+  noticeTime: Int
+  availability: AvailabilitySettingsInput!
+  customQuestions: [CustomQuestionInput!]
+  redirectUrl: String
+  confirmationMessage: String
+}
+
+input UpdateSchedulingLinkInput {
+  name: String
+  description: String
+  duration: Int
+  bufferBefore: Int
+  bufferAfter: Int
+  meetingType: String
+  location: String
+  color: String
+  isActive: Boolean
+  isPublic: Boolean
+  requiresConfirmation: Boolean
+  maxBookingsPerDay: Int
+  noticeTime: Int
+  availability: AvailabilitySettingsInput
+  customQuestions: [CustomQuestionInput!]
+  redirectUrl: String
+  confirmationMessage: String
+}
+
+input AvailabilitySettingsInput {
+  timezone: String!
+  schedule: AvailabilityScheduleInput!
+}
+
+input AvailabilityScheduleInput {
+  monday: [TimeSlotInput!]
+  tuesday: [TimeSlotInput!]
+  wednesday: [TimeSlotInput!]
+  thursday: [TimeSlotInput!]
+  friday: [TimeSlotInput!]
+  saturday: [TimeSlotInput!]
+  sunday: [TimeSlotInput!]
+}
+
+input TimeSlotInput {
+  start: String!
+  end: String!
+}
+
+input CustomQuestionInput {
+  label: String!
+  type: QuestionType!
+  required: Boolean!
+  options: [String!]
+}
+
+input CreateBookingInput {
+  linkId: ID!
+  attendeeName: String!
+  attendeeEmail: String!
+  attendeePhone: String
+  startTime: DateTime!
+  timezone: String!
+  customResponses: JSON
+}

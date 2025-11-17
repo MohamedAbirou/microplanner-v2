@@ -1,0 +1,121 @@
+# Calendar Integration & Sync
+
+# ============================================
+# CALENDAR TOKENS & CONNECTIONS
+# ============================================
+
+type CalendarConnection {
+  id: ID!
+  userId: ID!
+  provider: CalendarProvider!
+  email: String
+  calendarId: String
+  calendarName: String
+  syncEnabled: Boolean!
+  lastSyncAt: DateTime
+  syncErrors: Int!
+  lastError: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum CalendarProvider {
+  GOOGLE
+  OUTLOOK
+  APPLE
+}
+
+type SyncResult {
+  success: Boolean!
+  provider: CalendarProvider!
+  tasksAttempted: Int!
+  tasksSucceeded: Int!
+  tasksFailed: Int!
+  duration: Int!
+  errors: [SyncError!]!
+}
+
+type SyncError {
+  taskId: ID
+  message: String!
+  code: String
+}
+
+type CalendarEvent {
+  id: String!
+  title: String!
+  description: String
+  start: DateTime!
+  end: DateTime!
+  allDay: Boolean!
+  source: CalendarProvider!
+  attendees: [String!]!
+  location: String
+}
+
+# ============================================
+# QUERIES
+# ============================================
+
+extend type Query {
+  # Get all calendar connections
+  calendarConnections: [CalendarConnection!]!
+
+  # Get upcoming calendar events
+  upcomingEvents(
+    limit: Int
+    startDate: DateTime
+    endDate: DateTime
+  ): [CalendarEvent!]!
+
+  # Get calendar busy slots
+  busySlots(
+    startDate: DateTime!
+    endDate: DateTime!
+  ): [BusySlot!]!
+}
+
+type BusySlot {
+  start: DateTime!
+  end: DateTime!
+  title: String
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+extend type Mutation {
+  # Connect calendar
+  connectCalendar(
+    provider: CalendarProvider!
+    authCode: String!
+  ): CalendarConnection!
+
+  # Disconnect calendar
+  disconnectCalendar(provider: CalendarProvider!): Boolean!
+
+  # Manually trigger sync
+  syncCalendar(provider: CalendarProvider!): SyncResult!
+
+  # Sync plan to calendar
+  syncPlanToCalendar(
+    planId: ID!
+    provider: CalendarProvider!
+  ): SyncResult!
+
+  # Update sync settings
+  updateCalendarSync(
+    provider: CalendarProvider!
+    enabled: Boolean!
+  ): CalendarConnection!
+}
+
+# ============================================
+# SUBSCRIPTIONS
+# ============================================
+
+extend type Subscription {
+  # Calendar sync status updates
+  calendarSyncStatus(userId: ID!): SyncResult!
+}
