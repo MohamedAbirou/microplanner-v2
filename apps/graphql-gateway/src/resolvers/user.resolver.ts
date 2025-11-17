@@ -2,6 +2,14 @@ import { GraphQLError } from 'graphql';
 
 export const userResolvers = {
   Query: {
+    /**
+     * Get current authenticated user
+     */
+    me: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.userAPI.getUser(user.userId);
+    },
+
     userSettings: async (_: any, __: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.userAPI.getUserSettings(user.userId);
@@ -14,6 +22,21 @@ export const userResolvers = {
   },
 
   Mutation: {
+    /**
+     * Sync/create user from Clerk authentication
+     * This ensures the user exists in our database with proper metadata
+     */
+    syncUser: async (_: any, { input }: any, { dataSources }: any) => {
+      try {
+        return await dataSources.userAPI.syncUser(input);
+      } catch (error) {
+        console.error('Failed to sync user:', error);
+        throw new GraphQLError('Failed to sync user to database', {
+          extensions: { code: 'USER_SYNC_FAILED' },
+        });
+      }
+    },
+
     updateUserProfile: async (_: any, { input }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.userAPI.updateUserProfile(user.userId, input);

@@ -8,6 +8,13 @@ import { projectResolvers } from './project.resolver';
 import { productivityResolvers } from './productivity.resolver';
 import { dashboardResolvers } from './dashboard.resolver';
 import { planResolvers } from './plan.resolver';
+import { analyticsResolvers } from './analytics.resolver';
+import { productivityFeaturesResolvers } from './productivity-features.resolver';
+import { calendarResolvers } from './calendar.resolver';
+import { teamsResolvers } from './teams.resolver';
+import { schedulingResolvers } from './scheduling.resolver';
+import { integrationsResolvers } from './integrations.resolver';
+import { billingResolvers } from './billing.resolver';
 
 /**
  * Merge all resolvers
@@ -23,6 +30,13 @@ export const resolvers = {
     ...productivityResolvers.Query,
     ...dashboardResolvers.Query,
     ...planResolvers.Query,
+    ...analyticsResolvers.Query,
+    ...productivityFeaturesResolvers.Query,
+    ...calendarResolvers.Query,
+    ...teamsResolvers.Query,
+    ...schedulingResolvers.Query,
+    ...integrationsResolvers.Query,
+    ...billingResolvers.Query,
   },
 
   Mutation: {
@@ -35,6 +49,13 @@ export const resolvers = {
     ...productivityResolvers.Mutation,
     ...dashboardResolvers.Mutation,
     ...planResolvers.Mutation,
+    ...analyticsResolvers.Mutation,
+    ...productivityFeaturesResolvers.Mutation,
+    ...calendarResolvers.Mutation,
+    ...teamsResolvers.Mutation,
+    ...schedulingResolvers.Mutation,
+    ...integrationsResolvers.Mutation,
+    ...billingResolvers.Mutation,
   },
 
   Subscription: {
@@ -42,6 +63,7 @@ export const resolvers = {
     ...goalResolvers.Subscription,
     ...projectResolvers.Subscription,
     ...productivityResolvers.Subscription,
+    ...productivityFeaturesResolvers.Subscription,
     ...planResolvers.Subscription,
   },
 
@@ -52,4 +74,13 @@ export const resolvers = {
   Plan: planResolvers.Plan,
   PlanTemplate: planResolvers.PlanTemplate,
   Project: projectResolvers.Project,
+  KanbanBoard: productivityFeaturesResolvers.KanbanBoard,
+  KanbanColumn: productivityFeaturesResolvers.KanbanColumn,
+  CalendarConnection: calendarResolvers.CalendarConnection,
+  Team: teamsResolvers.Team,
+  TeamMember: teamsResolvers.TeamMember,
+  TeamInvitation: teamsResolvers.TeamInvitation,
+  SchedulingLink: schedulingResolvers.SchedulingLink,
+  Booking: schedulingResolvers.Booking,
+  Webhook: integrationsResolvers.Webhook,
 };
