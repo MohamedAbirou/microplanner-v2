@@ -20,6 +20,9 @@ type Task {
   endTime: String!
   durationMinutes: Int!
 
+  # Recurrence
+  recurrenceRule: RecurrenceRule
+
   # Status
   isCompleted: Boolean!
   completedAt: DateTime
@@ -53,6 +56,22 @@ type Task {
   updatedAt: DateTime!
 }
 
+type RecurrenceRule {
+  frequency: RecurrenceFrequency!
+  interval: Int!
+  daysOfWeek: [Int!]
+  dayOfMonth: Int
+  endDate: DateTime
+  occurrences: Int
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
 type TaskDependency {
   id: ID!
   dependentTaskId: ID!
@@ -79,6 +98,8 @@ extend type Query {
 
   # Get tasks
   tasks(
+    filter: TaskFilterInput
+    sort: TaskSortInput
     goalId: ID
     projectId: ID
     scheduledDate: DateTime
@@ -204,6 +225,35 @@ input CreateTaskDependencyInput {
   dependentTaskId: ID!
   blockingTaskId: ID!
   type: DependencyType
+}
+
+# Filter and Sort Inputs
+input TaskFilterInput {
+  goalId: ID
+  projectId: ID
+  scheduledDate: DateTime
+  isCompleted: Boolean
+  priority: Int
+  tags: [String!]
+  search: String
+}
+
+input TaskSortInput {
+  field: TaskSortField!
+  direction: SortDirection!
+}
+
+enum TaskSortField {
+  SCHEDULED_DATE
+  PRIORITY
+  CREATED_AT
+  UPDATED_AT
+  TITLE
+}
+
+enum SortDirection {
+  ASC
+  DESC
 }
 
 # Enums

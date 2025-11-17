@@ -176,7 +176,8 @@ export class GoalsAPI {
     const { data } = await this.client.get(`/${id}`, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // API returns { message, goal }, extract the goal
+    return data.goal || data;
   }
 
   async getGoals(userId: string, filters: any) {
@@ -184,7 +185,8 @@ export class GoalsAPI {
       headers: { 'x-user-id': userId },
       params: filters,
     });
-    return data;
+    // API returns { message, goals, ... }, extract the goals array
+    return data.goals || data.data || data;
   }
 
   async getGoalAnalytics(id: string, userId: string) {
@@ -198,14 +200,16 @@ export class GoalsAPI {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // API returns { message, goal }, extract the goal
+    return data.goal || data;
   }
 
   async updateGoal(id: string, userId: string, input: any) {
     const { data } = await this.client.put(`/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // API returns { message, goal }, extract the goal
+    return data.goal || data;
   }
 
   async deleteGoal(id: string, userId: string) {

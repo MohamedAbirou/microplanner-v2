@@ -201,6 +201,11 @@ export const taskResolvers = {
     timeEntries: async (task: any, _: any, { dataSources }: any) => {
       return dataSources.tasksAPI.getTimeEntries(task.id);
     },
+
+    // Recurrence rule resolver (returns null if not set)
+    recurrenceRule: (task: any) => {
+      return task.recurrenceRule || null;
+    },
   },
 
   TaskDependency: {
