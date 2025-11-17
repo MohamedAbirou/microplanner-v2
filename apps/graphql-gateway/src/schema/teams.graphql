@@ -1,0 +1,177 @@
+# Teams & Premium Features
+
+# ============================================
+# TEAMS
+# ============================================
+
+type Team {
+  id: ID!
+  name: String!
+  description: String
+  ownerId: ID!
+  owner: User!
+  plan: TeamPlan!
+  maxMembers: Int!
+  logoUrl: String
+  settings: TeamSettings!
+  members: [TeamMember!]!
+  invitations: [TeamInvitation!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum TeamPlan {
+  PREMIUM
+  ENTERPRISE
+}
+
+type TeamSettings {
+  allowMemberInvites: Boolean!
+  requireApproval: Boolean!
+  sharedCalendar: Boolean!
+  sharedGoals: Boolean!
+}
+
+type TeamMember {
+  id: ID!
+  teamId: ID!
+  userId: ID!
+  user: User!
+  role: TeamRole!
+  status: MemberStatus!
+  invitedBy: String
+  joinedAt: DateTime!
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum MemberStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+type TeamInvitation {
+  id: ID!
+  teamId: ID!
+  team: Team!
+  email: String!
+  role: TeamRole!
+  invitedBy: ID!
+  inviter: User!
+  token: String!
+  expiresAt: DateTime!
+  acceptedAt: DateTime
+  createdAt: DateTime!
+}
+
+# ============================================
+# API KEYS (Premium)
+# ============================================
+
+type ApiKey {
+  id: ID!
+  userId: ID!
+  name: String!
+  keyPrefix: String!
+  scopes: [ApiScope!]!
+  rateLimit: Int!
+  usageCount: Int!
+  lastUsedAt: DateTime
+  isActive: Boolean!
+  expiresAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum ApiScope {
+  READ_TASKS
+  WRITE_TASKS
+  READ_GOALS
+  WRITE_GOALS
+  READ_PLANS
+  WRITE_PLANS
+  READ_ANALYTICS
+  WEBHOOKS
+}
+
+# ============================================
+# QUERIES
+# ============================================
+
+extend type Query {
+  # Teams
+  teams: [Team!]!
+  team(id: ID!): Team
+  teamMembers(teamId: ID!): [TeamMember!]!
+  teamInvitations(teamId: ID!): [TeamInvitation!]!
+
+  # API Keys
+  apiKeys: [ApiKey!]!
+  apiKey(id: ID!): ApiKey
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+extend type Mutation {
+  # Team Management
+  createTeam(input: CreateTeamInput!): Team!
+  updateTeam(id: ID!, input: UpdateTeamInput!): Team!
+  deleteTeam(id: ID!): Boolean!
+
+  # Team Members
+  inviteTeamMember(input: InviteTeamMemberInput!): TeamInvitation!
+  acceptTeamInvitation(token: String!): TeamMember!
+  removeTeamMember(teamId: ID!, userId: ID!): Boolean!
+  updateTeamMemberRole(teamId: ID!, userId: ID!, role: TeamRole!): TeamMember!
+
+  # API Keys
+  createApiKey(input: CreateApiKeyInput!): ApiKeyWithSecret!
+  deleteApiKey(id: ID!): Boolean!
+  toggleApiKey(id: ID!): ApiKey!
+}
+
+# Inputs
+input CreateTeamInput {
+  name: String!
+  description: String
+  logoUrl: String
+}
+
+input UpdateTeamInput {
+  name: String
+  description: String
+  logoUrl: String
+  settings: TeamSettingsInput
+}
+
+input TeamSettingsInput {
+  allowMemberInvites: Boolean
+  requireApproval: Boolean
+  sharedCalendar: Boolean
+  sharedGoals: Boolean
+}
+
+input InviteTeamMemberInput {
+  teamId: ID!
+  email: String!
+  role: TeamRole!
+}
+
+input CreateApiKeyInput {
+  name: String!
+  scopes: [ApiScope!]!
+  expiresAt: DateTime
+}
+
+type ApiKeyWithSecret {
+  apiKey: ApiKey!
+  secret: String!
+}

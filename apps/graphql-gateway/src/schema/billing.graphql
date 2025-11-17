@@ -1,0 +1,161 @@
+# Billing & Subscriptions
+
+# ============================================
+# SUBSCRIPTION
+# ============================================
+
+type Subscription {
+  id: ID!
+  userId: ID!
+  tier: SubscriptionTier!
+  status: SubscriptionStatus!
+  stripeCustomerId: String
+  stripeSubscriptionId: String
+  currentPeriodStart: DateTime
+  currentPeriodEnd: DateTime
+  cancelAtPeriodEnd: Boolean!
+  canceledAt: DateTime
+  trialStart: DateTime
+  trialEnd: DateTime
+  features: FeatureLimits!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type FeatureLimits {
+  # Goal limits
+  maxGoals: Int!
+  maxActiveGoals: Int!
+
+  # Plan limits
+  plansPerWeek: Int!
+  plansPerMonth: Int!
+
+  # Task limits
+  tasksPerDay: Int!
+  maxTasksPerPlan: Int!
+
+  # AI features
+  aiModel: String!
+  aiGenerations: Int!
+
+  # Premium features
+  calendarSync: Boolean!
+  offlineMode: Boolean!
+  advancedInsights: Boolean!
+  teamWorkspaces: Boolean!
+  apiAccess: Boolean!
+  prioritySupport: Boolean!
+  customBranding: Boolean!
+}
+
+type BillingInfo {
+  stripeCustomerId: String
+  paymentMethod: PaymentMethod
+  upcomingInvoice: UpcomingInvoice
+  invoices: [Invoice!]!
+}
+
+type PaymentMethod {
+  brand: String!
+  last4: String!
+  expMonth: Int!
+  expYear: Int!
+}
+
+type UpcomingInvoice {
+  amountDue: Int!
+  currency: String!
+  periodStart: DateTime!
+  periodEnd: DateTime!
+  total: Int!
+}
+
+type Invoice {
+  id: String!
+  amountPaid: Int!
+  amountDue: Int!
+  currency: String!
+  status: String!
+  invoicePdf: String
+  hostedInvoiceUrl: String
+  created: DateTime!
+}
+
+type CheckoutSession {
+  sessionId: String!
+  url: String!
+}
+
+type UsageStats {
+  # Current period usage
+  goalsCreated: Int!
+  plansGenerated: Int!
+  tasksCreated: Int!
+  aiGenerationsUsed: Int!
+
+  # Limits
+  goalLimit: Int!
+  planLimit: Int!
+  taskLimit: Int!
+  aiGenerationLimit: Int!
+
+  # Percentages
+  goalUsagePercent: Float!
+  planUsagePercent: Float!
+  taskUsagePercent: Float!
+  aiUsagePercent: Float!
+
+  # Reset info
+  resetsAt: DateTime!
+}
+
+# ============================================
+# QUERIES
+# ============================================
+
+extend type Query {
+  # Subscription info
+  subscription: Subscription
+
+  # Billing
+  billingInfo: BillingInfo
+
+  # Usage stats
+  usageStats: UsageStats!
+
+  # Feature availability
+  canUseFeature(feature: String!): Boolean!
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+extend type Mutation {
+  # Create checkout session
+  createCheckoutSession(
+    tier: SubscriptionTier!
+    interval: BillingInterval!
+  ): CheckoutSession!
+
+  # Manage subscription
+  upgradeSubscription(tier: SubscriptionTier!): CheckoutSession!
+  cancelSubscription: Subscription!
+  resumeSubscription: Subscription!
+
+  # Update payment method
+  updatePaymentMethod(paymentMethodId: String!): PaymentMethod!
+
+  # Portal
+  createBillingPortalSession: BillingPortalSession!
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+type BillingPortalSession {
+  url: String!
+}

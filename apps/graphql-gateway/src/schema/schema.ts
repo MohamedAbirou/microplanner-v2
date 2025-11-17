@@ -17,6 +17,17 @@ const projectSchema = readFileSync(join(__dirname, 'project.graphql'), 'utf-8');
 const productivitySchema = readFileSync(join(__dirname, 'productivity.graphql'), 'utf-8');
 const planSchema = readFileSync(join(__dirname, 'plan.graphql'), 'utf-8');
 
+// Load advanced features
+const analyticsSchema = readFileSync(join(__dirname, 'analytics.graphql'), 'utf-8');
+const productivityFeaturesSchema = readFileSync(join(__dirname, 'productivity-features.graphql'), 'utf-8');
+
+// Load enterprise features
+const calendarSchema = readFileSync(join(__dirname, 'calendar.graphql'), 'utf-8');
+const teamsSchema = readFileSync(join(__dirname, 'teams.graphql'), 'utf-8');
+const schedulingSchema = readFileSync(join(__dirname, 'scheduling.graphql'), 'utf-8');
+const integrationsSchema = readFileSync(join(__dirname, 'integrations.graphql'), 'utf-8');
+const billingSchema = readFileSync(join(__dirname, 'billing.graphql'), 'utf-8');
+
 // Combine all schemas
 export const typeDefs = gql`
   ${scalarsSchema}
@@ -30,4 +41,11 @@ export const typeDefs = gql`
   ${projectSchema}
   ${productivitySchema}
   ${planSchema}
+  ${analyticsSchema}
+  ${productivityFeaturesSchema}
+  ${calendarSchema}
+  ${teamsSchema}
+  ${schedulingSchema}
+  ${integrationsSchema}
+  ${billingSchema}
 `;

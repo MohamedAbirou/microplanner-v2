@@ -1,0 +1,141 @@
+# Integrations & Webhooks
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+type Integration {
+  id: ID!
+  userId: ID!
+  type: IntegrationType!
+  name: String!
+  isActive: Boolean!
+  config: JSON
+  metadata: JSON
+  lastSyncAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum IntegrationType {
+  SLACK
+  ZOOM
+  GOOGLE_MEET
+  NOTION
+  LINEAR
+  GITHUB
+  ZAPIER
+  CUSTOM
+}
+
+# ============================================
+# WEBHOOKS
+# ============================================
+
+type Webhook {
+  id: ID!
+  userId: ID!
+  url: String!
+  events: [WebhookEvent!]!
+  secret: String!
+  isActive: Boolean!
+  lastTriggeredAt: DateTime
+  failureCount: Int!
+  deliveries: [WebhookDelivery!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum WebhookEvent {
+  TASK_CREATED
+  TASK_UPDATED
+  TASK_COMPLETED
+  TASK_DELETED
+  GOAL_CREATED
+  GOAL_UPDATED
+  GOAL_DELETED
+  PLAN_GENERATED
+  PLAN_ACCEPTED
+  BOOKING_CREATED
+  BOOKING_CANCELED
+}
+
+type WebhookDelivery {
+  id: ID!
+  webhookId: ID!
+  event: WebhookEvent!
+  payload: JSON!
+  status: DeliveryStatus!
+  statusCode: Int
+  responseBody: String
+  error: String
+  attempts: Int!
+  lastAttemptAt: DateTime
+  createdAt: DateTime!
+}
+
+enum DeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+# ============================================
+# QUERIES
+# ============================================
+
+extend type Query {
+  # Integrations
+  integrations(type: IntegrationType): [Integration!]!
+  integration(id: ID!): Integration
+
+  # Webhooks
+  webhooks: [Webhook!]!
+  webhook(id: ID!): Webhook
+  webhookDeliveries(webhookId: ID!, limit: Int): [WebhookDelivery!]!
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+extend type Mutation {
+  # Integrations
+  connectIntegration(input: ConnectIntegrationInput!): Integration!
+  updateIntegration(id: ID!, input: UpdateIntegrationInput!): Integration!
+  disconnectIntegration(id: ID!): Boolean!
+  syncIntegration(id: ID!): Integration!
+
+  # Webhooks
+  createWebhook(input: CreateWebhookInput!): Webhook!
+  updateWebhook(id: ID!, input: UpdateWebhookInput!): Webhook!
+  deleteWebhook(id: ID!): Boolean!
+  toggleWebhook(id: ID!): Webhook!
+  retryWebhookDelivery(deliveryId: ID!): WebhookDelivery!
+}
+
+# Inputs
+input ConnectIntegrationInput {
+  type: IntegrationType!
+  name: String!
+  authCode: String
+  config: JSON
+}
+
+input UpdateIntegrationInput {
+  name: String
+  isActive: Boolean
+  config: JSON
+}
+
+input CreateWebhookInput {
+  url: String!
+  events: [WebhookEvent!]!
+  secret: String
+}
+
+input UpdateWebhookInput {
+  url: String
+  events: [WebhookEvent!]
+  isActive: Boolean
+}

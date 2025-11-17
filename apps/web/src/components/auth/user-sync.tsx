@@ -2,65 +2,62 @@
 
 import { useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
+import { useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
 
 /**
- * UserSync Component - Debug Version
+ * Mutation to sync/create user in database
+ */
+const SYNC_USER = gql`
+  mutation SyncUser($input: SyncUserInput!) {
+    syncUser(input: $input) {
+      id
+      email
+      name
+      tier
+      onboardingCompleted
+    }
+  }
+`;
+
+/**
+ * UserSync Component - GraphQL Version
  *
- * Temporarily logs the token to help debug authentication issues.
+ * Syncs authenticated Clerk user to database via GraphQL
+ * This ensures the user exists in our DB with proper metadata
  */
 export function UserSync() {
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn } = useAuth();
   const { user } = useUser();
+  const [syncUser] = useMutation(SYNC_USER);
 
   useEffect(() => {
-    async function syncUser() {
+    async function syncUserToDatabase() {
       if (!isSignedIn || !user) {
         return;
       }
 
       try {
-        const token = await getToken();
-
-        if (!token) {
-          console.warn('[UserSync] No auth token available');
-          return;
-        }
-
-        // DEBUG: Decode JWT to see what's inside
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          console.log('[UserSync] Token payload:', {
-            iss: payload.iss,
-            aud: payload.aud,
-            sub: payload.sub,
-            exp: payload.exp,
-          });
-        }
-
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        const response = await fetch(`${apiUrl}/api/v1/auth/me`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+        await syncUser({
+          variables: {
+            input: {
+              clerkId: user.id,
+              email: user.primaryEmailAddress?.emailAddress || '',
+              name: user.fullName || user.firstName || '',
+              avatar: user.imageUrl || null,
+              tier: (user.publicMetadata?.tier as string) || 'FREE',
+            },
           },
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('[UserSync] User synced to database:', data.email);
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('[UserSync] Failed to sync user:', response.status, response.statusText, errorData);
-        }
+        console.log('[UserSync] User synced to database via GraphQL');
       } catch (error) {
-        console.error('[UserSync] Error syncing user:', error);
+        console.error('[UserSync] Failed to sync user:', error);
       }
     }
 
-    syncUser();
-  }, [isSignedIn, user, getToken]);
+    syncUserToDatabase();
+  }, [isSignedIn, user, syncUser]);
 
   return null;
 }

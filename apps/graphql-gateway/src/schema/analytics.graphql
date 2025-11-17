@@ -1,0 +1,125 @@
+# Analytics and Insights
+
+type ProductivityScore {
+  id: ID!
+  userId: ID!
+  date: DateTime!
+
+  # Scores (0-100)
+  overallScore: Int!
+  focusTimeScore: Int!
+  taskCompletionScore: Int!
+  meetingEfficiencyScore: Int!
+  workLifeBalanceScore: Int!
+
+  # Time breakdowns
+  totalFocusMinutes: Int!
+  totalMeetingMinutes: Int!
+  totalTaskMinutes: Int!
+  totalBreakMinutes: Int!
+
+  # Insights
+  insights: [String!]!
+  recommendations: [String!]!
+
+  createdAt: DateTime!
+}
+
+type WeeklyStats {
+  weekStart: DateTime!
+  weekEnd: DateTime!
+
+  # Task completion
+  totalTasks: Int!
+  completedTasks: Int!
+  completionRate: Float!
+
+  # Time tracking
+  totalHoursScheduled: Float!
+  totalHoursCompleted: Float!
+  focusHours: Float!
+
+  # Goal progress
+  activeGoals: Int!
+  goalsCompletionRate: Float!
+
+  # Productivity
+  averageProductivityScore: Int
+  bestDay: String
+  worstDay: String
+
+  # Streaks
+  currentStreak: Int!
+  longestStreak: Int!
+}
+
+type GoalAnalytics {
+  goalId: ID!
+  goal: Goal!
+
+  # Completion stats
+  completionRate: Float!
+  totalCompletions: Int!
+  totalScheduled: Int!
+
+  # Time analysis
+  averageDuration: Float
+  bestTimeOfDay: String
+
+  # Progress
+  currentStreak: Int!
+  longestStreak: Int!
+  weeklyProgress: [WeeklyGoalProgress!]!
+}
+
+type WeeklyGoalProgress {
+  week: String!
+  scheduled: Int!
+  completed: Int!
+  completionRate: Float!
+}
+
+type DashboardStats {
+  # Today
+  todayTasks: Int!
+  todayCompleted: Int!
+  todayCompletionRate: Float!
+
+  # Week
+  weekTasks: Int!
+  weekCompleted: Int!
+  weekCompletionRate: Float!
+
+  # Goals
+  activeGoals: Int!
+  goalsMilestones: Int!
+
+  # Streaks
+  currentStreak: Int!
+  longestStreak: Int!
+
+  # Plans
+  totalPlans: Int!
+  averagePlanQuality: Float
+}
+
+# Queries
+extend type Query {
+  # Dashboard stats (quick overview)
+  dashboardStats: DashboardStats!
+
+  # Weekly analytics
+  weeklyStats(weekStart: DateTime): WeeklyStats!
+
+  # Productivity scores
+  productivityScores(
+    startDate: DateTime!
+    endDate: DateTime!
+  ): [ProductivityScore!]!
+
+  # Goal-specific analytics
+  goalAnalytics(goalId: ID!): GoalAnalytics!
+
+  # All goals analytics
+  allGoalsAnalytics: [GoalAnalytics!]!
+}

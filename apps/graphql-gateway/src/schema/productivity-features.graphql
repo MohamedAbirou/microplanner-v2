@@ -1,0 +1,338 @@
+# Productivity Features (Work-Life Balance, Focus Time, Kanban)
+
+# ============================================
+# WORK HOURS
+# ============================================
+
+type WorkHours {
+  id: ID!
+  userId: ID!
+  timezone: String!
+  schedule: WorkWeekSchedule!
+  enforceWorkHours: Boolean!
+  maxMeetingsPerDay: Int
+  maxMeetingHoursPerDay: Int
+  maxConsecutiveMeetings: Int
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type WorkWeekSchedule {
+  monday: DaySchedule!
+  tuesday: DaySchedule!
+  wednesday: DaySchedule!
+  thursday: DaySchedule!
+  friday: DaySchedule!
+  saturday: DaySchedule!
+  sunday: DaySchedule!
+}
+
+type DaySchedule {
+  isWorkDay: Boolean!
+  startTime: String
+  endTime: String
+  breakTimes: [BreakTime!]!
+}
+
+type BreakTime {
+  start: String!
+  end: String!
+}
+
+input WorkHoursInput {
+  timezone: String
+  schedule: WorkWeekScheduleInput
+  enforceWorkHours: Boolean
+  maxMeetingsPerDay: Int
+  maxMeetingHoursPerDay: Int
+  maxConsecutiveMeetings: Int
+}
+
+input WorkWeekScheduleInput {
+  monday: DayScheduleInput
+  tuesday: DayScheduleInput
+  wednesday: DayScheduleInput
+  thursday: DayScheduleInput
+  friday: DayScheduleInput
+  saturday: DayScheduleInput
+  sunday: DayScheduleInput
+}
+
+input DayScheduleInput {
+  isWorkDay: Boolean!
+  startTime: String
+  endTime: String
+  breakTimes: [BreakTimeInput!]
+}
+
+input BreakTimeInput {
+  start: String!
+  end: String!
+}
+
+# ============================================
+# FOCUS TIME BLOCKS
+# ============================================
+
+type FocusTimeBlock {
+  id: ID!
+  userId: ID!
+  title: String!
+  frequency: FocusFrequency!
+  daysOfWeek: [Int!]!
+  startTime: String
+  durationMinutes: Int!
+  priority: Int!
+  protected: Boolean!
+  isActive: Boolean!
+  autoSchedule: Boolean!
+  preferredTimeSlots: [String!]!
+  color: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum FocusFrequency {
+  DAILY
+  WEEKDAYS
+  WEEKLY
+  CUSTOM
+}
+
+input CreateFocusBlockInput {
+  title: String!
+  frequency: FocusFrequency!
+  daysOfWeek: [Int!]!
+  startTime: String
+  durationMinutes: Int!
+  priority: Int
+  protected: Boolean
+  autoSchedule: Boolean
+  preferredTimeSlots: [String!]
+  color: String
+}
+
+input UpdateFocusBlockInput {
+  title: String
+  frequency: FocusFrequency
+  daysOfWeek: [Int!]
+  startTime: String
+  durationMinutes: Int
+  priority: Int
+  protected: Boolean
+  isActive: Boolean
+  autoSchedule: Boolean
+  preferredTimeSlots: [String!]
+  color: String
+}
+
+# ============================================
+# NO MEETING DAYS
+# ============================================
+
+type NoMeetingDay {
+  id: ID!
+  userId: ID!
+  dayOfWeek: Int!
+  isActive: Boolean!
+  allowExceptions: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input SetNoMeetingDayInput {
+  dayOfWeek: Int!
+  allowExceptions: Boolean
+}
+
+# ============================================
+# PRIORITY HOURS
+# ============================================
+
+type PriorityHours {
+  id: ID!
+  userId: ID!
+  timeSlots: [PriorityTimeSlot!]!
+  prioritizeFocusTime: Boolean!
+  prioritizeTasks: Boolean!
+  deprioritizeMeetings: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type PriorityTimeSlot {
+  dayOfWeek: Int!
+  startTime: String!
+  endTime: String!
+  priority: Int!
+}
+
+input PriorityHoursInput {
+  timeSlots: [PriorityTimeSlotInput!]!
+  prioritizeFocusTime: Boolean
+  prioritizeTasks: Boolean
+  deprioritizeMeetings: Boolean
+}
+
+input PriorityTimeSlotInput {
+  dayOfWeek: Int!
+  startTime: String!
+  endTime: String!
+  priority: Int!
+}
+
+# ============================================
+# CALENDAR DEFENSE
+# ============================================
+
+type CalendarDefense {
+  id: ID!
+  userId: ID!
+  autoAcceptDuringOpenHours: Boolean!
+  autoDeclineDuringFocusTime: Boolean!
+  autoDeclineOutsideWorkHours: Boolean!
+  autoDeclineDoubleBookings: Boolean!
+  requireMinimumNotice: Boolean!
+  minimumNoticeHours: Int!
+  requireBufferBetweenMeetings: Boolean!
+  bufferMinutes: Int!
+  suggestShorterMeetings: Boolean!
+  defaultMeetingDuration: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CalendarDefenseInput {
+  autoAcceptDuringOpenHours: Boolean
+  autoDeclineDuringFocusTime: Boolean
+  autoDeclineOutsideWorkHours: Boolean
+  autoDeclineDoubleBookings: Boolean
+  requireMinimumNotice: Boolean
+  minimumNoticeHours: Int
+  requireBufferBetweenMeetings: Boolean
+  bufferMinutes: Int
+  suggestShorterMeetings: Boolean
+  defaultMeetingDuration: Int
+}
+
+# ============================================
+# KANBAN BOARDS
+# ============================================
+
+type KanbanBoard {
+  id: ID!
+  userId: ID!
+  projectId: ID
+  name: String!
+  description: String
+  isDefault: Boolean!
+  columns: [KanbanColumn!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type KanbanColumn {
+  id: ID!
+  boardId: ID!
+  name: String!
+  order: Int!
+  color: String!
+  taskIds: [ID!]!
+  tasks: [Task!]!
+}
+
+input CreateKanbanBoardInput {
+  projectId: ID
+  name: String!
+  description: String
+  isDefault: Boolean
+}
+
+input UpdateKanbanBoardInput {
+  name: String
+  description: String
+  isDefault: Boolean
+}
+
+input CreateKanbanColumnInput {
+  boardId: ID!
+  name: String!
+  order: Int!
+  color: String
+}
+
+input UpdateKanbanColumnInput {
+  name: String
+  order: Int
+  color: String
+}
+
+input MoveTaskToColumnInput {
+  taskId: ID!
+  columnId: ID!
+  position: Int
+}
+
+# ============================================
+# QUERIES
+# ============================================
+
+extend type Query {
+  # Work Hours
+  workHours: WorkHours
+
+  # Focus Time Blocks
+  focusTimeBlocks(isActive: Boolean): [FocusTimeBlock!]!
+  focusTimeBlock(id: ID!): FocusTimeBlock
+
+  # No Meeting Days
+  noMeetingDays(isActive: Boolean): [NoMeetingDay!]!
+
+  # Priority Hours
+  priorityHours: PriorityHours
+
+  # Calendar Defense
+  calendarDefense: CalendarDefense
+
+  # Kanban Boards
+  kanbanBoards(projectId: ID): [KanbanBoard!]!
+  kanbanBoard(id: ID!): KanbanBoard
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+extend type Mutation {
+  # Work Hours
+  setWorkHours(input: WorkHoursInput!): WorkHours!
+  updateWorkHours(input: WorkHoursInput!): WorkHours!
+
+  # Focus Time Blocks
+  createFocusBlock(input: CreateFocusBlockInput!): FocusTimeBlock!
+  updateFocusBlock(id: ID!, input: UpdateFocusBlockInput!): FocusTimeBlock!
+  deleteFocusBlock(id: ID!): Boolean!
+  toggleFocusBlock(id: ID!): FocusTimeBlock!
+
+  # No Meeting Days
+  setNoMeetingDay(input: SetNoMeetingDayInput!): NoMeetingDay!
+  removeNoMeetingDay(dayOfWeek: Int!): Boolean!
+  toggleNoMeetingDay(dayOfWeek: Int!): NoMeetingDay!
+
+  # Priority Hours
+  setPriorityHours(input: PriorityHoursInput!): PriorityHours!
+
+  # Calendar Defense
+  setCalendarDefense(input: CalendarDefenseInput!): CalendarDefense!
+
+  # Kanban Boards
+  createKanbanBoard(input: CreateKanbanBoardInput!): KanbanBoard!
+  updateKanbanBoard(id: ID!, input: UpdateKanbanBoardInput!): KanbanBoard!
+  deleteKanbanBoard(id: ID!): Boolean!
+
+  createKanbanColumn(input: CreateKanbanColumnInput!): KanbanColumn!
+  updateKanbanColumn(id: ID!, input: UpdateKanbanColumnInput!): KanbanColumn!
+  deleteKanbanColumn(id: ID!): Boolean!
+
+  moveTaskToColumn(input: MoveTaskToColumnInput!): KanbanColumn!
+}
