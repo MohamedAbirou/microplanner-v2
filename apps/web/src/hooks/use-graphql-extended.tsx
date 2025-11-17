@@ -675,7 +675,7 @@ export function useCreateWebhook() {
 // BILLING & SUBSCRIPTIONS
 // ============================================================================
 
-export function useSubscription() {
+export function useBillingSubscription() {
   const { data, loading, error, refetch } = useQuery(ops.GET_SUBSCRIPTION);
 
   return {
