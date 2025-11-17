@@ -112,4 +112,25 @@ export class UsersController {
       data,
     };
   }
+
+  @Put('me/onboarding')
+  @ApiOperation({ summary: 'Update onboarding status and data' })
+  @ApiResponse({ status: 200, description: 'Onboarding updated successfully' })
+  async updateOnboarding(
+    @CurrentUser() user: User,
+    @Body() onboardingData: any
+  ) {
+    const updatedUser = await this.usersService.updateOnboarding(user.id, onboardingData);
+
+    return {
+      message: 'Onboarding updated successfully',
+      user: {
+        id: updatedUser.id,
+        onboardingCompleted: updatedUser.onboardingCompleted,
+        onboardingStep: updatedUser.onboardingStep,
+        context: updatedUser.context,
+        focusAreas: updatedUser.focusAreas,
+      },
+    };
+  }
 }

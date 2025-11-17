@@ -72,6 +72,28 @@ export class UserAPI {
     });
   }
 
+  // Sync/create user from Clerk (no REST endpoint - handled by JWT auth)
+  async syncUser(input: any) {
+    // Note: User sync happens automatically via JWT validation in backend
+    // When a user authenticates, the Clerk strategy automatically creates/updates the user
+    // This method just fetches the user to confirm they exist
+    // We can't create the user directly without authentication
+
+    // Try to get the user - this will work if they're authenticated
+    // If not authenticated, this will fail with proper auth error
+    try {
+      const { data } = await this.client.get('/me', {
+        headers: { 'x-clerk-id': input.clerkId },
+      });
+      return data;
+    } catch (error) {
+      // User doesn't exist yet - they need to authenticate first
+      // The backend will create them via Clerk webhook or JWT validation
+      console.warn('User sync called but user not authenticated yet. User will be created on first auth.');
+      throw new Error('User must authenticate first. User will be created automatically on authentication.');
+    }
+  }
+
   // Get current user profile
   async getUser(userId: string) {
     const { data } = await this.client.get('/me', {
@@ -124,11 +146,19 @@ export class UserAPI {
     };
   }
 
-  // Complete onboarding (handled by OnboardingAPI GraphQL)
+  // Complete onboarding
   async completeOnboarding(userId: string, input: any) {
-    // This is now handled by onboarding.resolver.ts via GraphQL
-    // This method should not be called, but kept for backwards compatibility
-    throw new Error('completeOnboarding should use GraphQL onboarding.resolver.ts');
+    // Update onboarding status via the new /me/onboarding endpoint
+    const { data } = await this.client.put('/me/onboarding', {
+      onboardingCompleted: true,
+      onboardingStep: 999, // Mark as completed
+      ...input,
+    }, {
+      headers: { 'x-user-id': userId },
+    });
+
+    // Fetch and return the updated user with all fields
+    return await this.getUser(userId);
   }
 }
 
