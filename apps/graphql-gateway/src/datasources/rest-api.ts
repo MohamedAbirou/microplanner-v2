@@ -779,3 +779,604 @@ export class PlansAPI {
     return data.template;
   }
 }
+
+// ==================== ANALYTICS API ====================
+export class AnalyticsAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = axios.create({
+      baseURL: `${API_BASE_URL}/analytics`,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  }
+
+  async getDashboardStats(userId: string) {
+    const { data } = await this.client.get('/dashboard', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getWeeklyStats(userId: string, weekStart?: string) {
+    const { data } = await this.client.get('/weekly', {
+      headers: { 'x-user-id': userId },
+      params: { weekStart },
+    });
+    return data;
+  }
+
+  async getProductivityScores(userId: string, startDate: string, endDate: string) {
+    const { data } = await this.client.get('/productivity-scores', {
+      headers: { 'x-user-id': userId },
+      params: { startDate, endDate },
+    });
+    return data;
+  }
+
+  async getGoalAnalytics(goalId: string, userId: string) {
+    const { data } = await this.client.get(`/goals/${goalId}`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getTimeTracking(userId: string, startDate: string, endDate: string) {
+    const { data } = await this.client.get('/time-tracking', {
+      headers: { 'x-user-id': userId },
+      params: { startDate, endDate },
+    });
+    return data;
+  }
+
+  async getInsights(userId: string, type?: string, limit?: number) {
+    const { data } = await this.client.get('/insights', {
+      headers: { 'x-user-id': userId },
+      params: { type, limit },
+    });
+    return data;
+  }
+
+  async getStreakHistory(userId: string, limit?: number) {
+    const { data } = await this.client.get('/streaks', {
+      headers: { 'x-user-id': userId },
+      params: { limit },
+    });
+    return data;
+  }
+
+  async generateInsights(userId: string) {
+    const { data } = await this.client.post('/insights/generate', {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async dismissInsight(id: string, userId: string) {
+    const { data } = await this.client.delete(`/insights/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+}
+
+// ==================== CALENDAR API ====================
+export class CalendarAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = axios.create({
+      baseURL: `${API_BASE_URL}/calendar`,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  }
+
+  async getConnections(userId: string) {
+    const { data } = await this.client.get('/connections', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getConnection(id: string, userId: string) {
+    const { data } = await this.client.get(`/connections/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async initiateAuth(userId: string, provider: string) {
+    const { data } = await this.client.post('/auth/initiate', { provider }, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async connectCalendar(userId: string, input: any) {
+    const { data } = await this.client.post('/connections', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async disconnectCalendar(id: string, userId: string) {
+    await this.client.delete(`/connections/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+  }
+
+  async syncCalendar(id: string, userId: string) {
+    const { data } = await this.client.post(`/connections/${id}/sync`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async syncAllCalendars(userId: string) {
+    const { data } = await this.client.post('/sync-all', {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getEvents(userId: string, startDate: string, endDate: string, calendarIds?: string[]) {
+    const { data } = await this.client.get('/events', {
+      headers: { 'x-user-id': userId },
+      params: { startDate, endDate, calendarIds: calendarIds?.join(',') },
+    });
+    return data;
+  }
+
+  async getEventsByConnection(connectionId: string, startDate?: string, endDate?: string) {
+    const { data } = await this.client.get(`/connections/${connectionId}/events`, {
+      params: { startDate, endDate },
+    });
+    return data;
+  }
+
+  async getBusySlots(userId: string, startDate: string, endDate: string) {
+    const { data } = await this.client.get('/busy-slots', {
+      headers: { 'x-user-id': userId },
+      params: { startDate, endDate },
+    });
+    return data;
+  }
+
+  async createEvent(userId: string, input: any) {
+    const { data } = await this.client.post('/events', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async updateEvent(id: string, userId: string, input: any) {
+    const { data } = await this.client.put(`/events/${id}`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async deleteEvent(id: string, userId: string) {
+    await this.client.delete(`/events/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+  }
+}
+
+// ==================== TEAMS API ====================
+export class TeamsAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = axios.create({
+      baseURL: `${API_BASE_URL}/teams`,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  }
+
+  async getTeams(userId: string) {
+    const { data } = await this.client.get('/', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getTeam(id: string, userId?: string) {
+    const { data } = await this.client.get(`/${id}`, {
+      headers: userId ? { 'x-user-id': userId } : {},
+    });
+    return data;
+  }
+
+  async createTeam(userId: string, input: any) {
+    const { data } = await this.client.post('/', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async updateTeam(id: string, userId: string, input: any) {
+    const { data } = await this.client.put(`/${id}`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async deleteTeam(id: string, userId: string) {
+    await this.client.delete(`/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+  }
+
+  async getTeamMembers(teamId: string, userId?: string) {
+    const { data } = await this.client.get(`/${teamId}/members`, {
+      headers: userId ? { 'x-user-id': userId } : {},
+    });
+    return data;
+  }
+
+  async getTeamInvitations(teamId: string, userId?: string) {
+    const { data } = await this.client.get(`/${teamId}/invitations`, {
+      headers: userId ? { 'x-user-id': userId } : {},
+    });
+    return data;
+  }
+
+  async inviteTeamMember(userId: string, input: any) {
+    const { data } = await this.client.post(`/${input.teamId}/invitations`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async acceptTeamInvitation(token: string, userId: string) {
+    const { data } = await this.client.post('/invitations/accept', { token }, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async removeTeamMember(teamId: string, memberId: string, userId: string) {
+    await this.client.delete(`/${teamId}/members/${memberId}`, {
+      headers: { 'x-user-id': userId },
+    });
+  }
+
+  async updateTeamMemberRole(teamId: string, memberId: string, role: string, userId: string) {
+    const { data } = await this.client.put(`/${teamId}/members/${memberId}/role`, { role }, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getApiKeys(userId: string) {
+    const { data } = await this.client.get('/api-keys', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getApiKey(id: string, userId: string) {
+    const { data } = await this.client.get(`/api-keys/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async createApiKey(userId: string, input: any) {
+    const { data } = await this.client.post('/api-keys', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async deleteApiKey(id: string, userId: string) {
+    await this.client.delete(`/api-keys/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+  }
+
+  async toggleApiKey(id: string, userId: string) {
+    const { data } = await this.client.put(`/api-keys/${id}/toggle`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+}
+
+// ==================== SCHEDULING API ====================
+export class SchedulingAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = axios.create({
+      baseURL: `${API_BASE_URL}/scheduling`,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  }
+
+  async getSchedulingLinks(userId: string) {
+    const { data } = await this.client.get('/links', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getSchedulingLink(id: string, userId?: string) {
+    const { data } = await this.client.get(`/links/${id}`, {
+      headers: userId ? { 'x-user-id': userId } : {},
+    });
+    return data;
+  }
+
+  async getSchedulingLinkBySlug(slug: string) {
+    const { data } = await this.client.get(`/links/slug/${slug}`);
+    return data;
+  }
+
+  async createSchedulingLink(userId: string, input: any) {
+    const { data } = await this.client.post('/links', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async updateSchedulingLink(id: string, userId: string, input: any) {
+    const { data } = await this.client.put(`/links/${id}`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async deleteSchedulingLink(id: string, userId: string) {
+    await this.client.delete(`/links/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+  }
+
+  async toggleSchedulingLink(id: string, userId: string) {
+    const { data } = await this.client.put(`/links/${id}/toggle`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getBookings(userId: string, linkId?: string, status?: string) {
+    const { data } = await this.client.get('/bookings', {
+      headers: { 'x-user-id': userId },
+      params: { linkId, status },
+    });
+    return data;
+  }
+
+  async getBooking(id: string, userId?: string) {
+    const { data } = await this.client.get(`/bookings/${id}`, {
+      headers: userId ? { 'x-user-id': userId } : {},
+    });
+    return data;
+  }
+
+  async getBookingsByLink(linkId: string) {
+    const { data } = await this.client.get(`/links/${linkId}/bookings`);
+    return data;
+  }
+
+  async getAvailableSlots(linkId: string, date: string) {
+    const { data } = await this.client.get(`/links/${linkId}/available-slots`, {
+      params: { date },
+    });
+    return data;
+  }
+
+  async createBooking(input: any) {
+    const { data } = await this.client.post('/bookings', input);
+    return data;
+  }
+
+  async confirmBooking(id: string, userId: string) {
+    const { data } = await this.client.post(`/bookings/${id}/confirm`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async cancelBooking(id: string, userId: string, reason?: string) {
+    const { data } = await this.client.post(`/bookings/${id}/cancel`, { reason }, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+}
+
+// ==================== INTEGRATIONS API ====================
+export class IntegrationsAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = axios.create({
+      baseURL: `${API_BASE_URL}/integrations`,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  }
+
+  async getIntegrations(userId: string, type?: string) {
+    const { data } = await this.client.get('/', {
+      headers: { 'x-user-id': userId },
+      params: { type },
+    });
+    return data;
+  }
+
+  async getIntegration(id: string, userId: string) {
+    const { data } = await this.client.get(`/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async connectIntegration(userId: string, input: any) {
+    const { data } = await this.client.post('/', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async updateIntegration(id: string, userId: string, input: any) {
+    const { data } = await this.client.put(`/${id}`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async disconnectIntegration(id: string, userId: string) {
+    await this.client.delete(`/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+  }
+
+  async syncIntegration(id: string, userId: string) {
+    const { data } = await this.client.post(`/${id}/sync`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getWebhooks(userId: string) {
+    const { data } = await this.client.get('/webhooks', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getWebhook(id: string, userId: string) {
+    const { data } = await this.client.get(`/webhooks/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async createWebhook(userId: string, input: any) {
+    const { data } = await this.client.post('/webhooks', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async updateWebhook(id: string, userId: string, input: any) {
+    const { data } = await this.client.put(`/webhooks/${id}`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async deleteWebhook(id: string, userId: string) {
+    await this.client.delete(`/webhooks/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+  }
+
+  async toggleWebhook(id: string, userId: string) {
+    const { data } = await this.client.put(`/webhooks/${id}/toggle`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getWebhookDeliveries(webhookId: string, userId?: string, limit?: number) {
+    const { data } = await this.client.get(`/webhooks/${webhookId}/deliveries`, {
+      headers: userId ? { 'x-user-id': userId } : {},
+      params: { limit },
+    });
+    return data;
+  }
+
+  async retryWebhookDelivery(deliveryId: string, userId: string) {
+    const { data } = await this.client.post(`/webhooks/deliveries/${deliveryId}/retry`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+}
+
+// ==================== BILLING API ====================
+export class BillingAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = axios.create({
+      baseURL: `${API_BASE_URL}/billing`,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  }
+
+  async getSubscription(userId: string) {
+    const { data } = await this.client.get('/subscription', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getBillingInfo(userId: string) {
+    const { data } = await this.client.get('/info', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getUsageStats(userId: string) {
+    const { data } = await this.client.get('/usage', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async canUseFeature(userId: string, feature: string) {
+    const { data } = await this.client.get('/can-use-feature', {
+      headers: { 'x-user-id': userId },
+      params: { feature },
+    });
+    return data.canUse;
+  }
+
+  async createCheckoutSession(userId: string, tier: string, interval: string) {
+    const { data } = await this.client.post('/checkout-session', { tier, interval }, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async upgradeSubscription(userId: string, tier: string) {
+    const { data } = await this.client.post('/upgrade', { tier }, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async cancelSubscription(userId: string) {
+    const { data } = await this.client.post('/cancel', {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async resumeSubscription(userId: string) {
+    const { data } = await this.client.post('/resume', {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async updatePaymentMethod(userId: string, paymentMethodId: string) {
+    const { data } = await this.client.put('/payment-method', { paymentMethodId }, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async createBillingPortalSession(userId: string) {
+    const { data } = await this.client.post('/portal-session', {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+}

@@ -18,7 +18,13 @@ import {
   TasksAPI,
   ProductivityAPI,
   ProjectsAPI,
-  PlansAPI
+  PlansAPI,
+  AnalyticsAPI,
+  CalendarAPI,
+  TeamsAPI,
+  SchedulingAPI,
+  IntegrationsAPI,
+  BillingAPI,
 } from './datasources/rest-api';
 
 // Import dataloaders for batching
@@ -82,9 +88,19 @@ const resolvers = {
   // Type resolvers for field resolution
   Goal: allResolvers.Goal,
   Task: allResolvers.Task,
+  TaskDependency: allResolvers.TaskDependency,
   Plan: allResolvers.Plan,
   PlanTemplate: allResolvers.PlanTemplate,
   Project: allResolvers.Project,
+  KanbanBoard: allResolvers.KanbanBoard,
+  KanbanColumn: allResolvers.KanbanColumn,
+  CalendarConnection: allResolvers.CalendarConnection,
+  Team: allResolvers.Team,
+  TeamMember: allResolvers.TeamMember,
+  TeamInvitation: allResolvers.TeamInvitation,
+  SchedulingLink: allResolvers.SchedulingLink,
+  Booking: allResolvers.Booking,
+  Webhook: allResolvers.Webhook,
 
   // Custom scalars
   DateTime: {
@@ -183,6 +199,12 @@ async function startServer() {
         const productivityAPI = new ProductivityAPI(token);
         const projectsAPI = new ProjectsAPI(token);
         const plansAPI = new PlansAPI(token);
+        const analyticsAPI = new AnalyticsAPI(token);
+        const calendarAPI = new CalendarAPI(token);
+        const teamsAPI = new TeamsAPI(token);
+        const schedulingAPI = new SchedulingAPI(token);
+        const integrationsAPI = new IntegrationsAPI(token);
+        const billingAPI = new BillingAPI(token);
 
         // Create DataLoaders for batching (reduces N+1 queries)
         const taskLoader = createTaskLoader(tasksAPI, userId);
@@ -205,6 +227,12 @@ async function startServer() {
             productivityAPI,
             projectsAPI,
             plansAPI,
+            analyticsAPI,
+            calendarAPI,
+            teamsAPI,
+            schedulingAPI,
+            integrationsAPI,
+            billingAPI,
           },
           // DataLoaders for field resolvers
           taskLoader,
