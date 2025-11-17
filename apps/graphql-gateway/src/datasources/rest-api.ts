@@ -830,7 +830,9 @@ export class AnalyticsAPI {
   }
 
   async getWeeklyStats(userId: string, weekStart?: string) {
-    const { data } = await this.client.get('/weekly', {
+    // Note: /weekly endpoint doesn't exist in analytics controller
+    // Using /metrics with date filtering instead
+    const { data } = await this.client.get('/metrics', {
       headers: { 'x-user-id': userId },
       params: { weekStart },
     });
@@ -838,7 +840,12 @@ export class AnalyticsAPI {
   }
 
   async getProductivityScores(userId: string, startDate: string, endDate: string) {
-    const { data } = await this.client.get('/score/range', {
+    // Note: /score/range is in ProductivityAPI, not Analytics API
+    const productivityClient = axios.create({
+      baseURL: `${API_BASE_URL}/productivity`,
+      headers: this.client.defaults.headers,
+    });
+    const { data } = await productivityClient.get('/score/range', {
       headers: { 'x-user-id': userId },
       params: { startDate, endDate },
     });
@@ -846,7 +853,12 @@ export class AnalyticsAPI {
   }
 
   async getGoalAnalyticsReport(goalId: string, userId: string) {
-    const { data } = await this.client.get(`/${goalId}/analytics`, {
+    // Note: Goal analytics is in GoalsAPI at /goals/:id/analytics
+    const goalsClient = axios.create({
+      baseURL: `${API_BASE_URL}/goals`,
+      headers: this.client.defaults.headers,
+    });
+    const { data } = await goalsClient.get(`/${goalId}/analytics`, {
       headers: { 'x-user-id': userId },
     });
     return data;
@@ -1193,15 +1205,26 @@ export class SchedulingAPI {
     return data;
   }
 
-  async getAvailableSlots(linkId: string, date: string) {
-    const { data } = await this.client.get(`/links/${linkId}/available-slots`, {
+  async getAvailableSlots(linkId: string, date: string, slug?: string) {
+    // Note: Backend uses /links/slug/:slug/slots, not /links/:linkId/available-slots
+    // If slug is provided, use it; otherwise fetch link first to get slug
+    if (!slug) {
+      const link = await this.getSchedulingLinkBySlug(linkId); // Assuming linkId might be slug
+      slug = link.slug || linkId;
+    }
+    const { data } = await this.client.get(`/links/slug/${slug}/slots`, {
       params: { date },
     });
     return data;
   }
 
-  async createBooking(input: any) {
-    const { data } = await this.client.post('/bookings', input);
+  async createBooking(input: any, slug?: string) {
+    // Note: Backend uses /links/slug/:slug/bookings, not /bookings
+    if (!slug && input.schedulingLinkId) {
+      const link = await this.getSchedulingLinkBySlug(input.schedulingLinkId);
+      slug = link.slug || input.schedulingLinkId;
+    }
+    const { data } = await this.client.post(`/links/slug/${slug}/bookings`, input);
     return data;
   }
 
@@ -1371,7 +1394,7 @@ export class BillingAPI {
   }
 
   async createCheckoutSession(userId: string, tier: string, interval: string) {
-    const { data } = await this.client.post('/checkout-session', { tier, interval }, {
+    const { data } = await this.client.post('/checkout', { tier, interval }, {
       headers: { 'x-user-id': userId },
     });
     return data;
@@ -1406,7 +1429,7 @@ export class BillingAPI {
   }
 
   async createBillingPortalSession(userId: string) {
-    const { data } = await this.client.post('/portal-session', {}, {
+    const { data } = await this.client.get('/portal', {
       headers: { 'x-user-id': userId },
     });
     return data;
