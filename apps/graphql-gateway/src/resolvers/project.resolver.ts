@@ -111,9 +111,9 @@ export const projectResolvers = {
       return dataSources.goalsAPI.getGoalsByProject(project.id, project.userId);
     },
 
-    members: async (project: any, _: any, { dataSources }: any) => {
-      // If we implement team features later
-      return [];
+    kanbanBoards: async (project: any, _: any, { dataSources }: any) => {
+      // Return kanban boards for the project
+      return dataSources.productivityAPI.getKanbanBoards(project.id, project.userId);
     },
   },
 };

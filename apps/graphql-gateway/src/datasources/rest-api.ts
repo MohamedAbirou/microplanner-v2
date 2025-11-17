@@ -681,3 +681,101 @@ export class ProjectsAPI {
     return data;
   }
 }
+
+// ==================== PLANS API ====================
+export class PlansAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = axios.create({
+      baseURL: `${API_BASE_URL}/plans`,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  }
+
+  // Generate plan
+  async generatePlan(userId: string, input: any) {
+    const { data } = await this.client.post('/generate', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.plan;
+  }
+
+  // Get current week plan
+  async getCurrentPlan(userId: string) {
+    const { data } = await this.client.get('/current', {
+      headers: { 'x-user-id': userId },
+    });
+    return data.plan;
+  }
+
+  // Get plan by ID
+  async getPlan(id: string, userId: string) {
+    const { data } = await this.client.get(`/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.plan;
+  }
+
+  // Get all plans
+  async getPlans(userId: string, filter: any = {}) {
+    const { data } = await this.client.get('/', {
+      headers: { 'x-user-id': userId },
+      params: filter,
+    });
+    return data.plans || data.data || [];
+  }
+
+  // Create plan manually
+  async createPlan(userId: string, input: any) {
+    const { data } = await this.client.post('/', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.plan;
+  }
+
+  // Update plan
+  async updatePlan(id: string, userId: string, input: any) {
+    const { data } = await this.client.put(`/${id}`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.plan;
+  }
+
+  // Accept plan
+  async acceptPlan(id: string, userId: string) {
+    const { data } = await this.client.put(`/${id}/accept`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.plan;
+  }
+
+  // Delete plan
+  async deletePlan(id: string, userId: string) {
+    await this.client.delete(`/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+  }
+
+  // Get plan templates
+  async getPlanTemplates(args: any = {}) {
+    const { data } = await this.client.get('/templates', {
+      params: args,
+    });
+    return data.templates || data.data || [];
+  }
+
+  // Get single plan template
+  async getPlanTemplate(id: string) {
+    const { data } = await this.client.get(`/templates/${id}`);
+    return data.template;
+  }
+
+  // Create plan template
+  async createPlanTemplate(userId: string, input: any) {
+    const { data } = await this.client.post('/templates', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.template;
+  }
+}

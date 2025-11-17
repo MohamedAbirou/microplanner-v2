@@ -17,7 +17,8 @@ import {
   GoalsAPI,
   TasksAPI,
   ProductivityAPI,
-  ProjectsAPI
+  ProjectsAPI,
+  PlansAPI
 } from './datasources/rest-api';
 
 // Import dataloaders for batching
@@ -181,6 +182,7 @@ async function startServer() {
         const tasksAPI = new TasksAPI(token);
         const productivityAPI = new ProductivityAPI(token);
         const projectsAPI = new ProjectsAPI(token);
+        const plansAPI = new PlansAPI(token);
 
         // Create DataLoaders for batching (reduces N+1 queries)
         const taskLoader = createTaskLoader(tasksAPI, userId);
@@ -202,6 +204,7 @@ async function startServer() {
             tasksAPI,
             productivityAPI,
             projectsAPI,
+            plansAPI,
           },
           // DataLoaders for field resolvers
           taskLoader,
