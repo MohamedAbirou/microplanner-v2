@@ -1,5 +1,5 @@
 import type { User } from '@microplanner/database';
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
@@ -45,17 +45,6 @@ export class UsersController {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastSeenAt: user.lastSeenAt,
-    };
-  }
-
-  @Post('sync')
-  @ApiOperation({ summary: 'Sync/create user from authentication provider' })
-  @ApiResponse({ status: 200, description: 'User synced successfully' })
-  async syncUser(@CurrentUser() user: User) {
-    const syncedUser = await this.usersService.syncUser({ clerkId: user.id, email: user.email });
-    return {
-      message: 'User synced successfully',
-      user: syncedUser,
     };
   }
 
