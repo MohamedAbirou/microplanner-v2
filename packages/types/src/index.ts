@@ -122,6 +122,7 @@ export type NotificationType =
 export interface Goal {
   id: string;
   userId: string;
+  projectId?: string;
   title: string;
   description?: string;
   emoji?: string;
@@ -140,8 +141,27 @@ export interface Goal {
   currentStreak: number;
   longestStreak: number;
   lastCompletedAt?: string;
+  project?: ProjectSummary;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface GoalSummary {
+  id: string;
+  emoji?: string;
+  title: string;
+  color?: string;
+  currentStreak?: number;
+  longestStreak?: number;
+  completionRate?: number;
+  totalCompletions?: number;
+}
+
+export interface ProjectSummary {
+  id: string;
+  name: string;
+  color: string;
+  icon?: string;
 }
 
 export interface CreateGoalDto {
@@ -153,12 +173,14 @@ export interface CreateGoalDto {
   durationMinutes: number;
   preferredTimes?: string[];
   priority?: number;
+  projectId?: string;
 }
 
 export interface UpdateGoalDto extends Partial<CreateGoalDto> {
   isActive?: boolean;
   isPaused?: boolean;
   pausedUntil?: string;
+  projectId?: string;
 }
 
 // ============================================
@@ -170,35 +192,130 @@ export interface Task {
   userId: string;
   goalId?: string;
   planId?: string;
+  parentTaskId?: string;
+  projectId?: string;
+
+  // Task details
   title: string;
   notes?: string;
+  priority: number;
+  tags: string[];
+
+  // Scheduling
   scheduledDate: string;
   startTime: string;
   endTime: string;
   durationMinutes: number;
+
+  // Recurrence
+  recurrenceRule?: RecurrenceRule;
+
+  // Status
   isCompleted: boolean;
   completedAt?: string;
   isSkipped: boolean;
   skippedReason?: string;
+  skippedAt?: string;
+
+  // Time tracking
+  actualStartTime?: string;
+  actualEndTime?: string;
+  timeSpentMinutes: number;
+  isTimerRunning: boolean;
+  timerStartedAt?: string;
+
+  // Source tracking
   aiGenerated: boolean;
+  manuallyAdded: boolean;
   aiReasoning?: string;
+
+  // Calendar sync
   calendarEventId?: string;
   calendarProvider?: string;
   syncStatus: SyncStatus;
   syncError?: string;
+
+  // Relations (populated)
+  goal?: GoalSummary;
+  project?: ProjectSummary;
+  parentTask?: TaskSummary;
+  subtasks?: TaskSummary[];
+  dependencies?: TaskDependency[];
+  blockedBy?: TaskDependency[];
+
+  // Timestamps
   createdAt: string;
   updatedAt: string;
 }
 
+export interface RecurrenceRule {
+  frequency: RecurrenceFrequency;
+  interval: number;
+  daysOfWeek?: number[];
+  dayOfMonth?: number;
+  endDate?: string;
+  occurrences?: number;
+}
+
+export type RecurrenceFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+
+export interface TaskSummary {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+  scheduledDate?: string;
+  startTime?: string;
+  endTime?: string;
+  durationMinutes?: number;
+}
+
+export interface TaskWithDependencies {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+  scheduledDate: string;
+  blockingTasks: TaskSummary[];
+  dependentTasks: TaskSummary[];
+  isBlocked: boolean;
+  canStart: boolean;
+}
+
+export interface TimeEntry {
+  taskId: string;
+  actualStartTime?: string;
+  actualEndTime?: string;
+  timeSpentMinutes: number;
+  isTimerRunning: boolean;
+  timerStartedAt?: string;
+}
+
 export type SyncStatus = 'PENDING' | 'SYNCING' | 'SYNCED' | 'FAILED' | 'CONFLICT';
+export type DependencyType = 'FINISH_TO_START' | 'START_TO_START' | 'FINISH_TO_FINISH';
 
 export interface CreateTaskDto {
   title: string;
   notes?: string;
   scheduledDate: string;
   startTime: string;
+  endTime: string;
   durationMinutes: number;
   goalId?: string;
+  projectId?: string;
+  priority?: number;
+  tags?: string[];
+}
+
+export interface UpdateTaskDto extends Partial<CreateTaskDto> {
+  isCompleted?: boolean;
+  isSkipped?: boolean;
+  skippedReason?: string;
+}
+
+export interface CreateSubtaskInput {
+  parentTaskId: string;
+  title: string;
+  durationMinutes?: number;
+  scheduledDate?: string;
 }
 
 // ============================================
