@@ -7,9 +7,12 @@ import { Plus, Target } from 'lucide-react';
 import Link from 'next/link';
 
 export default function GoalsPage() {
-  // Fetch goals from GraphQL
-  const { goals, loading, refetch } = useGoals({ isActive: true });
+  // Fetch all goals from GraphQL
+  const { goals: allGoals, loading, refetch } = useGoals();
   const { updateGoal } = useUpdateGoal();
+
+  // Filter for active goals on the client side
+  const goals = allGoals?.filter((goal) => goal.isActive !== false) || [];
 
   const handlePause = async (goalId: string) => {
     try {

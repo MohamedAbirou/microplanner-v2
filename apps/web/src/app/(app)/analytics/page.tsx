@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   TrendingUp,
   TrendingDown,
@@ -13,6 +14,7 @@ import {
   Calendar,
   Zap,
   Award,
+  Construction,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -32,7 +34,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-// Mock data - will be replaced with GraphQL queries
+// MVP MODE: Mock data shown for demonstration - real GraphQL integration coming soon
+// TODO: Connect to actual analytics endpoints before production
 const weeklyCompletionData = [
   { week: 'Week 1', completed: 42, planned: 50, rate: 84 },
   { week: 'Week 2', completed: 48, planned: 52, rate: 92 },
@@ -89,6 +92,15 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
+      {/* MVP Mode Warning */}
+      <Alert>
+        <Construction className="h-4 w-4" />
+        <AlertTitle>MVP Mode - Mock Data</AlertTitle>
+        <AlertDescription>
+          This analytics page currently displays demo data. Real-time analytics integration will be completed in the next phase.
+        </AlertDescription>
+      </Alert>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -13,8 +13,9 @@ export default function DayPage() {
 
   // Fetch tasks for today
   const today = new Date();
+  // Use scheduledDate filter for single day (GraphQL supports this)
   const { tasks, loading, refetch } = useTasks({
-    dateRange: { start: startOfDay(today), end: endOfDay(today) },
+    scheduledDate: startOfDay(today),
   });
 
   const handleTaskClick = (task: any) => {

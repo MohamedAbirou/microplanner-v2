@@ -263,7 +263,8 @@ export class TasksAPI {
     const { data } = await this.client.get(`/${id}`, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // API returns { message, task }, extract the task
+    return data.task || data;
   }
 
   async getTasks(userId: string, filters: any) {
@@ -271,7 +272,8 @@ export class TasksAPI {
       headers: { 'x-user-id': userId },
       params: filters,
     });
-    return data;
+    // API returns { message, tasks, total, page, limit }, extract the tasks array
+    return data.tasks || data.data || data;
   }
 
   async getTasksByGoalIds(goalIds: string[]) {
@@ -291,14 +293,16 @@ export class TasksAPI {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // API returns { message, task }, extract the task
+    return data.task || data;
   }
 
   async updateTask(id: string, userId: string, input: any) {
     const { data } = await this.client.put(`/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // API returns { message, task }, extract the task
+    return data.task || data;
   }
 
   async deleteTask(id: string, userId: string) {
@@ -315,7 +319,8 @@ export class TasksAPI {
         headers: { 'x-user-id': userId },
       }
     );
-    return data;
+    // API returns { message, task }, extract the task
+    return data.task || data;
   }
 
   async skipTask(id: string, userId: string, reason?: string) {
@@ -326,7 +331,8 @@ export class TasksAPI {
         headers: { 'x-user-id': userId },
       }
     );
-    return data;
+    // API returns { message, task }, extract the task
+    return data.task || data;
   }
 
   async uncompleteTask(id: string, userId: string) {
@@ -339,7 +345,8 @@ export class TasksAPI {
         headers: { 'x-user-id': userId },
       }
     );
-    return data;
+    // API returns { message, task }, extract the task
+    return data.task || data;
   }
 
   async getTasksByProject(projectId: string, userId: string) {
@@ -347,7 +354,8 @@ export class TasksAPI {
       headers: { 'x-user-id': userId },
       params: { projectId },
     });
-    return data;
+    // API returns { message, tasks, ... }, extract the tasks array
+    return data.tasks || data.data || data;
   }
 
   async getTasksByGoal(goalId: string, userId: string) {
@@ -355,7 +363,8 @@ export class TasksAPI {
       headers: { 'x-user-id': userId },
       params: { goalId },
     });
-    return data;
+    // API returns { message, tasks, ... }, extract the tasks array
+    return data.tasks || data.data || data;
   }
 
   async searchTasks(query: string, userId: string) {

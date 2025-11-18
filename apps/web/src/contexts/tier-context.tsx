@@ -40,20 +40,23 @@ interface TierContextValue {
  * - Quality score ranges show expected AI performance
  * - Template access for viral growth
  * - Team workspace and API access for Premium only
+ *
+ * MVP MODE: All tiers have generous limits for testing (80% feature completion focus)
+ * TODO: Restore proper limits before production launch
  */
 const tierLimits: Record<UserTier, TierLimits> = {
   FREE: {
-    maxActiveGoals: 3,
-    maxGoalsPerPlan: 3,
-    maxTasksPerDay: 20,
-    maxPlansPerWeek: 7, // One per day - enables habit formation
+    maxActiveGoals: -1, // Unlimited for MVP testing (TODO: Set to 3 for production)
+    maxGoalsPerPlan: -1, // Unlimited for MVP testing (TODO: Set to 3 for production)
+    maxTasksPerDay: -1, // Unlimited for MVP testing (TODO: Set to 20 for production)
+    maxPlansPerWeek: -1, // Unlimited for MVP testing (TODO: Set to 7 for production)
     aiModel: 'rule-based',
     qualityScoreRange: [70, 85],
-    hasCalendarIntegration: false,
-    hasTemplateAccess: false, // Can use templates but not create
-    hasAdvancedAnalytics: false,
-    hasTeamWorkspace: false,
-    hasAPIAccess: false,
+    hasCalendarIntegration: true, // Enabled for MVP testing (TODO: Set to false for production)
+    hasTemplateAccess: true, // Enabled for MVP testing (TODO: Set to false for production)
+    hasAdvancedAnalytics: false, // Premium feature - keep disabled
+    hasTeamWorkspace: false, // Premium feature - keep disabled
+    hasAPIAccess: false, // Premium feature - keep disabled
     hasPrioritySupport: false,
   },
   STARTER: {
