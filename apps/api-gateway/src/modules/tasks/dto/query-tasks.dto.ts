@@ -13,6 +13,16 @@ export class QueryTasksDto {
   @IsDateString()
   weekStart?: string;
 
+  @ApiProperty({ required: false, example: '2025-01-13T00:00:00.000Z', description: 'Filter by start date (date range filter)' })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @ApiProperty({ required: false, example: '2025-01-13T23:59:59.999Z', description: 'Filter by end date (date range filter)' })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
   @ApiProperty({ required: false, example: 'goal-uuid', description: 'Filter by goal ID' })
   @IsOptional()
   @IsString()

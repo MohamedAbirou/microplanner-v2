@@ -268,9 +268,19 @@ export class TasksAPI {
   }
 
   async getTasks(userId: string, filters: any) {
+    // Transform GraphQL filter to REST API params
+    const params: any = { ...filters };
+
+    // Handle dateRange filter (GraphQL -> REST API conversion)
+    if (params.dateRange) {
+      params.startDate = params.dateRange.start;
+      params.endDate = params.dateRange.end;
+      delete params.dateRange;
+    }
+
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
-      params: filters,
+      params,
     });
     // API returns { message, tasks, total, page, limit }, extract the tasks array
     return data.tasks || data.data || data;

@@ -79,18 +79,26 @@ export class TasksService {
    * Get all tasks with filters and pagination
    */
   async findAll(userId: string, query: QueryTasksDto): Promise<{ tasks: Task[]; total: number; page: number; limit: number }> {
-    const { page = 1, limit = 50, date, weekStart, goalId, planId, projectId, priority, tags, search, isCompleted, aiGenerated } = query;
+    const { page = 1, limit = 50, date, weekStart, startDate, endDate, goalId, planId, projectId, priority, tags, search, isCompleted, aiGenerated } = query;
     const skip = (page - 1) * limit;
 
     const where: any = { userId };
 
-    // Date filters
-    if (date) {
+    // Date filters (priority: startDate/endDate > date > weekStart)
+    if (startDate && endDate) {
+      // Date range filter
+      where.scheduledDate = {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      };
+    } else if (date) {
+      // Single date filter (start and end of day)
       const targetDate = new Date(date);
       const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
       const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
       where.scheduledDate = { gte: startOfDay, lte: endOfDay };
     } else if (weekStart) {
+      // Week filter
       const weekStartDate = new Date(weekStart);
       const weekEndDate = new Date(weekStartDate);
       weekEndDate.setDate(weekStartDate.getDate() + 6);

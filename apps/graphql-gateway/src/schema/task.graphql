@@ -229,9 +229,15 @@ input CreateTaskDependencyInput {
 }
 
 # Filter and Sort Inputs
+input DateRangeInput {
+  start: DateTime!
+  end: DateTime!
+}
+
 input TaskFilterInput {
   date: String
   weekStart: String
+  dateRange: DateRangeInput
   goalId: ID
   planId: ID
   projectId: ID
