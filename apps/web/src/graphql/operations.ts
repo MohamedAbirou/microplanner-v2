@@ -52,15 +52,25 @@ export const GET_TASKS = gql`
   query GetTasks($filter: TaskFilterInput, $sort: TaskSortInput) {
     tasks(filter: $filter, sort: $sort) {
       id
+      userId
+      goalId
+      planId
+      parentTaskId
+      projectId
+
+      # Task details
       title
       notes
+      priority
+      tags
+
+      # Scheduling
       scheduledDate
       startTime
       endTime
       durationMinutes
-      isCompleted
-      priority
-      tags
+
+      # Recurrence
       recurrenceRule {
         frequency
         interval
@@ -69,12 +79,64 @@ export const GET_TASKS = gql`
         endDate
         occurrences
       }
+
+      # Status
+      isCompleted
+      completedAt
+      isSkipped
+      skippedReason
+      skippedAt
+
+      # Time tracking
+      actualStartTime
+      actualEndTime
+      timeSpentMinutes
+      isTimerRunning
+      timerStartedAt
+
+      # Source tracking
+      aiGenerated
+      manuallyAdded
+      aiReasoning
+
+      # Relations
       goal {
         id
         emoji
         title
         color
       }
+      project {
+        id
+        name
+        color
+        icon
+      }
+      parentTask {
+        id
+        title
+        isCompleted
+      }
+      subtasks {
+        id
+        title
+        isCompleted
+        durationMinutes
+      }
+      dependencies {
+        id
+        dependentTaskId
+        blockingTaskId
+        type
+      }
+      blockedBy {
+        id
+        dependentTaskId
+        blockingTaskId
+        type
+      }
+
+      # Timestamps
       createdAt
       updatedAt
     }
@@ -85,15 +147,25 @@ export const GET_TASK = gql`
   query GetTask($id: ID!) {
     task(id: $id) {
       id
+      userId
+      goalId
+      planId
+      parentTaskId
+      projectId
+
+      # Task details
       title
       notes
+      priority
+      tags
+
+      # Scheduling
       scheduledDate
       startTime
       endTime
       durationMinutes
-      isCompleted
-      priority
-      tags
+
+      # Recurrence
       recurrenceRule {
         frequency
         interval
@@ -102,19 +174,88 @@ export const GET_TASK = gql`
         endDate
         occurrences
       }
+
+      # Status
+      isCompleted
+      completedAt
+      isSkipped
+      skippedReason
+      skippedAt
+
+      # Time tracking
+      actualStartTime
+      actualEndTime
+      timeSpentMinutes
+      isTimerRunning
+      timerStartedAt
+
+      # Source tracking
+      aiGenerated
+      manuallyAdded
+      aiReasoning
+
+      # Relations
       goal {
         id
         emoji
         title
         color
       }
+      project {
+        id
+        name
+        color
+        icon
+      }
+      parentTask {
+        id
+        title
+        isCompleted
+      }
+      subtasks {
+        id
+        title
+        isCompleted
+        scheduledDate
+        startTime
+        endTime
+        durationMinutes
+      }
       dependencies {
         id
-        fromTaskId
-        toTaskId
+        dependentTaskId
+        blockingTaskId
         type
+        dependentTask {
+          id
+          title
+          isCompleted
+        }
+        blockingTask {
+          id
+          title
+          isCompleted
+        }
         createdAt
       }
+      blockedBy {
+        id
+        dependentTaskId
+        blockingTaskId
+        type
+        dependentTask {
+          id
+          title
+          isCompleted
+        }
+        blockingTask {
+          id
+          title
+          isCompleted
+        }
+      }
+
+      # Timestamps
       createdAt
       updatedAt
     }
@@ -125,6 +266,9 @@ export const CREATE_TASK = gql`
   mutation CreateTask($input: CreateTaskInput!) {
     createTask(input: $input) {
       id
+      userId
+      goalId
+      projectId
       title
       notes
       scheduledDate
@@ -140,7 +284,14 @@ export const CREATE_TASK = gql`
         title
         color
       }
+      project {
+        id
+        name
+        color
+        icon
+      }
       createdAt
+      updatedAt
     }
   }
 `;
@@ -149,6 +300,9 @@ export const UPDATE_TASK = gql`
   mutation UpdateTask($id: ID!, $input: UpdateTaskInput!) {
     updateTask(id: $id, input: $input) {
       id
+      userId
+      goalId
+      projectId
       title
       notes
       scheduledDate
@@ -156,8 +310,21 @@ export const UPDATE_TASK = gql`
       endTime
       durationMinutes
       isCompleted
+      completedAt
       priority
       tags
+      goal {
+        id
+        emoji
+        title
+        color
+      }
+      project {
+        id
+        name
+        color
+        icon
+      }
       updatedAt
     }
   }
@@ -176,6 +343,14 @@ export const COMPLETE_TASK = gql`
     completeTask(id: $id) {
       id
       isCompleted
+      completedAt
+      goal {
+        id
+        currentStreak
+        longestStreak
+        completionRate
+        totalCompletions
+      }
       updatedAt
     }
   }
@@ -200,6 +375,148 @@ export const BULK_DELETE_TASKS = gql`
   }
 `;
 
+// Task Skip/Uncomplete
+export const SKIP_TASK = gql`
+  mutation SkipTask($id: ID!, $reason: String) {
+    skipTask(id: $id, reason: $reason) {
+      id
+      isSkipped
+      skippedReason
+      skippedAt
+      updatedAt
+    }
+  }
+`;
+
+export const UNCOMPLETE_TASK = gql`
+  mutation UncompleteTask($id: ID!) {
+    uncompleteTask(id: $id) {
+      id
+      isCompleted
+      completedAt
+      updatedAt
+    }
+  }
+`;
+
+// Subtasks
+export const CREATE_SUBTASK = gql`
+  mutation CreateSubtask($input: CreateSubtaskInput!) {
+    createSubtask(input: $input) {
+      id
+      parentTaskId
+      title
+      durationMinutes
+      scheduledDate
+      isCompleted
+      createdAt
+    }
+  }
+`;
+
+// Task Dependencies
+export const CREATE_TASK_DEPENDENCY = gql`
+  mutation CreateTaskDependency($input: CreateTaskDependencyInput!) {
+    createTaskDependency(input: $input) {
+      id
+      dependentTaskId
+      blockingTaskId
+      type
+      dependentTask {
+        id
+        title
+        isCompleted
+      }
+      blockingTask {
+        id
+        title
+        isCompleted
+      }
+      createdAt
+    }
+  }
+`;
+
+export const DELETE_TASK_DEPENDENCY = gql`
+  mutation DeleteTaskDependency($id: ID!) {
+    deleteTaskDependency(id: $id)
+  }
+`;
+
+// Time Tracking
+export const START_TIMER = gql`
+  mutation StartTimer($taskId: ID!) {
+    startTimer(taskId: $taskId) {
+      taskId
+      isTimerRunning
+      timerStartedAt
+      actualStartTime
+    }
+  }
+`;
+
+export const STOP_TIMER = gql`
+  mutation StopTimer($taskId: ID!) {
+    stopTimer(taskId: $taskId) {
+      taskId
+      isTimerRunning
+      actualEndTime
+      timeSpentMinutes
+    }
+  }
+`;
+
+export const LOG_TIME = gql`
+  mutation LogTime($taskId: ID!, $minutes: Int!, $date: DateTime) {
+    logTime(taskId: $taskId, minutes: $minutes, date: $date) {
+      taskId
+      timeSpentMinutes
+      actualStartTime
+      actualEndTime
+    }
+  }
+`;
+
+// Task with Dependencies Query
+export const GET_TASK_WITH_DEPENDENCIES = gql`
+  query GetTaskWithDependencies($id: ID!) {
+    taskWithDependencies(id: $id) {
+      id
+      title
+      isCompleted
+      scheduledDate
+      blockingTasks {
+        id
+        title
+        isCompleted
+      }
+      dependentTasks {
+        id
+        title
+        isCompleted
+      }
+      isBlocked
+      canStart
+    }
+  }
+`;
+
+// Subtasks Query
+export const GET_SUBTASKS = gql`
+  query GetSubtasks($parentTaskId: ID!) {
+    subtasks(parentTaskId: $parentTaskId) {
+      id
+      title
+      isCompleted
+      scheduledDate
+      startTime
+      endTime
+      durationMinutes
+      createdAt
+    }
+  }
+`;
+
 // ============================================================================
 // GOAL OPERATIONS
 // ============================================================================
@@ -208,43 +525,8 @@ export const GET_GOALS = gql`
   query GetGoals {
     goals {
       id
-      emoji
-      title
-      description
-      color
-      # Scheduling fields
-      frequencyPerWeek
-      durationMinutes
-      preferredTimes
-      flexibilityScore
-      priority
-      # Status fields
-      isActive
-      isPaused
-      pausedUntil
-      # Analytics fields
-      completionRate
-      totalCompletions
-      totalScheduled
-      currentStreak
-      longestStreak
-      lastCompletedAt
-      # Legacy fields (for backward compatibility)
-      targetMetric
-      currentProgress
-      targetValue
-      deadline
-      isArchived
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-export const GET_GOAL = gql`
-  query GetGoal($id: ID!) {
-    goal(id: $id) {
-      id
+      userId
+      projectId
       emoji
       title
       description
@@ -273,6 +555,58 @@ export const GET_GOAL = gql`
       deadline
       isArchived
       # Relations
+      project {
+        id
+        name
+        color
+        icon
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const GET_GOAL = gql`
+  query GetGoal($id: ID!) {
+    goal(id: $id) {
+      id
+      userId
+      projectId
+      emoji
+      title
+      description
+      color
+      # Scheduling fields
+      frequencyPerWeek
+      durationMinutes
+      preferredTimes
+      flexibilityScore
+      priority
+      # Status fields
+      isActive
+      isPaused
+      pausedUntil
+      # Analytics fields
+      completionRate
+      totalCompletions
+      totalScheduled
+      currentStreak
+      longestStreak
+      lastCompletedAt
+      # Legacy fields (for backward compatibility)
+      targetMetric
+      currentProgress
+      targetValue
+      deadline
+      isArchived
+      # Relations
+      project {
+        id
+        name
+        color
+        icon
+      }
       tasks {
         id
         title
