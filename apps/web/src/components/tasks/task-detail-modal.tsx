@@ -34,6 +34,7 @@ import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TaskDependenciesPanel } from '@/components/dependencies/task-dependencies-panel';
+import { TaskSubtasksPanel } from '@/components/tasks/task-subtasks-panel';
 import { TaskDependency, DependencyType } from '@/lib/dependencies';
 
 interface Goal {
@@ -41,6 +42,16 @@ interface Goal {
   emoji: string;
   title: string;
   color: string;
+}
+
+interface Subtask {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+  scheduledDate?: string;
+  startTime?: string;
+  endTime?: string;
+  durationMinutes?: number;
 }
 
 interface Task {
@@ -54,6 +65,7 @@ interface Task {
   durationMinutes: number;
   isCompleted: boolean;
   priority: number;
+  subtasks?: Subtask[];
 }
 
 interface TaskDetailModalProps {
@@ -68,6 +80,9 @@ interface TaskDetailModalProps {
   onToggleComplete?: (taskId: string) => void | Promise<void>;
   onAddDependency?: (fromTaskId: string, toTaskId: string, type: DependencyType) => Promise<void>;
   onRemoveDependency?: (dependencyId: string) => Promise<void>;
+  onAddSubtask?: (taskId: string, title: string) => Promise<void>;
+  onToggleSubtask?: (subtaskId: string) => Promise<void>;
+  onDeleteSubtask?: (subtaskId: string) => Promise<void>;
 }
 
 const DURATION_OPTIONS = [
@@ -99,6 +114,9 @@ export function TaskDetailModal({
   onToggleComplete,
   onAddDependency,
   onRemoveDependency,
+  onAddSubtask,
+  onToggleSubtask,
+  onDeleteSubtask,
 }: TaskDetailModalProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -247,8 +265,16 @@ export function TaskDetailModal({
         </DialogHeader>
 
         <Tabs defaultValue="details" className="mt-4">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="subtasks">
+              Subtasks
+              {task.subtasks && task.subtasks.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="dependencies">
               Dependencies
               {(getBlockingTasks(task.id, dependencies).length + getBlockedTasks(task.id, dependencies).length) > 0 && (
@@ -412,6 +438,22 @@ export function TaskDetailModal({
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="subtasks" className="mt-4">
+            <TaskSubtasksPanel
+              taskId={task.id}
+              subtasks={task.subtasks || []}
+              onAddSubtask={async (title) => {
+                await onAddSubtask?.(task.id, title);
+              }}
+              onToggleSubtask={async (subtaskId) => {
+                await onToggleSubtask?.(subtaskId);
+              }}
+              onDeleteSubtask={async (subtaskId) => {
+                await onDeleteSubtask?.(subtaskId);
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="dependencies" className="mt-4">
