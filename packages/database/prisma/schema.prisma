@@ -276,7 +276,7 @@ model TaskDependency {
   blockingTask    Task     @relation("BlockingTask", fields: [blockingTaskId], references: [id], onDelete: Cascade)
 
   // Dependency type
-  type            String   @default("finish-to-start") // finish-to-start, start-to-start, finish-to-finish
+  type            String   @default("BLOCKS") // BLOCKS, BLOCKED_BY, RELATED_TO
 
   // Timestamps
   createdAt       DateTime @default(now())

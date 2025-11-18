@@ -53,8 +53,11 @@ export class TasksService {
       data: {
         userId,
         goalId: createTaskDto.goalId || null,
+        projectId: createTaskDto.projectId || null,
         title: createTaskDto.title,
         notes: createTaskDto.notes || null,
+        priority: createTaskDto.priority || 2, // Default to medium priority
+        tags: createTaskDto.tags || [],
         scheduledDate: new Date(createTaskDto.scheduledDate),
         startTime: createTaskDto.startTime,
         endTime: createTaskDto.endTime,
@@ -76,7 +79,7 @@ export class TasksService {
    * Get all tasks with filters and pagination
    */
   async findAll(userId: string, query: QueryTasksDto): Promise<{ tasks: Task[]; total: number; page: number; limit: number }> {
-    const { page = 1, limit = 50, date, weekStart, goalId, planId, isCompleted, aiGenerated } = query;
+    const { page = 1, limit = 50, date, weekStart, goalId, planId, projectId, priority, tags, search, isCompleted, aiGenerated } = query;
     const skip = (page - 1) * limit;
 
     const where: any = { userId };
@@ -95,9 +98,26 @@ export class TasksService {
       where.scheduledDate = { gte: weekStartDate, lte: weekEndDate };
     }
 
-    // Goal and plan filters
+    // Goal, plan, and project filters
     if (goalId) where.goalId = goalId;
     if (planId) where.planId = planId;
+    if (projectId) where.projectId = projectId;
+
+    // Priority filter
+    if (priority !== undefined) where.priority = priority;
+
+    // Tags filter (contains any of the specified tags)
+    if (tags && tags.length > 0) {
+      where.tags = { hasSome: tags };
+    }
+
+    // Search filter (search in title or notes)
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
     // Status filters
     if (isCompleted !== undefined) where.isCompleted = isCompleted;
@@ -162,6 +182,17 @@ export class TasksService {
     if (updateTaskDto.endTime !== undefined) data.endTime = updateTaskDto.endTime;
     if (updateTaskDto.durationMinutes !== undefined) data.durationMinutes = updateTaskDto.durationMinutes;
     if (updateTaskDto.goalId !== undefined) data.goalId = updateTaskDto.goalId;
+    if (updateTaskDto.projectId !== undefined) data.projectId = updateTaskDto.projectId;
+    if (updateTaskDto.priority !== undefined) data.priority = updateTaskDto.priority;
+    if (updateTaskDto.tags !== undefined) data.tags = updateTaskDto.tags;
+    if (updateTaskDto.isCompleted !== undefined) {
+      data.isCompleted = updateTaskDto.isCompleted;
+      if (updateTaskDto.isCompleted) {
+        data.completedAt = new Date();
+      } else {
+        data.completedAt = null;
+      }
+    }
 
     // Mark as manually moved if date/time changed
     if (updateTaskDto.scheduledDate || updateTaskDto.startTime || updateTaskDto.endTime) {

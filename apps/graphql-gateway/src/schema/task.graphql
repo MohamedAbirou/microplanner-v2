@@ -211,6 +211,7 @@ input UpdateTaskInput {
   endTime: String
   durationMinutes: Int
   isCompleted: Boolean
+  goalId: ID
   projectId: ID
 }
 
@@ -229,13 +230,17 @@ input CreateTaskDependencyInput {
 
 # Filter and Sort Inputs
 input TaskFilterInput {
+  date: String
+  weekStart: String
   goalId: ID
+  planId: ID
   projectId: ID
-  scheduledDate: DateTime
-  isCompleted: Boolean
   priority: Int
   tags: [String!]
   search: String
+  scheduledDate: DateTime
+  isCompleted: Boolean
+  aiGenerated: Boolean
 }
 
 input TaskSortInput {
@@ -267,7 +272,7 @@ enum TaskOrderBy {
 }
 
 enum DependencyType {
-  FINISH_TO_START
-  START_TO_START
-  FINISH_TO_FINISH
+  BLOCKS
+  BLOCKED_BY
+  RELATED_TO
 }

@@ -290,7 +290,7 @@ export interface TimeEntry {
 }
 
 export type SyncStatus = 'PENDING' | 'SYNCING' | 'SYNCED' | 'FAILED' | 'CONFLICT';
-export type DependencyType = 'FINISH_TO_START' | 'START_TO_START' | 'FINISH_TO_FINISH';
+export type DependencyType = 'BLOCKS' | 'BLOCKED_BY' | 'RELATED_TO';
 
 export interface CreateTaskDto {
   title: string;

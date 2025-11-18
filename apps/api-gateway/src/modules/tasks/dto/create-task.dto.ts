@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString, IsInt, Min, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsInt, Min, Max, MinLength, MaxLength, Matches, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateTaskDto {
@@ -57,4 +57,37 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   goalId?: string;
+
+  @ApiProperty({
+    example: 'project-uuid',
+    description: 'Optional project ID to link this task to',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  projectId?: string;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Task priority (1=High, 2=Medium, 3=Low)',
+    required: false,
+    minimum: 1,
+    maximum: 3,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(3)
+  priority?: number;
+
+  @ApiProperty({
+    example: ['work', 'urgent'],
+    description: 'Optional tags for the task',
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
 }
