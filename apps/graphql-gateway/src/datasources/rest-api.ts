@@ -267,15 +267,47 @@ export class TasksAPI {
     return data.task || data;
   }
 
-  async getTasks(userId: string, filters: any) {
-    // Transform GraphQL filter to REST API params
-    const params: any = { ...filters };
+  async getTasks(userId: string, args: any = {}) {
+    // Check if args contains GraphQL-style nested filter/sort or direct params
+    const hasNestedFilter = args.filter !== undefined;
+
+    // Extract filter and sort if they exist (GraphQL query style)
+    // Otherwise treat entire args as flat params (dashboard resolver style)
+    const filterSource = hasNestedFilter ? args.filter : args;
+    const { filter, sort, ...directParams } = args;
+
+    // Start with direct params (for non-filter args like take, skip, etc.)
+    const params: any = hasNestedFilter ? { ...directParams } : {};
 
     // Handle dateRange filter (GraphQL -> REST API conversion)
-    if (params.dateRange) {
-      params.startDate = params.dateRange.start;
-      params.endDate = params.dateRange.end;
-      delete params.dateRange;
+    if (filterSource?.dateRange) {
+      params.startDate = filterSource.dateRange.start;
+      params.endDate = filterSource.dateRange.end;
+    }
+
+    // Copy other filter fields directly
+    if (filterSource?.date) params.date = filterSource.date;
+    if (filterSource?.weekStart) params.weekStart = filterSource.weekStart;
+    if (filterSource?.goalId) params.goalId = filterSource.goalId;
+    if (filterSource?.planId) params.planId = filterSource.planId;
+    if (filterSource?.projectId) params.projectId = filterSource.projectId;
+    if (filterSource?.priority !== undefined) params.priority = filterSource.priority;
+    if (filterSource?.tags) params.tags = filterSource.tags;
+    if (filterSource?.search) params.search = filterSource.search;
+    if (filterSource?.scheduledDate) params.scheduledDate = filterSource.scheduledDate;
+    if (filterSource?.isCompleted !== undefined) params.isCompleted = filterSource.isCompleted;
+    if (filterSource?.aiGenerated !== undefined) params.aiGenerated = filterSource.aiGenerated;
+
+    // For dashboard resolver compatibility: copy any remaining direct params
+    if (!hasNestedFilter) {
+      if (args.orderBy) params.orderBy = args.orderBy;
+      if (args.take) params.take = args.take;
+      if (args.skip) params.skip = args.skip;
+    }
+
+    // Handle sort (convert to REST API format if needed)
+    if (sort) {
+      params.sort = sort;
     }
 
     const { data } = await this.client.get('/', {
