@@ -21,7 +21,15 @@ import {
   SORT_PRESETS,
   getTaskStatistics,
 } from '@/lib/filters';
-import { useTasks, useGoals, useCompleteTask, useDeleteTask } from '@/hooks/use-graphql';
+import {
+  useTasks,
+  useGoals,
+  useCompleteTask,
+  useDeleteTask,
+  useStartTimer,
+  useStopTimer,
+  useSkipTask,
+} from '@/hooks/use-graphql';
 
 export default function TodayPage() {
   const [filters, setFilters] = React.useState<TaskFilters>(clearAllFilters());
@@ -48,6 +56,9 @@ export default function TodayPage() {
   // GraphQL mutations
   const { completeTask } = useCompleteTask();
   const { deleteTask, loading: deleting } = useDeleteTask();
+  const { startTimer } = useStartTimer();
+  const { stopTimer } = useStopTimer();
+  const { skipTask } = useSkipTask();
 
   // Apply filters and sorting
   const filteredAndSortedTasks = React.useMemo(() => {
@@ -80,6 +91,21 @@ export default function TodayPage() {
       setDeleteTaskId(null);
       refetch();
     }
+  };
+
+  const handleStartTimer = async (taskId: string) => {
+    await startTimer({ variables: { taskId } });
+    refetch();
+  };
+
+  const handleStopTimer = async (taskId: string) => {
+    await stopTimer({ variables: { taskId } });
+    refetch();
+  };
+
+  const handleSkipTask = async (taskId: string) => {
+    await skipTask({ variables: { id: taskId, reason: 'Skipped from today view' } });
+    refetch();
   };
 
   return (
@@ -167,6 +193,9 @@ export default function TodayPage() {
             onComplete={handleComplete}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onStartTimer={handleStartTimer}
+            onStopTimer={handleStopTimer}
+            onSkip={handleSkipTask}
           />
         </CardContent>
       </Card>
