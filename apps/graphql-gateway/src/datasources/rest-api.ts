@@ -284,9 +284,21 @@ export class TasksAPI {
       params.startDate = filterSource.dateRange.start;
       params.endDate = filterSource.dateRange.end;
     }
+    // Handle scheduledDate filter - convert DateTime to date string (YYYY-MM-DD)
+    // This is used by /today page and other single-day filters
+    else if (filterSource?.scheduledDate) {
+      // Extract just the date part from ISO string (YYYY-MM-DD)
+      const dateStr = typeof filterSource.scheduledDate === 'string'
+        ? filterSource.scheduledDate.split('T')[0]
+        : new Date(filterSource.scheduledDate).toISOString().split('T')[0];
+      params.date = dateStr;
+    }
+    // Handle explicit date filter
+    else if (filterSource?.date) {
+      params.date = filterSource.date;
+    }
 
     // Copy other filter fields directly
-    if (filterSource?.date) params.date = filterSource.date;
     if (filterSource?.weekStart) params.weekStart = filterSource.weekStart;
     if (filterSource?.goalId) params.goalId = filterSource.goalId;
     if (filterSource?.planId) params.planId = filterSource.planId;
@@ -294,7 +306,6 @@ export class TasksAPI {
     if (filterSource?.priority !== undefined) params.priority = filterSource.priority;
     if (filterSource?.tags) params.tags = filterSource.tags;
     if (filterSource?.search) params.search = filterSource.search;
-    if (filterSource?.scheduledDate) params.scheduledDate = filterSource.scheduledDate;
     if (filterSource?.isCompleted !== undefined) params.isCompleted = filterSource.isCompleted;
     if (filterSource?.aiGenerated !== undefined) params.aiGenerated = filterSource.aiGenerated;
 
@@ -305,10 +316,9 @@ export class TasksAPI {
       if (args.skip) params.skip = args.skip;
     }
 
-    // Handle sort (convert to REST API format if needed)
-    if (sort) {
-      params.sort = sort;
-    }
+    // Handle sort - backend doesn't support GraphQL-style sort yet
+    // For now, we'll ignore it as backend returns sorted by scheduledDate + startTime by default
+    // TODO: Add orderBy support to backend QueryTasksDto if needed
 
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
