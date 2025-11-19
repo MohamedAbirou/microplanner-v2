@@ -58,7 +58,11 @@ export default function AppLayout({
 
   const handleQuickAddSubmit = async (data: TaskFormData) => {
     try {
-      await createTask({ variables: { input: data } });
+      // Remove isRecurring field - it's not in GraphQL schema
+      // recurrenceRule presence indicates if task is recurring
+      const { isRecurring, ...taskInput } = data;
+
+      await createTask({ variables: { input: taskInput } });
       setQuickAddOpen(false);
     } catch (error) {
       console.error('Failed to create task:', error);
