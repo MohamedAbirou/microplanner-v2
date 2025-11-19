@@ -23,6 +23,11 @@ type Task {
   # Recurrence
   recurrenceRule: RecurrenceRule
 
+  # Recurring instance metadata (for expanded instances)
+  isRecurringInstance: Boolean
+  recurringTaskId: ID
+  instanceDate: DateTime
+
   # Status
   isCompleted: Boolean!
   completedAt: DateTime
@@ -74,6 +79,7 @@ type RecurrenceRule {
   interval: Int!
   daysOfWeek: [Int!]
   dayOfMonth: Int
+  monthOfYear: Int
   endDate: DateTime
   occurrences: Int
 }
@@ -83,6 +89,7 @@ input RecurrenceRuleInput {
   interval: Int!
   daysOfWeek: [Int!]
   dayOfMonth: Int
+  monthOfYear: Int
   endDate: DateTime
   occurrences: Int
 }

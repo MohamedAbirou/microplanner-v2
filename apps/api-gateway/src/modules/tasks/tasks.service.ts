@@ -3,6 +3,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { GoalsService } from '../goals/goals.service';
 import { PatternRecognitionService } from '../analytics/pattern-recognition.service';
 import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
+import { RecurringTaskService, TaskInstance } from './recurring-task.service';
 import type { Task, SubscriptionTierType } from '@microplanner/database';
 import { SyncStatus } from '@microplanner/database';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -20,6 +21,7 @@ export class TasksService {
     private goalsService: GoalsService,
     private patternRecognitionService: PatternRecognitionService,
     private usageLimitService: UsageLimitService,
+    private recurringTaskService: RecurringTaskService,
   ) {}
 
   /**
@@ -88,6 +90,7 @@ export class TasksService {
 
   /**
    * Get all tasks with filters and pagination
+   * Expands recurring tasks into instances for the requested date range
    */
   async findAll(userId: string, query: QueryTasksDto): Promise<{ tasks: Task[]; total: number; page: number; limit: number }> {
     const { page = 1, limit = 50, date, weekStart, startDate, endDate, goalId, planId, projectId, priority, tags, search, isCompleted, aiGenerated } = query;
@@ -95,64 +98,98 @@ export class TasksService {
 
     const where: any = { userId };
 
+    // Determine date range for recurring task expansion
+    let rangeStart: Date;
+    let rangeEnd: Date;
+
     // Date filters (priority: startDate/endDate > date > weekStart)
     if (startDate && endDate) {
       // Date range filter
-      where.scheduledDate = {
-        gte: new Date(startDate),
-        lte: new Date(endDate)
-      };
+      rangeStart = new Date(startDate);
+      rangeEnd = new Date(endDate);
+      where.scheduledDate = { gte: rangeStart, lte: rangeEnd };
     } else if (date) {
       // Single date filter (start and end of day)
       const targetDate = new Date(date);
-      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
-      where.scheduledDate = { gte: startOfDay, lte: endOfDay };
+      rangeStart = new Date(targetDate.setHours(0, 0, 0, 0));
+      rangeEnd = new Date(targetDate.setHours(23, 59, 59, 999));
+      where.scheduledDate = { gte: rangeStart, lte: rangeEnd };
     } else if (weekStart) {
       // Week filter
-      const weekStartDate = new Date(weekStart);
-      const weekEndDate = new Date(weekStartDate);
-      weekEndDate.setDate(weekStartDate.getDate() + 6);
-      weekEndDate.setHours(23, 59, 59, 999);
-      where.scheduledDate = { gte: weekStartDate, lte: weekEndDate };
+      rangeStart = new Date(weekStart);
+      rangeEnd = new Date(rangeStart);
+      rangeEnd.setDate(rangeStart.getDate() + 6);
+      rangeEnd.setHours(23, 59, 59, 999);
+      where.scheduledDate = { gte: rangeStart, lte: rangeEnd };
+    } else {
+      // Default: next 90 days if no date filter specified
+      rangeStart = new Date();
+      rangeStart.setHours(0, 0, 0, 0);
+      rangeEnd = new Date(rangeStart);
+      rangeEnd.setDate(rangeEnd.getDate() + 90);
     }
 
-    // Goal, plan, and project filters
-    if (goalId) where.goalId = goalId;
-    if (planId) where.planId = planId;
-    if (projectId) where.projectId = projectId;
-
-    // Priority filter
-    if (priority !== undefined) where.priority = priority;
-
-    // Tags filter (contains any of the specified tags)
-    if (tags && tags.length > 0) {
-      where.tags = { hasSome: tags };
-    }
-
-    // Search filter (search in title or notes)
+    // Build where clause for non-date filters
+    const commonWhere: any = { userId };
+    if (goalId) commonWhere.goalId = goalId;
+    if (planId) commonWhere.planId = planId;
+    if (projectId) commonWhere.projectId = projectId;
+    if (priority !== undefined) commonWhere.priority = priority;
+    if (tags && tags.length > 0) commonWhere.tags = { hasSome: tags };
     if (search) {
-      where.OR = [
+      commonWhere.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { notes: { contains: search, mode: 'insensitive' } },
       ];
     }
+    if (isCompleted !== undefined) commonWhere.isCompleted = isCompleted;
+    if (aiGenerated !== undefined) commonWhere.aiGenerated = aiGenerated;
 
-    // Status filters
-    if (isCompleted !== undefined) where.isCompleted = isCompleted;
-    if (aiGenerated !== undefined) where.aiGenerated = aiGenerated;
+    // 1. Fetch regular (non-recurring) tasks in date range
+    const regularTasks = await this.prisma.task.findMany({
+      where: {
+        ...commonWhere,
+        recurrenceRule: null,
+        scheduledDate: { gte: rangeStart, lte: rangeEnd },
+      },
+      orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
+    });
 
-    const [tasks, total] = await Promise.all([
-      this.prisma.task.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
-      }),
-      this.prisma.task.count({ where }),
-    ]);
+    // 2. Fetch recurring tasks (any task with recurrenceRule, matching other filters)
+    const recurringTasks = await this.prisma.task.findMany({
+      where: {
+        ...commonWhere,
+        recurrenceRule: { not: null },
+      },
+      orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
+    });
 
-    return { tasks: tasks as any, total, page, limit };
+    // 3. Expand recurring tasks to instances in date range
+    const recurringInstances: TaskInstance[] = [];
+    for (const recurringTask of recurringTasks) {
+      const instances = this.recurringTaskService.expandRecurringTask(
+        recurringTask as Task,
+        rangeStart,
+        rangeEnd,
+      );
+      recurringInstances.push(...instances);
+    }
+
+    // 4. Combine regular tasks and recurring instances
+    const allTasks = [...regularTasks, ...recurringInstances] as Task[];
+
+    // 5. Sort by scheduled date and start time
+    allTasks.sort((a, b) => {
+      const dateCompare = new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime();
+      if (dateCompare !== 0) return dateCompare;
+      return a.startTime.localeCompare(b.startTime);
+    });
+
+    // 6. Apply pagination
+    const total = allTasks.length;
+    const paginatedTasks = allTasks.slice(skip, skip + limit);
+
+    return { tasks: paginatedTasks as any, total, page, limit };
   }
 
   /**

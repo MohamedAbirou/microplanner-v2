@@ -32,6 +32,13 @@ export class RecurrenceRuleDto {
   @Max(31)
   dayOfMonth?: number;
 
+  @ApiProperty({ example: 12, description: 'Month of year (1-12)', required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  monthOfYear?: number;
+
   @ApiProperty({ example: '2025-12-31', description: 'End date for recurrence', required: false })
   @IsOptional()
   @IsDateString()
