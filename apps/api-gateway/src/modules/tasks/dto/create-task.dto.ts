@@ -1,5 +1,48 @@
-import { IsString, IsOptional, IsDateString, IsInt, Min, Max, MinLength, MaxLength, Matches, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsInt, Min, Max, MinLength, MaxLength, Matches, IsArray, IsEnum, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+
+export enum RecurrenceFrequency {
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  YEARLY = 'YEARLY',
+}
+
+export class RecurrenceRuleDto {
+  @ApiProperty({ enum: RecurrenceFrequency, example: 'WEEKLY' })
+  @IsEnum(RecurrenceFrequency)
+  frequency!: RecurrenceFrequency;
+
+  @ApiProperty({ example: 1, description: 'Recurrence interval' })
+  @IsInt()
+  @Min(1)
+  interval!: number;
+
+  @ApiProperty({ example: [1, 3, 5], description: 'Days of week (0=Sunday, 6=Saturday)', required: false, type: [Number] })
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  daysOfWeek?: number[];
+
+  @ApiProperty({ example: 15, description: 'Day of month (1-31)', required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(31)
+  dayOfMonth?: number;
+
+  @ApiProperty({ example: '2025-12-31', description: 'End date for recurrence', required: false })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @ApiProperty({ example: 10, description: 'Number of occurrences', required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  occurrences?: number;
+}
 
 export class CreateTaskDto {
   @ApiProperty({ example: 'Morning workout', description: 'Task title' })
@@ -35,11 +78,13 @@ export class CreateTaskDto {
 
   @ApiProperty({
     example: '10:00',
-    description: 'End time (HH:MM format)',
+    description: 'End time (HH:MM format) - optional if durationMinutes is provided',
+    required: false,
   })
+  @IsOptional()
   @IsString()
   @Matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: 'endTime must be in HH:MM format' })
-  endTime!: string;
+  endTime?: string;
 
   @ApiProperty({
     example: 60,
@@ -90,4 +135,14 @@ export class CreateTaskDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @ApiProperty({
+    description: 'Recurrence rule for recurring tasks',
+    required: false,
+    type: RecurrenceRuleDto,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => RecurrenceRuleDto)
+  recurrenceRule?: RecurrenceRuleDto;
 }

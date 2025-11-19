@@ -36,17 +36,27 @@ export class TasksService {
       await this.goalsService.findOne(createTaskDto.goalId, userId);
     }
 
-    // Validate time range
-    const startTime = this.parseTime(createTaskDto.startTime);
-    const endTime = this.parseTime(createTaskDto.endTime);
+    // Calculate endTime if not provided
+    let endTime: string;
+    if (createTaskDto.endTime) {
+      // Validate provided endTime
+      const startTimeDate = this.parseTime(createTaskDto.startTime);
+      const endTimeDate = this.parseTime(createTaskDto.endTime);
 
-    if (endTime.getTime() <= startTime.getTime()) {
-      throw new BadRequestException('End time must be after start time');
-    }
+      if (endTimeDate.getTime() <= startTimeDate.getTime()) {
+        throw new BadRequestException('End time must be after start time');
+      }
 
-    const calculatedDuration = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
-    if (Math.abs(calculatedDuration - createTaskDto.durationMinutes) > 1) {
-      throw new BadRequestException('Duration must match start and end times');
+      const calculatedDuration = (endTimeDate.getTime() - startTimeDate.getTime()) / (1000 * 60);
+      if (Math.abs(calculatedDuration - createTaskDto.durationMinutes) > 1) {
+        throw new BadRequestException('Duration must match start and end times');
+      }
+      endTime = createTaskDto.endTime;
+    } else {
+      // Calculate endTime from startTime + durationMinutes
+      const startTimeDate = this.parseTime(createTaskDto.startTime);
+      startTimeDate.setMinutes(startTimeDate.getMinutes() + createTaskDto.durationMinutes);
+      endTime = `${String(startTimeDate.getHours()).padStart(2, '0')}:${String(startTimeDate.getMinutes()).padStart(2, '0')}`;
     }
 
     const task = await this.prisma.task.create({
@@ -60,8 +70,9 @@ export class TasksService {
         tags: createTaskDto.tags || [],
         scheduledDate: new Date(createTaskDto.scheduledDate),
         startTime: createTaskDto.startTime,
-        endTime: createTaskDto.endTime,
+        endTime, // Use calculated endTime
         durationMinutes: createTaskDto.durationMinutes,
+        recurrenceRule: createTaskDto.recurrenceRule || null, // Store as JSONB
         aiGenerated: false,
         manuallyAdded: true,
         syncStatus: SyncStatus.PENDING,
@@ -193,6 +204,7 @@ export class TasksService {
     if (updateTaskDto.projectId !== undefined) data.projectId = updateTaskDto.projectId;
     if (updateTaskDto.priority !== undefined) data.priority = updateTaskDto.priority;
     if (updateTaskDto.tags !== undefined) data.tags = updateTaskDto.tags;
+    if (updateTaskDto.recurrenceRule !== undefined) data.recurrenceRule = updateTaskDto.recurrenceRule;
     if (updateTaskDto.isCompleted !== undefined) {
       data.isCompleted = updateTaskDto.isCompleted;
       if (updateTaskDto.isCompleted) {

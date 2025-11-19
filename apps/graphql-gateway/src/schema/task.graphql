@@ -65,6 +65,15 @@ type RecurrenceRule {
   occurrences: Int
 }
 
+input RecurrenceRuleInput {
+  frequency: RecurrenceFrequency!
+  interval: Int!
+  daysOfWeek: [Int!]
+  dayOfMonth: Int
+  endDate: DateTime
+  occurrences: Int
+}
+
 enum RecurrenceFrequency {
   DAILY
   WEEKLY
@@ -197,8 +206,9 @@ input CreateTaskInput {
   tags: [String!]
   scheduledDate: DateTime!
   startTime: String!
-  endTime: String!
+  endTime: String
   durationMinutes: Int!
+  recurrenceRule: RecurrenceRuleInput
 }
 
 input UpdateTaskInput {
@@ -213,6 +223,7 @@ input UpdateTaskInput {
   isCompleted: Boolean
   goalId: ID
   projectId: ID
+  recurrenceRule: RecurrenceRuleInput
 }
 
 input CreateSubtaskInput {

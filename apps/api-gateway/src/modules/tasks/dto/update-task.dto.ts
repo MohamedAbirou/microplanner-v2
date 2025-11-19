@@ -1,5 +1,7 @@
-import { IsString, IsOptional, IsDateString, IsInt, Min, Max, MinLength, MaxLength, Matches, IsArray, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsInt, Min, Max, MinLength, MaxLength, Matches, IsArray, IsBoolean, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { RecurrenceRuleDto } from './create-task.dto';
 
 export class UpdateTaskDto {
   @ApiProperty({ example: 'Morning workout', description: 'Task title', required: false })
@@ -108,4 +110,14 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsBoolean()
   isCompleted?: boolean;
+
+  @ApiProperty({
+    description: 'Recurrence rule for recurring tasks',
+    required: false,
+    type: RecurrenceRuleDto,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => RecurrenceRuleDto)
+  recurrenceRule?: RecurrenceRuleDto;
 }
