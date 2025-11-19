@@ -72,7 +72,7 @@ export class AdvancedTasksService {
       data: {
         dependentTaskId: createDto.dependentTaskId,
         blockingTaskId: createDto.blockingTaskId,
-        type: createDto.type || DependencyType.FINISH_TO_START,
+        type: createDto.type || DependencyType.BLOCKS,
       },
     });
 

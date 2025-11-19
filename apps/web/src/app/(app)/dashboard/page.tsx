@@ -15,6 +15,8 @@ import {
     Plus,
     Sparkles,
     Target,
+    ListTodo,
+    Link as LinkIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -175,8 +177,29 @@ export default function DashboardPage() {
                     <div className="h-5 w-5 rounded-full border-2 border-muted-foreground" />
                   )}
                   <div className="flex-1">
-                    <div className={`font-medium ${task.isCompleted ? 'line-through text-muted-foreground' : ''}`}>
-                      {task.title}
+                    <div className="flex items-center gap-2">
+                      <div className={`font-medium ${task.isCompleted ? 'line-through text-muted-foreground' : ''}`}>
+                        {task.title}
+                      </div>
+                      {/* Subtasks indicator */}
+                      {task.subtasks && task.subtasks.length > 0 && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <ListTodo className="h-3 w-3" />
+                          <span>{task.subtasks.filter((s: any) => s.isCompleted).length}/{task.subtasks.length}</span>
+                        </div>
+                      )}
+                      {/* Dependency indicator */}
+                      {task.dependencies && task.dependencies.length > 0 && (
+                        <div className="flex items-center gap-1 text-xs text-blue-600" title="Has dependencies">
+                          <LinkIcon className="h-3 w-3" />
+                        </div>
+                      )}
+                      {/* Blocked indicator */}
+                      {task.blockedBy && task.blockedBy.length > 0 && (
+                        <div className="flex items-center gap-1 text-xs text-orange-600" title="Blocked by other tasks">
+                          <LinkIcon className="h-3 w-3" />
+                        </div>
+                      )}
                     </div>
                     {task.startTime && task.endTime && (
                       <div className="text-xs text-muted-foreground">
@@ -185,12 +208,20 @@ export default function DashboardPage() {
                     )}
                   </div>
                 </div>
-                {task.goal && (
-                  <Badge variant="outline" style={{ borderColor: task.goal.color }}>
-                    <span className="mr-1">{task.goal.emoji}</span>
-                    {task.goal.title}
-                  </Badge>
-                )}
+                <div className="flex items-center gap-2">
+                  {task.project && (
+                    <Badge variant="outline" style={{ borderColor: task.project.color }}>
+                      {task.project.icon && <span className="mr-1">{task.project.icon}</span>}
+                      {task.project.name}
+                    </Badge>
+                  )}
+                  {task.goal && (
+                    <Badge variant="outline" style={{ borderColor: task.goal.color }}>
+                      <span className="mr-1">{task.goal.emoji}</span>
+                      {task.goal.title}
+                    </Badge>
+                  )}
+                </div>
               </div>
             ))}
 
@@ -233,9 +264,17 @@ export default function DashboardPage() {
                 className="p-4 rounded-lg border"
                 style={{ borderLeftWidth: '4px', borderLeftColor: goal.color }}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">{goal.emoji}</span>
-                  <div className="font-semibold">{goal.title}</div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{goal.emoji}</span>
+                    <div className="font-semibold">{goal.title}</div>
+                  </div>
+                  {goal.project && (
+                    <Badge variant="secondary" className="text-xs" style={{ borderColor: goal.project.color }}>
+                      {goal.project.icon && <span className="mr-1">{goal.project.icon}</span>}
+                      {goal.project.name}
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-3">{goal.description}</p>
                 <div className="flex items-center justify-between text-xs">

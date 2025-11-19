@@ -41,6 +41,9 @@ interface TaskListProps {
   onComplete?: (taskId: string) => void;
   onEdit?: (taskId: string) => void;
   onDelete?: (taskId: string) => void;
+  onStartTimer?: (taskId: string) => void;
+  onStopTimer?: (taskId: string) => void;
+  onSkip?: (taskId: string) => void;
 }
 
 export function TaskList({
@@ -50,6 +53,9 @@ export function TaskList({
   onComplete,
   onEdit,
   onDelete,
+  onStartTimer,
+  onStopTimer,
+  onSkip,
 }: TaskListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'todo' | 'completed'>('all');
@@ -128,6 +134,9 @@ export function TaskList({
                   onComplete={onComplete}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onStartTimer={onStartTimer}
+                  onStopTimer={onStopTimer}
+                  onSkip={onSkip}
                 />
               ))}
             </div>

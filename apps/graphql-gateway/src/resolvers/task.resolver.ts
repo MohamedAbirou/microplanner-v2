@@ -87,6 +87,17 @@ export const taskResolvers = {
       return task;
     },
 
+    skipTask: async (_: any, { id, reason }: { id: string; reason?: string }, { dataSources, user, pubsub }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+
+      const task = await dataSources.tasksAPI.skipTask(id, user.userId, reason);
+
+      // Publish to subscription
+      await pubsub.publish(`TASK_UPDATED_${user.userId}`, { taskUpdated: task });
+
+      return task;
+    },
+
     // Task Dependencies
     createTaskDependency: async (_: any, { input }: any, { dataSources, user, pubsub }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -127,6 +138,19 @@ export const taskResolvers = {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
       const timeEntry = await dataSources.tasksAPI.stopTimer(taskId, user.userId);
+
+      // Publish task update
+      await pubsub.publish(`TASK_UPDATED_${user.userId}`, {
+        taskUpdated: await dataSources.tasksAPI.getTask(taskId, user.userId),
+      });
+
+      return timeEntry;
+    },
+
+    logTime: async (_: any, { taskId, minutes, date }: any, { dataSources, user, pubsub }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+
+      const timeEntry = await dataSources.tasksAPI.logTime(taskId, user.userId, minutes, date);
 
       // Publish task update
       await pubsub.publish(`TASK_UPDATED_${user.userId}`, {

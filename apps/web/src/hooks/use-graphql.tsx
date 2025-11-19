@@ -135,6 +135,168 @@ export function useBulkDeleteTasks() {
   return { bulkDeleteTasks, loading, error };
 }
 
+export function useSkipTask() {
+  const [skipTask, { loading, error }] = useMutation(operations.SKIP_TASK, {
+    onCompleted: () => {
+      toast.success('Task skipped');
+    },
+    onError: (error) => {
+      toast.error('Failed to skip task', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { skipTask, loading, error };
+}
+
+export function useUncompleteTask() {
+  const [uncompleteTask, { loading, error }] = useMutation(operations.UNCOMPLETE_TASK, {
+    onCompleted: () => {
+      toast.success('Task marked as incomplete');
+    },
+    onError: (error) => {
+      toast.error('Failed to uncomplete task', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { uncompleteTask, loading, error };
+}
+
+// ============================================================================
+// SUBTASKS
+// ============================================================================
+
+export function useCreateSubtask() {
+  const [createSubtask, { loading, error }] = useMutation(operations.CREATE_SUBTASK, {
+    onCompleted: () => {
+      toast.success('Subtask created successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to create subtask', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { createSubtask, loading, error };
+}
+
+export function useSubtasks(parentTaskId: string) {
+  const { data, loading, error, refetch } = useQuery(operations.GET_SUBTASKS, {
+    variables: { parentTaskId },
+    skip: !parentTaskId,
+  });
+
+  return {
+    subtasks: data?.subtasks || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+// ============================================================================
+// TASK DEPENDENCIES
+// ============================================================================
+
+export function useCreateTaskDependency() {
+  const [createTaskDependency, { loading, error }] = useMutation(operations.CREATE_TASK_DEPENDENCY, {
+    onCompleted: () => {
+      toast.success('Dependency added successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to add dependency', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { createTaskDependency, loading, error };
+}
+
+export function useDeleteTaskDependency() {
+  const [deleteTaskDependency, { loading, error }] = useMutation(operations.DELETE_TASK_DEPENDENCY, {
+    onCompleted: () => {
+      toast.success('Dependency removed successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to remove dependency', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { deleteTaskDependency, loading, error };
+}
+
+export function useTaskWithDependencies(id: string) {
+  const { data, loading, error, refetch } = useQuery(operations.GET_TASK_WITH_DEPENDENCIES, {
+    variables: { id },
+    skip: !id,
+  });
+
+  return {
+    taskWithDependencies: data?.taskWithDependencies,
+    loading,
+    error,
+    refetch,
+  };
+}
+
+// ============================================================================
+// TIME TRACKING
+// ============================================================================
+
+export function useStartTimer() {
+  const [startTimer, { loading, error }] = useMutation(operations.START_TIMER, {
+    onCompleted: () => {
+      toast.success('Timer started');
+    },
+    onError: (error) => {
+      toast.error('Failed to start timer', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { startTimer, loading, error };
+}
+
+export function useStopTimer() {
+  const [stopTimer, { loading, error }] = useMutation(operations.STOP_TIMER, {
+    onCompleted: (data) => {
+      const minutes = data.stopTimer.timeSpentMinutes;
+      toast.success(`Timer stopped: ${minutes} minutes logged`);
+    },
+    onError: (error) => {
+      toast.error('Failed to stop timer', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { stopTimer, loading, error };
+}
+
+export function useLogTime() {
+  const [logTime, { loading, error }] = useMutation(operations.LOG_TIME, {
+    onCompleted: (data) => {
+      const minutes = data.logTime.timeSpentMinutes;
+      toast.success(`${minutes} minutes logged`);
+    },
+    onError: (error) => {
+      toast.error('Failed to log time', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { logTime, loading, error };
+}
+
 // ============================================================================
 // GOALS
 // ============================================================================

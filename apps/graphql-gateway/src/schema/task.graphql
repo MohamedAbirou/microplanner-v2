@@ -23,6 +23,11 @@ type Task {
   # Recurrence
   recurrenceRule: RecurrenceRule
 
+  # Recurring instance metadata (for expanded instances)
+  isRecurringInstance: Boolean
+  recurringTaskId: ID
+  instanceDate: DateTime
+
   # Status
   isCompleted: Boolean!
   completedAt: DateTime
@@ -40,7 +45,20 @@ type Task {
   # Source tracking
   aiGenerated: Boolean!
   manuallyAdded: Boolean!
+  manuallyMoved: Boolean!
   aiReasoning: String
+
+  # Calendar sync
+  calendarEventId: String
+  calendarProvider: String
+  syncedAt: DateTime
+  syncStatus: SyncStatus!
+  syncError: String
+
+  # Offline support
+  localId: String
+  pendingSync: Boolean!
+  offlineCreatedAt: DateTime
 
   # Relations
   goal: Goal
@@ -61,6 +79,17 @@ type RecurrenceRule {
   interval: Int!
   daysOfWeek: [Int!]
   dayOfMonth: Int
+  monthOfYear: Int
+  endDate: DateTime
+  occurrences: Int
+}
+
+input RecurrenceRuleInput {
+  frequency: RecurrenceFrequency!
+  interval: Int!
+  daysOfWeek: [Int!]
+  dayOfMonth: Int
+  monthOfYear: Int
   endDate: DateTime
   occurrences: Int
 }
@@ -197,8 +226,9 @@ input CreateTaskInput {
   tags: [String!]
   scheduledDate: DateTime!
   startTime: String!
-  endTime: String!
+  endTime: String
   durationMinutes: Int!
+  recurrenceRule: RecurrenceRuleInput
 }
 
 input UpdateTaskInput {
@@ -211,7 +241,9 @@ input UpdateTaskInput {
   endTime: String
   durationMinutes: Int
   isCompleted: Boolean
+  goalId: ID
   projectId: ID
+  recurrenceRule: RecurrenceRuleInput
 }
 
 input CreateSubtaskInput {
@@ -228,14 +260,24 @@ input CreateTaskDependencyInput {
 }
 
 # Filter and Sort Inputs
+input DateRangeInput {
+  start: DateTime!
+  end: DateTime!
+}
+
 input TaskFilterInput {
+  date: String
+  weekStart: String
+  dateRange: DateRangeInput
   goalId: ID
+  planId: ID
   projectId: ID
-  scheduledDate: DateTime
-  isCompleted: Boolean
   priority: Int
   tags: [String!]
   search: String
+  scheduledDate: DateTime
+  isCompleted: Boolean
+  aiGenerated: Boolean
 }
 
 input TaskSortInput {
@@ -267,7 +309,15 @@ enum TaskOrderBy {
 }
 
 enum DependencyType {
-  FINISH_TO_START
-  START_TO_START
-  FINISH_TO_FINISH
+  BLOCKS
+  BLOCKED_BY
+  RELATED_TO
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  SYNCED
+  FAILED
+  CONFLICT
 }

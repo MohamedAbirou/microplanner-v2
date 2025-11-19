@@ -267,10 +267,62 @@ export class TasksAPI {
     return data.task || data;
   }
 
-  async getTasks(userId: string, filters: any) {
+  async getTasks(userId: string, args: any = {}) {
+    // Check if args contains GraphQL-style nested filter/sort or direct params
+    const hasNestedFilter = args.filter !== undefined;
+
+    // Extract filter and sort if they exist (GraphQL query style)
+    // Otherwise treat entire args as flat params (dashboard resolver style)
+    const filterSource = hasNestedFilter ? args.filter : args;
+    const { filter, sort, ...directParams } = args;
+
+    // Start with direct params (for non-filter args like take, skip, etc.)
+    const params: any = hasNestedFilter ? { ...directParams } : {};
+
+    // Handle dateRange filter (GraphQL -> REST API conversion)
+    if (filterSource?.dateRange) {
+      params.startDate = filterSource.dateRange.start;
+      params.endDate = filterSource.dateRange.end;
+    }
+    // Handle scheduledDate filter - convert DateTime to date string (YYYY-MM-DD)
+    // This is used by /today page and other single-day filters
+    else if (filterSource?.scheduledDate) {
+      // Extract just the date part from ISO string (YYYY-MM-DD)
+      const dateStr = typeof filterSource.scheduledDate === 'string'
+        ? filterSource.scheduledDate.split('T')[0]
+        : new Date(filterSource.scheduledDate).toISOString().split('T')[0];
+      params.date = dateStr;
+    }
+    // Handle explicit date filter
+    else if (filterSource?.date) {
+      params.date = filterSource.date;
+    }
+
+    // Copy other filter fields directly
+    if (filterSource?.weekStart) params.weekStart = filterSource.weekStart;
+    if (filterSource?.goalId) params.goalId = filterSource.goalId;
+    if (filterSource?.planId) params.planId = filterSource.planId;
+    if (filterSource?.projectId) params.projectId = filterSource.projectId;
+    if (filterSource?.priority !== undefined) params.priority = filterSource.priority;
+    if (filterSource?.tags) params.tags = filterSource.tags;
+    if (filterSource?.search) params.search = filterSource.search;
+    if (filterSource?.isCompleted !== undefined) params.isCompleted = filterSource.isCompleted;
+    if (filterSource?.aiGenerated !== undefined) params.aiGenerated = filterSource.aiGenerated;
+
+    // For dashboard resolver compatibility: copy any remaining direct params
+    if (!hasNestedFilter) {
+      if (args.orderBy) params.orderBy = args.orderBy;
+      if (args.take) params.take = args.take;
+      if (args.skip) params.skip = args.skip;
+    }
+
+    // Handle sort - backend doesn't support GraphQL-style sort yet
+    // For now, we'll ignore it as backend returns sorted by scheduledDate + startTime by default
+    // TODO: Add orderBy support to backend QueryTasksDto if needed
+
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
-      params: filters,
+      params,
     });
     // API returns { message, tasks, total, page, limit }, extract the tasks array
     return data.tasks || data.data || data;

@@ -14,9 +14,9 @@
  * Dependency types
  */
 export enum DependencyType {
-  FINISH_TO_START = 'finish-to-start', // Most common: B starts after A finishes
-  START_TO_START = 'start-to-start',   // B starts when A starts
-  FINISH_TO_FINISH = 'finish-to-finish', // B finishes when A finishes
+  BLOCKS = 'BLOCKS',           // This task blocks another task
+  BLOCKED_BY = 'BLOCKED_BY',   // This task is blocked by another task
+  RELATED_TO = 'RELATED_TO',   // This task is related to another task
 }
 
 /**

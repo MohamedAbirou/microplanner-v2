@@ -3,6 +3,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { GoalsService } from '../goals/goals.service';
 import { PatternRecognitionService } from '../analytics/pattern-recognition.service';
 import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
+import { RecurringTaskService, TaskInstance } from './recurring-task.service';
 import type { Task, SubscriptionTierType } from '@microplanner/database';
 import { SyncStatus } from '@microplanner/database';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -20,6 +21,7 @@ export class TasksService {
     private goalsService: GoalsService,
     private patternRecognitionService: PatternRecognitionService,
     private usageLimitService: UsageLimitService,
+    private recurringTaskService: RecurringTaskService,
   ) {}
 
   /**
@@ -36,29 +38,43 @@ export class TasksService {
       await this.goalsService.findOne(createTaskDto.goalId, userId);
     }
 
-    // Validate time range
-    const startTime = this.parseTime(createTaskDto.startTime);
-    const endTime = this.parseTime(createTaskDto.endTime);
+    // Calculate endTime if not provided
+    let endTime: string;
+    if (createTaskDto.endTime) {
+      // Validate provided endTime
+      const startTimeDate = this.parseTime(createTaskDto.startTime);
+      const endTimeDate = this.parseTime(createTaskDto.endTime);
 
-    if (endTime.getTime() <= startTime.getTime()) {
-      throw new BadRequestException('End time must be after start time');
-    }
+      if (endTimeDate.getTime() <= startTimeDate.getTime()) {
+        throw new BadRequestException('End time must be after start time');
+      }
 
-    const calculatedDuration = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
-    if (Math.abs(calculatedDuration - createTaskDto.durationMinutes) > 1) {
-      throw new BadRequestException('Duration must match start and end times');
+      const calculatedDuration = (endTimeDate.getTime() - startTimeDate.getTime()) / (1000 * 60);
+      if (Math.abs(calculatedDuration - createTaskDto.durationMinutes) > 1) {
+        throw new BadRequestException('Duration must match start and end times');
+      }
+      endTime = createTaskDto.endTime;
+    } else {
+      // Calculate endTime from startTime + durationMinutes
+      const startTimeDate = this.parseTime(createTaskDto.startTime);
+      startTimeDate.setMinutes(startTimeDate.getMinutes() + createTaskDto.durationMinutes);
+      endTime = `${String(startTimeDate.getHours()).padStart(2, '0')}:${String(startTimeDate.getMinutes()).padStart(2, '0')}`;
     }
 
     const task = await this.prisma.task.create({
       data: {
         userId,
         goalId: createTaskDto.goalId || null,
+        projectId: createTaskDto.projectId || null,
         title: createTaskDto.title,
         notes: createTaskDto.notes || null,
+        priority: createTaskDto.priority || 2, // Default to medium priority
+        tags: createTaskDto.tags || [],
         scheduledDate: new Date(createTaskDto.scheduledDate),
         startTime: createTaskDto.startTime,
-        endTime: createTaskDto.endTime,
+        endTime, // Use calculated endTime
         durationMinutes: createTaskDto.durationMinutes,
+        recurrenceRule: createTaskDto.recurrenceRule || null, // Store as JSONB
         aiGenerated: false,
         manuallyAdded: true,
         syncStatus: SyncStatus.PENDING,
@@ -74,46 +90,103 @@ export class TasksService {
 
   /**
    * Get all tasks with filters and pagination
+   * Expands recurring tasks into instances for the requested date range
    */
   async findAll(userId: string, query: QueryTasksDto): Promise<{ tasks: Task[]; total: number; page: number; limit: number }> {
-    const { page = 1, limit = 50, date, weekStart, goalId, planId, isCompleted, aiGenerated } = query;
+    const { page = 1, limit = 50, date, weekStart, startDate, endDate, goalId, planId, projectId, priority, tags, search, isCompleted, aiGenerated } = query;
     const skip = (page - 1) * limit;
 
     const where: any = { userId };
 
-    // Date filters
-    if (date) {
+    // Determine date range for recurring task expansion
+    let rangeStart: Date;
+    let rangeEnd: Date;
+
+    // Date filters (priority: startDate/endDate > date > weekStart)
+    if (startDate && endDate) {
+      // Date range filter
+      rangeStart = new Date(startDate);
+      rangeEnd = new Date(endDate);
+      where.scheduledDate = { gte: rangeStart, lte: rangeEnd };
+    } else if (date) {
+      // Single date filter (start and end of day)
       const targetDate = new Date(date);
-      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
-      where.scheduledDate = { gte: startOfDay, lte: endOfDay };
+      rangeStart = new Date(targetDate.setHours(0, 0, 0, 0));
+      rangeEnd = new Date(targetDate.setHours(23, 59, 59, 999));
+      where.scheduledDate = { gte: rangeStart, lte: rangeEnd };
     } else if (weekStart) {
-      const weekStartDate = new Date(weekStart);
-      const weekEndDate = new Date(weekStartDate);
-      weekEndDate.setDate(weekStartDate.getDate() + 6);
-      weekEndDate.setHours(23, 59, 59, 999);
-      where.scheduledDate = { gte: weekStartDate, lte: weekEndDate };
+      // Week filter
+      rangeStart = new Date(weekStart);
+      rangeEnd = new Date(rangeStart);
+      rangeEnd.setDate(rangeStart.getDate() + 6);
+      rangeEnd.setHours(23, 59, 59, 999);
+      where.scheduledDate = { gte: rangeStart, lte: rangeEnd };
+    } else {
+      // Default: next 90 days if no date filter specified
+      rangeStart = new Date();
+      rangeStart.setHours(0, 0, 0, 0);
+      rangeEnd = new Date(rangeStart);
+      rangeEnd.setDate(rangeEnd.getDate() + 90);
     }
 
-    // Goal and plan filters
-    if (goalId) where.goalId = goalId;
-    if (planId) where.planId = planId;
+    // Build where clause for non-date filters
+    const commonWhere: any = { userId };
+    if (goalId) commonWhere.goalId = goalId;
+    if (planId) commonWhere.planId = planId;
+    if (projectId) commonWhere.projectId = projectId;
+    if (priority !== undefined) commonWhere.priority = priority;
+    if (tags && tags.length > 0) commonWhere.tags = { hasSome: tags };
+    if (search) {
+      commonWhere.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    if (isCompleted !== undefined) commonWhere.isCompleted = isCompleted;
+    if (aiGenerated !== undefined) commonWhere.aiGenerated = aiGenerated;
 
-    // Status filters
-    if (isCompleted !== undefined) where.isCompleted = isCompleted;
-    if (aiGenerated !== undefined) where.aiGenerated = aiGenerated;
+    // Fetch all tasks matching filters (we'll separate regular vs recurring in memory to avoid JSON null filter issues)
+    const allTasksFromDB = await this.prisma.task.findMany({
+      where: commonWhere,
+      orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
+    });
 
-    const [tasks, total] = await Promise.all([
-      this.prisma.task.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
-      }),
-      this.prisma.task.count({ where }),
-    ]);
+    // 1. Filter regular (non-recurring) tasks in date range
+    const regularTasks = allTasksFromDB.filter(
+      task => !task.recurrenceRule &&
+        new Date(task.scheduledDate) >= rangeStart &&
+        new Date(task.scheduledDate) <= rangeEnd
+    );
 
-    return { tasks: tasks as any, total, page, limit };
+    // 2. Filter recurring tasks (have recurrenceRule set)
+    const recurringTasks = allTasksFromDB.filter(task => task.recurrenceRule);
+
+    // 3. Expand recurring tasks to instances in date range
+    const recurringInstances: TaskInstance[] = [];
+    for (const recurringTask of recurringTasks) {
+      const instances = this.recurringTaskService.expandRecurringTask(
+        recurringTask as Task,
+        rangeStart,
+        rangeEnd,
+      );
+      recurringInstances.push(...instances);
+    }
+
+    // 4. Combine regular tasks and recurring instances
+    const allTasks = [...regularTasks, ...recurringInstances] as Task[];
+
+    // 5. Sort by scheduled date and start time
+    allTasks.sort((a, b) => {
+      const dateCompare = new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime();
+      if (dateCompare !== 0) return dateCompare;
+      return a.startTime.localeCompare(b.startTime);
+    });
+
+    // 6. Apply pagination
+    const total = allTasks.length;
+    const paginatedTasks = allTasks.slice(skip, skip + limit);
+
+    return { tasks: paginatedTasks as any, total, page, limit };
   }
 
   /**
@@ -162,6 +235,18 @@ export class TasksService {
     if (updateTaskDto.endTime !== undefined) data.endTime = updateTaskDto.endTime;
     if (updateTaskDto.durationMinutes !== undefined) data.durationMinutes = updateTaskDto.durationMinutes;
     if (updateTaskDto.goalId !== undefined) data.goalId = updateTaskDto.goalId;
+    if (updateTaskDto.projectId !== undefined) data.projectId = updateTaskDto.projectId;
+    if (updateTaskDto.priority !== undefined) data.priority = updateTaskDto.priority;
+    if (updateTaskDto.tags !== undefined) data.tags = updateTaskDto.tags;
+    if (updateTaskDto.recurrenceRule !== undefined) data.recurrenceRule = updateTaskDto.recurrenceRule;
+    if (updateTaskDto.isCompleted !== undefined) {
+      data.isCompleted = updateTaskDto.isCompleted;
+      if (updateTaskDto.isCompleted) {
+        data.completedAt = new Date();
+      } else {
+        data.completedAt = null;
+      }
+    }
 
     // Mark as manually moved if date/time changed
     if (updateTaskDto.scheduledDate || updateTaskDto.startTime || updateTaskDto.endTime) {
