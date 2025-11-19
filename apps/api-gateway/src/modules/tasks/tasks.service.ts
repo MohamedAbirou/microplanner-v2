@@ -145,24 +145,21 @@ export class TasksService {
     if (isCompleted !== undefined) commonWhere.isCompleted = isCompleted;
     if (aiGenerated !== undefined) commonWhere.aiGenerated = aiGenerated;
 
-    // 1. Fetch regular (non-recurring) tasks in date range
-    const regularTasks = await this.prisma.task.findMany({
-      where: {
-        ...commonWhere,
-        recurrenceRule: null,
-        scheduledDate: { gte: rangeStart, lte: rangeEnd },
-      },
+    // Fetch all tasks matching filters (we'll separate regular vs recurring in memory to avoid JSON null filter issues)
+    const allTasksFromDB = await this.prisma.task.findMany({
+      where: commonWhere,
       orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
     });
 
-    // 2. Fetch recurring tasks (any task with recurrenceRule, matching other filters)
-    const recurringTasks = await this.prisma.task.findMany({
-      where: {
-        ...commonWhere,
-        recurrenceRule: { not: null },
-      },
-      orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
-    });
+    // 1. Filter regular (non-recurring) tasks in date range
+    const regularTasks = allTasksFromDB.filter(
+      task => !task.recurrenceRule &&
+        new Date(task.scheduledDate) >= rangeStart &&
+        new Date(task.scheduledDate) <= rangeEnd
+    );
+
+    // 2. Filter recurring tasks (have recurrenceRule set)
+    const recurringTasks = allTasksFromDB.filter(task => task.recurrenceRule);
 
     // 3. Expand recurring tasks to instances in date range
     const recurringInstances: TaskInstance[] = [];
