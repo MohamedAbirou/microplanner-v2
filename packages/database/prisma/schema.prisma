@@ -205,6 +205,7 @@ model Task {
   startTime         String       // "09:00"
   endTime           String       // "10:00"
   durationMinutes   Int
+  recurrenceRule    Json?        // Recurring task configuration: { frequency, interval, daysOfWeek, etc. }
 
   // Status
   isCompleted       Boolean      @default(false)

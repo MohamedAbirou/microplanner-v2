@@ -40,7 +40,20 @@ type Task {
   # Source tracking
   aiGenerated: Boolean!
   manuallyAdded: Boolean!
+  manuallyMoved: Boolean!
   aiReasoning: String
+
+  # Calendar sync
+  calendarEventId: String
+  calendarProvider: String
+  syncedAt: DateTime
+  syncStatus: SyncStatus!
+  syncError: String
+
+  # Offline support
+  localId: String
+  pendingSync: Boolean!
+  offlineCreatedAt: DateTime
 
   # Relations
   goal: Goal
@@ -292,4 +305,12 @@ enum DependencyType {
   BLOCKS
   BLOCKED_BY
   RELATED_TO
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  SYNCED
+  FAILED
+  CONFLICT
 }
