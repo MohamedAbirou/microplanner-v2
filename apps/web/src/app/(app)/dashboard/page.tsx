@@ -48,7 +48,7 @@ export default function DashboardPage() {
   });
 
   // Fetch active goals from GraphQL
-  const { goals: activeGoals, loading: goalsLoading } = useGoals({ isActive: true });
+  const { goals: activeGoals, loading: goalsLoading } = useGoals();
 
   const loading = tasksLoading || goalsLoading;
 
