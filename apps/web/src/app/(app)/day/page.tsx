@@ -48,7 +48,9 @@ export default function DayPage() {
           taskId={selectedTaskId}
           open={!!selectedTaskId}
           onClose={() => setSelectedTaskId(null)}
-          onUpdate={() => refetch()}
+          onUpdate={async (taskId, updates) => {
+            await refetch();
+          }}
         />
       )}
 
