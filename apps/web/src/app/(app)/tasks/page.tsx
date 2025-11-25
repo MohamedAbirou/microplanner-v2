@@ -269,7 +269,9 @@ export default function TasksPage() {
           taskId={selectedTaskId}
           open={!!selectedTaskId}
           onClose={() => setSelectedTaskId(null)}
-          onUpdate={() => refetch()}
+          onUpdate={async (taskId, updates) => {
+            await refetch();
+          }}
         />
       )}
     </div>
