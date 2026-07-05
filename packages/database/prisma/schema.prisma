@@ -32,6 +32,10 @@ model User {
   subscriptionId    String?
   subscriptionStatus SubscriptionStatus @default(INACTIVE)
 
+  // Dunning state (billing lifecycle)
+  paymentFailedCount Int                @default(0)  // consecutive failed payments
+  paymentGraceUntil  DateTime?          // anchored to FIRST failure; never slides forward
+
   // Embedded preferences (denormalized for performance)
   wakeTime          String              @default("07:00")
   sleepTime         String              @default("23:00")

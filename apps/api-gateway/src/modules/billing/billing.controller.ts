@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Put, Body, Headers, Query, RawBodyRequest, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Headers, Query, RawBodyRequest, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { BillingService } from './billing.service';
+import { BillingReconciliationService } from './billing-reconciliation.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { AdminGuard } from '../../common/guards/admin.guard';
 import type { User, SubscriptionTierType } from '@microplanner/database';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { Request } from 'express';
@@ -11,7 +13,10 @@ import { Request } from 'express';
 @ApiBearerAuth()
 @Controller('billing')
 export class BillingController {
-  constructor(private readonly billingService: BillingService) {}
+  constructor(
+    private readonly billingService: BillingService,
+    private readonly reconciliationService: BillingReconciliationService,
+  ) {}
 
   @Get('plans')
   @ApiOperation({ summary: 'Get all pricing plans' })
@@ -64,13 +69,32 @@ export class BillingController {
   }
 
   @Post('cancel')
-  @ApiOperation({ summary: 'Cancel subscription' })
+  @ApiOperation({ summary: 'Cancel subscription (period-end by default; immediately: true to cancel now)' })
   @ApiResponse({ status: 200, description: 'Subscription cancelled successfully' })
   @ApiResponse({ status: 400, description: 'No active subscription found' })
-  async cancelSubscription(@CurrentUser() user: User) {
-    const result = await this.billingService.cancelSubscription(user.id);
+  async cancelSubscription(
+    @CurrentUser() user: User,
+    @Body('immediately') immediately?: boolean
+  ) {
+    return this.billingService.cancelSubscription(user.id, immediately === true);
+  }
 
-    return result;
+  @Post('refund')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Refund a payment (admin only; partial supported; cumulative cap enforced)' })
+  async refund(
+    @CurrentUser() admin: User,
+    @Body()
+    dto: { userEmail: string; amountCents?: number; reason?: string; paymentIntentId?: string }
+  ) {
+    return this.billingService.refundPayment(admin.email, dto);
+  }
+
+  @Post('reconcile')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Manually trigger the billing reconciliation sweep (admin only)' })
+  async reconcile() {
+    return this.reconciliationService.reconcileAll();
   }
 
   @Get('info')

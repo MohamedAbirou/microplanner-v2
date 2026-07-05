@@ -64,7 +64,8 @@ export const PRICING_PLANS: PricingPlan[] = [
     tier: SubscriptionTier.STARTER,
     name: 'Starter',
     price: 700, // $7.00/month (in cents)
-    priceId: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter',
+    // Lazy getter: .env.local loads AFTER module import (ConfigModule)
+    get priceId() { return process.env.STRIPE_STARTER_PRICE_ID || 'price_starter'; },
     interval: 'month',
     features: {
       maxGoals: 5,
@@ -93,7 +94,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     tier: SubscriptionTier.PRO,
     name: 'Pro',
     price: 1500, // $15.00/month (in cents)
-    priceId: process.env.STRIPE_PRO_PRICE_ID || 'price_pro',
+    get priceId() { return process.env.STRIPE_PRO_PRICE_ID || 'price_pro'; },
     interval: 'month',
     features: {
       maxGoals: Infinity,
@@ -122,7 +123,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     tier: SubscriptionTier.PREMIUM,
     name: 'Premium',
     price: 2900, // $29.00/month (in cents)
-    priceId: process.env.STRIPE_PREMIUM_PRICE_ID || 'price_premium',
+    get priceId() { return process.env.STRIPE_PREMIUM_PRICE_ID || 'price_premium'; },
     interval: 'month',
     features: {
       maxGoals: Infinity,

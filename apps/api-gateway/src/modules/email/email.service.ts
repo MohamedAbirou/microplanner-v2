@@ -491,6 +491,108 @@ export class EmailService {
   }
 
   /**
+   * Send a billing lifecycle email (cancellation, dunning, receipts).
+   * Inline HTML so a missing template file can never break billing flows.
+   * Fire-and-forget safe: never throws.
+   */
+  async sendBillingLifecycleEmail(
+    to: string,
+    kind:
+      | 'CANCEL_SCHEDULED'
+      | 'CANCELLED'
+      | 'PAYMENT_FAILED'
+      | 'ACCOUNT_SUSPENDED'
+      | 'PAYMENT_RECEIPT',
+    ctx: {
+      userName?: string;
+      planName?: string;
+      effectiveDate?: Date | null;
+      amountFormatted?: string;
+      invoiceUrl?: string | null;
+      failedCount?: number;
+      graceUntil?: Date | null;
+    } = {}
+  ): Promise<void> {
+    if (!this.isEnabled) {
+      this.logger.debug('Email service disabled, skipping billing lifecycle email');
+      return;
+    }
+
+    const name = ctx.userName || 'there';
+    const plan = ctx.planName || 'your plan';
+    const fmtDate = (d?: Date | null) =>
+      d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+
+    // The scheduled notice carries the FUTURE period-end date so users are
+    // never alarmed into thinking access stops today; the cancelled notice
+    // carries the actual effective date.
+    const content: Record<string, { subject: string; body: string }> = {
+      CANCEL_SCHEDULED: {
+        subject: `Your ${plan} subscription is scheduled to cancel`,
+        body: `<p>Hi ${name},</p>
+          <p>Your <strong>${plan}</strong> subscription has been scheduled for cancellation.</p>
+          <p>You keep full access until <strong>${fmtDate(ctx.effectiveDate)}</strong>. After that, your account moves to the Free plan — your goals, tasks, and history stay intact.</p>
+          <p>Changed your mind? You can resume your subscription anytime before that date from Settings → Billing.</p>`,
+      },
+      CANCELLED: {
+        subject: `Your ${plan} subscription has ended`,
+        body: `<p>Hi ${name},</p>
+          <p>Your <strong>${plan}</strong> subscription ended on <strong>${fmtDate(ctx.effectiveDate) || 'today'}</strong> and your account is now on the Free plan.</p>
+          <p>All your goals, tasks, and history are safe. You can re-subscribe anytime from Settings → Billing.</p>`,
+      },
+      PAYMENT_FAILED: {
+        subject: `Payment failed for your ${plan} subscription`,
+        body: `<p>Hi ${name},</p>
+          <p>We couldn't process the payment for your <strong>${plan}</strong> subscription${
+            ctx.failedCount ? ` (attempt ${ctx.failedCount})` : ''
+          }.</p>
+          <p>Please update your payment method in Settings → Billing.${
+            ctx.graceUntil
+              ? ` Your subscription stays active until <strong>${fmtDate(ctx.graceUntil)}</strong> while we retry.`
+              : ''
+          }</p>`,
+      },
+      ACCOUNT_SUSPENDED: {
+        subject: 'Your subscription has been paused',
+        body: `<p>Hi ${name},</p>
+          <p>After several failed payment attempts, your <strong>${plan}</strong> subscription has been paused and your account moved to the Free plan.</p>
+          <p>Nothing has been deleted. Update your payment method in Settings → Billing to restore your plan instantly.</p>`,
+      },
+      PAYMENT_RECEIPT: {
+        subject: `Payment received${ctx.amountFormatted ? ` — ${ctx.amountFormatted}` : ''}`,
+        body: `<p>Hi ${name},</p>
+          <p>Thanks! We received your payment${ctx.amountFormatted ? ` of <strong>${ctx.amountFormatted}</strong>` : ''} for <strong>${plan}</strong>.</p>
+          ${ctx.invoiceUrl ? `<p><a href="${ctx.invoiceUrl}" style="background: #6d28d9; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none;">View invoice</a></p>` : ''}`,
+      },
+    };
+
+    const { subject, body } = content[kind];
+    const html = `
+      <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px;">
+        ${body}
+        <p style="color: #666; font-size: 13px; margin-top: 28px;">— The MicroPlanner team</p>
+      </div>`;
+
+    try {
+      const response = await this.resend.emails.send({
+        from: this.fromEmail,
+        to,
+        subject,
+        html,
+      });
+      if (response.error) {
+        this.logger.error(`Failed to send ${kind} email: ${JSON.stringify(response.error)}`);
+        return;
+      }
+      this.logger.log(`Billing ${kind} email sent to ${to}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to send ${kind} email: ${message}`);
+      // Never throw — email failures must not break billing flows
+    }
+  }
+
+  /**
    * Check if email service is enabled
    */
   isEmailEnabled(): boolean {
