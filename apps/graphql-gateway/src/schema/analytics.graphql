@@ -1,29 +1,6 @@
 # Analytics and Insights
-
-type ProductivityScore {
-  id: ID!
-  userId: ID!
-  date: DateTime!
-
-  # Scores (0-100)
-  overallScore: Int!
-  focusTimeScore: Int!
-  taskCompletionScore: Int!
-  meetingEfficiencyScore: Int!
-  workLifeBalanceScore: Int!
-
-  # Time breakdowns
-  totalFocusMinutes: Int!
-  totalMeetingMinutes: Int!
-  totalTaskMinutes: Int!
-  totalBreakMinutes: Int!
-
-  # Insights
-  insights: [String!]!
-  recommendations: [String!]!
-
-  createdAt: DateTime!
-}
+# NOTE: ProductivityScore type + productivityScores query live in
+# productivity.graphql — defining them here too made the SDL invalid.
 
 type WeeklyStats {
   weekStart: DateTime!
@@ -112,17 +89,17 @@ extend type Query {
   weeklyStats(weekStart: DateTime): WeeklyStats!
 
   # insights
-  insights(type: String, limit: String): [String!]!
-
-  # Productivity scores
-  productivityScores(
-    startDate: DateTime!
-    endDate: DateTime!
-  ): [ProductivityScore!]!
+  insights(type: String, limit: Int): [String!]!
 
   # Goal-specific analytics
   goalAnalyticsReport(goalId: ID!): GoalAnalyticsReport!
 
   # All goals analytics
   # allGoalsAnalyticsReport: [GoalAnalyticsReport!]!
+}
+
+# Mutations
+extend type Mutation {
+  # Recompute insights (fresh fetch server-side)
+  generateInsights: [String!]!
 }

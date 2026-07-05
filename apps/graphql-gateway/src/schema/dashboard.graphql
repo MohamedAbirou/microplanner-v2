@@ -1,14 +1,7 @@
 # Dashboard types for overview and stats
-
-type DashboardStats {
-  activeGoalsCount: Int!
-  tasksTodayCount: Int!
-  tasksCompletedToday: Int!
-  completionRate: Float!
-  weeklyPlansCount: Int!
-  productivityScore: Int
-  currentStreak: Int!
-}
+# NOTE: DashboardStats type + dashboardStats query live in analytics.graphql
+# (that shape is what the frontend selects) — duplicating them here made the
+# merged SDL invalid.
 
 type UpcomingTask {
   id: ID!
@@ -77,9 +70,6 @@ enum QuickActionVariant {
 
 # Queries
 extend type Query {
-  # Get dashboard overview stats
-  dashboardStats: DashboardStats!
-
   # Get upcoming tasks (next 7 days)
   upcomingTasks(limit: Int): [UpcomingTask!]!
 

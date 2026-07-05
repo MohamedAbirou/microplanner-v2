@@ -44,12 +44,13 @@ export const analyticsResolvers = {
 
   Mutation: {
     /**
-     * Generate AI insights for user's productivity patterns
+     * Generate AI insights for the user's productivity patterns.
+     * The REST layer computes insights on read, so "generate" is a fresh fetch.
      */
-    // generateInsights: async (_: any, __: any, { dataSources, user }: any) => {
-    //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-    //   return dataSources.analyticsAPI.generateInsights(user.userId);
-    // },
+    generateInsights: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.analyticsAPI.getInsights(user.userId);
+    },
 
     // dismissInsight: async (_: any, { id }: any, { dataSources, user }: any) => {
     //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });

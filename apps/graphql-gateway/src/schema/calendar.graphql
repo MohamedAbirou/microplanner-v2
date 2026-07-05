@@ -65,7 +65,7 @@ extend type Query {
   calendarConnection(id: ID!): CalendarConnection!
 
   # Get all calendar events
-  calendarEvents: [CalendarEvent!]!
+  calendarEvents(startDate: DateTime, endDate: DateTime, calendarIds: [String!]): [CalendarEvent!]!
 
   # Get upcoming calendar events
   upcomingEvents(limit: Int, startDate: DateTime, endDate: DateTime): [CalendarEvent!]!
@@ -84,55 +84,58 @@ type BusySlot {
 # MUTATIONS
 # ============================================
 
+# Mutation signatures match the resolvers in calendar.resolver.ts, which pass
+# through to the api-gateway connections API (connection-id based, not
+# provider based — a user can have multiple connections).
+
+input ConnectCalendarInput {
+  provider: CalendarProvider!
+  code: String!
+  state: String
+}
+
+type CalendarAuthPayload {
+  url: String!
+  provider: String
+}
+
+input CreateCalendarEventInput {
+  title: String!
+  description: String
+  start: DateTime!
+  end: DateTime!
+  allDay: Boolean
+  location: String
+}
+
+input UpdateCalendarEventInput {
+  title: String
+  description: String
+  start: DateTime
+  end: DateTime
+  location: String
+}
+
 extend type Mutation {
-  # Connect calendar
-  connectCalendar(provider: CalendarProvider!, authCode: String!): CalendarConnection!
+  # OAuth step 1: get the provider auth URL
+  initiateCalendarAuth(provider: CalendarProvider!): CalendarAuthPayload!
 
-  # Disconnect calendar
-  disconnectCalendar(provider: CalendarProvider!): Boolean!
+  # OAuth step 2: exchange the code for a connection
+  connectCalendar(input: ConnectCalendarInput!): CalendarConnection!
 
-  # Initiate calendar auth flow
-  initiateCalendarAuth(provider: CalendarProvider!): String!
+  # Disconnect a specific connection
+  disconnectCalendar(id: ID!): Boolean!
 
-  # Manually trigger sync
-  syncCalendar(provider: CalendarProvider!): SyncResult!
+  # Manually trigger sync for a connection
+  syncCalendar(id: ID!): SyncResult!
 
   # Sync all connected calendars
   syncAllCalendars: [SyncResult!]!
 
-  # Sync plan to calendar
-  syncPlanToCalendar(planId: ID!, provider: CalendarProvider!): SyncResult!
-
-  # Update sync settings
-  updateCalendarSync(provider: CalendarProvider!, enabled: Boolean!): CalendarConnection!
-
-  # Create a new calendar event
-  createCalendarEvent(
-    provider: CalendarProvider!
-    title: String!
-    description: String
-    start: DateTime!
-    end: DateTime!
-    allDay: Boolean
-    attendees: [String!]
-    location: String
-  ): CalendarEvent!
-
-  # Update an existing calendar event
-  updateCalendarEvent(
-    provider: CalendarProvider!
-    eventId: String!
-    title: String
-    description: String
-    start: DateTime
-    end: DateTime
-    allDay: Boolean
-    attendees: [String!]
-    location: String
-  ): CalendarEvent!
-
-  # Delete a calendar event
-  deleteCalendarEvent(provider: CalendarProvider!, eventId: String!): Boolean!
+  # Event CRUD
+  createCalendarEvent(input: CreateCalendarEventInput!): CalendarEvent!
+  updateCalendarEvent(id: String!, input: UpdateCalendarEventInput!): CalendarEvent!
+  deleteCalendarEvent(id: String!): Boolean!
 }
 
 extend type CalendarConnection {

@@ -160,6 +160,31 @@ export const taskResolvers = {
       return timeEntry;
     },
 
+    // Bulk operations
+    bulkUpdateTasks: async (_: any, { ids, input }: any, { dataSources, user, pubsub }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+
+      const tasks = await dataSources.tasksAPI.bulkUpdateTasks(ids, user.userId, input);
+
+      for (const task of tasks) {
+        await pubsub.publish(`TASK_UPDATED_${user.userId}`, { taskUpdated: task });
+      }
+
+      return tasks;
+    },
+
+    bulkDeleteTasks: async (_: any, { ids }: any, { dataSources, user, pubsub }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+
+      const count = await dataSources.tasksAPI.bulkDeleteTasks(ids, user.userId);
+
+      for (const id of ids) {
+        await pubsub.publish(`TASK_DELETED_${user.userId}`, { taskDeleted: { id } });
+      }
+
+      return { count };
+    },
+
     // Subtasks
     createSubtask: async (_: any, { parentId, input }: any, { dataSources, user, pubsub }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });

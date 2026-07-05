@@ -13,45 +13,5 @@ type Subscription {
   _empty: String
 }
 
-# User type (Phase 0 & 1 - simplified)
-type User {
-  id: ID!
-  clerkId: String!
-  email: String!
-  name: String!
-  avatar: String
-  timezone: String!
-  tier: SubscriptionTier!
-
-  # Onboarding status
-  onboardingCompleted: Boolean!
-  onboardingStep: Int!
-
-  # Relations - commented out until features are implemented
-  # goals: [Goal!]!
-  # tasks: [Task!]!
-  # projects: [Project!]!
-
-  # Settings - commented out until features are implemented
-  # workHours: WorkHours
-  # focusTimeBlocks: [FocusTimeBlock!]!
-
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-extend type Query {
-  # Get current user
-  me: User!
-
-  # Get user by ID (admin only)
-  user(id: ID!): User
-}
-
-# Subscription tier
-enum SubscriptionTier {
-  FREE
-  STARTER
-  PRO
-  PREMIUM
-}
+# User type, SubscriptionTier enum, and me/user queries live in user.graphql
+# (defining them here too made the merged SDL invalid — duplicate types).

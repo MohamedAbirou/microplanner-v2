@@ -43,14 +43,10 @@ export const GET_WEEKLY_STATS = gql`
       totalTasks
       completedTasks
       completionRate
-      totalDuration
-      productivityScore
-      dailyBreakdown {
-        date
-        tasksScheduled
-        tasksCompleted
-        productivity
-      }
+      totalDuration: totalHoursScheduled
+      productivityScore: averageProductivityScore
+      currentStreak
+      longestStreak
     }
   }
 `;
@@ -59,37 +55,24 @@ export const GET_PRODUCTIVITY_SCORES = gql`
   query GetProductivityScores($startDate: DateTime!, $endDate: DateTime!) {
     productivityScores(startDate: $startDate, endDate: $endDate) {
       date
-      score
-      completedTasks
-      totalTasks
-      focusTimeHours
-      energyLevel
+      score: overallScore
+      focusTimeScore
+      taskCompletionScore
+      totalFocusMinutes
+      totalTaskMinutes
     }
   }
 `;
 
 export const GET_INSIGHTS = gql`
   query GetInsights($type: String, $limit: Int) {
-    insights(type: $type, limit: $limit) {
-      id
-      type
-      title
-      description
-      actionable
-      priority
-      createdAt
-    }
+    insights(type: $type, limit: $limit)
   }
 `;
 
 export const GENERATE_INSIGHTS = gql`
   mutation GenerateInsights {
-    generateInsights {
-      id
-      type
-      title
-      description
-    }
+    generateInsights
   }
 `;
 
@@ -150,8 +133,8 @@ export const GET_FOCUS_TIME_BLOCKS = gql`
 `;
 
 export const CREATE_FOCUS_BLOCK = gql`
-  mutation CreateFocusBlock($input: CreateFocusBlockInput!) {
-    createFocusBlock(input: $input) {
+  mutation CreateFocusBlock($input: CreateFocusTimeBlockInput!) {
+    createFocusTimeBlock(input: $input) {
       id
       title
       frequency
@@ -162,8 +145,8 @@ export const CREATE_FOCUS_BLOCK = gql`
 `;
 
 export const UPDATE_FOCUS_BLOCK = gql`
-  mutation UpdateFocusBlock($id: ID!, $input: UpdateFocusBlockInput!) {
-    updateFocusBlock(id: $id, input: $input) {
+  mutation UpdateFocusBlock($id: ID!, $input: UpdateFocusTimeBlockInput!) {
+    updateFocusTimeBlock(id: $id, input: $input) {
       id
       title
       isActive
@@ -173,7 +156,7 @@ export const UPDATE_FOCUS_BLOCK = gql`
 
 export const DELETE_FOCUS_BLOCK = gql`
   mutation DeleteFocusBlock($id: ID!) {
-    deleteFocusBlock(id: $id)
+    deleteFocusTimeBlock(id: $id)
   }
 `;
 
@@ -327,9 +310,9 @@ export const GET_CALENDAR_CONNECTIONS = gql`
       id
       provider
       email
-      isActive
-      lastSyncedAt
-      syncStatus
+      isActive: syncEnabled
+      lastSyncedAt: lastSyncAt
+      syncErrors
     }
   }
 `;
@@ -337,8 +320,8 @@ export const GET_CALENDAR_CONNECTIONS = gql`
 export const INITIATE_CALENDAR_AUTH = gql`
   mutation InitiateCalendarAuth($provider: CalendarProvider!) {
     initiateCalendarAuth(provider: $provider) {
-      authUrl
-      state
+      authUrl: url
+      provider
     }
   }
 `;
@@ -349,7 +332,7 @@ export const CONNECT_CALENDAR_WITH_CODE = gql`
       id
       provider
       email
-      isActive
+      isActive: syncEnabled
     }
   }
 `;
@@ -363,15 +346,16 @@ export const DISCONNECT_CALENDAR_CONNECTION = gql`
 export const SYNC_CALENDAR_CONNECTION = gql`
   mutation SyncCalendar($id: ID!) {
     syncCalendar(id: $id) {
-      id
-      lastSyncedAt
-      syncStatus
+      success
+      tasksSucceeded
+      tasksFailed
+      duration
     }
   }
 `;
 
 export const GET_CALENDAR_EVENTS = gql`
-  query GetCalendarEvents($startDate: DateTime!, $endDate: DateTime!, $calendarIds: [ID!]) {
+  query GetCalendarEvents($startDate: DateTime!, $endDate: DateTime!, $calendarIds: [String!]) {
     calendarEvents(startDate: $startDate, endDate: $endDate, calendarIds: $calendarIds) {
       id
       title
@@ -379,8 +363,7 @@ export const GET_CALENDAR_EVENTS = gql`
       end
       location
       attendees
-      isAllDay
-      calendarId
+      isAllDay: allDay
     }
   }
 `;
@@ -479,11 +462,11 @@ export const GET_SCHEDULING_LINKS = gql`
     schedulingLinks {
       id
       slug
-      title
+      title: name
       description
       duration
       isActive
-      bookingsCount
+      bookingsCount: bookingCount
       createdAt
     }
   }
@@ -494,7 +477,7 @@ export const CREATE_SCHEDULING_LINK = gql`
     createSchedulingLink(input: $input) {
       id
       slug
-      title
+      title: name
       duration
     }
   }
@@ -545,7 +528,7 @@ export const GET_INTEGRATIONS = gql`
       name
       isActive
       config
-      lastSyncedAt
+      lastSyncedAt: lastSyncAt
     }
   }
 `;
@@ -611,12 +594,10 @@ export const GET_SUBSCRIPTION = gql`
 export const GET_USAGE_STATS = gql`
   query GetUsageStats {
     usageStats {
-      goalsUsed
-      tasksUsed
-      projectsUsed
-      aiPlansUsed
-      teamMembersUsed
-      resetDate
+      goalsUsed: goalsCreated
+      tasksUsed: tasksCreated
+      aiPlansUsed: aiGenerationsUsed
+      resetDate: resetsAt
     }
   }
 `;

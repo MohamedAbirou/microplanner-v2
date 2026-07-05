@@ -13,10 +13,12 @@ type WaitlistEntry {
 }
 
 type WaitlistStats {
-  totalCount: Int!
-  pendingCount: Int!
-  approvedCount: Int!
-  averageWaitTime: Float
+  total: Int!
+  pending: Int!
+  approved: Int!
+  invited: Int!
+  converted: Int!
+  averageWaitDays: Float
 }
 
 type JoinWaitlistResult {

@@ -332,9 +332,7 @@ export const UPDATE_TASK = gql`
 
 export const DELETE_TASK = gql`
   mutation DeleteTask($id: ID!) {
-    deleteTask(id: $id) {
-      id
-    }
+    deleteTask(id: $id)
   }
 `;
 
@@ -650,9 +648,7 @@ export const UPDATE_GOAL = gql`
 
 export const DELETE_GOAL = gql`
   mutation DeleteGoal($id: ID!) {
-    deleteGoal(id: $id) {
-      id
-    }
+    deleteGoal(id: $id)
   }
 `;
 
@@ -793,11 +789,11 @@ export const ACCEPT_PLAN = gql`
 // ============================================================================
 
 export const ADD_DEPENDENCY = gql`
-  mutation AddDependency($input: AddDependencyInput!) {
-    addDependency(input: $input) {
+  mutation AddDependency($input: CreateTaskDependencyInput!) {
+    createTaskDependency(input: $input) {
       id
-      fromTaskId
-      toTaskId
+      dependentTaskId
+      blockingTaskId
       type
       createdAt
     }
@@ -806,9 +802,7 @@ export const ADD_DEPENDENCY = gql`
 
 export const REMOVE_DEPENDENCY = gql`
   mutation RemoveDependency($id: ID!) {
-    removeDependency(id: $id) {
-      id
-    }
+    deleteTaskDependency(id: $id)
   }
 `;
 
@@ -850,18 +844,16 @@ export const UPDATE_USER_SETTINGS = gql`
   mutation UpdateUserSettings($input: UpdateUserSettingsInput!) {
     updateUserSettings(input: $input) {
       id
-      settings {
-        theme
-        workingHours {
-          start
-          end
-        }
-        defaultTaskDuration
-        notifications {
-          email
-          push
-          reminders
-        }
+      theme
+      workingHours {
+        start
+        end
+      }
+      defaultTaskDuration
+      notifications {
+        email
+        push
+        reminders
       }
     }
   }
@@ -872,31 +864,31 @@ export const UPDATE_USER_SETTINGS = gql`
 // ============================================================================
 
 export const CONNECT_CALENDAR = gql`
-  mutation ConnectCalendar($provider: CalendarProvider!, $authCode: String!) {
-    connectCalendar(provider: $provider, authCode: $authCode) {
+  mutation ConnectCalendar($input: ConnectCalendarInput!) {
+    connectCalendar(input: $input) {
+      id
       provider
       email
-      isConnected
-      lastSyncedAt
+      syncEnabled
+      lastSyncAt
     }
   }
 `;
 
 export const DISCONNECT_CALENDAR = gql`
-  mutation DisconnectCalendar($provider: CalendarProvider!) {
-    disconnectCalendar(provider: $provider) {
-      provider
-      isConnected
-    }
+  mutation DisconnectCalendar($id: ID!) {
+    disconnectCalendar(id: $id)
   }
 `;
 
 export const SYNC_CALENDAR = gql`
-  mutation SyncCalendar($provider: CalendarProvider!) {
-    syncCalendar(provider: $provider) {
+  mutation SyncCalendar($id: ID!) {
+    syncCalendar(id: $id) {
+      success
       provider
-      lastSyncedAt
-      syncedEventsCount
+      tasksSucceeded
+      tasksFailed
+      duration
     }
   }
 `;
@@ -935,9 +927,7 @@ export const TASK_CREATED = gql`
 
 export const TASK_DELETED = gql`
   subscription TaskDeleted($userId: ID!) {
-    taskDeleted(userId: $userId) {
-      id
-    }
+    taskDeleted(userId: $userId)
   }
 `;
 

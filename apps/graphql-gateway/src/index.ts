@@ -1,9 +1,12 @@
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import { GraphQLError } from 'graphql';
 import Redis from 'ioredis';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
@@ -37,6 +40,7 @@ import {
   createUserLoader,
 } from './datasources/dataloaders';
 import * as jwt from 'jsonwebtoken';
+import jwksClient from 'jwks-rsa';
 import 'dotenv/config';
 
 // Redis setup
@@ -56,15 +60,44 @@ const pubsub = new RedisPubSub({
   subscriber: redis.duplicate(),
 });
 
-// Verify JWT token
-function verifyToken(token: string | undefined): any {
-  if (!token) return null;
+// Clerk JWKS client — verifies JWT signatures against Clerk's public keys.
+// CLERK_DOMAIN (e.g. "clerk.example.com" or "xxx.clerk.accounts.dev") is
+// required in production; without it we refuse to trust any token.
+const CLERK_DOMAIN = process.env.CLERK_DOMAIN;
+const jwks = CLERK_DOMAIN
+  ? jwksClient({
+      jwksUri: `https://${CLERK_DOMAIN}/.well-known/jwks.json`,
+      cache: true,
+      cacheMaxAge: 10 * 60 * 1000,
+      rateLimit: true,
+      jwksRequestsPerMinute: 5,
+    })
+  : null;
+
+if (!jwks) {
+  console.warn(
+    '⚠ CLERK_DOMAIN is not set — JWT signatures cannot be verified. ' +
+      'Tokens will be REJECTED. Set CLERK_DOMAIN to enable authentication.'
+  );
+}
+
+// Verify JWT token against Clerk JWKS and normalize the user shape.
+// Returns null (unauthenticated) on any failure — never trusts unverified data.
+async function verifyToken(token: string | undefined): Promise<any> {
+  if (!token || !jwks) return null;
 
   try {
-    // If using Clerk, verify with Clerk's public key
-    // For now, decode without verification (development only!)
-    const decoded = jwt.decode(token);
-    return decoded;
+    const decoded = jwt.decode(token, { complete: true });
+    if (!decoded || typeof decoded === 'string' || !decoded.header.kid) return null;
+
+    const key = await jwks.getSigningKey(decoded.header.kid);
+    const payload = jwt.verify(token, key.getPublicKey(), {
+      algorithms: ['RS256'],
+      issuer: `https://${CLERK_DOMAIN}`,
+    }) as jwt.JwtPayload;
+
+    // Normalize: resolvers use user.userId; Clerk puts the user id in `sub`
+    return { ...payload, sub: payload.sub, userId: (payload as any).userId || payload.sub };
   } catch (error) {
     return null;
   }
@@ -128,10 +161,32 @@ async function startServer() {
   const app = express();
   const httpServer = http.createServer(app);
 
+  // Executable schema shared by the HTTP server and the WebSocket server
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+  // WebSocket server for GraphQL subscriptions (graphql-ws protocol —
+  // matches the frontend's GraphQLWsLink in apps/web/src/lib/apollo/client.ts)
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: '/graphql',
+  });
+
+  const wsServerCleanup = useServer(
+    {
+      schema,
+      context: async (ctx) => {
+        const rawAuth = (ctx.connectionParams?.authorization as string) || '';
+        const token = rawAuth.replace('Bearer ', '');
+        const user = await verifyToken(token);
+        return { user, token, redis, pubsub };
+      },
+    },
+    wsServer
+  );
+
   // Create Apollo Server
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema,
 
     // Performance optimizations
     cache: 'bounded',
@@ -152,8 +207,19 @@ async function startServer() {
     // Production settings
     introspection: process.env.NODE_ENV !== 'production',
 
-    // Drain HTTP server on shutdown
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    // Drain HTTP + WS servers on shutdown
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await wsServerCleanup.dispose();
+            },
+          };
+        },
+      },
+    ],
   });
 
   // Start Apollo Server
@@ -188,7 +254,7 @@ async function startServer() {
     expressMiddleware(server, {
       context: async ({ req }) => {
         const token = req.headers.authorization?.replace('Bearer ', '');
-        const user = verifyToken(token);
+        const user = await verifyToken(token);
         const userId = user?.userId || user?.sub || '';
 
         // Create all data sources

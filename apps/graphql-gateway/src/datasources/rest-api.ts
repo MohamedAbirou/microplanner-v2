@@ -329,14 +329,13 @@ export class TasksAPI {
   }
 
   async getTasksByGoalIds(goalIds: string[]) {
-    // Note: /batch endpoint doesn't exist in backend
-    // Fetching tasks by filtering on goalId instead
-    const tasks = [];
+    // No /batch endpoint — fetch per goal and unwrap the { tasks } envelope
+    const tasks: any[] = [];
     for (const goalId of goalIds) {
       const { data } = await this.client.get('/', {
         params: { goalId },
       });
-      tasks.push(...(Array.isArray(data) ? data : []));
+      tasks.push(...(data.tasks || data.data || []));
     }
     return tasks;
   }
@@ -388,11 +387,10 @@ export class TasksAPI {
   }
 
   async uncompleteTask(id: string, userId: string) {
-    // Note: /uncomplete endpoint doesn't exist in backend
-    // Using update task to set completed: false instead
+    // No /uncomplete endpoint — update with the whitelisted isCompleted field
     const { data } = await this.client.put(
       `/${id}`,
-      { completed: false, completedAt: null },
+      { isCompleted: false },
       {
         headers: { 'x-user-id': userId },
       }
@@ -419,19 +417,51 @@ export class TasksAPI {
     return data.tasks || data.data || data;
   }
 
+  // Bulk operations. REST PATCH /tasks/bulk supports complete/skip/delete/
+  // reschedule; any other field combination falls back to per-task updates.
+  async bulkUpdateTasks(ids: string[], userId: string, input: any) {
+    if (input?.isCompleted === true && Object.keys(input).length === 1) {
+      await this.client.patch(
+        '/bulk',
+        { taskIds: ids, operation: 'complete' },
+        { headers: { 'x-user-id': userId } }
+      );
+    } else if (input?.scheduledDate && Object.keys(input).every((k) => ['scheduledDate', 'startTime', 'endTime'].includes(k))) {
+      await this.client.patch(
+        '/bulk',
+        { taskIds: ids, operation: 'reschedule', data: input },
+        { headers: { 'x-user-id': userId } }
+      );
+    } else {
+      for (const id of ids) {
+        await this.updateTask(id, userId, input);
+      }
+    }
+
+    // Return the updated tasks
+    const tasks = [];
+    for (const id of ids) {
+      tasks.push(await this.getTask(id, userId));
+    }
+    return tasks;
+  }
+
+  async bulkDeleteTasks(ids: string[], userId: string): Promise<number> {
+    const { data } = await this.client.patch(
+      '/bulk',
+      { taskIds: ids, operation: 'delete' },
+      { headers: { 'x-user-id': userId } }
+    );
+    return data.success ?? ids.length;
+  }
+
   async searchTasks(query: string, userId: string) {
-    // Note: /search endpoint doesn't exist in backend
-    // Implementing basic client-side filter instead
+    // Backend supports server-side search (title/notes, case-insensitive)
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
+      params: { search: query },
     });
-    const tasks = Array.isArray(data) ? data : [];
-    const lowercaseQuery = query.toLowerCase();
-    return tasks.filter(
-      (task: any) =>
-        task.title?.toLowerCase().includes(lowercaseQuery) ||
-        task.description?.toLowerCase().includes(lowercaseQuery)
-    );
+    return data.tasks || data.data || [];
   }
 
   // Task Dependencies
@@ -449,15 +479,29 @@ export class TasksAPI {
   }
 
   async getTaskDependencies(taskId: string) {
+    // REST returns TaskWithDependencies { blockingTasks, dependentTasks, ... }.
+    // GraphQL Task.dependencies wants TaskDependency rows where this task is
+    // the blocking side (tasks that depend on this one) — synthesize them.
     const { data } = await this.client.get(`/advanced/${taskId}/dependencies`);
-    return data;
+    return (data.dependentTasks || []).map((t: any) => ({
+      id: `${taskId}:${t.id}`,
+      dependentTaskId: t.id,
+      blockingTaskId: taskId,
+      type: 'BLOCKS',
+      createdAt: new Date().toISOString(),
+    }));
   }
 
   async getTaskBlockers(taskId: string) {
-    // Note: /blockers endpoint doesn't exist in backend
-    // Dependencies are returned by getTaskDependencies
-    // Frontend should derive blockers from dependencies
-    throw new Error('getTaskBlockers not implemented in backend. Use getTaskDependencies instead.');
+    // Blockers = dependency rows where this task is the dependent side
+    const { data } = await this.client.get(`/advanced/${taskId}/dependencies`);
+    return (data.blockingTasks || []).map((t: any) => ({
+      id: `${t.id}:${taskId}`,
+      dependentTaskId: taskId,
+      blockingTaskId: t.id,
+      type: 'BLOCKED_BY',
+      createdAt: new Date().toISOString(),
+    }));
   }
 
   // Time Tracking
@@ -484,9 +528,10 @@ export class TasksAPI {
   }
 
   async getTimeEntries(taskId: string) {
-    // Note: /time-entries endpoint doesn't exist in backend
-    // Use /advanced/time/stats instead or implement in backend
-    throw new Error('getTimeEntries not fully implemented. Consider using time/stats endpoint.');
+    // Time tracking is embedded on the Task row (single running timer), so
+    // there is no per-entry history table yet. Return an empty list — never
+    // throw from a field resolver.
+    return [];
   }
 
   // Subtasks
@@ -1063,7 +1108,20 @@ export class CalendarAPI {
       headers: { 'x-user-id': userId },
       params: { startDate, endDate, calendarIds: calendarIds?.join(',') },
     });
-    return data;
+    // REST returns { message, events: [google-shaped], total } — map to the
+    // GraphQL CalendarEvent type (title/start/end/allDay/source/attendees)
+    const events = data.events || data || [];
+    return events.map((e: any) => ({
+      id: e.id,
+      title: e.summary || e.title || 'Untitled Event',
+      description: e.description || null,
+      start: e.start?.dateTime || e.start?.date || e.start,
+      end: e.end?.dateTime || e.end?.date || e.end,
+      allDay: !!e.start?.date,
+      source: 'GOOGLE',
+      attendees: (e.attendees || []).map((a: any) => a.email || a).filter(Boolean),
+      location: e.location || null,
+    }));
   }
 
   async getEventsByConnection(connectionId: string, startDate?: string, endDate?: string) {

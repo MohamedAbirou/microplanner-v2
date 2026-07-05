@@ -67,6 +67,7 @@ type TeamInvitation {
   token: String!
   expiresAt: DateTime!
   acceptedAt: DateTime
+  status: String
   createdAt: DateTime!
 }
 
@@ -172,6 +173,13 @@ input CreateApiKeyInput {
 }
 
 type ApiKeyWithSecret {
-  apiKey: ApiKey!
-  secret: String!
+  # Flat shape matching the REST ApiKeyResponse (key returned once on create)
+  id: ID!
+  name: String!
+  key: String
+  keyPrefix: String!
+  scopes: [String!]!
+  rateLimit: Int
+  expiresAt: DateTime
+  createdAt: DateTime!
 }

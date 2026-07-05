@@ -4,7 +4,7 @@
 # SUBSCRIPTION
 # ============================================
 
-type Subscription {
+type UserSubscription {
   id: ID!
   userId: ID!
   tier: SubscriptionTier!
@@ -47,6 +47,12 @@ type FeatureLimits {
   apiAccess: Boolean!
   prioritySupport: Boolean!
   customBranding: Boolean!
+
+  # Legacy aliases still selected by parts of the frontend (nullable)
+  maxTasks: Int
+  maxProjects: Int
+  aiPlansPerMonth: Int
+  teamMembers: Int
 }
 
 type BillingInfo {
@@ -116,7 +122,7 @@ type UsageStats {
 
 extend type Query {
   # Subscription info
-  subscription: Subscription
+  subscription: UserSubscription
 
   # Billing
   billingInfo: BillingInfo
@@ -141,8 +147,8 @@ extend type Mutation {
 
   # Manage subscription
   upgradeSubscription(tier: SubscriptionTier!): CheckoutSession!
-  cancelSubscription: Subscription!
-  resumeSubscription: Subscription!
+  cancelSubscription: UserSubscription!
+  resumeSubscription: UserSubscription!
 
   # Update payment method
   updatePaymentMethod(paymentMethodId: String!): PaymentMethod!

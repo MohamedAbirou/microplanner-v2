@@ -107,11 +107,7 @@ type CalendarIntegration {
   lastSyncedAt: DateTime
 }
 
-enum CalendarProvider {
-  GOOGLE
-  OUTLOOK
-  APPLE
-}
+# CalendarProvider enum is defined in calendar.graphql
 
 # Enums
 enum Theme {
@@ -130,6 +126,9 @@ enum EnergyPattern {
 extend type Query {
   # Get current user
   me: User
+
+  # Get user by ID (admin only)
+  user(id: ID!): User
 
   # Get user settings
   userSettings: UserSettings
