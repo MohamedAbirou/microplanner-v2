@@ -86,7 +86,7 @@ async function bootstrap() {
   }
 
   // Allow all Vercel preview deployments in production
-  const isVercelPreview = (origin: string) => {
+  const _isVercelPreview = (origin: string) => {
     return origin?.includes('.vercel.app');
   };
 

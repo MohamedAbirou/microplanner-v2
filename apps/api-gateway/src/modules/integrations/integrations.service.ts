@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
@@ -6,7 +6,6 @@ import axios from 'axios';
 import {
   Integration,
   Webhook,
-  WebhookDelivery,
   IntegrationType,
   WebhookEvent,
   WebhookPayload,
@@ -15,9 +14,6 @@ import {
   CreateWebhookDto,
   UpdateWebhookDto,
   OAuthCallbackDto,
-  SlackSendMessageDto,
-  CreateZoomMeetingDto,
-  CreateGoogleMeetDto,
 } from './types/integrations.types';
 
 /**

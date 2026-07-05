@@ -540,7 +540,7 @@ export class SchedulingService {
   /**
    * Cancel a booking
    */
-  async cancelBooking(bookingId: string, cancellationToken?: string): Promise<Booking> {
+  async cancelBooking(bookingId: string, _cancellationToken?: string): Promise<Booking> {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
       include: { link: true },

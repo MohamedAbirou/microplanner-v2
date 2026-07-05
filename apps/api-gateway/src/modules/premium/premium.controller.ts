@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Body, Param, Query, Logger } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { PremiumService } from './premium.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';

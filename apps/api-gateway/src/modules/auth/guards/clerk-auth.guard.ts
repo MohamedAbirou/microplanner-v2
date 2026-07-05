@@ -60,7 +60,7 @@ export class ClerkAuthGuard extends AuthGuard('clerk') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest(err: any, user: any, _info: any) {
     if (err || !user) {
       throw err || new UnauthorizedException('Authentication required');
     }

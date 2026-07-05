@@ -116,7 +116,7 @@ export class PatternRecognitionService {
    * Pattern insights persistence requires a patternInsights column (see
    * docs/COMPLETION_PLAN.md Phase 7); until then insights are computed on read.
    */
-  async getCachedInsights(userId: string): Promise<UserPatternInsights | null> {
+  async getCachedInsights(_userId: string): Promise<UserPatternInsights | null> {
     // DISABLED: patternInsights field not yet in schema
     // const user = await this.prisma.user.findUnique({
     //   where: { id: userId },
@@ -419,7 +419,7 @@ export class PatternRecognitionService {
     today.setHours(0, 0, 0, 0);
 
     let streak = 0;
-    let checkDate = new Date(today);
+    const checkDate = new Date(today);
 
     for (let i = 0; i < 90; i++) {
       const nextDay = new Date(checkDate);
@@ -469,7 +469,7 @@ export class PatternRecognitionService {
   /**
    * Detect if user prefers buffer time between tasks
    */
-  private detectBufferPreference(events: TaskCompletionEvent[]): boolean {
+  private detectBufferPreference(_events: TaskCompletionEvent[]): boolean {
     // Gap-spacing analysis is a Phase 7 enhancement.
     // Simplified: assume true for now
     return true;
@@ -478,7 +478,7 @@ export class PatternRecognitionService {
   /**
    * Detect if user prefers clustering similar tasks
    */
-  private detectClusteringPreference(events: TaskCompletionEvent[]): boolean {
+  private detectClusteringPreference(_events: TaskCompletionEvent[]): boolean {
     // Batch-completion analysis is a Phase 7 enhancement.
     // Simplified: assume false for now
     return false;
@@ -629,7 +629,7 @@ export class PatternRecognitionService {
    * Pattern insights persistence requires a patternInsights column (see
    * docs/COMPLETION_PLAN.md Phase 7); until then insights are computed on read.
    */
-  private async cacheInsights(userId: string, insights: UserPatternInsights): Promise<void> {
+  private async cacheInsights(_userId: string, _insights: UserPatternInsights): Promise<void> {
     // DISABLED: patternInsights field not yet in schema
     // await this.prisma.user.update({
     //   where: { id: userId },
@@ -637,7 +637,7 @@ export class PatternRecognitionService {
     //     patternInsights: insights as any,
     //   },
     // });
-    this.logger.debug(`Pattern insights generated for user ${userId} (caching disabled)`);
+    this.logger.debug(`Pattern insights generated for user ${_userId} (caching disabled)`);
   }
 
   /**

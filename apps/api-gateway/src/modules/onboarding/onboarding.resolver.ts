@@ -15,8 +15,6 @@ import {
   CompleteOnboardingInput,
   UpdateOnboardingProgressInput,
   OnboardingResult,
-  UserContext,
-  FocusArea,
 } from './dto/onboarding.dto';
 
 /**
@@ -97,7 +95,7 @@ export class OnboardingResolver {
       );
 
       // Update user profile with onboarding data
-      const updatedUser = await this.usersService.updateOnboarding(user.id, {
+      const _updatedUser = await this.usersService.updateOnboarding(user.id, {
         context: input.context,
         focusAreas: input.focusAreas,
         timezone: input.timezone,

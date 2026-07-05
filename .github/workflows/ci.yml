@@ -71,7 +71,7 @@ jobs:
         run: pnpm lint
 
       - name: Type check
-        run: pnpm type-check || true
+        run: pnpm type-check
 
   # Job 3: Test API Gateway
   test-api-gateway:

@@ -1,4 +1,4 @@
-import { Goal, WeeklyPlan, Task, User } from '@microplanner/database';
+import { Goal, User } from '@microplanner/database';
 
 /**
  * Planning Strategy Interface

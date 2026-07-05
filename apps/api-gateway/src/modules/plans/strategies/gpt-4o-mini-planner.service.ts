@@ -238,7 +238,7 @@ Always output valid JSON matching the requested format. Be concise but insightfu
   /**
    * Parse AI-generated tasks into ScheduledTask format
    */
-  private parseAITasks(aiTasks: any[], weekStart: Date): ScheduledTask[] {
+  private parseAITasks(aiTasks: any[], _weekStart: Date): ScheduledTask[] {
     if (!Array.isArray(aiTasks)) {
       throw new Error('Invalid AI response: tasks must be an array');
     }

@@ -112,7 +112,7 @@ function getGraphQLErrorCode(statusCode: number): string {
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => [
+      useFactory: (_config: ConfigService) => [
         {
           ttl: 60000, // 1 minute
           limit: 100, // requests per ttl

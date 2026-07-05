@@ -1,6 +1,6 @@
 import { IsOptional, IsDateString, IsString, IsInt, Min, Max, IsBoolean, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 export class QueryTasksDto {
   @ApiProperty({ required: false, example: '2025-01-13', description: 'Filter by specific date (YYYY-MM-DD)' })

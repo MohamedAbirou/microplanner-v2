@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
+import { SubscriptionTierType } from '@microplanner/database';
 
 /**
  * Tier hierarchy for access control

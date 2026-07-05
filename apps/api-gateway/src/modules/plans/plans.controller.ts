@@ -181,7 +181,7 @@ export class PlansController {
   @Get('automation/metrics')
   @ApiOperation({ summary: 'Get plan automation metrics' })
   @ApiResponse({ status: 200, description: 'Automation metrics retrieved' })
-  async getAutomationMetrics(@CurrentUser() user: User) {
+  async getAutomationMetrics(@CurrentUser() _user: User) {
     const metrics = this.planAutomationService.getMetrics();
 
     return {

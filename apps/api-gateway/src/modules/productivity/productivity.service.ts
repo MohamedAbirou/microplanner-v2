@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   WorkHours,
@@ -15,7 +15,6 @@ import {
   Smart1on1,
   CreateSmart1on1Dto,
   UpdateSmart1on1Dto,
-  TravelTime,
   CalculateTravelTimeDto,
   KanbanBoard,
   CreateKanbanBoardDto,
@@ -673,7 +672,6 @@ export class ProductivityService {
 
     // Calculate metrics
     const totalTaskMinutes = tasks.reduce((sum, t) => sum + t.durationMinutes, 0);
-    const totalTrackedMinutes = tasks.reduce((sum, t) => sum + t.timeSpentMinutes, 0);
     const completedTasks = tasks.filter((t) => t.isCompleted).length;
     const totalTasks = tasks.length;
 

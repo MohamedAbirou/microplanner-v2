@@ -1,5 +1,63 @@
 import axios, { AxiosInstance } from 'axios';
 import { GraphQLError } from 'graphql';
+import type {
+  CalculateTravelTimeInput,
+  ConnectCalendarInput,
+  ConnectIntegrationInput,
+  CreateApiKeyInput,
+  CreateBookingInput,
+  CreateCalendarEventInput,
+  CreateFocusTimeBlockInput,
+  CreateGoalInput,
+  CreateKanbanBoardInput,
+  CreateNoMeetingDayInput,
+  CreatePlanInput,
+  CreatePlanTemplateInput,
+  CreateProjectInput,
+  CreateSchedulingLinkInput,
+  CreateSmart1on1Input,
+  CreateSubtaskInput,
+  CreateTaskDependencyInput,
+  CreateTaskInput,
+  CreateTeamInput,
+  CreateWebhookInput,
+  GeneratePlanInput,
+  InviteTeamMemberInput,
+  JoinWaitlistInput,
+  MoveTaskInKanbanInput,
+  QueryGoalsArgs,
+  QueryPlanTemplatesArgs,
+  QueryPlansArgs,
+  QueryProjectsArgs,
+  QueryTasksArgs,
+  QueryWaitlistEntriesArgs,
+  GoogleCalendarApiEvent,
+  TaskQueryFilterSource,
+  RestListParams,
+  RestTaskDependencySummary,
+  SyncUserInput,
+  Task,
+  TaskInfo,
+  UpdateCalendarDefenseInput,
+  UpdateCalendarEventInput,
+  UpdateFocusTimeBlockInput,
+  UpdateGoalInput,
+  UpdateIntegrationInput,
+  UpdateKanbanBoardInput,
+  UpdateNotificationPreferencesInput,
+  UpdateOnboardingProgressInput,
+  UpdatePlanInput,
+  UpdatePriorityHoursInput,
+  UpdateProjectInput,
+  UpdateSchedulingLinkInput,
+  UpdateSmart1on1Input,
+  UpdateTaskInput,
+  UpdateTeamInput,
+  UpdateUserProfileInput,
+  UpdateUserSettingsInput,
+  UpdateWebhookInput,
+  WorkHoursInput,
+} from '../types/api-inputs';
 
 const API_BASE_URL = process.env.API_GATEWAY_URL || 'http://localhost:3001';
 
@@ -53,7 +111,7 @@ export class WaitlistAPI {
   }
 
   // Join waitlist
-  async joinWaitlist(input: any) {
+  async joinWaitlist(input: JoinWaitlistInput) {
     const { data } = await this.client.post('/', input);
     return data;
   }
@@ -73,7 +131,7 @@ export class WaitlistAPI {
   }
 
   // Get all waitlist entries (admin)
-  async getWaitlistEntries(userId: string, filters: any) {
+  async getWaitlistEntries(userId: string, filters: QueryWaitlistEntriesArgs) {
     const { data } = await this.client.get('/entries', {
       headers: { 'x-user-id': userId },
       params: filters,
@@ -107,7 +165,7 @@ export class UserAPI {
   }
 
   // Sync/create user from Clerk (no REST endpoint - handled by JWT auth)
-  async syncUser(input: any) {
+  async syncUser(input: SyncUserInput) {
     // Note: User sync happens automatically via JWT validation in backend
     // When a user authenticates, the Clerk strategy automatically creates/updates the user
     // This method just fetches the user to confirm they exist
@@ -137,7 +195,7 @@ export class UserAPI {
   }
 
   // Update user profile
-  async updateUserProfile(userId: string, input: any) {
+  async updateUserProfile(userId: string, input: UpdateUserProfileInput) {
     const { data } = await this.client.put('/me', input, {
       headers: { 'x-user-id': userId },
     });
@@ -162,7 +220,7 @@ export class UserAPI {
   }
 
   // Update user settings (preferences)
-  async updateUserSettings(userId: string, input: any) {
+  async updateUserSettings(userId: string, input: UpdateUserSettingsInput) {
     const { data } = await this.client.put('/me/preferences', input, {
       headers: { 'x-user-id': userId },
     });
@@ -181,7 +239,7 @@ export class UserAPI {
   }
 
   // Complete onboarding
-  async completeOnboarding(userId: string, input: any) {
+  async completeOnboarding(userId: string, input: UpdateOnboardingProgressInput) {
     // Update onboarding status via the new /me/onboarding endpoint
     const { data } = await this.client.put('/me/onboarding', {
       onboardingCompleted: true,
@@ -211,7 +269,7 @@ export class GoalsAPI {
     return data.goal || data;
   }
 
-  async getGoals(userId: string, filters: any) {
+  async getGoals(userId: string, filters: QueryGoalsArgs) {
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
       params: filters,
@@ -227,7 +285,7 @@ export class GoalsAPI {
     return data;
   }
 
-  async createGoal(userId: string, input: any) {
+  async createGoal(userId: string, input: CreateGoalInput) {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
     });
@@ -235,7 +293,7 @@ export class GoalsAPI {
     return data.goal || data;
   }
 
-  async updateGoal(id: string, userId: string, input: any) {
+  async updateGoal(id: string, userId: string, input: UpdateGoalInput) {
     const { data } = await this.client.put(`/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -295,17 +353,17 @@ export class TasksAPI {
     return data.task || data;
   }
 
-  async getTasks(userId: string, args: any = {}) {
+  async getTasks(userId: string, args: QueryTasksArgs = {}) {
     // Check if args contains GraphQL-style nested filter/sort or direct params
     const hasNestedFilter = args.filter !== undefined;
 
     // Extract filter and sort if they exist (GraphQL query style)
     // Otherwise treat entire args as flat params (dashboard resolver style)
-    const filterSource = hasNestedFilter ? args.filter : args;
+    const filterSource = (hasNestedFilter ? args.filter : args) as TaskQueryFilterSource | undefined;
     const { filter, sort, ...directParams } = args;
 
     // Start with direct params (for non-filter args like take, skip, etc.)
-    const params: any = hasNestedFilter ? { ...directParams } : {};
+    const params: RestListParams = hasNestedFilter ? { ...directParams } : {};
 
     // Handle dateRange filter (GraphQL -> REST API conversion)
     if (filterSource?.dateRange) {
@@ -358,7 +416,7 @@ export class TasksAPI {
 
   async getTasksByGoalIds(goalIds: string[]) {
     // No /batch endpoint — fetch per goal and unwrap the { tasks } envelope
-    const tasks: any[] = [];
+    const tasks: Task[] = [];
     for (const goalId of goalIds) {
       const { data } = await this.client.get('/', {
         params: { goalId },
@@ -368,7 +426,7 @@ export class TasksAPI {
     return tasks;
   }
 
-  async createTask(userId: string, input: any) {
+  async createTask(userId: string, input: CreateTaskInput) {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
     });
@@ -376,7 +434,7 @@ export class TasksAPI {
     return data.task || data;
   }
 
-  async updateTask(id: string, userId: string, input: any) {
+  async updateTask(id: string, userId: string, input: UpdateTaskInput) {
     const { data } = await this.client.put(`/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -454,7 +512,7 @@ export class TasksAPI {
 
   // Bulk operations. REST PATCH /tasks/bulk supports complete/skip/delete/
   // reschedule; any other field combination falls back to per-task updates.
-  async bulkUpdateTasks(ids: string[], userId: string, input: any) {
+  async bulkUpdateTasks(ids: string[], userId: string, input: UpdateTaskInput) {
     if (input?.isCompleted === true && Object.keys(input).length === 1) {
       await this.client.patch(
         '/bulk',
@@ -500,7 +558,7 @@ export class TasksAPI {
   }
 
   // Task Dependencies
-  async createTaskDependency(userId: string, input: any) {
+  async createTaskDependency(userId: string, input: CreateTaskDependencyInput) {
     const { data } = await this.client.post('/advanced/dependencies', input, {
       headers: { 'x-user-id': userId },
     });
@@ -518,7 +576,7 @@ export class TasksAPI {
     // GraphQL Task.dependencies wants TaskDependency rows where this task is
     // the blocking side (tasks that depend on this one) — synthesize them.
     const { data } = await this.client.get(`/advanced/${taskId}/dependencies`);
-    return (data.dependentTasks || []).map((t: any) => ({
+    return (data.dependentTasks || []).map((t: RestTaskDependencySummary) => ({
       id: `${taskId}:${t.id}`,
       dependentTaskId: t.id,
       blockingTaskId: taskId,
@@ -530,7 +588,7 @@ export class TasksAPI {
   async getTaskBlockers(taskId: string) {
     // Blockers = dependency rows where this task is the dependent side
     const { data } = await this.client.get(`/advanced/${taskId}/dependencies`);
-    return (data.blockingTasks || []).map((t: any) => ({
+    return (data.blockingTasks || []).map((t: RestTaskDependencySummary) => ({
       id: `${t.id}:${taskId}`,
       dependentTaskId: taskId,
       blockingTaskId: t.id,
@@ -570,7 +628,7 @@ export class TasksAPI {
   }
 
   // Subtasks
-  async createSubtask(parentId: string, userId: string, input: any) {
+  async createSubtask(parentId: string, userId: string, input: CreateSubtaskInput) {
     const { data } = await this.client.post('/advanced/subtasks', { ...input, parentId }, {
       headers: { 'x-user-id': userId },
     });
@@ -598,7 +656,7 @@ export class ProductivityAPI {
     return data;
   }
 
-  async updateWorkHours(userId: string, input: any) {
+  async updateWorkHours(userId: string, input: WorkHoursInput) {
     const { data } = await this.client.put('/work-hours', input, {
       headers: { 'x-user-id': userId },
     });
@@ -613,14 +671,14 @@ export class ProductivityAPI {
     return data;
   }
 
-  async createFocusTime(userId: string, input: any) {
+  async createFocusTime(userId: string, input: CreateFocusTimeBlockInput) {
     const { data } = await this.client.post('/focus-time', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async updateFocusTime(id: string, userId: string, input: any) {
+  async updateFocusTime(id: string, userId: string, input: UpdateFocusTimeBlockInput) {
     const { data } = await this.client.put(`/focus-time/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -641,7 +699,7 @@ export class ProductivityAPI {
     return data;
   }
 
-  async createNoMeetingDay(userId: string, input: any) {
+  async createNoMeetingDay(userId: string, input: CreateNoMeetingDayInput) {
     const { data } = await this.client.post('/no-meeting-days', input, {
       headers: { 'x-user-id': userId },
     });
@@ -662,7 +720,7 @@ export class ProductivityAPI {
     return data;
   }
 
-  async updatePriorityHours(userId: string, input: any) {
+  async updatePriorityHours(userId: string, input: UpdatePriorityHoursInput) {
     const { data } = await this.client.put('/priority-hours', input, {
       headers: { 'x-user-id': userId },
     });
@@ -677,7 +735,7 @@ export class ProductivityAPI {
     return data;
   }
 
-  async updateCalendarDefense(userId: string, input: any) {
+  async updateCalendarDefense(userId: string, input: UpdateCalendarDefenseInput) {
     const { data } = await this.client.put('/calendar-defense', input, {
       headers: { 'x-user-id': userId },
     });
@@ -692,14 +750,14 @@ export class ProductivityAPI {
     return data;
   }
 
-  async createSmart1on1(userId: string, input: any) {
+  async createSmart1on1(userId: string, input: CreateSmart1on1Input) {
     const { data } = await this.client.post('/smart-1on1', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async updateSmart1on1(id: string, userId: string, input: any) {
+  async updateSmart1on1(id: string, userId: string, input: UpdateSmart1on1Input) {
     const { data } = await this.client.put(`/smart-1on1/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -713,7 +771,7 @@ export class ProductivityAPI {
   }
 
   // ==================== TRAVEL TIME ====================
-  async calculateTravelTime(userId: string, input: any) {
+  async calculateTravelTime(userId: string, input: CalculateTravelTimeInput) {
     const { data } = await this.client.post('/travel-time/calculate', input, {
       headers: { 'x-user-id': userId },
     });
@@ -736,14 +794,14 @@ export class ProductivityAPI {
     return data;
   }
 
-  async createKanbanBoard(userId: string, input: any) {
+  async createKanbanBoard(userId: string, input: CreateKanbanBoardInput) {
     const { data } = await this.client.post('/kanban', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async updateKanbanBoard(id: string, userId: string, input: any) {
+  async updateKanbanBoard(id: string, userId: string, input: UpdateKanbanBoardInput) {
     const { data } = await this.client.put(`/kanban/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -756,7 +814,7 @@ export class ProductivityAPI {
     });
   }
 
-  async moveTaskInKanban(userId: string, input: any) {
+  async moveTaskInKanban(userId: string, input: MoveTaskInKanbanInput) {
     const { data } = await this.client.post('/kanban/move-task', input, {
       headers: { 'x-user-id': userId },
     });
@@ -801,7 +859,7 @@ export class ProductivityAPI {
     return data;
   }
 
-  async updateNotificationPreferences(userId: string, input: any) {
+  async updateNotificationPreferences(userId: string, input: UpdateNotificationPreferencesInput) {
     const { data } = await this.client.put('/notifications/preferences', input, {
       headers: { 'x-user-id': userId },
     });
@@ -824,7 +882,7 @@ export class ProjectsAPI {
     return data;
   }
 
-  async getProjects(userId: string, filters: any) {
+  async getProjects(userId: string, filters: QueryProjectsArgs) {
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
       params: filters,
@@ -839,14 +897,14 @@ export class ProjectsAPI {
     return data;
   }
 
-  async createProject(userId: string, input: any) {
+  async createProject(userId: string, input: CreateProjectInput) {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async updateProject(id: string, userId: string, input: any) {
+  async updateProject(id: string, userId: string, input: UpdateProjectInput) {
     const { data } = await this.client.put(`/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -891,7 +949,7 @@ export class PlansAPI {
   }
 
   // Generate plan
-  async generatePlan(userId: string, input: any) {
+  async generatePlan(userId: string, input: GeneratePlanInput) {
     const { data } = await this.client.post('/generate', input, {
       headers: { 'x-user-id': userId },
     });
@@ -915,7 +973,7 @@ export class PlansAPI {
   }
 
   // Get all plans
-  async getPlans(userId: string, filter: any = {}) {
+  async getPlans(userId: string, filter: QueryPlansArgs = {}) {
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
       params: filter,
@@ -924,7 +982,7 @@ export class PlansAPI {
   }
 
   // Create plan manually
-  async createPlan(userId: string, input: any) {
+  async createPlan(userId: string, input: CreatePlanInput) {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
     });
@@ -932,7 +990,7 @@ export class PlansAPI {
   }
 
   // Update plan
-  async updatePlan(id: string, userId: string, input: any) {
+  async updatePlan(id: string, userId: string, input: UpdatePlanInput) {
     const { data } = await this.client.put(`/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -955,7 +1013,7 @@ export class PlansAPI {
   }
 
   // Get plan templates
-  async getPlanTemplates(args: any = {}) {
+  async getPlanTemplates(args: QueryPlanTemplatesArgs = {}) {
     const { data } = await this.client.get('/templates', {
       params: args,
     });
@@ -969,7 +1027,7 @@ export class PlansAPI {
   }
 
   // Create plan template
-  async createPlanTemplate(userId: string, input: any) {
+  async createPlanTemplate(userId: string, input: CreatePlanTemplateInput) {
     const { data } = await this.client.post('/templates', input, {
       headers: { 'x-user-id': userId },
     });
@@ -1124,7 +1182,7 @@ export class CalendarAPI {
     return data;
   }
 
-  async connectCalendar(userId: string, input: any) {
+  async connectCalendar(userId: string, input: ConnectCalendarInput) {
     const { data } = await this.client.post('/connections', input, {
       headers: { 'x-user-id': userId },
     });
@@ -1159,17 +1217,26 @@ export class CalendarAPI {
     // REST returns { message, events: [google-shaped], total } — map to the
     // GraphQL CalendarEvent type (title/start/end/allDay/source/attendees)
     const events = data.events || data || [];
-    return events.map((e: any) => ({
-      id: e.id,
-      title: e.summary || e.title || 'Untitled Event',
-      description: e.description || null,
-      start: e.start?.dateTime || e.start?.date || e.start,
-      end: e.end?.dateTime || e.end?.date || e.end,
-      allDay: !!e.start?.date,
-      source: 'GOOGLE',
-      attendees: (e.attendees || []).map((a: any) => a.email || a).filter(Boolean),
-      location: e.location || null,
-    }));
+    return events.map((e: GoogleCalendarApiEvent) => {
+      const startValue = e.start;
+      const endValue = e.end;
+      const startObj = typeof startValue === 'object' && startValue !== null ? startValue : undefined;
+      const endObj = typeof endValue === 'object' && endValue !== null ? endValue : undefined;
+
+      return {
+        id: e.id,
+        title: e.summary || e.title || 'Untitled Event',
+        description: e.description || null,
+        start: startObj?.dateTime || startObj?.date || (typeof startValue === 'string' ? startValue : ''),
+        end: endObj?.dateTime || endObj?.date || (typeof endValue === 'string' ? endValue : ''),
+        allDay: !!startObj?.date,
+        source: 'GOOGLE',
+        attendees: (e.attendees || []).map((a: string | { email?: string }) =>
+          typeof a === 'string' ? a : a.email
+        ).filter(Boolean),
+        location: e.location || null,
+      };
+    });
   }
 
   async getEventsByConnection(connectionId: string, startDate?: string, endDate?: string) {
@@ -1187,14 +1254,14 @@ export class CalendarAPI {
     return data;
   }
 
-  async createEvent(userId: string, input: any) {
+  async createEvent(userId: string, input: CreateCalendarEventInput) {
     const { data } = await this.client.post('/events', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async updateEvent(id: string, userId: string, input: any) {
+  async updateEvent(id: string, userId: string, input: UpdateCalendarEventInput) {
     const { data } = await this.client.put(`/events/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -1230,14 +1297,14 @@ export class TeamsAPI {
     return data;
   }
 
-  async createTeam(userId: string, input: any) {
+  async createTeam(userId: string, input: CreateTeamInput) {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async updateTeam(id: string, userId: string, input: any) {
+  async updateTeam(id: string, userId: string, input: UpdateTeamInput) {
     const { data } = await this.client.put(`/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -1264,7 +1331,7 @@ export class TeamsAPI {
     return data;
   }
 
-  async inviteTeamMember(userId: string, input: any) {
+  async inviteTeamMember(userId: string, input: InviteTeamMemberInput) {
     const { data } = await this.client.post(`/${input.teamId}/invitations`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -1305,7 +1372,7 @@ export class TeamsAPI {
     return data;
   }
 
-  async createApiKey(userId: string, input: any) {
+  async createApiKey(userId: string, input: CreateApiKeyInput) {
     const { data } = await this.client.post('/api-keys', input, {
       headers: { 'x-user-id': userId },
     });
@@ -1353,14 +1420,14 @@ export class SchedulingAPI {
     return data;
   }
 
-  async createSchedulingLink(userId: string, input: any) {
+  async createSchedulingLink(userId: string, input: CreateSchedulingLinkInput) {
     const { data } = await this.client.post('/links', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async updateSchedulingLink(id: string, userId: string, input: any) {
+  async updateSchedulingLink(id: string, userId: string, input: UpdateSchedulingLinkInput) {
     const { data } = await this.client.put(`/links/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -1413,11 +1480,11 @@ export class SchedulingAPI {
     return data;
   }
 
-  async createBooking(input: any, slug?: string) {
+  async createBooking(input: CreateBookingInput, slug?: string) {
     // Note: Backend uses /links/slug/:slug/bookings, not /bookings
-    if (!slug && input.schedulingLinkId) {
-      const link = await this.getSchedulingLinkBySlug(input.schedulingLinkId);
-      slug = link.slug || input.schedulingLinkId;
+    if (!slug && input.linkId) {
+      const link = await this.getSchedulingLinkBySlug(input.linkId);
+      slug = link.slug || input.linkId;
     }
     const { data } = await this.client.post(`/links/slug/${slug}/bookings`, input);
     return data;
@@ -1461,14 +1528,14 @@ export class IntegrationsAPI {
     return data;
   }
 
-  async connectIntegration(userId: string, input: any) {
+  async connectIntegration(userId: string, input: ConnectIntegrationInput) {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async updateIntegration(id: string, userId: string, input: any) {
+  async updateIntegration(id: string, userId: string, input: UpdateIntegrationInput) {
     const { data } = await this.client.put(`/${id}`, input, {
       headers: { 'x-user-id': userId },
     });
@@ -1502,14 +1569,14 @@ export class IntegrationsAPI {
     return data;
   }
 
-  async createWebhook(userId: string, input: any) {
+  async createWebhook(userId: string, input: CreateWebhookInput) {
     const { data } = await this.client.post('/webhooks', input, {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
-  async updateWebhook(id: string, userId: string, input: any) {
+  async updateWebhook(id: string, userId: string, input: UpdateWebhookInput) {
     const { data } = await this.client.put(`/webhooks/${id}`, input, {
       headers: { 'x-user-id': userId },
     });

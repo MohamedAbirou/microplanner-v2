@@ -15,9 +15,7 @@ import {
   CreateProjectDto,
   UpdateProjectDto,
   ProjectWithStats,
-  TaskFilterOptions,
   TaskWithDependencies,
-  GanttChartData,
 } from './types/advanced-tasks.types';
 
 /**

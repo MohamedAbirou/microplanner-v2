@@ -364,7 +364,7 @@ export class CalendarService {
     task: Task,
     conflict: ConflictInfo,
     resolution: ConflictResolution,
-    calendar: any,
+    _calendar: any,
   ): Promise<boolean> {
     switch (resolution) {
       case ConflictResolution.SKIP:
@@ -399,7 +399,7 @@ export class CalendarService {
   private suggestAlternativeTime(
     task: Task,
     existingEvents: any[],
-    allTasks: Task[],
+    _allTasks: Task[],
   ): { startTime: string; endTime: string } | undefined {
     // Simple strategy: try next hour slots
     const duration = task.durationMinutes;

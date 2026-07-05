@@ -54,7 +54,6 @@ export class ReminderScheduler {
 
       // Calculate time window: 55-65 minutes from now
       const now = new Date();
-      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
       const windowStart = new Date(now.getTime() + 55 * 60 * 1000);
       const windowEnd = new Date(now.getTime() + 65 * 60 * 1000);
 
@@ -350,8 +349,8 @@ export class ReminderScheduler {
    */
   private generateRecommendation(
     completionRate: number,
-    goalsCreated: number,
-    tasksCompleted: number,
+    _goalsCreated: number,
+    _tasksCompleted: number,
   ): string {
     if (completionRate >= 80) {
       return "Outstanding week! You're in a great flow state. Consider taking on one more challenging goal to maintain momentum.";

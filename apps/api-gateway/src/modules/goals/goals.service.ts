@@ -1,5 +1,4 @@
 import type { Goal, SubscriptionTierType } from '@microplanner/database';
-import { SubscriptionTier } from '@microplanner/database';
 import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';

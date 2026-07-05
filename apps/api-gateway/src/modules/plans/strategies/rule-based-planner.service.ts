@@ -56,7 +56,7 @@ export class RuleBasedPlannerService implements IPlanningStrategy {
       // Schedule tasks for each goal
       const scheduledTasks: ScheduledTask[] = [];
       const warnings: string[] = [];
-      let conflictsDetected = 0;
+      const conflictsDetected = 0;
       let constraintsViolated = 0;
 
       for (const goal of sortedGoals) {
@@ -387,8 +387,8 @@ export class RuleBasedPlannerService implements IPlanningStrategy {
     availableSlots: TimeSlot[][],
     preferredDay: number,
     slotsNeeded: number,
-    goal: Goal,
-    user: User,
+    _goal: Goal,
+    _user: User,
   ): TimeSlot | null {
     // Try preferred day first
     let slot = this.findSlotOnDay(availableSlots[preferredDay], slotsNeeded);

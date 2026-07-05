@@ -10,7 +10,6 @@ import {
   Request,
   HttpCode,
   HttpStatus,
-  Redirect,
 } from '@nestjs/common';
 import { IntegrationsService } from './integrations.service';
 import { Public } from '../auth/decorators/public.decorator';
@@ -20,7 +19,6 @@ import {
   UpdateIntegrationDto,
   CreateWebhookDto,
   UpdateWebhookDto,
-  OAuthCallbackDto,
 } from './types/integrations.types';
 
 /**
@@ -162,7 +160,7 @@ export class IntegrationsController {
    * Test webhook
    */
   @Post('webhooks/:id/test')
-  async testWebhook(@Request() req: any, @Param('id') webhookId: string) {
+  async testWebhook(@Request() req: any, @Param('id') _webhookId: string) {
     // Trigger a test webhook event
     await this.integrationsService.triggerWebhook(
       'goal.created' as any,

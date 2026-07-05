@@ -1,7 +1,7 @@
-import type { Goal, SubscriptionTierType, User, WeeklyPlan } from '@microplanner/database';
+import type { Goal, User, WeeklyPlan } from '@microplanner/database';
 import { PlanStatus, SubscriptionTier } from '@microplanner/database';
 import { HttpService } from '@nestjs/axios';
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { PrismaService } from '../../database/prisma.service';
@@ -66,7 +66,7 @@ export class PlansService {
     }
 
     // 4. Fetch user preferences
-    const preferences = {
+    const _preferences = {
       wakeTime: user.wakeTime,
       sleepTime: user.sleepTime,
       workStartTime: user.workStartTime,
@@ -87,12 +87,11 @@ export class PlansService {
     this.logger.debug(`Fetched ${calendarEvents.length} calendar events for conflict detection`);
 
     // 6. Select planning strategy based on tier
-    let aiResponse: any;
     let planJson: any;
     let reasoning: string | null = null;
     let aiModel: string;
     let tokenUsage = 0;
-    let complexity = 'simple';
+    const complexity = 'simple';
     let qualityScore = 0;
     let generationCost = 0;
 

@@ -1,13 +1,11 @@
 import { Injectable, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
+import { SubscriptionTierType } from '@microplanner/database';
 import { TIER_LIMITS } from '../../modules/billing/billing.constants';
 
 // Limits come from billing.constants (single source of truth, shared with
 // the billing checkFeatureLimit checks). Infinity = unlimited.
 const isUnlimited = (limit: number) => limit === Infinity || limit === -1;
-
-type LimitType = 'goals' | 'plans' | 'tasks';
 
 /**
  * Service to check and enforce usage limits based on user's tier
