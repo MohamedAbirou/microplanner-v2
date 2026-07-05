@@ -408,6 +408,13 @@ export class TasksAPI {
     return data.tasks || data.data || data;
   }
 
+  async getTasksByPlanId(planId: string) {
+    const { data } = await this.client.get('/', {
+      params: { planId },
+    });
+    return data.tasks || data.data || [];
+  }
+
   async getTasksByGoal(goalId: string, userId: string) {
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
@@ -966,17 +973,46 @@ export class AnalyticsAPI {
     const { data } = await this.client.get('/metrics', {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // REST wraps the payload: { message, dashboardStats }
+    return data.dashboardStats || data;
   }
 
   async getWeeklyStats(userId: string, weekStart?: string) {
-    // Note: /weekly endpoint doesn't exist in analytics controller
-    // Using /metrics with date filtering instead
+    // No dedicated /weekly endpoint — synthesize the WeeklyStats shape from
+    // the dashboard metrics so every non-null schema field is present.
     const { data } = await this.client.get('/metrics', {
       headers: { 'x-user-id': userId },
       params: { weekStart },
     });
-    return data;
+    const m = data.dashboardStats || data;
+
+    const start = weekStart ? new Date(weekStart) : new Date();
+    if (!weekStart) {
+      const day = start.getDay();
+      start.setDate(start.getDate() + (day === 0 ? -6 : 1 - day)); // Monday
+    }
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+
+    return {
+      weekStart: start.toISOString(),
+      weekEnd: end.toISOString(),
+      totalTasks: m.weekTasks ?? 0,
+      completedTasks: m.weekCompleted ?? 0,
+      completionRate: m.weekCompletionRate ?? 0,
+      totalHoursScheduled: 0,
+      totalHoursCompleted: 0,
+      focusHours: 0,
+      activeGoals: m.activeGoals ?? 0,
+      goalsCompletionRate: m.weekCompletionRate ?? 0,
+      averageProductivityScore: null,
+      bestDay: null,
+      worstDay: null,
+      currentStreak: m.currentStreak ?? 0,
+      longestStreak: m.longestStreak ?? 0,
+    };
   }
 
   async getProductivityScores(userId: string, startDate: string, endDate: string) {

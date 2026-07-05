@@ -11,8 +11,8 @@ export interface UserMetrics {
   weekCompleted: number;
   weekCompletionRate: number;
   activeGoals: number;
-  currentStreak: Promise<number>;
-  longestStreak: Promise<number>;
+  currentStreak: number;
+  longestStreak: number;
   totalPlans: number;
   averagePlanQuality: number;
 }
@@ -66,6 +66,13 @@ export class AnalyticsService {
     // Calculate current week boundaries (Monday-Sunday)
     const { weekStartDate, weekEndDate } = this.calculateCurrentWeekBoundaries();
 
+    // Today boundaries (scheduledDate is stored at midnight, but use a full
+    // day range to be robust against timezone offsets in stored values)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
     const [
       todayTasks,
       todayCompleted,
@@ -75,9 +82,11 @@ export class AnalyticsService {
       totalPlans,
       avgAggregate,
     ] = await Promise.all([
-      this.prisma.task.count({ where: { userId, scheduledDate: Date.now().toLocaleString() } }),
       this.prisma.task.count({
-        where: { userId, scheduledDate: Date.now().toLocaleString(), isCompleted: true },
+        where: { userId, scheduledDate: { gte: todayStart, lte: todayEnd } },
+      }),
+      this.prisma.task.count({
+        where: { userId, scheduledDate: { gte: todayStart, lte: todayEnd }, isCompleted: true },
       }),
       this.prisma.task.count({
         where: {
@@ -153,8 +162,7 @@ export class AnalyticsService {
       return { current, longest };
     })();
 
-    const currentStreak = streaksPromise.then(s => s.current);
-    const longestStreak = streaksPromise.then(s => s.longest);
+    const { current: currentStreak, longest: longestStreak } = await streaksPromise;
 
     return {
       todayTasks,

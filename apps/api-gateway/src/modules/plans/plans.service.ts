@@ -337,7 +337,37 @@ export class PlansService {
    */
   async accept(planId: string, userId: string): Promise<WeeklyPlan> {
     // Verify ownership
-    await this.findOne(planId, userId);
+    const plan = await this.findOne(planId, userId);
+
+    // Materialize the plan's scheduled tasks into real Task rows so they show
+    // up on the calendar/task views. Idempotent: skip if rows already exist
+    // (e.g. plan re-accepted, or created from a template that made tasks).
+    const existingTaskCount = await this.prisma.task.count({ where: { planId } });
+    const scheduledTasks: any[] = (plan.planJson as any)?.tasks || [];
+
+    if (existingTaskCount === 0 && scheduledTasks.length > 0) {
+      await this.prisma.task.createMany({
+        data: scheduledTasks
+          .filter(t => t && t.title && t.scheduledDate && t.startTime)
+          .map(t => ({
+            userId,
+            planId,
+            goalId: t.goalId || null,
+            title: t.title,
+            notes: t.notes || null,
+            scheduledDate: new Date(t.scheduledDate),
+            startTime: t.startTime,
+            endTime: t.endTime,
+            durationMinutes: t.durationMinutes || 30,
+            aiGenerated: t.aiGenerated ?? true,
+            aiReasoning: t.aiReasoning || null,
+            manuallyAdded: false,
+          })),
+      });
+      this.logger.log(
+        `Materialized ${scheduledTasks.length} tasks for accepted plan ${planId}`
+      );
+    }
 
     this.logger.log(`Plan ${planId} accepted by user ${userId}`);
 
@@ -346,6 +376,7 @@ export class PlansService {
       data: {
         status: PlanStatus.ACCEPTED,
         acceptedAt: new Date(),
+        appliedAt: new Date(),
         userSatisfaction: 'accepted',
       },
     });

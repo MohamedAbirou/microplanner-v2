@@ -53,7 +53,6 @@ services:
       PORT: 3001
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
-      PLANNING_SERVICE_URL: http://planning-service:8000
     volumes:
       - ./apps/api-gateway:/app/apps/api-gateway
       - ./packages:/app/packages
@@ -64,7 +63,32 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      planning-service:
+    networks:
+      - microplanner-network
+    command: pnpm dev
+
+  # GraphQL Gateway (Apollo Server) — the API the web app talks to
+  graphql-gateway:
+    build:
+      context: .
+      dockerfile: ./apps/graphql-gateway/Dockerfile
+    container_name: microplanner-graphql-gateway
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      API_GATEWAY_URL: http://api-gateway:3001
+      NEST_GRAPHQL_URL: http://api-gateway:3001/graphql
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CLERK_DOMAIN: ${CLERK_DOMAIN}
+      FRONTEND_URL: http://localhost:3000
+    depends_on:
+      redis:
+        condition: service_healthy
+      api-gateway:
         condition: service_started
     networks:
       - microplanner-network

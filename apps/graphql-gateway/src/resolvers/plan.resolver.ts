@@ -82,15 +82,55 @@ export const planResolvers = {
         // Fallback if loader not available
         return plan.tasks || [];
       }
-      return taskByPlanLoader.load(plan.id);
+
+      const materialized = await taskByPlanLoader.load(plan.id);
+      if (materialized?.length) return materialized;
+
+      // DRAFT plans have no Task rows yet — surface the proposed schedule
+      // from planJson so the review page can render it before acceptance.
+      const draft = (plan.planJson as any)?.tasks || [];
+      const now = new Date().toISOString();
+      return draft.map((t: any, i: number) => ({
+        id: `${plan.id}:draft:${i}`,
+        userId: plan.userId,
+        planId: plan.id,
+        goalId: t.goalId || null,
+        title: t.title,
+        notes: t.notes || null,
+        priority: t.priority ?? 2,
+        tags: [],
+        scheduledDate: t.scheduledDate,
+        startTime: t.startTime,
+        endTime: t.endTime,
+        durationMinutes: t.durationMinutes ?? 30,
+        isCompleted: false,
+        isSkipped: false,
+        aiGenerated: t.aiGenerated ?? true,
+        manuallyAdded: false,
+        aiReasoning: t.aiReasoning || null,
+        timeSpentMinutes: 0,
+        isTimerRunning: false,
+        syncStatus: 'PENDING',
+        createdAt: now,
+        updatedAt: now,
+      }));
     },
 
-    goals: async (plan: any, _: any, { goalByPlanLoader }: any) => {
-      if (!goalByPlanLoader) {
-        // Fallback if loader not available
+    goals: async (plan: any, _: any, { taskByPlanLoader, goalLoader }: any) => {
+      if (!taskByPlanLoader || !goalLoader) {
         return plan.goals || [];
       }
-      return goalByPlanLoader.load(plan.id);
+
+      // Derive the plan's goals from its tasks (materialized rows first,
+      // falling back to the draft schedule stored in planJson)
+      const tasks = await taskByPlanLoader.load(plan.id);
+      const source = tasks?.length ? tasks : (plan.planJson as any)?.tasks || [];
+      const goalIds: string[] = Array.from(
+        new Set(source.map((t: any) => t.goalId).filter(Boolean))
+      );
+
+      const goals = await Promise.all(goalIds.map((id) => goalLoader.load(id)));
+      return goals.filter(Boolean);
     },
 
     user: async (plan: any, _: any, { userLoader }: any) => {

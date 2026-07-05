@@ -106,11 +106,9 @@ async function verifyToken(token: string | undefined): Promise<any> {
 // Combine all resolvers
 const resolvers = {
   Query: {
+    // user.resolver.ts provides `me` (fetches the DB user via the REST API);
+    // do not override it here — the JWT payload is not a User object.
     ...allResolvers.Query,
-    me: async (_: any, __: any, { user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return user;
-    },
   },
   Mutation: {
     ...allResolvers.Mutation,

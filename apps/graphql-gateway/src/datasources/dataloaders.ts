@@ -76,9 +76,12 @@ export function createProjectLoader(projectsAPI: ProjectsAPI, userId: string) {
  */
 export function createTaskByPlanLoader(tasksAPI: TasksAPI) {
   return new DataLoader(async (planIds: readonly string[]) => {
-    // Note: This requires implementing getTasksByPlanIds in TasksAPI
-    // For now, return empty arrays for each plan
-    return planIds.map(() => []);
+    const results = await Promise.all(
+      planIds.map((planId) =>
+        tasksAPI.getTasksByPlanId(planId as string).catch(() => [])
+      )
+    );
+    return results;
   });
 }
 
