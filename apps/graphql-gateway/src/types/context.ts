@@ -1,6 +1,5 @@
 import type DataLoader from 'dataloader';
 import type {
-  WaitlistAPI,
   UserAPI,
   OnboardingAPI,
   GoalsAPI,
@@ -28,7 +27,6 @@ export interface GraphQLContext {
   user: AuthenticatedUser | null;
   token: string | null;
   dataSources: {
-    waitlistAPI: WaitlistAPI;
     userAPI: UserAPI;
     onboardingAPI: OnboardingApiClass;
     goalsAPI: GoalsAPI;

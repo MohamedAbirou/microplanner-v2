@@ -14,7 +14,6 @@ import { typeDefs } from './schema/schema';
 import { resolvers as allResolvers } from './resolvers';
 // Import all datasources
 import {
-  WaitlistAPI,
   UserAPI,
   OnboardingAPI,
   GoalsAPI,
@@ -256,7 +255,6 @@ async function startServer() {
         const userId = user?.userId || user?.sub || '';
 
         // Create all data sources
-        const waitlistAPI = new WaitlistAPI(token);
         const userAPI = new UserAPI(token);
         const onboardingAPI = new OnboardingAPI(token);
         const goalsAPI = new GoalsAPI(token);
@@ -285,7 +283,6 @@ async function startServer() {
           redis,
           pubsub,
           dataSources: {
-            waitlistAPI,
             userAPI,
             onboardingAPI,
             goalsAPI,

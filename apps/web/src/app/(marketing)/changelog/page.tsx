@@ -12,7 +12,7 @@ const changelog = [
     type: 'launch',
     items: [
       { type: 'new', text: 'Marketing website with ultra-premium design' },
-      { type: 'new', text: 'Email waitlist with real-time counter' },
+      { type: 'new', text: 'Marketing website with sign-up flow' },
       { type: 'new', text: 'Brand identity and design system' },
       { type: 'new', text: 'Legal pages (Terms, Privacy, Security)' },
       { type: 'new', text: 'Public roadmap and founder story' },
@@ -89,11 +89,11 @@ export default function ChangelogPage() {
             <div className="mt-12 rounded-xl border border-border bg-card p-8 text-center">
               <h3 className="mb-4 text-xl font-bold">Get Notified of Updates</h3>
               <p className="mb-6 text-muted-foreground">
-                Join the waitlist to receive notifications when we ship new features.
+                Create a free account to get notified when we ship new features.
               </p>
-              <Link href="/waitlist">
+              <Link href="/sign-up">
                 <Button size="lg">
-                  Join Waitlist
+                  Get Started Free
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>

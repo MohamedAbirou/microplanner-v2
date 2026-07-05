@@ -28,7 +28,6 @@ import { SchedulingModule } from './modules/scheduling/scheduling.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ProductivityModule } from './modules/productivity/productivity.module';
 import { RedisModule } from './redis/redis.module';
-import { WaitlistModule } from './modules/waitlist/waitlist.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 
 /**
@@ -187,7 +186,6 @@ function getGraphQLErrorCode(statusCode: number): string {
     ProductivityModule,
     HealthModule,
     EmailModule,
-    WaitlistModule,
     OnboardingModule,
   ],
   controllers: [AppController],

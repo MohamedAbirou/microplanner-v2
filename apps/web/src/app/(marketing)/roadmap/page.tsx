@@ -52,7 +52,7 @@ export default function RoadmapPage() {
                   </li>
                   <li className="flex gap-2">
                     <CheckCircle2 className="h-4 w-4 text-success-500 mt-0.5" />
-                    <span>Functional email waitlist</span>
+                    <span>Marketing website with sign-up flow</span>
                   </li>
                   <li className="flex gap-2">
                     <CheckCircle2 className="h-4 w-4 text-success-500 mt-0.5" />
@@ -190,11 +190,11 @@ export default function RoadmapPage() {
             <div className="mt-16 rounded-2xl border border-border bg-card p-8 text-center">
               <h2 className="mb-4 text-2xl font-bold">Want to Influence the Roadmap?</h2>
               <p className="mb-6 text-muted-foreground">
-                Join the waitlist and get early access. Your feedback will shape what we build next.
+                Create a free account and get early access. Your feedback will shape what we build next.
               </p>
-              <Link href="/waitlist">
+              <Link href="/sign-up">
                 <Button size="lg">
-                  Join Waitlist
+                  Get Started Free
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>

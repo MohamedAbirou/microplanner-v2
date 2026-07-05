@@ -68,10 +68,10 @@ export default function HomePage() {
             {/* CTA Buttons */}
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/waitlist"
+                href="/sign-up"
                 className="group inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-primary px-6 py-3 text-sm font-semibold text-white shadow-primary-glow transition-all hover:shadow-xl hover:scale-105"
               >
-                Join Waitlist
+                Get Started Free
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
@@ -396,7 +396,7 @@ export default function HomePage() {
                 </li>
               </ul>
               <Link
-                href="/waitlist"
+                href="/sign-up"
                 className="block w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-semibold transition-colors hover:bg-background"
               >
                 Get Started
@@ -431,7 +431,7 @@ export default function HomePage() {
                 </li>
               </ul>
               <Link
-                href="/waitlist"
+                href="/sign-up"
                 className="block w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-semibold transition-colors hover:bg-background"
               >
                 Choose Starter
@@ -479,7 +479,7 @@ export default function HomePage() {
                 </li>
               </ul>
               <Link
-                href="/waitlist"
+                href="/sign-up"
                 className="block w-full rounded-lg bg-gradient-primary py-2 text-center text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
               >
                 Choose Pro
@@ -518,7 +518,7 @@ export default function HomePage() {
                 </li>
               </ul>
               <Link
-                href="/waitlist"
+                href="/sign-up"
                 className="block w-full rounded-lg border border-border bg-background py-2 text-center text-sm font-semibold transition-colors hover:bg-background"
               >
                 Choose Premium
@@ -602,10 +602,10 @@ export default function HomePage() {
               Join thousands of users who crush their goals with MicroPlanner
             </p>
             <Link
-              href="/waitlist"
+              href="/sign-up"
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-600 transition-all hover:scale-105 hover:shadow-xl"
             >
-              Join Waitlist
+              Get Started Free
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

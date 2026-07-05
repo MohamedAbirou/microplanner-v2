@@ -47,23 +47,8 @@ type GoalSuggestion {
   title: String!
 }
 
-input JoinWaitlistInput {
-  email: String!
-  name: String
-  referralSource: String
-  useCase: String
-}
-
-type JoinWaitlistResult {
-  email: String!
-  message: String!
-  position: Int
-  success: Boolean!
-}
-
 type Mutation {
   completeOnboarding(input: CompleteOnboardingInput!): OnboardingResult!
-  joinWaitlist(input: JoinWaitlistInput!): JoinWaitlistResult!
   updateOnboardingProgress(input: UpdateOnboardingProgressInput!): Boolean!
 }
 
@@ -81,7 +66,6 @@ type ProductivityWindow {
 type Query {
   calculateSleepRecommendation(input: CalculateSleepInput!): SleepRecommendationOutput!
   getGoalSuggestions(input: GetGoalSuggestionsInput!): [GoalSuggestion!]!
-  waitlistStats: WaitlistStats!
 }
 
 type SleepRecommendationOutput {
@@ -114,13 +98,4 @@ enum UserContext {
   PARENT_CAREGIVER
   RETIRED
   STUDENT
-}
-
-type WaitlistStats {
-  approved: Int!
-  averageWaitDays: Int
-  converted: Int!
-  invited: Int!
-  pending: Int!
-  total: Int!
 }

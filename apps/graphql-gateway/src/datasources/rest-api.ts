@@ -23,14 +23,12 @@ import type {
   CreateWebhookInput,
   GeneratePlanInput,
   InviteTeamMemberInput,
-  JoinWaitlistInput,
   MoveTaskInKanbanInput,
   QueryGoalsArgs,
   QueryPlanTemplatesArgs,
   QueryPlansArgs,
   QueryProjectsArgs,
   QueryTasksArgs,
-  QueryWaitlistEntriesArgs,
   GoogleCalendarApiEvent,
   TaskQueryFilterSource,
   RestListParams,
@@ -101,60 +99,6 @@ function createApiClient(baseURL: string, token?: string): AxiosInstance {
 }
 
 export { OnboardingAPI } from './onboarding-api';
-
-// ==================== WAITLIST API ====================
-export class WaitlistAPI {
-  private client: AxiosInstance;
-
-  constructor(token?: string) {
-    this.client = createApiClient(`${API_BASE_URL}/api/v1/waitlist`, token);
-  }
-
-  // Join waitlist
-  async joinWaitlist(input: JoinWaitlistInput) {
-    const { data } = await this.client.post('/', input);
-    return data;
-  }
-
-  // Get waitlist stats
-  async getWaitlistStats() {
-    const { data } = await this.client.get('/stats');
-    return data;
-  }
-
-  // Get waitlist entry by email (admin)
-  async getWaitlistEntry(email: string, userId: string) {
-    const { data } = await this.client.get(`/entry/${email}`, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
-  }
-
-  // Get all waitlist entries (admin)
-  async getWaitlistEntries(userId: string, filters: QueryWaitlistEntriesArgs) {
-    const { data } = await this.client.get('/entries', {
-      headers: { 'x-user-id': userId },
-      params: filters,
-    });
-    return data;
-  }
-
-  // Update waitlist status (admin)
-  async updateWaitlistStatus(id: string, userId: string, status: string) {
-    const { data } = await this.client.put(`/${id}/status`, { status }, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
-  }
-
-  // Send invitation (admin)
-  async sendWaitlistInvitation(id: string, userId: string) {
-    const { data } = await this.client.post(`/${id}/invite`, {}, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
-  }
-}
 
 // ==================== USER API ====================
 export class UserAPI {

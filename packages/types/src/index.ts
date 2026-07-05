@@ -97,13 +97,6 @@ export type ReferralStatus =
   | 'ACTIVE'
   | 'EXPIRED';
 
-export type WaitlistStatus =
-  | 'PENDING'
-  | 'INVITED'
-  | 'CONVERTED'
-  | 'DECLINED'
-  | 'INVALID';
-
 export type NotificationType =
   | 'TASK_DUE'
   | 'GOAL_MILESTONE'
@@ -582,42 +575,6 @@ export interface CreatePlanTemplateDto {
   isPublic?: boolean;
   tags?: string[];
   tasks: TemplateTask[];
-}
-
-// ============================================
-// Waitlist Types
-// ============================================
-
-export interface WaitlistEntry {
-  id: string;
-  email: string;
-  name?: string;
-  useCase?: string;
-  referralSource?: string;
-  status: WaitlistStatus;
-  position: number;
-  invitedAt?: string;
-  convertedAt?: string;
-  emailVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface JoinWaitlistDto {
-  email: string;
-  name?: string;
-  useCase?: string;
-  referralSource?: string;
-}
-
-export interface WaitlistStats {
-  total: number;
-  pending: number;
-  invited: number;
-  converted: number;
-  declined: number;
-  invalid: number;
-  averageWaitDays: number;
 }
 
 // ============================================

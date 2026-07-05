@@ -62,7 +62,7 @@ export default function HelpPage() {
                 <h2 className="text-xl font-bold">We're Still Building!</h2>
               </div>
               <p className="mb-4 text-muted-foreground">
-                <strong className="text-foreground">Current status:</strong> Phase 0 complete (marketing site & waitlist).
+                <strong className="text-foreground">Current status:</strong> Phase 0 complete (marketing site).
                 Building Phase 1 (core MVP) right now.
               </p>
               <p className="mb-4 text-muted-foreground">
@@ -113,11 +113,11 @@ export default function HelpPage() {
               {[
                 {
                   q: 'When will MicroPlanner launch?',
-                  a: 'Phase 1 (core MVP) is planned for December 2025. You can follow progress on the roadmap and by joining the waitlist for updates.',
+                  a: 'Phase 1 (core MVP) is planned for December 2025. You can follow progress on the roadmap and create a free account for updates.',
                 },
                 {
                   q: 'Can I use MicroPlanner now?',
-                  a: 'Not yet! We\'re currently building Phase 1. Join the waitlist to be among the first to get access when it launches.',
+                  a: 'Yes! Sign up for a free account to get started. Core features are available now, with more shipping during Phase 1.',
                 },
                 {
                   q: 'How much will it cost?',
@@ -129,7 +129,7 @@ export default function HelpPage() {
                 },
                 {
                   q: 'How can I follow the progress?',
-                  a: 'Join the waitlist for email updates, follow on LinkedIn (mohamed-abirou), or check the blog after launch for weekly build logs.',
+                  a: 'Create a free account for email updates, follow on LinkedIn (mohamed-abirou), or check the blog after launch for weekly build logs.',
                 },
                 {
                   q: 'Will there be tutorials and docs?',
@@ -166,16 +166,11 @@ export default function HelpPage() {
               For pre-launch questions or feedback, reach out directly. Email support will be available after Phase 1 launches.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link href="/waitlist">
+              <Link href="/sign-up">
                 <Button size="lg">
-                  Join Waitlist
+                  Get Started Free
                 </Button>
               </Link>
-              {/* <Link href="/waitlist">
-                <Button variant="outline" size="lg">
-                  Join Waitlist
-                </Button>
-              </Link> */}
             </div>
           </div>
         </div>

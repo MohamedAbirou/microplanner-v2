@@ -250,9 +250,9 @@ export default function StoryPage() {
                   struggles. If you want to follow along or be among the first to try MicroPlanner:
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                  <Link href="/waitlist">
+                  <Link href="/sign-up">
                     <Button size="lg">
-                      Join Waitlist
+                      Get Started Free
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>

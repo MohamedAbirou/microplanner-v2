@@ -20,7 +20,6 @@ const isPublicRoute = createRouteMatcher([
   '/story(.*)',
   '/changelog(.*)',
   '/glossary(.*)',
-  '/waitlist(.*)',
 ]);
 
 /**

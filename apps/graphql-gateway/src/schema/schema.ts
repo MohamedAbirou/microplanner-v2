@@ -6,7 +6,6 @@ import { join } from 'path';
 const scalarsSchema = readFileSync(join(__dirname, 'scalars.graphql'), 'utf-8');
 const indexSchema = readFileSync(join(__dirname, 'index.graphql'), 'utf-8');
 const userSchema = readFileSync(join(__dirname, 'user.graphql'), 'utf-8');
-const waitlistSchema = readFileSync(join(__dirname, 'waitlist.graphql'), 'utf-8');
 const onboardingSchema = readFileSync(join(__dirname, 'onboarding.graphql'), 'utf-8');
 
 // Load all schemas for core app features
@@ -32,7 +31,6 @@ export const typeDefs = gql`
   ${scalarsSchema}
   ${indexSchema}
   ${userSchema}
-  ${waitlistSchema}
   ${onboardingSchema}
   ${dashboardSchema}
   ${goalSchema}

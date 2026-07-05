@@ -7,7 +7,6 @@ import type {
   SubscriptionTier,
   SubscriptionStatus,
   EnergyPattern,
-  WaitlistStatus,
   PlanStatus,
   SyncStatus,
   MemoryType,
@@ -18,7 +17,6 @@ import type {
 export type SubscriptionTierType = SubscriptionTier;
 export type SubscriptionStatusType = SubscriptionStatus;
 export type EnergyPatternType = EnergyPattern;
-export type WaitlistStatusType = WaitlistStatus;
 export type PlanStatusType = PlanStatus;
 export type SyncStatusType = SyncStatus;
 export type MemoryTypeType = MemoryType;

@@ -19,7 +19,7 @@ const { buildASTSchema, parse, validate, specifiedRules } = require('graphql');
 // ---------- 1. Build the gateway schema ----------
 const schemaDir = join(root, 'apps/graphql-gateway/src/schema');
 const schemaFiles = [
-  'scalars.graphql', 'index.graphql', 'user.graphql', 'waitlist.graphql',
+  'scalars.graphql', 'index.graphql', 'user.graphql',
   'onboarding.graphql', 'dashboard.graphql', 'goal.graphql', 'task.graphql',
   'project.graphql', 'productivity.graphql', 'plan.graphql', 'analytics.graphql',
   'calendar.graphql', 'teams.graphql', 'scheduling.graphql',
@@ -34,8 +34,6 @@ const docFiles = [
   'apps/web/src/graphql/onboarding.graphql.ts',
   'apps/web/src/graphql/operations-extended.ts',
   'apps/web/src/graphql/operations.ts',
-  'apps/web/src/lib/graphql/mutations/waitlist.ts',
-  'apps/web/src/lib/graphql/queries/waitlist.ts',
 ];
 
 let total = 0;

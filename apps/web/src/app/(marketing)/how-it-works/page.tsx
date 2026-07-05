@@ -184,9 +184,9 @@ export default function HowItWorksPage() {
             <p className="mb-6 text-muted-foreground">
               See how MicroPlanner can transform your planning in action.
             </p>
-            <Link href="/waitlist">
+            <Link href="/sign-up">
               <Button size="lg">
-                Join Waitlist
+                Get Started Free
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>

@@ -13,7 +13,6 @@ import { schedulingResolvers } from './scheduling.resolver';
 import { taskResolvers } from './task.resolver';
 import { teamsResolvers } from './teams.resolver';
 import { userResolvers } from './user.resolver';
-import { waitlistResolvers } from './waitlist.resolver';
 
 /**
  * Merge all resolvers
@@ -21,7 +20,6 @@ import { waitlistResolvers } from './waitlist.resolver';
 export const resolvers = {
   Query: {
     ...userResolvers.Query,
-    ...waitlistResolvers.Query,
     ...onboardingResolvers.Query,
     ...goalResolvers.Query,
     ...taskResolvers.Query,
@@ -39,7 +37,6 @@ export const resolvers = {
 
   Mutation: {
     ...userResolvers.Mutation,
-    ...waitlistResolvers.Mutation,
     ...onboardingResolvers.Mutation,
     ...goalResolvers.Mutation,
     ...taskResolvers.Mutation,

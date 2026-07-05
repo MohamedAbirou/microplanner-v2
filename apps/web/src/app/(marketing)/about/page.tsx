@@ -49,8 +49,8 @@ export default function AboutPage() {
                 </p>
 
                 <p className="mb-4">
-                  <strong className="text-foreground">Current status:</strong> Pre-launch. Waitlist
-                  only. 0 paying customers (yet). Building Phase 1 right now.
+                  <strong className="text-foreground">Current status:</strong> Early access open.
+                  Sign up free and start planning. Building Phase 1 right now.
                 </p>
 
                 <p>
@@ -235,14 +235,14 @@ export default function AboutPage() {
               <h2 className="mb-4 text-2xl font-bold">Want to Follow the Journey?</h2>
 
               <p className="mb-6 text-muted-foreground">
-                Join the waitlist to get updates as I build, ship, and (hopefully) grow MicroPlanner
-                from 0 to something meaningful.
+                Create a free account to start planning, and follow along as I build, ship, and
+                (hopefully) grow MicroPlanner from 0 to something meaningful.
               </p>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <Link href="/waitlist">
+                <Link href="/sign-up">
                   <Button size="lg">
-                    Join Waitlist
+                    Get Started Free
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>

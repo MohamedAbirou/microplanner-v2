@@ -30,8 +30,8 @@ export function PageTemplate({
   description,
   features = [],
   benefits = [],
-  ctaText = 'Join Waitlist',
-  ctaLink = '/waitlist',
+  ctaText = 'Get Started Free',
+  ctaLink = '/sign-up',
   children,
 }: PageTemplateProps) {
   return (

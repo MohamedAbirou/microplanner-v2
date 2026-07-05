@@ -163,9 +163,9 @@ export default function FeaturesPage() {
             <p className="mb-6 text-muted-foreground">
               Start with our free plan today. No credit card required.
             </p>
-            <Link href="/waitlist">
+            <Link href="/sign-up">
               <Button size="lg">
-                Join Waitlist
+                Get Started Free
               </Button>
             </Link>
           </div>

@@ -712,21 +712,6 @@ export type Invoice = {
   status: Scalars['String']['output'];
 };
 
-export type JoinWaitlistInput = {
-  email: Scalars['String']['input'];
-  name?: InputMaybe<Scalars['String']['input']>;
-  referralSource?: InputMaybe<Scalars['String']['input']>;
-  useCase?: InputMaybe<WaitlistUseCase>;
-};
-
-export type JoinWaitlistResult = {
-  __typename?: 'JoinWaitlistResult';
-  email?: Maybe<Scalars['String']['output']>;
-  message: Scalars['String']['output'];
-  position?: Maybe<Scalars['Int']['output']>;
-  success: Scalars['Boolean']['output'];
-};
-
 export type KanbanBoard = {
   __typename?: 'KanbanBoard';
   columns: Array<KanbanColumn>;
@@ -824,7 +809,6 @@ export type Mutation = {
   generatePlan: Plan;
   initiateCalendarAuth: CalendarAuthPayload;
   inviteTeamMember: TeamInvitation;
-  joinWaitlist: JoinWaitlistResult;
   logTime: TimeEntry;
   markNotificationAsRead: Scalars['Boolean']['output'];
   moveTaskInKanban: Scalars['Boolean']['output'];
@@ -833,7 +817,6 @@ export type Mutation = {
   resumeGoal: Goal;
   resumeSubscription: UserSubscription;
   retryWebhookDelivery: WebhookDelivery;
-  sendWaitlistInvitation: Scalars['Boolean']['output'];
   skipTask: Task;
   startTimer: TimeEntry;
   stopTimer: TimeEntry;
@@ -867,7 +850,6 @@ export type Mutation = {
   updateTeamMemberRole: TeamMember;
   updateUserProfile: User;
   updateUserSettings: UserSettings;
-  updateWaitlistStatus: WaitlistEntry;
   updateWebhook: Webhook;
   updateWorkHours: WorkHours;
   upgradeSubscription: CheckoutSession;
@@ -1127,11 +1109,6 @@ export type MutationInviteTeamMemberArgs = {
 };
 
 
-export type MutationJoinWaitlistArgs = {
-  input: JoinWaitlistInput;
-};
-
-
 export type MutationLogTimeArgs = {
   date?: InputMaybe<Scalars['DateTime']['input']>;
   minutes: Scalars['Int']['input'];
@@ -1168,11 +1145,6 @@ export type MutationResumeGoalArgs = {
 
 export type MutationRetryWebhookDeliveryArgs = {
   deliveryId: Scalars['ID']['input'];
-};
-
-
-export type MutationSendWaitlistInvitationArgs = {
-  id: Scalars['ID']['input'];
 };
 
 
@@ -1337,12 +1309,6 @@ export type MutationUpdateUserProfileArgs = {
 
 export type MutationUpdateUserSettingsArgs = {
   input: UpdateUserSettingsInput;
-};
-
-
-export type MutationUpdateWaitlistStatusArgs = {
-  id: Scalars['ID']['input'];
-  status: WaitlistStatus;
 };
 
 
@@ -1698,9 +1664,6 @@ export type Query = {
   usageStats: UsageStats;
   user?: Maybe<User>;
   userSettings?: Maybe<UserSettings>;
-  waitlistEntries: Array<WaitlistEntry>;
-  waitlistEntry?: Maybe<WaitlistEntry>;
-  waitlistStats: WaitlistStats;
   webhook?: Maybe<Webhook>;
   webhookDeliveries: Array<WebhookDelivery>;
   webhooks: Array<Webhook>;
@@ -1977,18 +1940,6 @@ export type QueryUpcomingTasksArgs = {
 
 export type QueryUserArgs = {
   id: Scalars['ID']['input'];
-};
-
-
-export type QueryWaitlistEntriesArgs = {
-  skip?: InputMaybe<Scalars['Int']['input']>;
-  status?: InputMaybe<WaitlistStatus>;
-  take?: InputMaybe<Scalars['Int']['input']>;
-};
-
-
-export type QueryWaitlistEntryArgs = {
-  email: Scalars['String']['input'];
 };
 
 
@@ -2815,42 +2766,6 @@ export type UserSubscription = {
   userId: Scalars['ID']['output'];
 };
 
-export type WaitlistEntry = {
-  __typename?: 'WaitlistEntry';
-  createdAt: Scalars['DateTime']['output'];
-  email: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  name?: Maybe<Scalars['String']['output']>;
-  position: Scalars['Int']['output'];
-  referralSource?: Maybe<Scalars['String']['output']>;
-  status: WaitlistStatus;
-  updatedAt: Scalars['DateTime']['output'];
-  useCase?: Maybe<WaitlistUseCase>;
-};
-
-export type WaitlistStats = {
-  __typename?: 'WaitlistStats';
-  approved: Scalars['Int']['output'];
-  averageWaitDays?: Maybe<Scalars['Float']['output']>;
-  converted: Scalars['Int']['output'];
-  invited: Scalars['Int']['output'];
-  pending: Scalars['Int']['output'];
-  total: Scalars['Int']['output'];
-};
-
-export type WaitlistStatus =
-  | 'APPROVED'
-  | 'CONVERTED'
-  | 'DECLINED'
-  | 'INVITED'
-  | 'PENDING';
-
-export type WaitlistUseCase =
-  | 'BUSINESS'
-  | 'OTHER'
-  | 'PERSONAL'
-  | 'TEAM';
-
 export type Webhook = {
   __typename?: 'Webhook';
   createdAt: Scalars['DateTime']['output'];
@@ -3139,8 +3054,6 @@ export type ResolversTypes = ResolversObject<{
   InviteTeamMemberInput: InviteTeamMemberInput;
   Invoice: ResolverTypeWrapper<Invoice>;
   JSON: ResolverTypeWrapper<Scalars['JSON']['output']>;
-  JoinWaitlistInput: JoinWaitlistInput;
-  JoinWaitlistResult: ResolverTypeWrapper<JoinWaitlistResult>;
   KanbanBoard: ResolverTypeWrapper<KanbanBoard>;
   KanbanColumn: ResolverTypeWrapper<KanbanColumn>;
   MemberStatus: MemberStatus;
@@ -3237,10 +3150,6 @@ export type ResolversTypes = ResolversObject<{
   UserContext: UserContext;
   UserSettings: ResolverTypeWrapper<UserSettings>;
   UserSubscription: ResolverTypeWrapper<UserSubscription>;
-  WaitlistEntry: ResolverTypeWrapper<WaitlistEntry>;
-  WaitlistStats: ResolverTypeWrapper<WaitlistStats>;
-  WaitlistStatus: WaitlistStatus;
-  WaitlistUseCase: WaitlistUseCase;
   Webhook: ResolverTypeWrapper<Webhook>;
   WebhookDelivery: ResolverTypeWrapper<WebhookDelivery>;
   WebhookEvent: WebhookEvent;
@@ -3323,8 +3232,6 @@ export type ResolversParentTypes = ResolversObject<{
   InviteTeamMemberInput: InviteTeamMemberInput;
   Invoice: Invoice;
   JSON: Scalars['JSON']['output'];
-  JoinWaitlistInput: JoinWaitlistInput;
-  JoinWaitlistResult: JoinWaitlistResult;
   KanbanBoard: KanbanBoard;
   KanbanColumn: KanbanColumn;
   MoveTaskInKanbanInput: MoveTaskInKanbanInput;
@@ -3402,8 +3309,6 @@ export type ResolversParentTypes = ResolversObject<{
   User: User;
   UserSettings: UserSettings;
   UserSubscription: UserSubscription;
-  WaitlistEntry: WaitlistEntry;
-  WaitlistStats: WaitlistStats;
   Webhook: Webhook;
   WebhookDelivery: WebhookDelivery;
   WeekOverview: WeekOverview;
@@ -3774,14 +3679,6 @@ export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
   name: 'JSON';
 }
 
-export type JoinWaitlistResultResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['JoinWaitlistResult'] = ResolversParentTypes['JoinWaitlistResult']> = ResolversObject<{
-  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  position?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
 export type KanbanBoardResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['KanbanBoard'] = ResolversParentTypes['KanbanBoard']> = ResolversObject<{
   columns?: Resolver<Array<ResolversTypes['KanbanColumn']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
@@ -3861,7 +3758,6 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   generatePlan?: Resolver<ResolversTypes['Plan'], ParentType, ContextType, RequireFields<MutationGeneratePlanArgs, 'input'>>;
   initiateCalendarAuth?: Resolver<ResolversTypes['CalendarAuthPayload'], ParentType, ContextType, RequireFields<MutationInitiateCalendarAuthArgs, 'provider'>>;
   inviteTeamMember?: Resolver<ResolversTypes['TeamInvitation'], ParentType, ContextType, RequireFields<MutationInviteTeamMemberArgs, 'input'>>;
-  joinWaitlist?: Resolver<ResolversTypes['JoinWaitlistResult'], ParentType, ContextType, RequireFields<MutationJoinWaitlistArgs, 'input'>>;
   logTime?: Resolver<ResolversTypes['TimeEntry'], ParentType, ContextType, RequireFields<MutationLogTimeArgs, 'minutes' | 'taskId'>>;
   markNotificationAsRead?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationMarkNotificationAsReadArgs, 'id'>>;
   moveTaskInKanban?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationMoveTaskInKanbanArgs, 'input'>>;
@@ -3870,7 +3766,6 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   resumeGoal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<MutationResumeGoalArgs, 'id'>>;
   resumeSubscription?: Resolver<ResolversTypes['UserSubscription'], ParentType, ContextType>;
   retryWebhookDelivery?: Resolver<ResolversTypes['WebhookDelivery'], ParentType, ContextType, RequireFields<MutationRetryWebhookDeliveryArgs, 'deliveryId'>>;
-  sendWaitlistInvitation?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationSendWaitlistInvitationArgs, 'id'>>;
   skipTask?: Resolver<ResolversTypes['Task'], ParentType, ContextType, RequireFields<MutationSkipTaskArgs, 'id'>>;
   startTimer?: Resolver<ResolversTypes['TimeEntry'], ParentType, ContextType, RequireFields<MutationStartTimerArgs, 'taskId'>>;
   stopTimer?: Resolver<ResolversTypes['TimeEntry'], ParentType, ContextType, RequireFields<MutationStopTimerArgs, 'taskId'>>;
@@ -3902,7 +3797,6 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   updateTeamMemberRole?: Resolver<ResolversTypes['TeamMember'], ParentType, ContextType, RequireFields<MutationUpdateTeamMemberRoleArgs, 'role' | 'teamId' | 'userId'>>;
   updateUserProfile?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationUpdateUserProfileArgs, 'input'>>;
   updateUserSettings?: Resolver<ResolversTypes['UserSettings'], ParentType, ContextType, RequireFields<MutationUpdateUserSettingsArgs, 'input'>>;
-  updateWaitlistStatus?: Resolver<ResolversTypes['WaitlistEntry'], ParentType, ContextType, RequireFields<MutationUpdateWaitlistStatusArgs, 'id' | 'status'>>;
   updateWebhook?: Resolver<ResolversTypes['Webhook'], ParentType, ContextType, RequireFields<MutationUpdateWebhookArgs, 'id' | 'input'>>;
   updateWorkHours?: Resolver<ResolversTypes['WorkHours'], ParentType, ContextType, RequireFields<MutationUpdateWorkHoursArgs, 'input'>>;
   upgradeSubscription?: Resolver<ResolversTypes['CheckoutSession'], ParentType, ContextType, RequireFields<MutationUpgradeSubscriptionArgs, 'tier'>>;
@@ -4178,9 +4072,6 @@ export type QueryResolvers<ContextType = GraphQLContext, ParentType extends Reso
   usageStats?: Resolver<ResolversTypes['UsageStats'], ParentType, ContextType>;
   user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryUserArgs, 'id'>>;
   userSettings?: Resolver<Maybe<ResolversTypes['UserSettings']>, ParentType, ContextType>;
-  waitlistEntries?: Resolver<Array<ResolversTypes['WaitlistEntry']>, ParentType, ContextType, Partial<QueryWaitlistEntriesArgs>>;
-  waitlistEntry?: Resolver<Maybe<ResolversTypes['WaitlistEntry']>, ParentType, ContextType, RequireFields<QueryWaitlistEntryArgs, 'email'>>;
-  waitlistStats?: Resolver<ResolversTypes['WaitlistStats'], ParentType, ContextType>;
   webhook?: Resolver<Maybe<ResolversTypes['Webhook']>, ParentType, ContextType, RequireFields<QueryWebhookArgs, 'id'>>;
   webhookDeliveries?: Resolver<Array<ResolversTypes['WebhookDelivery']>, ParentType, ContextType, RequireFields<QueryWebhookDeliveriesArgs, 'webhookId'>>;
   webhooks?: Resolver<Array<ResolversTypes['Webhook']>, ParentType, ContextType>;
@@ -4608,29 +4499,6 @@ export type UserSubscriptionResolvers<ContextType = GraphQLContext, ParentType e
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
-export type WaitlistEntryResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['WaitlistEntry'] = ResolversParentTypes['WaitlistEntry']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  position?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  referralSource?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<ResolversTypes['WaitlistStatus'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  useCase?: Resolver<Maybe<ResolversTypes['WaitlistUseCase']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
-export type WaitlistStatsResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['WaitlistStats'] = ResolversParentTypes['WaitlistStats']> = ResolversObject<{
-  approved?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  averageWaitDays?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
-  converted?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  invited?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  pending?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  total?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
 export type WebhookResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Webhook'] = ResolversParentTypes['Webhook']> = ResolversObject<{
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   deliveries?: Resolver<Array<ResolversTypes['WebhookDelivery']>, ParentType, ContextType>;
@@ -4769,7 +4637,6 @@ export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
   Integration?: IntegrationResolvers<ContextType>;
   Invoice?: InvoiceResolvers<ContextType>;
   JSON?: GraphQLScalarType;
-  JoinWaitlistResult?: JoinWaitlistResultResolvers<ContextType>;
   KanbanBoard?: KanbanBoardResolvers<ContextType>;
   KanbanColumn?: KanbanColumnResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
@@ -4817,8 +4684,6 @@ export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
   User?: UserResolvers<ContextType>;
   UserSettings?: UserSettingsResolvers<ContextType>;
   UserSubscription?: UserSubscriptionResolvers<ContextType>;
-  WaitlistEntry?: WaitlistEntryResolvers<ContextType>;
-  WaitlistStats?: WaitlistStatsResolvers<ContextType>;
   Webhook?: WebhookResolvers<ContextType>;
   WebhookDelivery?: WebhookDeliveryResolvers<ContextType>;
   WeekOverview?: WeekOverviewResolvers<ContextType>;

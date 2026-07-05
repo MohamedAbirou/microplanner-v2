@@ -70,9 +70,9 @@ export default function BlogPage() {
                 Want to be notified when I publish the first post?
               </p>
 
-              <Link href="/waitlist">
+              <Link href="/sign-up">
                 <Button size="lg">
-                  Join Waitlist for Updates
+                  Get Started Free
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>

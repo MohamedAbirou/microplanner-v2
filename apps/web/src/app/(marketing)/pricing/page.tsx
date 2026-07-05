@@ -23,8 +23,8 @@ export default function PricingPage() {
         { text: 'Advanced analytics', included: false },
         { text: 'Team workspaces', included: false },
       ],
-      cta: 'Join Waitlist',
-      ctaLink: '/waitlist',
+      cta: 'Get Started Free',
+      ctaLink: '/sign-up',
       popular: false,
     },
     {
@@ -41,8 +41,8 @@ export default function PricingPage() {
         { text: 'Advanced analytics', included: false },
         { text: 'Team workspaces', included: false },
       ],
-      cta: 'Join Waitlist',
-      ctaLink: '/waitlist',
+      cta: 'Get Started Free',
+      ctaLink: '/sign-up',
       popular: false,
     },
     {
@@ -59,8 +59,8 @@ export default function PricingPage() {
         { text: 'Priority email support', included: true },
         { text: 'Team workspaces', included: false },
       ],
-      cta: 'Join Waitlist',
-      ctaLink: '/waitlist',
+      cta: 'Get Started Free',
+      ctaLink: '/sign-up',
       popular: true,
     },
     {
@@ -77,8 +77,8 @@ export default function PricingPage() {
         { text: '24/7 priority support', included: true },
         { text: 'Custom integrations', included: true },
       ],
-      cta: 'Join Waitlist',
-      ctaLink: '/waitlist',
+      cta: 'Get Started Free',
+      ctaLink: '/sign-up',
       popular: false,
     },
   ];
@@ -327,9 +327,9 @@ export default function PricingPage() {
             <p className="mb-6 text-muted-foreground">
               All plans include a 30-day money-back guarantee. Start free today.
             </p>
-            <Link href="/waitlist">
+            <Link href="/sign-up">
               <Button size="lg">
-                Join Waitlist
+                Get Started Free
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
