@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service';
+import { EmailService } from '../email/email.service';
 import {
   AvailabilitySettings,
   Booking,
@@ -39,7 +40,41 @@ export interface TimeSlot {
 export class SchedulingService {
   private readonly logger = new Logger(SchedulingService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
+
+  /**
+   * Notify the link owner and attendee about a booking event.
+   * Fire-and-forget: email failures never break bookings.
+   */
+  private notifyBooking(
+    booking: { attendeeName: string; attendeeEmail: string; startTime: Date; endTime: Date; timezone?: string | null },
+    link: { name: string; userId: string },
+    status: 'pending' | 'confirmed' | 'canceled'
+  ): void {
+    (async () => {
+      const payload = {
+        linkName: link.name,
+        attendeeName: booking.attendeeName,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        timezone: booking.timezone || undefined,
+        status,
+      };
+      const owner = await this.prisma.user.findUnique({ where: { id: link.userId } });
+      if (owner?.email) {
+        await this.emailService.sendBookingEmail(owner.email, payload);
+      }
+      if (booking.attendeeEmail) {
+        await this.emailService.sendBookingEmail(booking.attendeeEmail, payload);
+      }
+    })().catch((error) => {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn('Failed to send booking email: ' + message);
+    });
+  }
 
   // ==================== SCHEDULING LINKS ====================
 
@@ -359,7 +394,11 @@ export class SchedulingService {
 
     this.logger.log(`Booking created: ${booking.id} for link ${link.id}`);
 
-    // TODO: Send email notification to user and attendee
+    this.notifyBooking(
+      booking as any,
+      link as any,
+      link.requiresConfirmation ? 'pending' : 'confirmed'
+    );
 
     return booking as unknown as Booking;
   }
@@ -489,7 +528,11 @@ export class SchedulingService {
 
     this.logger.log(`Booking ${bookingId} status updated to ${status}`);
 
-    // TODO: Send email notification
+    this.notifyBooking(
+      updated as any,
+      booking.link as any,
+      status === 'confirmed' ? 'confirmed' : 'canceled'
+    );
 
     return updated as unknown as Booking;
   }
@@ -500,6 +543,7 @@ export class SchedulingService {
   async cancelBooking(bookingId: string, cancellationToken?: string): Promise<Booking> {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
+      include: { link: true },
     });
 
     if (!booking) {
@@ -519,7 +563,7 @@ export class SchedulingService {
 
     this.logger.log(`Booking cancelled: ${bookingId}`);
 
-    // TODO: Send cancellation email
+    this.notifyBooking(updated as any, booking.link as any, 'canceled');
 
     return updated as unknown as Booking;
   }
@@ -552,9 +596,28 @@ export class SchedulingService {
     startDate: Date,
     endDate: Date
   ): Promise<Array<{ start: Date; end: Date }>> {
-    // TODO: Integrate with CalendarService to fetch actual calendar events
-    // For now, return empty array
-    return [];
+    // Busy times come from the user's own MicroPlanner tasks in the range.
+    // External-calendar busy times additionally flow in once the user
+    // connects Google Calendar (tasks synced there carry the same times).
+    const tasks = await this.prisma.task.findMany({
+      where: {
+        userId,
+        isCompleted: false,
+        isSkipped: false,
+        scheduledDate: { gte: startDate, lte: endDate },
+      },
+      select: { scheduledDate: true, startTime: true, endTime: true },
+    });
+
+    return tasks.map((t) => {
+      const start = new Date(t.scheduledDate);
+      const [sh, sm] = t.startTime.split(':').map(Number);
+      start.setHours(sh, sm, 0, 0);
+      const end = new Date(t.scheduledDate);
+      const [eh, em] = t.endTime.split(':').map(Number);
+      end.setHours(eh, em, 0, 0);
+      return { start, end };
+    });
   }
 
   private isSlotAvailable(

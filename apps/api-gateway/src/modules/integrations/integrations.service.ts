@@ -511,66 +511,77 @@ export class IntegrationsService {
       },
     });
 
-    // Attempt delivery
-    try {
-      const signature = this.generateWebhookSignature(payload, webhook.secret);
+    // Attempt delivery with exponential backoff (1s, 2s, 4s between tries)
+    const signature = this.generateWebhookSignature(payload, webhook.secret);
+    const maxAttempts = 3;
+    let lastError: any = null;
 
-      const response = await axios.post(webhook.url, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-MicroPlanner-Signature': signature,
-          'X-MicroPlanner-Event': payload.event,
-        },
-        timeout: 10000, // 10 seconds
-      });
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await axios.post(webhook.url, payload, {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-MicroPlanner-Signature': signature,
+            'X-MicroPlanner-Event': payload.event,
+          },
+          timeout: 10000, // 10 seconds
+        });
 
-      // Success
-      await this.prisma.webhookDelivery.update({
-        where: { id: delivery.id },
-        data: {
-          status: 'success',
-          statusCode: response.status,
-          responseBody: JSON.stringify(response.data),
-          attempts: 1,
-          lastAttemptAt: new Date(),
-        },
-      });
+        // Success
+        await this.prisma.webhookDelivery.update({
+          where: { id: delivery.id },
+          data: {
+            status: 'success',
+            statusCode: response.status,
+            responseBody: JSON.stringify(response.data),
+            attempts: attempt,
+            lastAttemptAt: new Date(),
+          },
+        });
 
-      // Update webhook
-      await this.prisma.webhook.update({
-        where: { id: webhookId },
-        data: {
-          lastTriggeredAt: new Date(),
-          failureCount: 0,
-        },
-      });
+        await this.prisma.webhook.update({
+          where: { id: webhookId },
+          data: {
+            lastTriggeredAt: new Date(),
+            failureCount: 0,
+          },
+        });
 
-      this.logger.log(`Webhook delivered successfully: ${webhookId} (${payload.event})`);
-    } catch (error: any) {
-      // Failure
-      await this.prisma.webhookDelivery.update({
-        where: { id: delivery.id },
-        data: {
-          status: 'failed',
-          statusCode: error.response?.status,
-          error: error.message,
-          attempts: 1,
-          lastAttemptAt: new Date(),
-        },
-      });
-
-      // Increment failure count
-      await this.prisma.webhook.update({
-        where: { id: webhookId },
-        data: {
-          failureCount: { increment: 1 },
-        },
-      });
-
-      this.logger.error(`Webhook delivery failed: ${webhookId} - ${error.message}`);
-
-      // TODO: Implement retry logic with exponential backoff
+        this.logger.log(
+          `Webhook delivered successfully: ${webhookId} (${payload.event}, attempt ${attempt})`
+        );
+        return;
+      } catch (error: any) {
+        lastError = error;
+        this.logger.warn(
+          `Webhook delivery attempt ${attempt}/${maxAttempts} failed: ${webhookId} - ${error.message}`
+        );
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** (attempt - 1)));
+        }
+      }
     }
+
+    // All attempts failed
+    await this.prisma.webhookDelivery.update({
+      where: { id: delivery.id },
+      data: {
+        status: 'failed',
+        statusCode: lastError?.response?.status,
+        error: lastError?.message || 'Delivery failed',
+        attempts: maxAttempts,
+        lastAttemptAt: new Date(),
+      },
+    });
+
+    await this.prisma.webhook.update({
+      where: { id: webhookId },
+      data: {
+        failureCount: { increment: 1 },
+      },
+    });
+
+    this.logger.error(`Webhook delivery failed after ${maxAttempts} attempts: ${webhookId}`);
   }
 
   // ==================== HELPER METHODS ====================
@@ -600,15 +611,54 @@ export class IntegrationsService {
     }
   }
 
+  /**
+   * AES-256-GCM encryption for stored OAuth credentials.
+   * Key: sha256(ENCRYPTION_KEY). Output: { __enc: 'aes-256-gcm', iv, tag, data }.
+   */
+  private getEncryptionKey(): Buffer {
+    const secret =
+      this.config.get<string>('ENCRYPTION_KEY') ||
+      this.config.get<string>('ENCRYPTION_SECRET') ||
+      '';
+    if (!secret || secret.startsWith('your-')) {
+      throw new BadRequestException(
+        'ENCRYPTION_KEY is not configured — cannot store integration credentials securely'
+      );
+    }
+    return crypto.createHash('sha256').update(secret).digest();
+  }
+
   private encryptCredentials(credentials: any): any {
-    // TODO: Implement encryption using crypto
-    // For now, return as-is (should be encrypted in production)
-    return credentials;
+    const key = this.getEncryptionKey();
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+    const plaintext = Buffer.from(JSON.stringify(credentials), 'utf8');
+    const data = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+    return {
+      __enc: 'aes-256-gcm',
+      iv: iv.toString('base64'),
+      tag: cipher.getAuthTag().toString('base64'),
+      data: data.toString('base64'),
+    };
   }
 
   private decryptCredentials(encrypted: any): any {
-    // TODO: Implement decryption
-    return encrypted;
+    // Back-compat: rows written before encryption existed are plain objects
+    if (!encrypted || encrypted.__enc !== 'aes-256-gcm') {
+      return encrypted;
+    }
+    const key = this.getEncryptionKey();
+    const decipher = crypto.createDecipheriv(
+      'aes-256-gcm',
+      key,
+      Buffer.from(encrypted.iv, 'base64')
+    );
+    decipher.setAuthTag(Buffer.from(encrypted.tag, 'base64'));
+    const plaintext = Buffer.concat([
+      decipher.update(Buffer.from(encrypted.data, 'base64')),
+      decipher.final(),
+    ]);
+    return JSON.parse(plaintext.toString('utf8'));
   }
 
   private generateWebhookSignature(payload: WebhookPayload, secret: string): string {
@@ -649,34 +699,141 @@ export class IntegrationsService {
     return `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=repo`;
   }
 
-  // OAuth code exchange (placeholder implementations)
+  /**
+   * OAuth code exchanges. Each provider needs its CLIENT_ID/CLIENT_SECRET
+   * env vars; without them the exchange fails with a clear config error
+   * (the UI surfaces it) rather than pretending to connect.
+   */
+  private requireProviderConfig(provider: string, ...keys: string[]): string[] {
+    const values = keys.map((k) => this.config.get<string>(k));
+    if (values.some((v) => !v)) {
+      throw new BadRequestException(
+        `${provider} integration is not configured on this server (missing ${keys.join('/')})`
+      );
+    }
+    return values as string[];
+  }
+
+  private oauthRedirectUri(provider: string): string {
+    const base = this.config.get<string>('APP_URL') || 'http://localhost:3001';
+    return `${base}/api/v1/integrations/oauth/${provider}/callback`;
+  }
+
   private async exchangeSlackCode(code: string): Promise<any> {
-    // TODO: Implement Slack OAuth token exchange
-    throw new Error('Slack OAuth not implemented');
+    const [clientId, clientSecret] = this.requireProviderConfig(
+      'Slack', 'SLACK_CLIENT_ID', 'SLACK_CLIENT_SECRET'
+    );
+    const { data } = await axios.post(
+      'https://slack.com/api/oauth.v2.access',
+      new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri: this.oauthRedirectUri('slack'),
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+    if (!data.ok) {
+      throw new BadRequestException(`Slack OAuth failed: ${data.error}`);
+    }
+    return data;
   }
 
   private async exchangeZoomCode(code: string): Promise<any> {
-    // TODO: Implement Zoom OAuth token exchange
-    throw new Error('Zoom OAuth not implemented');
+    const [clientId, clientSecret] = this.requireProviderConfig(
+      'Zoom', 'ZOOM_CLIENT_ID', 'ZOOM_CLIENT_SECRET'
+    );
+    const { data } = await axios.post(
+      'https://zoom.us/oauth/token',
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: this.oauthRedirectUri('zoom'),
+      }),
+      {
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+    return data;
   }
 
   private async exchangeGoogleCode(code: string): Promise<any> {
-    // TODO: Implement Google OAuth token exchange
-    throw new Error('Google OAuth not implemented');
+    const [clientId, clientSecret] = this.requireProviderConfig(
+      'Google', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'
+    );
+    const { data } = await axios.post(
+      'https://oauth2.googleapis.com/token',
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri: this.oauthRedirectUri('google-meet'),
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+    return data;
   }
 
   private async exchangeNotionCode(code: string): Promise<any> {
-    // TODO: Implement Notion OAuth token exchange
-    throw new Error('Notion OAuth not implemented');
+    const [clientId, clientSecret] = this.requireProviderConfig(
+      'Notion', 'NOTION_CLIENT_ID', 'NOTION_CLIENT_SECRET'
+    );
+    const { data } = await axios.post(
+      'https://api.notion.com/v1/oauth/token',
+      {
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: this.oauthRedirectUri('notion'),
+      },
+      {
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return data;
   }
 
   private async exchangeLinearCode(code: string): Promise<any> {
-    // TODO: Implement Linear OAuth token exchange
-    throw new Error('Linear OAuth not implemented');
+    const [clientId, clientSecret] = this.requireProviderConfig(
+      'Linear', 'LINEAR_CLIENT_ID', 'LINEAR_CLIENT_SECRET'
+    );
+    const { data } = await axios.post(
+      'https://api.linear.app/oauth/token',
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri: this.oauthRedirectUri('linear'),
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+    return data;
   }
 
   private async exchangeGitHubCode(code: string): Promise<any> {
-    // TODO: Implement GitHub OAuth token exchange
-    throw new Error('GitHub OAuth not implemented');
+    const [clientId, clientSecret] = this.requireProviderConfig(
+      'GitHub', 'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET'
+    );
+    const { data } = await axios.post(
+      'https://github.com/login/oauth/access_token',
+      {
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri: this.oauthRedirectUri('github'),
+      },
+      { headers: { Accept: 'application/json' } }
+    );
+    if (data.error) {
+      throw new BadRequestException(`GitHub OAuth failed: ${data.error_description || data.error}`);
+    }
+    return data;
   }
 }

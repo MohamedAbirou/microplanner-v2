@@ -157,13 +157,23 @@ Native mobile apps, offline mode/PWA, template marketplace UI, Todoist/Linear/Ou
 - The two audit scripts are the regression net for the contract seams — run them before every commit.
 - Golden-flow checklist lives in Phase 2/3 exit criteria; walk it fully before declaring any phase done.
 
-## 5. Progress Tracker
+## 5. Progress Tracker (updated 2026-07-05)
 | Phase | Status | Notes |
 |---|---|---|
-| 0 Baseline builds | IN PROGRESS | pnpm install running; typechecks pending |
-| 1 Contract fixes | NOT STARTED | audit findings F1 table above is the worklist |
-| 2 Boot & realtime | NOT STARTED | |
-| 3 Plan generation | NOT STARTED | |
-| 4 Money & retention | NOT STARTED | |
-| 5 UX completeness | NOT STARTED | |
-| 6 Hardening | NOT STARTED | |
+| 0 Baseline builds | ✅ DONE | all 3 apps typecheck + production-build; Prisma types now re-exported (manual copies deleted) |
+| 1 Contract fixes | ✅ DONE | `audit-contracts.mjs`: 0/158 unmatched (was 60). `audit-operations.mjs`: 0/101 invalid (was 32 + schema itself was invalid SDL). JWKS verification + graphql-ws server added. Fixed `req.user.userId`→`id` (60 usages), route-shadowing bugs (plans/integrations), Stripe webhook made @Public |
+| 2 Boot & core flows | ✅ DONE (API level) | docker-compose fixed (planning-service ghost dep removed; graphql-gateway service added); DATABASE_URL → local docker PG; verified with real Clerk JWT: me→goal→task→complete→dashboardStats→generatePlan(rule-based, q=80)→accept→**tasks materialize**→calendar/tasks views. Fixed: analytics locale-string date filter + Promise streaks, `me` override, taskByPlanLoader stub, Plan.goals loader, accept() materialization, DRAFT plan tasks from planJson. Web serves (landing/sign-in/dashboard) |
+| 3 Plan generation | PARTIAL | rule-based path verified E2E incl. quality score (80). REMAINING: verify STARTER (gpt-4o-mini) + PRO (claude) paths and their fallback to rule-based on API error; verify tier plan-limit enforcement returns typed error; buffer time in rule-based planner |
+| 4 Money & retention | NOT STARTED | billing endpoints exist + Stripe test keys present; needs checkout→webhook→tier walk; notifications context still mock data; analytics charts wiring |
+| 5 UX completeness | NOT STARTED | browser click-through; command palette; empty states; settings persistence |
+| 6 Hardening | NOT STARTED | tests, README-for-buyer, env example accuracy, branch cleanup, tag v1.0.0 |
+
+### How to run (verified working today)
+```
+docker compose up -d postgres redis
+cd packages/database && pnpm prisma db push
+cd apps/api-gateway && pnpm exec nest build && node dist/main.js   # :3001
+cd apps/graphql-gateway && npx tsx src/index.ts                     # :4000 (dev) / pnpm build && node dist
+cd apps/web && npx next dev -p 3000                                 # :3000
+node scripts/audit-contracts.mjs && node scripts/audit-operations.mjs  # regression net
+```

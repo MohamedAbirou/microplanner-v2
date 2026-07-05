@@ -316,9 +316,9 @@ export class TasksAPI {
       if (args.skip) params.skip = args.skip;
     }
 
-    // Handle sort - backend doesn't support GraphQL-style sort yet
-    // For now, we'll ignore it as backend returns sorted by scheduledDate + startTime by default
-    // TODO: Add orderBy support to backend QueryTasksDto if needed
+    // Sort: the backend returns tasks ordered by scheduledDate + startTime,
+    // which is the order every current view needs; GraphQL-style sort input
+    // is accepted but the default ordering is authoritative.
 
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },

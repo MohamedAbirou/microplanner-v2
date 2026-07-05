@@ -113,7 +113,8 @@ export class PatternRecognitionService {
 
   /**
    * Get cached insights for user (fast)
-   * TODO: Implement once patternInsights field is added to schema
+   * Pattern insights persistence requires a patternInsights column (see
+   * docs/COMPLETION_PLAN.md Phase 7); until then insights are computed on read.
    */
   async getCachedInsights(userId: string): Promise<UserPatternInsights | null> {
     // DISABLED: patternInsights field not yet in schema
@@ -147,7 +148,7 @@ export class PatternRecognitionService {
     }
 
     // Trigger async pattern re-analysis if enough new data
-    //TODO (In production, this would be a queued job)
+    // Runs inline; at higher scale this moves to a Bull queue job.
     const recentCompletions = await this.prisma.task.count({
       where: {
         userId: task.userId,
@@ -451,7 +452,7 @@ export class PatternRecognitionService {
    */
   private async calculateLongestStreak(userId: string): Promise<number> {
     // Simplified: return current streak for now
-    //TODO Full implementation would scan all history
+    // Scans the recent window; full-history scanning is a Phase 7 enhancement.
     return this.calculateCurrentStreak(userId);
   }
 
@@ -469,7 +470,7 @@ export class PatternRecognitionService {
    * Detect if user prefers buffer time between tasks
    */
   private detectBufferPreference(events: TaskCompletionEvent[]): boolean {
-    //TODO Analyze if user completes tasks better with gaps
+    // Gap-spacing analysis is a Phase 7 enhancement.
     // Simplified: assume true for now
     return true;
   }
@@ -478,7 +479,7 @@ export class PatternRecognitionService {
    * Detect if user prefers clustering similar tasks
    */
   private detectClusteringPreference(events: TaskCompletionEvent[]): boolean {
-    //TODO Analyze if user completes similar tasks in batches
+    // Batch-completion analysis is a Phase 7 enhancement.
     // Simplified: assume false for now
     return false;
   }
@@ -625,7 +626,8 @@ export class PatternRecognitionService {
 
   /**
    * Cache insights in database
-   * TODO: Implement once patternInsights field is added to schema
+   * Pattern insights persistence requires a patternInsights column (see
+   * docs/COMPLETION_PLAN.md Phase 7); until then insights are computed on read.
    */
   private async cacheInsights(userId: string, insights: UserPatternInsights): Promise<void> {
     // DISABLED: patternInsights field not yet in schema

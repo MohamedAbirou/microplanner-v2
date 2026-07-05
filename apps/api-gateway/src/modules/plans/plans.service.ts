@@ -178,16 +178,28 @@ export class PlansService {
       `Plan generated successfully: ${plan.id} (${generationTime.toFixed(2)}s, $${(generationCost / 100).toFixed(4)})`
     );
 
-    // 9. Send email notification (async, non-blocking)
-    // TODO: Re-enable once planReadyNotification field is added to schema
-    // if (user.planReadyNotification) {
-    //   this.emailService.sendPlanReady(user, plan).catch((error) => {
-    //     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    //     this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
-    //   });
-    // }
+    // 9. Send email notification (async, non-blocking, honors preferences)
+    this.sendPlanReadyIfEnabled(user, plan);
 
     return plan as any;
+  }
+
+  /**
+   * Send the plan-ready email if the user has email notifications enabled
+   * (NotificationPreferences.emailEnabled; users without a preferences row
+   * default to enabled). Fire-and-forget: email failures never break plans.
+   */
+  private sendPlanReadyIfEnabled(user: User, plan: WeeklyPlan): void {
+    (async () => {
+      const prefs = await this.prisma.notificationPreferences.findUnique({
+        where: { userId: user.id },
+      });
+      if (prefs && !prefs.emailEnabled) return;
+      await this.emailService.sendPlanReady(user, plan);
+    })().catch((error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
+    });
   }
 
   /**
@@ -256,14 +268,8 @@ export class PlansService {
 
     this.logger.log(`Plan generated from template: ${plan.id} with ${tasks.length} tasks`);
 
-    // Send email notification (async, non-blocking)
-    // TODO: Re-enable once planReadyNotification field is added to schema
-    // if (user.planReadyNotification) {
-    //   this.emailService.sendPlanReady(user, plan).catch((error) => {
-    //     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    //     this.logger.warn(`Failed to send plan ready email: ${errorMessage}`);
-    //   });
-    // }
+    // Send email notification (async, non-blocking, honors preferences)
+    this.sendPlanReadyIfEnabled(user, plan as any);
 
     return plan as any;
   }

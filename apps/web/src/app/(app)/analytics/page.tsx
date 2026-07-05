@@ -3,19 +3,8 @@
 import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  TrendingUp,
-  TrendingDown,
-  Target,
-  Clock,
-  Calendar,
-  Zap,
-  Award,
-  Construction,
-} from 'lucide-react';
+import { Target, Clock, Zap, Award, Loader2 } from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -33,74 +22,203 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { useTasks, useGoals } from '@/hooks/use-graphql';
+import { useDashboardStats } from '@/hooks/use-graphql-extended';
 
-// MVP MODE: Mock data shown for demonstration - real GraphQL integration coming soon
-// TODO: Connect to actual analytics endpoints before production
-const weeklyCompletionData = [
-  { week: 'Week 1', completed: 42, planned: 50, rate: 84 },
-  { week: 'Week 2', completed: 48, planned: 52, rate: 92 },
-  { week: 'Week 3', completed: 45, planned: 50, rate: 90 },
-  { week: 'Week 4', completed: 51, planned: 54, rate: 94 },
-];
+const GOAL_COLORS = ['#3B82F6', '#10B981', '#EC4899', '#8B5CF6', '#F59E0B', '#06B6D4', '#EF4444', '#84CC16'];
 
-const goalDistributionData = [
-  { name: 'Career Growth', value: 35, color: '#3B82F6' },
-  { name: 'Fitness', value: 25, color: '#10B981' },
-  { name: 'Learning', value: 20, color: '#EC4899' },
-  { name: 'Creative', value: 15, color: '#8B5CF6' },
-  { name: 'Personal', value: 5, color: '#F59E0B' },
-];
+const RANGE_DAYS: Record<string, number> = {
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+  '1y': 365,
+};
 
-const productivityHoursData = [
-  { hour: '6am', tasks: 2 },
-  { hour: '7am', tasks: 4 },
-  { hour: '8am', tasks: 6 },
-  { hour: '9am', tasks: 8 },
-  { hour: '10am', tasks: 10 },
-  { hour: '11am', tasks: 9 },
-  { hour: '12pm', tasks: 7 },
-  { hour: '1pm', tasks: 5 },
-  { hour: '2pm', tasks: 8 },
-  { hour: '3pm', tasks: 9 },
-  { hour: '4pm', tasks: 7 },
-  { hour: '5pm', tasks: 6 },
-  { hour: '6pm', tasks: 4 },
-  { hour: '7pm', tasks: 3 },
-  { hour: '8pm', tasks: 2 },
-];
+function startOfDay(d: Date): Date {
+  const out = new Date(d);
+  out.setHours(0, 0, 0, 0);
+  return out;
+}
 
-const streakData = [
-  { date: 'Mon', streak: 5 },
-  { date: 'Tue', streak: 6 },
-  { date: 'Wed', streak: 7 },
-  { date: 'Thu', streak: 8 },
-  { date: 'Fri', streak: 9 },
-  { date: 'Sat', streak: 10 },
-  { date: 'Sun', streak: 11 },
-];
+function formatHourLabel(hour: number): string {
+  if (hour === 0) return '12am';
+  if (hour < 12) return `${hour}am`;
+  if (hour === 12) return '12pm';
+  return `${hour - 12}pm`;
+}
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = React.useState('30d');
 
-  // Calculate summary stats
-  const totalTasks = weeklyCompletionData.reduce((sum, w) => sum + w.completed, 0);
-  const avgCompletionRate = Math.round(
-    weeklyCompletionData.reduce((sum, w) => sum + w.rate, 0) / weeklyCompletionData.length
-  );
-  const currentStreak = 11; // Mock
-  const longestStreak = 14; // Mock
+  const { tasks: allTasks, loading: tasksLoading } = useTasks();
+  const { goals, loading: goalsLoading } = useGoals();
+  const { stats: dashboardStats, loading: statsLoading } = useDashboardStats();
+
+  const loading = tasksLoading || goalsLoading || statsLoading;
+
+  const rangeStart = React.useMemo(() => {
+    const days = RANGE_DAYS[timeRange] ?? 30;
+    const start = startOfDay(new Date());
+    start.setDate(start.getDate() - (days - 1));
+    return start;
+  }, [timeRange]);
+
+  // Tasks inside the selected range
+  const tasks = React.useMemo(() => {
+    return (allTasks || []).filter((t: any) => {
+      if (!t.scheduledDate) return false;
+      return new Date(t.scheduledDate) >= rangeStart;
+    });
+  }, [allTasks, rangeStart]);
+
+  // Summary stats — all computed from real task data
+  const summary = React.useMemo(() => {
+    const completed = tasks.filter((t: any) => t.isCompleted);
+    const completionRate = tasks.length > 0 ? Math.round((completed.length / tasks.length) * 100) : 0;
+    const totalMinutes = completed.reduce(
+      (sum: number, t: any) => sum + (t.timeSpentMinutes || t.durationMinutes || 0),
+      0
+    );
+    return {
+      tasksCompleted: completed.length,
+      totalTasks: tasks.length,
+      completionRate,
+      totalHours: Math.round((totalMinutes / 60) * 10) / 10,
+    };
+  }, [tasks]);
+
+  // Weekly completion — group range into ISO weeks (Mon-Sun)
+  const weeklyCompletionData = React.useMemo(() => {
+    const weeks = new Map<number, { completed: number; planned: number }>();
+    for (const t of tasks) {
+      const d = new Date(t.scheduledDate);
+      const monday = startOfDay(d);
+      const day = monday.getDay();
+      monday.setDate(monday.getDate() + (day === 0 ? -6 : 1 - day));
+      const key = monday.getTime();
+      const bucket = weeks.get(key) || { completed: 0, planned: 0 };
+      bucket.planned++;
+      if (t.isCompleted) bucket.completed++;
+      weeks.set(key, bucket);
+    }
+    return Array.from(weeks.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([key, bucket]) => ({
+        week: new Date(key).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        completed: bucket.completed,
+        planned: bucket.planned,
+        rate: bucket.planned > 0 ? Math.round((bucket.completed / bucket.planned) * 100) : 0,
+      }));
+  }, [tasks]);
+
+  // Time spent per goal
+  const goalDistributionData = React.useMemo(() => {
+    const byGoal = new Map<string, number>();
+    for (const t of tasks) {
+      if (!t.goalId) continue;
+      const minutes = t.isCompleted ? t.timeSpentMinutes || t.durationMinutes || 0 : 0;
+      if (minutes <= 0) continue;
+      byGoal.set(t.goalId, (byGoal.get(t.goalId) || 0) + minutes);
+    }
+    const entries = Array.from(byGoal.entries())
+      .map(([goalId, minutes], i) => {
+        const goal = (goals || []).find((g: any) => g.id === goalId);
+        return {
+          name: goal ? `${goal.emoji || ''} ${goal.title}`.trim() : 'Other',
+          value: Math.round((minutes / 60) * 10) / 10,
+          color: goal?.color || GOAL_COLORS[i % GOAL_COLORS.length],
+        };
+      })
+      .sort((a, b) => b.value - a.value);
+    return entries;
+  }, [tasks, goals]);
+
+  // Goal completion rates
+  const goalProgressData = React.useMemo(() => {
+    const byGoal = new Map<string, { completed: number; total: number }>();
+    for (const t of tasks) {
+      if (!t.goalId) continue;
+      const bucket = byGoal.get(t.goalId) || { completed: 0, total: 0 };
+      bucket.total++;
+      if (t.isCompleted) bucket.completed++;
+      byGoal.set(t.goalId, bucket);
+    }
+    return Array.from(byGoal.entries())
+      .map(([goalId, bucket], i) => {
+        const goal = (goals || []).find((g: any) => g.id === goalId);
+        return {
+          name: goal ? `${goal.emoji || ''} ${goal.title}`.trim() : 'Other',
+          value: bucket.total > 0 ? Math.round((bucket.completed / bucket.total) * 100) : 0,
+          color: goal?.color || GOAL_COLORS[i % GOAL_COLORS.length],
+        };
+      })
+      .sort((a, b) => b.value - a.value);
+  }, [tasks, goals]);
+
+  // Completed tasks by hour of day (from scheduled startTime)
+  const productivityHoursData = React.useMemo(() => {
+    const byHour = new Map<number, number>();
+    for (const t of tasks) {
+      if (!t.isCompleted || !t.startTime) continue;
+      const hour = parseInt(t.startTime.split(':')[0], 10);
+      if (Number.isNaN(hour)) continue;
+      byHour.set(hour, (byHour.get(hour) || 0) + 1);
+    }
+    const hours: { hour: string; tasks: number }[] = [];
+    for (let h = 5; h <= 22; h++) {
+      hours.push({ hour: formatHourLabel(h), tasks: byHour.get(h) || 0 });
+    }
+    return hours;
+  }, [tasks]);
+
+  const peakHour = React.useMemo(() => {
+    let best: { hour: string; tasks: number } | null = null;
+    for (const row of productivityHoursData) {
+      if (!best || row.tasks > best.tasks) best = row;
+    }
+    return best && best.tasks > 0 ? best.hour : null;
+  }, [productivityHoursData]);
+
+  // Daily completions over the last 14 days (consistency view)
+  const dailyCompletionData = React.useMemo(() => {
+    const days: { date: string; completed: number }[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const day = startOfDay(new Date());
+      day.setDate(day.getDate() - i);
+      const next = new Date(day);
+      next.setDate(day.getDate() + 1);
+      const completed = (allTasks || []).filter((t: any) => {
+        if (!t.isCompleted || !t.completedAt) return false;
+        const c = new Date(t.completedAt);
+        return c >= day && c < next;
+      }).length;
+      days.push({
+        date: day.toLocaleDateString(undefined, { weekday: 'short' }),
+        completed,
+      });
+    }
+    return days;
+  }, [allTasks]);
+
+  const consistency = React.useMemo(() => {
+    const activeDays = dailyCompletionData.filter((d) => d.completed > 0).length;
+    return Math.round((activeDays / dailyCompletionData.length) * 100);
+  }, [dailyCompletionData]);
+
+  const currentStreak = dashboardStats?.currentStreak ?? 0;
+  const longestStreak = dashboardStats?.longestStreak ?? 0;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-3 text-muted-foreground">Loading analytics...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
-      {/* MVP Mode Warning */}
-      <Alert>
-        <Construction className="h-4 w-4" />
-        <AlertTitle>MVP Mode - Mock Data</AlertTitle>
-        <AlertDescription>
-          This analytics page currently displays demo data. Real-time analytics integration will be completed in the next phase.
-        </AlertDescription>
-      </Alert>
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -128,10 +246,9 @@ export default function AnalyticsPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalTasks}</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3 text-green-600" />
-              <span className="text-green-600">+12%</span> from last period
+            <div className="text-2xl font-bold">{summary.tasksCompleted}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              of {summary.totalTasks} scheduled in range
             </p>
           </CardContent>
         </Card>
@@ -142,11 +259,8 @@ export default function AnalyticsPage() {
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgCompletionRate}%</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3 text-green-600" />
-              <span className="text-green-600">+5%</span> from last period
-            </p>
+            <div className="text-2xl font-bold">{summary.completionRate}%</div>
+            <p className="text-xs text-muted-foreground mt-1">across the selected range</p>
           </CardContent>
         </Card>
 
@@ -157,9 +271,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{currentStreak} days</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Longest: {longestStreak} days
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Longest: {longestStreak} days</p>
           </CardContent>
         </Card>
 
@@ -169,11 +281,8 @@ export default function AnalyticsPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">42.5h</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-              <TrendingDown className="h-3 w-3 text-red-600" />
-              <span className="text-red-600">-3%</span> from last period
-            </p>
+            <div className="text-2xl font-bold">{summary.totalHours}h</div>
+            <p className="text-xs text-muted-foreground mt-1">on completed tasks in range</p>
           </CardContent>
         </Card>
       </div>
@@ -191,41 +300,45 @@ export default function AnalyticsPage() {
         <TabsContent value="overview" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Weekly Completion Rate</CardTitle>
-              <CardDescription>
-                Track your task completion over the past 4 weeks
-              </CardDescription>
+              <CardTitle>Weekly Completion</CardTitle>
+              <CardDescription>Completed vs planned tasks per week</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={weeklyCompletionData}>
-                  <defs>
-                    <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="week" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="completed"
-                    stroke="#3B82F6"
-                    fillOpacity={1}
-                    fill="url(#colorCompleted)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="planned"
-                    stroke="#94A3B8"
-                    fillOpacity={0.3}
-                    fill="#94A3B8"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {weeklyCompletionData.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-12 text-center">
+                  No tasks scheduled in this range yet. Generate a plan or add tasks to see trends.
+                </p>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={weeklyCompletionData}>
+                    <defs>
+                      <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="week" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Area
+                      type="monotone"
+                      dataKey="completed"
+                      stroke="#3B82F6"
+                      fillOpacity={1}
+                      fill="url(#colorCompleted)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="planned"
+                      stroke="#94A3B8"
+                      fillOpacity={0.3}
+                      fill="#94A3B8"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -236,57 +349,62 @@ export default function AnalyticsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Goal Distribution</CardTitle>
-                <CardDescription>
-                  Time spent per goal category
-                </CardDescription>
+                <CardDescription>Hours spent per goal (completed tasks)</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={goalDistributionData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {goalDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {goalDistributionData.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-12 text-center">
+                    Complete some goal tasks to see how your time is distributed.
+                  </p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={goalDistributionData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {goalDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle>Goal Progress</CardTitle>
-                <CardDescription>
-                  Completion rates by goal
-                </CardDescription>
+                <CardDescription>Completion rate per goal (%)</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={goalDistributionData}
-                    layout="horizontal"
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" domain={[0, 100]} />
-                    <YAxis dataKey="name" type="category" width={100} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#3B82F6">
-                      {goalDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                {goalProgressData.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-12 text-center">
+                    Schedule tasks against your goals to see completion rates.
+                  </p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={goalProgressData} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" domain={[0, 100]} />
+                      <YAxis dataKey="name" type="category" width={120} />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#3B82F6">
+                        {goalProgressData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -297,26 +415,26 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Productivity by Hour</CardTitle>
-              <CardDescription>
-                Identify your peak productivity hours
-              </CardDescription>
+              <CardDescription>Completed tasks by scheduled start hour</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={productivityHoursData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" />
-                  <YAxis />
+                  <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Bar dataKey="tasks" fill="#10B981" />
                 </BarChart>
               </ResponsiveContainer>
-              <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <p className="text-sm">
-                  <strong>Insight:</strong> Your peak productivity is between 9am-11am.
-                  Consider scheduling high-priority tasks during these hours.
-                </p>
-              </div>
+              {peakHour && (
+                <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <p className="text-sm">
+                    <strong>Insight:</strong> Your peak completion hour is around {peakHour}.
+                    Consider scheduling high-priority tasks near that time.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -325,40 +443,38 @@ export default function AnalyticsPage() {
         <TabsContent value="streaks" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Daily Streak Progress</CardTitle>
-              <CardDescription>
-                Your consistency over the past week
-              </CardDescription>
+              <CardTitle>Daily Completions</CardTitle>
+              <CardDescription>Tasks completed per day over the last two weeks</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={streakData}>
+                <LineChart data={dailyCompletionData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
-                  <YAxis />
+                  <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
                   <Line
                     type="monotone"
-                    dataKey="streak"
+                    dataKey="completed"
                     stroke="#EC4899"
                     strokeWidth={3}
-                    dot={{ fill: '#EC4899', r: 6 }}
+                    dot={{ fill: '#EC4899', r: 5 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <div className="p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">11</div>
+                  <div className="text-2xl font-bold text-green-600">{currentStreak}</div>
                   <div className="text-sm text-muted-foreground">Current Streak</div>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">14</div>
+                  <div className="text-2xl font-bold text-blue-600">{longestStreak}</div>
                   <div className="text-sm text-muted-foreground">Longest Streak</div>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">87%</div>
-                  <div className="text-sm text-muted-foreground">Consistency</div>
+                  <div className="text-2xl font-bold text-purple-600">{consistency}%</div>
+                  <div className="text-sm text-muted-foreground">Consistency (14d)</div>
                 </div>
               </div>
             </CardContent>

@@ -105,9 +105,8 @@ export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }:
         ))}
       </div>
 
-      {/* Tier Limit Warning - COMMENTED OUT FOR MVP MODE */}
-      {/* TODO: Restore tier limits before production launch */}
-      {/* {selectedGoals.length > maxGoalsPerPlan && maxGoalsPerPlan !== -1 && (
+      {/* Tier Limit Warning */}
+      {selectedGoals.length > maxGoalsPerPlan && maxGoalsPerPlan !== -1 && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Goal Limit Reached</AlertTitle>
@@ -115,19 +114,26 @@ export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }:
             Your {tier} plan allows up to {maxGoalsPerPlan} goals per plan. Please deselect{' '}
             {selectedGoals.length - maxGoalsPerPlan} goal(s).
             {tier === 'FREE' && (
-              <Button variant="link" className="px-1 h-auto py-0 text-destructive">
+              <Button
+                variant="link"
+                className="px-1 h-auto py-0 text-destructive"
+                onClick={() => (window.location.href = '/settings?tab=billing')}
+              >
                 Upgrade to Starter
               </Button>
             )}
           </AlertDescription>
         </Alert>
-      )} */}
+      )}
 
       {/* Navigation */}
       <div className="flex justify-end">
         <Button
           onClick={() => onNext(selectedGoals)}
-          disabled={selectedGoals.length === 0}
+          disabled={
+            selectedGoals.length === 0 ||
+            (maxGoalsPerPlan !== -1 && selectedGoals.length > maxGoalsPerPlan)
+          }
           size="lg"
         >
           Continue

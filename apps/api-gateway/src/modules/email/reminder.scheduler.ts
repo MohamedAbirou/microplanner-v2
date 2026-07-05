@@ -24,6 +24,22 @@ export class ReminderScheduler {
   ) {}
 
   /**
+   * Check whether a user should receive a given kind of reminder email.
+   * Users without a NotificationPreferences row default to enabled.
+   */
+  private async emailAllowed(
+    userId: string,
+    kind: 'taskReminder' | 'weeklySummary'
+  ): Promise<boolean> {
+    const prefs = await this.prisma.notificationPreferences.findUnique({
+      where: { userId },
+    });
+    if (!prefs) return true;
+    if (!prefs.emailEnabled) return false;
+    return kind === 'taskReminder' ? prefs.taskDueAlerts : prefs.weeklySummary;
+  }
+
+  /**
    * Send 1-hour-before reminders
    * Runs every hour at :00
    */
@@ -65,10 +81,9 @@ export class ReminderScheduler {
       let sent = 0;
       for (const task of tasks) {
         try {
-          // TODO: Check user notification preferences once fields are added to schema
-          // if (!task.user.emailNotifications || !task.user.taskReminderOneHourBefore) {
-          //   continue;
-          // }
+          if (!(await this.emailAllowed(task.userId, 'taskReminder'))) {
+            continue;
+          }
 
           await this.emailService.sendTaskReminder(task as any, task.user, '1_hour_before');
           sent++;
@@ -133,10 +148,9 @@ export class ReminderScheduler {
       let sent = 0;
       for (const task of tasks) {
         try {
-          // TODO: Check user notification preferences once fields are added to schema
-          // if (!task.user.emailNotifications || !task.user.taskReminderOneDayBefore) {
-          //   continue;
-          // }
+          if (!(await this.emailAllowed(task.userId, 'taskReminder'))) {
+            continue;
+          }
 
           await this.emailService.sendTaskReminder(task as any, task.user, '1_day_before');
           sent++;
@@ -190,10 +204,9 @@ export class ReminderScheduler {
       let sent = 0;
       for (const user of users) {
         try {
-          // TODO: Check user notification preferences once fields are added to schema
-          // if (!user.emailNotifications || !user.weeklySummaryEnabled) {
-          //   continue;
-          // }
+          if (!(await this.emailAllowed(user.id, 'weeklySummary'))) {
+            continue;
+          }
 
           // Gather weekly statistics
           const [goalsCreated, plansGenerated, tasksCompleted, totalTasks] =

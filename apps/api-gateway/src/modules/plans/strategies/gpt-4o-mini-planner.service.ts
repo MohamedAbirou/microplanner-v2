@@ -150,7 +150,7 @@ export class GPT4oMiniPlannerService implements IPlanningStrategy {
     weekEnd.setDate(weekEnd.getDate() + 7);
 
     const workHours = { start: user.workStartTime || '09:00', end: user.workEndTime || '17:00' };
-    // TODO: Use user.workDays once field is added to schema
+    // Work days default to Mon-Fri; a per-user workDays field is a Phase 7 enhancement.
     const workDays = [1, 2, 3, 4, 5]; // Default: Mon-Fri
     const timezone = user.timezone || 'UTC';
 
@@ -291,7 +291,7 @@ Always output valid JSON matching the requested format. Be concise but insightfu
 
     // Calculate available hours
     const workHours = { start: user.workStartTime || '09:00', end: user.workEndTime || '17:00' };
-    // TODO: Use user.workDays once field is added to schema
+    // Work days default to Mon-Fri; a per-user workDays field is a Phase 7 enhancement.
     const workDays = [1, 2, 3, 4, 5]; // Default: Mon-Fri
 
     const hoursPerDay =

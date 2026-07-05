@@ -32,38 +32,31 @@ interface TierContextValue {
 }
 
 /**
- * Tier limits based on Competitive Research Report recommendations
- *
- * Key changes from original:
- * - Plans are weekly not monthly (users need daily/weekly planning)
- * - AI models: rule-based → gpt-4o-mini → claude-sonnet-3.5
- * - Quality score ranges show expected AI performance
- * - Template access for viral growth
- * - Team workspace and API access for Premium only
- *
- * MVP MODE: All tiers have generous limits for testing (80% feature completion focus)
- * TODO: Restore proper limits before production launch
+ * Tier limits shown in the UI. The BACKEND is authoritative — these values
+ * mirror apps/api-gateway/src/modules/billing/billing.constants.ts
+ * (PRICING_PLANS + TIER_LIMITS); server-side enforcement lives in
+ * UsageLimitService. Keep the two in sync when pricing changes.
  */
 const tierLimits: Record<UserTier, TierLimits> = {
   FREE: {
-    maxActiveGoals: -1, // Unlimited for MVP testing (TODO: Set to 3 for production)
-    maxGoalsPerPlan: -1, // Unlimited for MVP testing (TODO: Set to 3 for production)
-    maxTasksPerDay: -1, // Unlimited for MVP testing (TODO: Set to 20 for production)
-    maxPlansPerWeek: -1, // Unlimited for MVP testing (TODO: Set to 7 for production)
+    maxActiveGoals: 2,
+    maxGoalsPerPlan: 2,
+    maxTasksPerDay: 20,
+    maxPlansPerWeek: 5,
     aiModel: 'rule-based',
     qualityScoreRange: [70, 85],
-    hasCalendarIntegration: true, // Enabled for MVP testing (TODO: Set to false for production)
-    hasTemplateAccess: true, // Enabled for MVP testing (TODO: Set to false for production)
-    hasAdvancedAnalytics: false, // Premium feature - keep disabled
-    hasTeamWorkspace: false, // Premium feature - keep disabled
-    hasAPIAccess: false, // Premium feature - keep disabled
+    hasCalendarIntegration: true, // Free tier gets manual calendar sync
+    hasTemplateAccess: false,
+    hasAdvancedAnalytics: false,
+    hasTeamWorkspace: false,
+    hasAPIAccess: false,
     hasPrioritySupport: false,
   },
   STARTER: {
     maxActiveGoals: 5,
     maxGoalsPerPlan: 5,
     maxTasksPerDay: 40,
-    maxPlansPerWeek: 15, // 2+ per day
+    maxPlansPerWeek: 20,
     aiModel: 'gpt-4o-mini',
     qualityScoreRange: [80, 90],
     hasCalendarIntegration: true,
@@ -74,7 +67,7 @@ const tierLimits: Record<UserTier, TierLimits> = {
     hasPrioritySupport: false,
   },
   PRO: {
-    maxActiveGoals: 15,
+    maxActiveGoals: -1, // Unlimited (matches backend TIER_LIMITS)
     maxGoalsPerPlan: 10,
     maxTasksPerDay: 100,
     maxPlansPerWeek: -1, // Unlimited

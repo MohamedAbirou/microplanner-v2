@@ -1,5 +1,32 @@
 import { GraphQLError } from 'graphql';
 
+/**
+ * Admin gate for waitlist management operations.
+ * Admins are declared via the ADMIN_EMAILS env var (comma-separated list);
+ * the caller's email comes from their verified DB user record, not the JWT.
+ */
+async function requireAdmin(dataSources: any, user: any): Promise<void> {
+  if (!user) {
+    throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+  }
+
+  const adminEmails = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (adminEmails.length === 0) {
+    throw new GraphQLError('Waitlist administration is not configured on this server', {
+      extensions: { code: 'FORBIDDEN' },
+    });
+  }
+
+  const dbUser = await dataSources.userAPI.getUser(user.userId);
+  if (!dbUser?.email || !adminEmails.includes(dbUser.email.toLowerCase())) {
+    throw new GraphQLError('Admin access required', { extensions: { code: 'FORBIDDEN' } });
+  }
+}
+
 export const waitlistResolvers = {
   Query: {
     // Public: Get waitlist statistics
@@ -7,27 +34,27 @@ export const waitlistResolvers = {
       try {
         return await dataSources.waitlistAPI.getWaitlistStats();
       } catch (error) {
-        // Return default stats if backend not available
+        // Backend unavailable — return honest zeros, never fabricated numbers
         return {
-          totalCount: 1234,
-          pendingCount: 1234,
-          approvedCount: 0,
-          averageWaitTime: null,
+          total: 0,
+          pending: 0,
+          approved: 0,
+          invited: 0,
+          converted: 0,
+          averageWaitDays: null,
         };
       }
     },
 
     // Admin only: Get waitlist entry by email
     waitlistEntry: async (_: any, { email }: { email: string }, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      // TODO: Add admin check
+      await requireAdmin(dataSources, user);
       return dataSources.waitlistAPI.getWaitlistEntry(email, user.userId);
     },
 
     // Admin only: Get all waitlist entries
     waitlistEntries: async (_: any, args: any, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      // TODO: Add admin check
+      await requireAdmin(dataSources, user);
       return dataSources.waitlistAPI.getWaitlistEntries(user.userId, args);
     },
   },
@@ -57,10 +84,9 @@ export const waitlistResolvers = {
 
         console.error('Waitlist join error:', error);
 
-        // Graceful fallback - return success even if backend fails
         return {
-          success: true,
-          message: 'Successfully joined waitlist!',
+          success: false,
+          message: 'Could not join the waitlist right now. Please try again shortly.',
           position: null,
           email: input.email,
         };
@@ -73,15 +99,13 @@ export const waitlistResolvers = {
       { id, status }: { id: string; status: string },
       { dataSources, user }: any
     ) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      // TODO: Add admin check
+      await requireAdmin(dataSources, user);
       return dataSources.waitlistAPI.updateWaitlistStatus(id, user.userId, status);
     },
 
     // Admin only: Send invitation
     sendWaitlistInvitation: async (_: any, { id }: { id: string }, { dataSources, user }: any) => {
-      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      // TODO: Add admin check
+      await requireAdmin(dataSources, user);
       await dataSources.waitlistAPI.sendWaitlistInvitation(id, user.userId);
       return true;
     },

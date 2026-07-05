@@ -433,6 +433,64 @@ export class EmailService {
   }
 
   /**
+   * Send a booking lifecycle email (created / confirmed / canceled).
+   * Inline HTML so a missing template file can never break bookings.
+   */
+  async sendBookingEmail(
+    to: string,
+    booking: {
+      linkName: string;
+      attendeeName: string;
+      startTime: Date;
+      endTime: Date;
+      timezone?: string;
+      status: 'pending' | 'confirmed' | 'canceled';
+    }
+  ): Promise<void> {
+    if (!this.isEnabled) {
+      this.logger.debug('Email service disabled, skipping booking email');
+      return;
+    }
+
+    const subjects: Record<string, string> = {
+      pending: `📅 New booking request: ${booking.linkName}`,
+      confirmed: `✅ Booking confirmed: ${booking.linkName}`,
+      canceled: `❌ Booking canceled: ${booking.linkName}`,
+    };
+
+    const when = `${new Date(booking.startTime).toUTCString()} – ${new Date(
+      booking.endTime
+    ).toUTCString()}${booking.timezone ? ` (${booking.timezone})` : ''}`;
+
+    const html = `
+      <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px;">
+        <h1 style="font-size: 20px;">${subjects[booking.status]}</h1>
+        <p><strong>Meeting:</strong> ${booking.linkName}</p>
+        <p><strong>With:</strong> ${booking.attendeeName}</p>
+        <p><strong>When:</strong> ${when}</p>
+        <p style="color: #666; font-size: 13px;">Sent by MicroPlanner scheduling.</p>
+      </div>`;
+
+    try {
+      const response = await this.resend.emails.send({
+        from: this.fromEmail,
+        to,
+        subject: subjects[booking.status],
+        html,
+      });
+      if (response.error) {
+        this.logger.error(`Failed to send booking email: ${JSON.stringify(response.error)}`);
+        return;
+      }
+      this.logger.log(`Booking ${booking.status} email sent to ${to}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to send booking email: ${errorMessage}`);
+      // Don't throw — email failures never break bookings
+    }
+  }
+
+  /**
    * Check if email service is enabled
    */
   isEmailEnabled(): boolean {
