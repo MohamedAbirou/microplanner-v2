@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-interface StreakChartProps {
+export interface StreakChartProps {
   data: Array<{
     date: string;
     streak: number;

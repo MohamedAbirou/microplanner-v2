@@ -187,7 +187,7 @@ export default function TodayPage() {
         </CardHeader>
         <CardContent>
           <TaskList
-            tasks={filteredAndSortedTasks}
+            tasks={filteredAndSortedTasks as any}
             groupBy="date"
             showFilters={false}
             onComplete={handleComplete}
@@ -231,25 +231,26 @@ export default function TodayPage() {
       </div>
 
       {/* Task Detail Modal */}
-      {selectedTaskId && (
-        <TaskDetailModal
-          taskId={selectedTaskId}
-          open={!!selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
-          onUpdate={async (taskId, updates) => {
-            await refetch();
-          }}
-        />
-      )}
+      <TaskDetailModal
+        task={(allTasks.find((t: any) => t.id === selectedTaskId) as any) || null}
+        open={!!selectedTaskId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTaskId(null);
+        }}
+        onUpdate={async () => {
+          await refetch();
+        }}
+      />
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         open={deleteTaskId !== null}
-        onOpenChange={(open) => !open && setDeleteTaskId(null)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTaskId(null);
+        }}
         onConfirm={confirmDelete}
-        title="Delete Task"
-        description="Are you sure you want to delete this task? This action cannot be undone."
-        loading={deleting}
+        itemName="this task"
+        itemType="task"
       />
 
       {/* Loading State */}

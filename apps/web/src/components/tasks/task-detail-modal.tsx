@@ -59,6 +59,7 @@ interface Task {
   title: string;
   notes?: string | null;
   goal: Goal;
+  goalId?: string;
   scheduledDate: string;
   startTime: string;
   endTime: string;

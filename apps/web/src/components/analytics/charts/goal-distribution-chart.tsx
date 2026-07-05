@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-interface GoalDistributionChartProps {
+export interface GoalDistributionChartProps {
   data: Array<{
     name: string;
     value: number;

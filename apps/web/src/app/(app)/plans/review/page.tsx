@@ -166,7 +166,7 @@ export default function PlanReviewPage() {
             <CardHeader>
               <CardTitle>Weekly Schedule</CardTitle>
               <CardDescription>
-                {weekTasks.length} tasks scheduled across {new Set(weekTasks.map(t => t.scheduledDate)).size} days
+                {weekTasks.length} tasks scheduled across {new Set(weekTasks.map((t: any) => t.scheduledDate)).size} days
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -184,12 +184,12 @@ export default function PlanReviewPage() {
         <TabsContent value="list" className="mt-6">
           <div className="space-y-4">
             {Object.entries(
-              weekTasks.reduce((acc, task) => {
+              weekTasks.reduce((acc: any, task: any) => {
                 const day = format(new Date(task.scheduledDate), 'EEEE, MMM d');
                 if (!acc[day]) acc[day] = [];
                 acc[day].push(task);
                 return acc;
-              }, {} as Record<string, typeof weekTasks>)
+              }, {} as Record<string, any[]>) as Record<string, any[]>
             ).map(([day, dayTasks]) => (
               <Card key={day}>
                 <CardHeader>
@@ -203,8 +203,8 @@ export default function PlanReviewPage() {
                 <CardContent>
                   <div className="space-y-2">
                     {dayTasks
-                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                      .map((task) => (
+                      .sort((a: any, b: any) => a.startTime.localeCompare(b.startTime))
+                      .map((task: any) => (
                         <div
                           key={task.id}
                           className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"

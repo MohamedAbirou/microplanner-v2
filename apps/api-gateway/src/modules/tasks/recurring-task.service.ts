@@ -43,8 +43,8 @@ export class RecurringTaskService {
       return [this.createRegularTaskInstance(task)];
     }
 
-    const rule = task.recurrenceRule as RecurrenceRule;
-    const exceptions = (task.recurrenceExceptions as RecurrenceException[]) || [];
+    const rule = task.recurrenceRule as unknown as RecurrenceRule;
+    const exceptions = (task.recurrenceExceptions as unknown as RecurrenceException[]) || [];
     const instances: TaskInstance[] = [];
 
     // Start from the task's original scheduledDate

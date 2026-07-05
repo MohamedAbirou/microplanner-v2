@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-interface ProductivityHoursChartProps {
+export interface ProductivityHoursChartProps {
   data: Array<{
     hour: string;
     tasks: number;

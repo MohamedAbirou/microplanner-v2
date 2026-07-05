@@ -12,7 +12,7 @@ export default function GoalsPage() {
   const { updateGoal } = useUpdateGoal();
 
   // Filter for active goals on the client side
-  const goals = allGoals?.filter((goal) => goal.isActive !== false) || [];
+  const goals = allGoals?.filter((goal: any) => goal.isActive !== false) || [];
 
   const handlePause = async (goalId: string) => {
     try {
@@ -73,7 +73,7 @@ export default function GoalsPage() {
       {/* Active Goals */}
       {goals.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2">
-          {goals.map((goal) => (
+          {goals.map((goal: any) => (
             <GoalCard
               key={goal.id}
               goal={goal}

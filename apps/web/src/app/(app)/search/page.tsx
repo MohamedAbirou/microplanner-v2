@@ -153,7 +153,7 @@ export default function SearchPage() {
             {/* All Results Tab */}
             <TabsContent value="all" className="space-y-4 mt-6">
               {totalResults === 0 ? (
-                <NoSearchResultsEmptyState searchQuery={searchQuery} />
+                <NoSearchResultsEmptyState query={searchQuery} />
               ) : (
                 <>
                   {filteredResults.tasks.length > 0 && (
@@ -284,7 +284,7 @@ export default function SearchPage() {
             {/* Tasks Only Tab */}
             <TabsContent value="tasks" className="space-y-2 mt-6">
               {filteredResults.tasks.length === 0 ? (
-                <NoSearchResultsEmptyState searchQuery={searchQuery} />
+                <NoSearchResultsEmptyState query={searchQuery} />
               ) : (
                 filteredResults.tasks.map((task: any) => (
                   <Card
@@ -330,7 +330,7 @@ export default function SearchPage() {
             {/* Goals Only Tab */}
             <TabsContent value="goals" className="space-y-2 mt-6">
               {filteredResults.goals.length === 0 ? (
-                <NoSearchResultsEmptyState searchQuery={searchQuery} />
+                <NoSearchResultsEmptyState query={searchQuery} />
               ) : (
                 filteredResults.goals.map((goal: any) => (
                   <Card
@@ -360,7 +360,7 @@ export default function SearchPage() {
             {/* Plans Only Tab */}
             <TabsContent value="plans" className="space-y-2 mt-6">
               {filteredResults.plans.length === 0 ? (
-                <NoSearchResultsEmptyState searchQuery={searchQuery} />
+                <NoSearchResultsEmptyState query={searchQuery} />
               ) : (
                 filteredResults.plans.map((plan: any) => (
                   <Card

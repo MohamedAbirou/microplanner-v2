@@ -74,7 +74,7 @@ const mockNotifications: Notification[] = [
   },
 ];
 
-export function NotificationsProvider({ children }: { children: React.Node }) {
+export function NotificationsProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = React.useState<Notification[]>(mockNotifications);
 
   const unreadCount = React.useMemo(

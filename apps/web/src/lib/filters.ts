@@ -189,9 +189,9 @@ export function sortTasks(tasks: Task[], sort: TaskSort): Task[] {
 
     // Handle numeric comparison
     if (sort.direction === 'asc') {
-      return aValue - bValue;
+      return Number(aValue) - Number(bValue);
     } else {
-      return bValue - aValue;
+      return Number(bValue) - Number(aValue);
     }
   });
 }

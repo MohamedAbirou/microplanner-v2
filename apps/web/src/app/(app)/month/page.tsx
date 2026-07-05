@@ -9,7 +9,7 @@ import * as React from 'react';
 
 export default function MonthPage() {
   const router = useRouter();
-  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = React.useState<any | null>(null);
 
   // Fetch tasks for the current month
   const today = new Date();
@@ -21,7 +21,7 @@ export default function MonthPage() {
 
   // Filter for current month
   const tasks = React.useMemo(() => {
-    return allTasks.filter((task) => {
+    return allTasks.filter((task: any) => {
       if (!task.scheduledDate) return false;
       const taskDate = new Date(task.scheduledDate);
       return taskDate >= monthStart && taskDate <= monthEnd;
@@ -34,7 +34,7 @@ export default function MonthPage() {
   };
 
   const handleTaskClick = (task: any) => {
-    setSelectedTaskId(task.id);
+    setSelectedTask(task);
   };
 
   if (loading) {
@@ -54,16 +54,16 @@ export default function MonthPage() {
       />
 
       {/* Task Detail Modal */}
-      {selectedTaskId && (
-        <TaskDetailModal
-          taskId={selectedTaskId}
-          open={!!selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
-          onUpdate={async (taskId, updates) => {
-            await refetch();
-          }}
-        />
-      )}
+      <TaskDetailModal
+        task={selectedTask}
+        open={!!selectedTask}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTask(null);
+        }}
+        onUpdate={async () => {
+          await refetch();
+        }}
+      />
     </div>
   );
 }

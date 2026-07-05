@@ -23,7 +23,7 @@ export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }:
   const maxGoalsPerPlan = limits.maxGoalsPerPlan;
 
   // Filter for active goals only
-  const activeGoals = goals?.filter((goal) => goal.isActive) || [];
+  const activeGoals = goals?.filter((goal: any) => goal.isActive) || [];
 
   const toggleGoalSelection = (goalId: string) => {
     setSelectedGoals((prev) =>
@@ -69,7 +69,7 @@ export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }:
 
       {/* Goals Grid */}
       <div className="grid gap-4 md:grid-cols-2">
-        {activeGoals.map((goal) => (
+        {activeGoals.map((goal: any) => (
           <Card
             key={goal.id}
             className={cn(

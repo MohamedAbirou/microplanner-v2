@@ -9,7 +9,7 @@ import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import { startOfWeek, endOfWeek } from 'date-fns';
 
 export default function WeekPage() {
-  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = React.useState<any | null>(null);
 
   // Get current week's start and end dates
   const today = new Date();
@@ -23,7 +23,7 @@ export default function WeekPage() {
 
   // Filter tasks for current week on client side
   const tasks = React.useMemo(() => {
-    return allTasks.filter((task) => {
+    return allTasks.filter((task: any) => {
       if (!task.scheduledDate) return false;
       const taskDate = new Date(task.scheduledDate);
       return taskDate >= weekStart && taskDate <= weekEnd;
@@ -33,7 +33,7 @@ export default function WeekPage() {
   const { updateTask } = useUpdateTask();
 
   const handleTaskClick = (task: any) => {
-    setSelectedTaskId(task.id);
+    setSelectedTask(task);
   };
 
   const handleTaskReschedule = async (taskId: string, newDate: string, newStartTime: string) => {
@@ -70,16 +70,16 @@ export default function WeekPage() {
       />
 
       {/* Task Detail Modal */}
-      {selectedTaskId && (
-        <TaskDetailModal
-          taskId={selectedTaskId}
-          open={!!selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
-          onUpdate={async (taskId, updates) => {
-            await refetch();
-          }}
-        />
-      )}
+      <TaskDetailModal
+        task={selectedTask}
+        open={!!selectedTask}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTask(null);
+        }}
+        onUpdate={async () => {
+          await refetch();
+        }}
+      />
     </div>
   );
 }

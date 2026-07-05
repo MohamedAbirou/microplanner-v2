@@ -74,7 +74,9 @@ export class TasksService {
         startTime: createTaskDto.startTime,
         endTime, // Use calculated endTime
         durationMinutes: createTaskDto.durationMinutes,
-        recurrenceRule: createTaskDto.recurrenceRule || null, // Store as JSONB
+        recurrenceRule: createTaskDto.recurrenceRule
+          ? JSON.parse(JSON.stringify(createTaskDto.recurrenceRule))
+          : null, // Store as JSONB (DTO class instance -> plain JSON)
         aiGenerated: false,
         manuallyAdded: true,
         syncStatus: SyncStatus.PENDING,

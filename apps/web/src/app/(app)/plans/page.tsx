@@ -197,7 +197,7 @@ export default function PlansPage() {
           <div>
             <h4 className="text-sm font-medium mb-3">Goal Breakdown</h4>
             <div className="grid gap-2 md:grid-cols-2">
-              {activePlan.goals.map((goal) => (
+              {activePlan.goals.map((goal: any) => (
                 <div
                   key={goal.id}
                   className="flex items-center justify-between p-3 rounded-lg border"
@@ -239,7 +239,7 @@ export default function PlansPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {planHistory.map((plan) => (
+                {planHistory.map((plan: any) => (
                   <div
                     key={plan.id}
                     className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"

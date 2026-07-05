@@ -2,13 +2,16 @@
 
 import * as React from 'react';
 import { DayCalendar } from '@/components/calendar/day-calendar';
-import { startOfDay, endOfDay } from 'date-fns';
-import { useTasks } from '@/hooks/use-graphql';
+import { startOfDay } from 'date-fns';
+import { useTasks, useCreateTask, useGoals } from '@/hooks/use-graphql';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
-import { QuickAddTaskModal } from '@/components/tasks/quick-add-task-modal';
+import {
+  QuickAddTaskModal,
+  type TaskFormData,
+} from '@/components/tasks/quick-add-task-modal';
 
 export default function DayPage() {
-  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = React.useState<any | null>(null);
   const [quickAddTime, setQuickAddTime] = React.useState<{ hour: number; minute: number } | null>(null);
 
   // Fetch tasks for today
@@ -17,13 +20,22 @@ export default function DayPage() {
   const { tasks, loading, refetch } = useTasks({
     scheduledDate: startOfDay(today),
   });
+  const { goals } = useGoals();
+  const { createTask } = useCreateTask();
 
   const handleTaskClick = (task: any) => {
-    setSelectedTaskId(task.id);
+    setSelectedTask(task);
   };
 
   const handleTimeSlotClick = (hour: number, minute: number) => {
     setQuickAddTime({ hour, minute });
+  };
+
+  const handleQuickAddSubmit = async (data: TaskFormData) => {
+    const { isRecurring, ...taskInput } = data as any;
+    await createTask({ variables: { input: taskInput } });
+    setQuickAddTime(null);
+    refetch();
   };
 
   if (loading) {
@@ -43,28 +55,29 @@ export default function DayPage() {
       />
 
       {/* Task Detail Modal */}
-      {selectedTaskId && (
-        <TaskDetailModal
-          taskId={selectedTaskId}
-          open={!!selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
-          onUpdate={async (taskId, updates) => {
-            await refetch();
-          }}
-        />
-      )}
+      <TaskDetailModal
+        task={selectedTask}
+        open={!!selectedTask}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTask(null);
+        }}
+        goals={goals}
+        onUpdate={async () => {
+          await refetch();
+        }}
+      />
 
       {/* Quick Add Task Modal */}
       {quickAddTime && (
         <QuickAddTaskModal
           open={!!quickAddTime}
-          onClose={() => setQuickAddTime(null)}
-          defaultTime={`${quickAddTime.hour.toString().padStart(2, '0')}:${quickAddTime.minute.toString().padStart(2, '0')}`}
-          defaultDate={today.toISOString()}
-          onSuccess={() => {
-            setQuickAddTime(null);
-            refetch();
+          onOpenChange={(open) => {
+            if (!open) setQuickAddTime(null);
           }}
+          goals={goals}
+          defaultTime={`${quickAddTime.hour.toString().padStart(2, '0')}:${quickAddTime.minute.toString().padStart(2, '0')}`}
+          defaultDate={today}
+          onSubmit={handleQuickAddSubmit}
         />
       )}
     </div>

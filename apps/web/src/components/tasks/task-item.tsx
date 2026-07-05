@@ -213,7 +213,7 @@ export function TaskItem({
               {task.durationMinutes}min
             </span>
           )}
-          {task.timeSpentMinutes > 0 && (
+          {(task.timeSpentMinutes ?? 0) > 0 && (
             <span className="flex items-center gap-1 text-green-600">
               <Timer className="h-3 w-3" />
               {task.timeSpentMinutes}min tracked

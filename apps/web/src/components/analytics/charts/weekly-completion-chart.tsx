@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-interface WeeklyCompletionChartProps {
+export interface WeeklyCompletionChartProps {
   data: Array<{
     week: string;
     completed: number;

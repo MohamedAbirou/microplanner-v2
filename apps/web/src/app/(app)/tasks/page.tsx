@@ -232,7 +232,7 @@ export default function TasksPage() {
               filteredAndSortedTasks.map((task) => (
                 <ResizableTaskCard
                   key={task.id}
-                  task={task}
+                  task={task as any}
                   onClick={() => setSelectedTaskId(task.id)}
                   onResize={handleTaskResize}
                   showCheckbox={taskSelection.isAnySelected || undefined}
@@ -264,16 +264,17 @@ export default function TasksPage() {
       />
 
       {/* Task Detail Modal */}
-      {selectedTaskId && (
-        <TaskDetailModal
-          taskId={selectedTaskId}
-          open={!!selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
-          onUpdate={async (taskId, updates) => {
-            await refetch();
-          }}
-        />
-      )}
+      <TaskDetailModal
+        task={(allTasks.find((t: any) => t.id === selectedTaskId) as any) || null}
+        open={!!selectedTaskId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTaskId(null);
+        }}
+        goals={goals}
+        onUpdate={async () => {
+          await refetch();
+        }}
+      />
     </div>
   );
 }

@@ -203,7 +203,7 @@ export function QuickAddTaskModal({
         setFormData({
           ...formData,
           isRecurring: true,
-          recurrenceRule: { ...preset.rule },
+          recurrenceRule: { ...(preset.rule as any) },
         });
       }
     }
