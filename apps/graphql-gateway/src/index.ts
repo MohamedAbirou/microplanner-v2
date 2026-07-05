@@ -230,7 +230,6 @@ async function startServer() {
   // Start Apollo Server
   await server.start();
 
-  // CORS configuration for credentials
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
@@ -240,27 +239,35 @@ async function startServer() {
     ...(process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()) || []),
   ].filter(Boolean) as string[];
 
+  const isAllowedOrigin = (origin: string | undefined): boolean => {
+    if (!origin) return true;
+    if (allowedOrigins.includes(origin)) return true;
+    if (origin.endsWith('.vercel.app')) return true;
+    return false;
+  };
+
+  const corsOptions: cors.CorsOptions = {
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, origin || true);
+        return;
+      }
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  };
+
+  // CORS on all routes so preflight succeeds even if the client URL is misconfigured
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
+
+  app.get('/', (_req, res) => {
+    res.json({ status: 'ok', graphql: '/graphql' });
+  });
+
   app.use(
     '/graphql',
-    cors({
-      origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, etc.)
-        if (!origin) return callback(null, true);
-
-        if (allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else if (
-          process.env.NODE_ENV === 'production' &&
-          origin.endsWith('.vercel.app')
-        ) {
-          callback(null, true);
-        } else {
-          console.warn(`CORS blocked origin: ${origin}`);
-          callback(new Error('Not allowed by CORS'));
-        }
-      },
-      credentials: true, // Allow credentials (cookies, authorization headers)
-    }),
     express.json(),
     expressMiddleware(server, {
       context: async ({ req }) => {
@@ -328,8 +335,8 @@ async function startServer() {
   await new Promise<void>((resolve) => httpServer.listen({ port: PORT }, resolve));
 
   console.log(`🚀 GraphQL Gateway ready at http://localhost:${PORT}/graphql`);
-  console.log(`📊 GraphQL Playground: http://localhost:${PORT}/graphql`);
-  console.log(`✅ CORS enabled for: ${allowedOrigins.join(', ')}`);
+  console.log(`📊 GraphQL endpoint: /graphql (set NEXT_PUBLIC_GRAPHQL_URL to .../graphql)`);
+  console.log(`✅ CORS allowed origins: ${allowedOrigins.join(', ') || '(none)'} + *.vercel.app`);
 }
 
 // Handle graceful shutdown
