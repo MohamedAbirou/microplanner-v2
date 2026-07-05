@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Query, Body, Redirect, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CalendarService } from './calendar.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
@@ -125,5 +125,110 @@ export class CalendarController {
     return {
       message: 'Google Calendar disconnected successfully',
     };
+  }
+
+  // ============================================================
+  // CONNECTIONS API — consumed by the GraphQL gateway datasource.
+  // Returns bare entities (no {message,...} wrappers).
+  // ============================================================
+
+  @Get('connections')
+  @ApiOperation({ summary: 'List calendar connections' })
+  async listConnections(@CurrentUser() user: User) {
+    return this.calendarService.listConnections(user.id);
+  }
+
+  @Post('connections')
+  @ApiOperation({ summary: 'Create a connection from an OAuth code' })
+  async createConnection(
+    @CurrentUser() user: User,
+    @Body() input: { provider: string; code: string; state?: string },
+  ) {
+    return this.calendarService.connectFromInput(user.id, input);
+  }
+
+  @Get('connections/:id')
+  @ApiOperation({ summary: 'Get a calendar connection' })
+  async getConnection(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.calendarService.getConnection(id, user.id);
+  }
+
+  @Delete('connections/:id')
+  @ApiOperation({ summary: 'Remove a calendar connection' })
+  async deleteConnection(@CurrentUser() user: User, @Param('id') id: string) {
+    await this.calendarService.disconnectConnection(id, user.id);
+    return { success: true };
+  }
+
+  @Post('connections/:id/sync')
+  @ApiOperation({ summary: 'Sync a specific calendar connection' })
+  async syncConnection(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.calendarService.syncConnection(id, user.id);
+  }
+
+  @Get('connections/:id/events')
+  @ApiOperation({ summary: 'Events for a specific connection' })
+  async getConnectionEvents(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const start = startDate ? new Date(startDate) : new Date();
+    const end = endDate ? new Date(endDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    return this.calendarService.getConnectionEvents(id, user.id, start, end);
+  }
+
+  @Post('auth/initiate')
+  @ApiOperation({ summary: 'Get OAuth URL for a calendar provider' })
+  async initiateAuth(@CurrentUser() user: User, @Body('provider') provider: string) {
+    return this.calendarService.initiateAuth(user.id, provider);
+  }
+
+  @Post('sync-all')
+  @ApiOperation({ summary: 'Sync all calendar connections' })
+  async syncAll(@CurrentUser() user: User) {
+    return this.calendarService.syncAllConnections(user.id);
+  }
+
+  @Get('busy-slots')
+  @ApiOperation({ summary: 'Busy slots across connected calendars' })
+  async getBusySlots(
+    @CurrentUser() user: User,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    if (!startDate || !endDate) {
+      throw new BadRequestException('startDate and endDate are required');
+    }
+    return this.calendarService.getBusySlots(user.id, new Date(startDate), new Date(endDate));
+  }
+
+  @Post('events')
+  @ApiOperation({ summary: 'Create a calendar event' })
+  async createEvent(
+    @CurrentUser() user: User,
+    @Body()
+    input: { title: string; description?: string; start: string; end: string; allDay?: boolean; location?: string },
+  ) {
+    return this.calendarService.createCalendarEvent(user.id, input);
+  }
+
+  @Put('events/:id')
+  @ApiOperation({ summary: 'Update a calendar event' })
+  async updateEvent(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body()
+    input: { title?: string; description?: string; start?: string; end?: string; location?: string },
+  ) {
+    return this.calendarService.updateCalendarEvent(id, user.id, input);
+  }
+
+  @Delete('events/:id')
+  @ApiOperation({ summary: 'Delete a calendar event' })
+  async deleteEvent(@CurrentUser() user: User, @Param('id') id: string) {
+    await this.calendarService.deleteCalendarEvent(id, user.id);
+    return { success: true };
   }
 }

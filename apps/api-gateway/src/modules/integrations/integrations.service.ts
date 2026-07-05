@@ -338,6 +338,127 @@ export class IntegrationsService {
   }
 
   /**
+   * Get a single webhook (owner only)
+   */
+  async getWebhook(webhookId: string, userId: string): Promise<Webhook> {
+    const webhook = await this.prisma.webhook.findFirst({
+      where: { id: webhookId, userId },
+    });
+
+    if (!webhook) {
+      throw new NotFoundException('Webhook not found');
+    }
+
+    return webhook as unknown as Webhook;
+  }
+
+  /**
+   * Toggle a webhook's active state
+   */
+  async toggleWebhook(webhookId: string, userId: string): Promise<Webhook> {
+    const webhook = await this.prisma.webhook.findFirst({
+      where: { id: webhookId, userId },
+    });
+
+    if (!webhook) {
+      throw new NotFoundException('Webhook not found');
+    }
+
+    const updated = await this.prisma.webhook.update({
+      where: { id: webhookId },
+      data: { isActive: !webhook.isActive },
+    });
+
+    this.logger.log(`Webhook ${webhookId} ${updated.isActive ? 'enabled' : 'disabled'}`);
+    return updated as unknown as Webhook;
+  }
+
+  /**
+   * List deliveries for a webhook (owner only)
+   */
+  async getWebhookDeliveries(webhookId: string, userId: string, take = 50) {
+    // Ownership check
+    await this.getWebhook(webhookId, userId);
+
+    return this.prisma.webhookDelivery.findMany({
+      where: { webhookId },
+      orderBy: { createdAt: 'desc' },
+      take: Number(take) || 50,
+    });
+  }
+
+  /**
+   * Retry a failed webhook delivery (owner only)
+   */
+  async retryWebhookDelivery(deliveryId: string, userId: string) {
+    const delivery = await this.prisma.webhookDelivery.findUnique({
+      where: { id: deliveryId },
+      include: { webhook: true },
+    });
+
+    if (!delivery || delivery.webhook.userId !== userId) {
+      throw new NotFoundException('Webhook delivery not found');
+    }
+
+    const payload = delivery.payload as any;
+
+    try {
+      const signature = this.generateWebhookSignature(payload, delivery.webhook.secret);
+      const response = await axios.post(delivery.webhook.url, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-MicroPlanner-Signature': signature,
+          'X-MicroPlanner-Event': delivery.event,
+        },
+        timeout: 10000,
+      });
+
+      return this.prisma.webhookDelivery.update({
+        where: { id: deliveryId },
+        data: {
+          status: 'success',
+          statusCode: response.status,
+          responseBody: JSON.stringify(response.data),
+          error: null,
+          attempts: { increment: 1 },
+          lastAttemptAt: new Date(),
+        },
+      });
+    } catch (error: any) {
+      return this.prisma.webhookDelivery.update({
+        where: { id: deliveryId },
+        data: {
+          status: 'failed',
+          statusCode: error?.response?.status || null,
+          error: error?.message || 'Delivery failed',
+          attempts: { increment: 1 },
+          lastAttemptAt: new Date(),
+        },
+      });
+    }
+  }
+
+  /**
+   * Manually trigger a sync for an integration.
+   * Marks the sync time; the per-provider sync logic hooks in here as it lands.
+   */
+  async syncIntegration(integrationId: string, userId: string): Promise<Integration> {
+    const integration = await this.getIntegration(integrationId, userId);
+
+    if (!(integration as any).isActive) {
+      throw new BadRequestException('Integration is not active');
+    }
+
+    const updated = await this.prisma.integration.update({
+      where: { id: integrationId },
+      data: { lastSyncAt: new Date() },
+    });
+
+    this.logger.log(`Integration ${integrationId} synced`);
+    return updated as unknown as Integration;
+  }
+
+  /**
    * Trigger webhook event
    */
   async triggerWebhook(event: WebhookEvent, userId: string, data: any): Promise<void> {

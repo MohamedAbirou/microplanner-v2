@@ -1,5 +1,5 @@
 import { WaitlistStatus } from '@microplanner/database';
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { EmailService } from '../email/email.service';
 import { JoinWaitlistInput } from './dto/join-waitlist.input';
@@ -101,5 +101,62 @@ export class WaitlistService {
       converted,
       averageWaitDays,
     };
+  }
+
+  async getEntry(email: string) {
+    const entry = await this.prisma.waitlist.findUnique({ where: { email } });
+    if (!entry) {
+      throw new NotFoundException(`Waitlist entry for ${email} not found`);
+    }
+    return entry;
+  }
+
+  async getEntries(filters: { status?: WaitlistStatus; take?: number; skip?: number } = {}) {
+    const where = filters.status ? { status: filters.status } : {};
+    const [entries, total] = await Promise.all([
+      this.prisma.waitlist.findMany({
+        where,
+        orderBy: { position: 'asc' },
+        take: filters.take ? Number(filters.take) : 100,
+        skip: filters.skip ? Number(filters.skip) : 0,
+      }),
+      this.prisma.waitlist.count({ where }),
+    ]);
+    return { entries, total };
+  }
+
+  async updateStatus(id: string, status: WaitlistStatus) {
+    const entry = await this.prisma.waitlist.findUnique({ where: { id } });
+    if (!entry) {
+      throw new NotFoundException('Waitlist entry not found');
+    }
+    return this.prisma.waitlist.update({
+      where: { id },
+      data: {
+        status,
+        ...(status === WaitlistStatus.INVITED ? { invitedAt: new Date() } : {}),
+        ...(status === WaitlistStatus.CONVERTED ? { convertedAt: new Date() } : {}),
+      },
+    });
+  }
+
+  async sendInvitation(id: string) {
+    const entry = await this.prisma.waitlist.findUnique({ where: { id } });
+    if (!entry) {
+      throw new NotFoundException('Waitlist entry not found');
+    }
+
+    const updated = await this.prisma.waitlist.update({
+      where: { id },
+      data: { status: WaitlistStatus.INVITED, invitedAt: new Date() },
+    });
+
+    this.emailService
+      .sendWaitlistInvitation(entry.email, entry.name || '')
+      .catch((error) => {
+        this.logger.error(`Failed to send waitlist invitation email: ${error.message}`);
+      });
+
+    return updated;
   }
 }

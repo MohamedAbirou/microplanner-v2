@@ -9,6 +9,8 @@ import type { User } from '@microplanner/database';
 import { SubscriptionTier } from '@microplanner/database';
 import { GeneratePlanDto } from './dto/generate-plan.dto';
 import { QueryPlansDto } from './dto/query-plans.dto';
+import { CreatePlanDto } from './dto/create-plan.dto';
+import { UpdatePlanDto } from './dto/update-plan.dto';
 import {
   CreateTemplateDto,
   UpdateTemplateDto,
@@ -68,15 +70,31 @@ export class PlansController {
     };
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a single plan by ID' })
-  @ApiResponse({ status: 200, description: 'Plan retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Plan not found' })
-  async findOne(@CurrentUser() user: User, @Param('id') id: string) {
-    const plan = await this.plansService.findOne(id, user.id);
+  @Post()
+  @ApiOperation({ summary: 'Create a plan manually (empty draft, no AI)' })
+  @ApiResponse({ status: 201, description: 'Plan created successfully' })
+  async create(@CurrentUser() user: User, @Body() createPlanDto: CreatePlanDto) {
+    const plan = await this.plansService.createManual(user.id, createPlanDto);
 
     return {
-      message: 'Plan retrieved successfully',
+      message: 'Plan created successfully',
+      plan,
+    };
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update plan title/description/status' })
+  @ApiResponse({ status: 200, description: 'Plan updated successfully' })
+  @ApiResponse({ status: 404, description: 'Plan not found' })
+  async update(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() updatePlanDto: UpdatePlanDto
+  ) {
+    const plan = await this.plansService.update(id, user.id, updatePlanDto);
+
+    return {
+      message: 'Plan updated successfully',
       plan,
     };
   }
@@ -402,6 +420,21 @@ export class PlansController {
         totalTasks: tasks.length,
         templateId: generateDto.templateId,
       },
+    };
+  }
+
+  // NOTE: keep this LAST — a parameterized GET :id declared earlier would
+  // shadow literal routes like GET /plans/templates and GET /plans/current.
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a single plan by ID' })
+  @ApiResponse({ status: 200, description: 'Plan retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Plan not found' })
+  async findOne(@CurrentUser() user: User, @Param('id') id: string) {
+    const plan = await this.plansService.findOne(id, user.id);
+
+    return {
+      message: 'Plan retrieved successfully',
+      plan,
     };
   }
 }

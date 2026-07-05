@@ -32,6 +32,10 @@ import {
 export class IntegrationsController {
   constructor(private readonly integrationsService: IntegrationsService) {}
 
+  // NOTE: literal routes (webhooks/*, oauth/*) are declared BEFORE the
+  // parameterized :id routes below — Express matches in declaration order,
+  // so GET :id declared first would shadow GET webhooks.
+
   // ==================== INTEGRATIONS ====================
 
   /**
@@ -39,15 +43,7 @@ export class IntegrationsController {
    */
   @Get()
   async getUserIntegrations(@Request() req: any) {
-    return this.integrationsService.getUserIntegrations(req.user.userId);
-  }
-
-  /**
-   * Get integration by ID
-   */
-  @Get(':id')
-  async getIntegration(@Request() req: any, @Param('id') integrationId: string) {
-    return this.integrationsService.getIntegration(integrationId, req.user.userId);
+    return this.integrationsService.getUserIntegrations(req.user.id);
   }
 
   /**
@@ -55,7 +51,7 @@ export class IntegrationsController {
    */
   @Post()
   async createIntegration(@Request() req: any, @Body() createDto: CreateIntegrationDto) {
-    return this.integrationsService.createIntegration(req.user.userId, createDto);
+    return this.integrationsService.createIntegration(req.user.id, createDto);
   }
 
   /**
@@ -69,7 +65,7 @@ export class IntegrationsController {
   ) {
     return this.integrationsService.updateIntegration(
       integrationId,
-      req.user.userId,
+      req.user.id,
       updateDto,
     );
   }
@@ -80,7 +76,7 @@ export class IntegrationsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteIntegration(@Request() req: any, @Param('id') integrationId: string) {
-    await this.integrationsService.deleteIntegration(integrationId, req.user.userId);
+    await this.integrationsService.deleteIntegration(integrationId, req.user.id);
   }
 
   // ==================== OAUTH ====================
@@ -96,7 +92,7 @@ export class IntegrationsController {
   ) {
     const authUrl = this.integrationsService.getOAuthUrl(
       type,
-      req.user.userId,
+      req.user.id,
       redirectUri || `${process.env.APP_URL}/integrations/callback`,
     );
 
@@ -130,7 +126,7 @@ export class IntegrationsController {
    */
   @Post('webhooks')
   async createWebhook(@Request() req: any, @Body() createDto: CreateWebhookDto) {
-    return this.integrationsService.createWebhook(req.user.userId, createDto);
+    return this.integrationsService.createWebhook(req.user.id, createDto);
   }
 
   /**
@@ -138,7 +134,7 @@ export class IntegrationsController {
    */
   @Get('webhooks')
   async getUserWebhooks(@Request() req: any) {
-    return this.integrationsService.getUserWebhooks(req.user.userId);
+    return this.integrationsService.getUserWebhooks(req.user.id);
   }
 
   /**
@@ -150,7 +146,7 @@ export class IntegrationsController {
     @Param('id') webhookId: string,
     @Body() updateDto: UpdateWebhookDto,
   ) {
-    return this.integrationsService.updateWebhook(webhookId, req.user.userId, updateDto);
+    return this.integrationsService.updateWebhook(webhookId, req.user.id, updateDto);
   }
 
   /**
@@ -159,7 +155,7 @@ export class IntegrationsController {
   @Delete('webhooks/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteWebhook(@Request() req: any, @Param('id') webhookId: string) {
-    await this.integrationsService.deleteWebhook(webhookId, req.user.userId);
+    await this.integrationsService.deleteWebhook(webhookId, req.user.id);
   }
 
   /**
@@ -170,7 +166,7 @@ export class IntegrationsController {
     // Trigger a test webhook event
     await this.integrationsService.triggerWebhook(
       'goal.created' as any,
-      req.user.userId,
+      req.user.id,
       {
         test: true,
         message: 'This is a test webhook delivery',
@@ -178,5 +174,59 @@ export class IntegrationsController {
     );
 
     return { success: true, message: 'Test webhook triggered' };
+  }
+
+  /**
+   * Get a single webhook
+   */
+  @Get('webhooks/:id')
+  async getWebhook(@Request() req: any, @Param('id') webhookId: string) {
+    return this.integrationsService.getWebhook(webhookId, req.user.id);
+  }
+
+  /**
+   * Toggle webhook active state
+   */
+  @Put('webhooks/:id/toggle')
+  async toggleWebhook(@Request() req: any, @Param('id') webhookId: string) {
+    return this.integrationsService.toggleWebhook(webhookId, req.user.id);
+  }
+
+  /**
+   * List webhook deliveries
+   */
+  @Get('webhooks/:id/deliveries')
+  async getWebhookDeliveries(
+    @Request() req: any,
+    @Param('id') webhookId: string,
+    @Query('take') take?: number,
+  ) {
+    return this.integrationsService.getWebhookDeliveries(webhookId, req.user.id, take);
+  }
+
+  /**
+   * Retry a webhook delivery
+   */
+  @Post('webhooks/deliveries/:id/retry')
+  async retryWebhookDelivery(@Request() req: any, @Param('id') deliveryId: string) {
+    return this.integrationsService.retryWebhookDelivery(deliveryId, req.user.id);
+  }
+
+  // ==================== PARAMETERIZED ROUTES (keep last) ====================
+
+  /**
+   * Get integration by ID
+   */
+  @Get(':id')
+  async getIntegration(@Request() req: any, @Param('id') integrationId: string) {
+    return this.integrationsService.getIntegration(integrationId, req.user.id);
+  }
+
+  /**
+   * Manually trigger integration sync
+   */
+  @Post(':id/sync')
+  async syncIntegration(@Request() req: any, @Param('id') integrationId: string) {
+    return this.integrationsService.syncIntegration(integrationId, req.user.id);
   }
 }

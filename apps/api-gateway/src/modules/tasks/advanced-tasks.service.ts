@@ -464,6 +464,35 @@ export class AdvancedTasksService {
   }
 
   /**
+   * Archive / unarchive project
+   */
+  async setProjectArchived(
+    projectId: string,
+    userId: string,
+    archived: boolean,
+  ): Promise<Project> {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, userId },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    const updated = await this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        isArchived: archived,
+        archivedAt: archived ? new Date() : null,
+      },
+    });
+
+    this.logger.log(`Project ${archived ? 'archived' : 'unarchived'}: ${projectId}`);
+
+    return updated as unknown as Project;
+  }
+
+  /**
    * Delete project
    */
   async deleteProject(projectId: string, userId: string): Promise<void> {

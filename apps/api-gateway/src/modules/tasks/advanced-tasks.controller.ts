@@ -42,7 +42,7 @@ export class AdvancedTasksController {
    */
   @Post('dependencies')
   async createDependency(@Request() req: any, @Body() createDto: CreateTaskDependencyDto) {
-    return this.advancedTasksService.createDependency(req.user.userId, createDto);
+    return this.advancedTasksService.createDependency(req.user.id, createDto);
   }
 
   /**
@@ -50,7 +50,7 @@ export class AdvancedTasksController {
    */
   @Get(':id/dependencies')
   async getTaskDependencies(@Request() req: any, @Param('id') taskId: string) {
-    return this.advancedTasksService.getTaskDependencies(taskId, req.user.userId);
+    return this.advancedTasksService.getTaskDependencies(taskId, req.user.id);
   }
 
   /**
@@ -59,7 +59,7 @@ export class AdvancedTasksController {
   @Delete('dependencies/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDependency(@Request() req: any, @Param('id') dependencyId: string) {
-    await this.advancedTasksService.deleteDependency(dependencyId, req.user.userId);
+    await this.advancedTasksService.deleteDependency(dependencyId, req.user.id);
   }
 
   // ==================== SUBTASKS ====================
@@ -69,7 +69,7 @@ export class AdvancedTasksController {
    */
   @Post('subtasks')
   async createSubtask(@Request() req: any, @Body() createDto: CreateSubtaskDto) {
-    return this.advancedTasksService.createSubtask(req.user.userId, createDto);
+    return this.advancedTasksService.createSubtask(req.user.id, createDto);
   }
 
   /**
@@ -77,7 +77,7 @@ export class AdvancedTasksController {
    */
   @Get(':id/subtasks')
   async getSubtasks(@Request() req: any, @Param('id') parentTaskId: string) {
-    return this.advancedTasksService.getSubtasks(parentTaskId, req.user.userId);
+    return this.advancedTasksService.getSubtasks(parentTaskId, req.user.id);
   }
 
   // ==================== TIME TRACKING ====================
@@ -87,7 +87,7 @@ export class AdvancedTasksController {
    */
   @Post('timer/start')
   async startTimer(@Request() req: any, @Body() dto: StartTimerDto) {
-    return this.advancedTasksService.startTimer(req.user.userId, dto);
+    return this.advancedTasksService.startTimer(req.user.id, dto);
   }
 
   /**
@@ -95,7 +95,7 @@ export class AdvancedTasksController {
    */
   @Post('timer/stop')
   async stopTimer(@Request() req: any, @Body() dto: StopTimerDto) {
-    return this.advancedTasksService.stopTimer(req.user.userId, dto);
+    return this.advancedTasksService.stopTimer(req.user.id, dto);
   }
 
   /**
@@ -103,7 +103,7 @@ export class AdvancedTasksController {
    */
   @Post('time/log')
   async logTime(@Request() req: any, @Body() dto: LogTimeDto) {
-    return this.advancedTasksService.logTime(req.user.userId, dto);
+    return this.advancedTasksService.logTime(req.user.id, dto);
   }
 
   /**
@@ -116,7 +116,7 @@ export class AdvancedTasksController {
     @Query('endDate') endDate?: string,
   ) {
     return this.advancedTasksService.getTimeTrackingStats(
-      req.user.userId,
+      req.user.id,
       startDate ? new Date(startDate) : undefined,
       endDate ? new Date(endDate) : undefined,
     );
@@ -129,7 +129,7 @@ export class AdvancedTasksController {
    */
   @Post('projects')
   async createProject(@Request() req: any, @Body() createDto: CreateProjectDto) {
-    return this.advancedTasksService.createProject(req.user.userId, createDto);
+    return this.advancedTasksService.createProject(req.user.id, createDto);
   }
 
   /**
@@ -141,7 +141,7 @@ export class AdvancedTasksController {
     @Query('includeArchived') includeArchived?: string,
   ) {
     return this.advancedTasksService.getUserProjects(
-      req.user.userId,
+      req.user.id,
       includeArchived === 'true',
     );
   }
@@ -151,7 +151,31 @@ export class AdvancedTasksController {
    */
   @Get('projects/:id')
   async getProjectWithStats(@Request() req: any, @Param('id') projectId: string) {
-    return this.advancedTasksService.getProjectWithStats(projectId, req.user.userId);
+    return this.advancedTasksService.getProjectWithStats(projectId, req.user.id);
+  }
+
+  /**
+   * Get project stats (alias used by the GraphQL gateway)
+   */
+  @Get('projects/:id/stats')
+  async getProjectStats(@Request() req: any, @Param('id') projectId: string) {
+    return this.advancedTasksService.getProjectWithStats(projectId, req.user.id);
+  }
+
+  /**
+   * Archive project
+   */
+  @Post('projects/:id/archive')
+  async archiveProject(@Request() req: any, @Param('id') projectId: string) {
+    return this.advancedTasksService.setProjectArchived(projectId, req.user.id, true);
+  }
+
+  /**
+   * Unarchive project
+   */
+  @Post('projects/:id/unarchive')
+  async unarchiveProject(@Request() req: any, @Param('id') projectId: string) {
+    return this.advancedTasksService.setProjectArchived(projectId, req.user.id, false);
   }
 
   /**
@@ -163,7 +187,7 @@ export class AdvancedTasksController {
     @Param('id') projectId: string,
     @Body() updateDto: UpdateProjectDto,
   ) {
-    return this.advancedTasksService.updateProject(projectId, req.user.userId, updateDto);
+    return this.advancedTasksService.updateProject(projectId, req.user.id, updateDto);
   }
 
   /**
@@ -172,6 +196,6 @@ export class AdvancedTasksController {
   @Delete('projects/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteProject(@Request() req: any, @Param('id') projectId: string) {
-    await this.advancedTasksService.deleteProject(projectId, req.user.userId);
+    await this.advancedTasksService.deleteProject(projectId, req.user.id);
   }
 }

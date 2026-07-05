@@ -576,4 +576,232 @@ export class CalendarService {
       recentSyncs: recentLogs,
     };
   }
+
+  // ============================================================
+  // CONNECTIONS API — shape consumed by the GraphQL gateway
+  // (CalendarConnection type). Google is the only provider today;
+  // other providers return a clear error instead of pretending.
+  // ============================================================
+
+  private mapTokenToConnection(token: {
+    id: string;
+    userId: string;
+    provider: string;
+    email: string | null;
+    calendarId: string | null;
+    calendarName: string | null;
+    syncEnabled: boolean;
+    lastSyncAt: Date | null;
+    syncErrors: number;
+    lastError: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }) {
+    return {
+      id: token.id,
+      userId: token.userId,
+      provider: token.provider.toUpperCase(), // GraphQL enum: GOOGLE | OUTLOOK | APPLE
+      email: token.email,
+      calendarId: token.calendarId,
+      calendarName: token.calendarName,
+      syncEnabled: token.syncEnabled,
+      lastSyncAt: token.lastSyncAt,
+      syncErrors: token.syncErrors,
+      lastError: token.lastError,
+      createdAt: token.createdAt,
+      updatedAt: token.updatedAt,
+    };
+  }
+
+  async listConnections(userId: string) {
+    const tokens = await this.prisma.calendarToken.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+    });
+    return tokens.map(t => this.mapTokenToConnection(t));
+  }
+
+  async getConnection(connectionId: string, userId: string) {
+    const token = await this.prisma.calendarToken.findFirst({
+      where: { id: connectionId, userId },
+    });
+    if (!token) {
+      throw new BadRequestException('Calendar connection not found');
+    }
+    return this.mapTokenToConnection(token);
+  }
+
+  initiateAuth(userId: string, provider: string) {
+    const normalized = (provider || '').toLowerCase();
+    if (normalized !== 'google') {
+      throw new BadRequestException(
+        `${provider} calendar is not supported yet. Google Calendar is currently the only supported provider.`
+      );
+    }
+    return { url: this.googleOAuthService.generateAuthUrl(userId), provider: 'GOOGLE' };
+  }
+
+  async connectFromInput(userId: string, input: { provider: string; code: string; state?: string }) {
+    const normalized = (input.provider || '').toLowerCase();
+    if (normalized !== 'google') {
+      throw new BadRequestException(
+        `${input.provider} calendar is not supported yet. Google Calendar is currently the only supported provider.`
+      );
+    }
+    const token = await this.googleOAuthService.handleCallback(input.code, input.state || '', userId);
+    return this.mapTokenToConnection(token as any);
+  }
+
+  async disconnectConnection(connectionId: string, userId: string) {
+    // Ownership check happens in getConnection
+    await this.getConnection(connectionId, userId);
+    await this.prisma.calendarToken.delete({ where: { id: connectionId } });
+    this.logger.log(`Calendar connection ${connectionId} removed for user ${userId}`);
+  }
+
+  /**
+   * Sync a specific connection (Google only today) and map the result to the
+   * GraphQL SyncResult shape.
+   */
+  async syncConnection(connectionId: string, userId: string) {
+    const connection = await this.getConnection(connectionId, userId);
+    const startTime = Date.now();
+    const result = await this.syncTasks(userId, {} as SyncTasksDto);
+
+    return {
+      success: result.failed === 0,
+      provider: connection.provider,
+      tasksAttempted: result.success + result.failed + result.skipped,
+      tasksSucceeded: result.success,
+      tasksFailed: result.failed,
+      duration: Date.now() - startTime,
+      errors: result.details
+        .filter(d => d.status === 'failed')
+        .map(d => ({ taskId: d.taskId, message: d.error || 'Sync failed', code: 'SYNC_FAILED' })),
+    };
+  }
+
+  async syncAllConnections(userId: string) {
+    const connections = await this.listConnections(userId);
+    const results = [];
+    for (const connection of connections) {
+      if (!connection.syncEnabled) continue;
+      results.push(await this.syncConnection(connection.id, userId));
+    }
+    return results;
+  }
+
+  /**
+   * Busy slots for the GraphQL BusySlot type
+   */
+  async getBusySlots(userId: string, startDate: Date, endDate: Date) {
+    const events = await this.getEventsForPlanning(userId, startDate, endDate);
+    return events.map(e => ({ start: e.start, end: e.end, title: e.title }));
+  }
+
+  /**
+   * Events for a specific connection, mapped to the GraphQL CalendarEvent type
+   */
+  async getConnectionEvents(connectionId: string, userId: string, startDate: Date, endDate: Date) {
+    const connection = await this.getConnection(connectionId, userId);
+    const events = await this.getEventsForPlanning(userId, startDate, endDate);
+    return events.map(e => ({
+      id: e.id,
+      title: e.title,
+      description: null,
+      start: e.start,
+      end: e.end,
+      allDay: e.isAllDay,
+      source: connection.provider,
+      attendees: [],
+      location: null,
+    }));
+  }
+
+  /**
+   * Create a calendar event directly (not tied to a task)
+   */
+  async createCalendarEvent(
+    userId: string,
+    input: { title: string; description?: string; start: string; end: string; allDay?: boolean; location?: string }
+  ) {
+    const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
+    const calendar = google.calendar({ version: 'v3', auth: authClient });
+
+    const response = await calendar.events.insert({
+      calendarId: 'primary',
+      requestBody: {
+        summary: input.title,
+        description: input.description || undefined,
+        location: input.location || undefined,
+        start: input.allDay
+          ? { date: input.start.split('T')[0] }
+          : { dateTime: new Date(input.start).toISOString() },
+        end: input.allDay
+          ? { date: input.end.split('T')[0] }
+          : { dateTime: new Date(input.end).toISOString() },
+      },
+    });
+
+    const event = response.data;
+    return {
+      id: event.id,
+      title: event.summary || input.title,
+      description: event.description || null,
+      start: event.start?.dateTime || event.start?.date,
+      end: event.end?.dateTime || event.end?.date,
+      allDay: !!event.start?.date,
+      source: 'GOOGLE',
+      attendees: (event.attendees || []).map(a => a.email || '').filter(Boolean),
+      location: event.location || null,
+    };
+  }
+
+  /**
+   * Update a calendar event
+   */
+  async updateCalendarEvent(
+    eventId: string,
+    userId: string,
+    input: { title?: string; description?: string; start?: string; end?: string; location?: string }
+  ) {
+    const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
+    const calendar = google.calendar({ version: 'v3', auth: authClient });
+
+    const patch: Record<string, unknown> = {};
+    if (input.title !== undefined) patch.summary = input.title;
+    if (input.description !== undefined) patch.description = input.description;
+    if (input.location !== undefined) patch.location = input.location;
+    if (input.start) patch.start = { dateTime: new Date(input.start).toISOString() };
+    if (input.end) patch.end = { dateTime: new Date(input.end).toISOString() };
+
+    const response = await calendar.events.patch({
+      calendarId: 'primary',
+      eventId,
+      requestBody: patch,
+    });
+
+    const event = response.data;
+    return {
+      id: event.id,
+      title: event.summary || '',
+      description: event.description || null,
+      start: event.start?.dateTime || event.start?.date,
+      end: event.end?.dateTime || event.end?.date,
+      allDay: !!event.start?.date,
+      source: 'GOOGLE',
+      attendees: (event.attendees || []).map(a => a.email || '').filter(Boolean),
+      location: event.location || null,
+    };
+  }
+
+  /**
+   * Delete a calendar event
+   */
+  async deleteCalendarEvent(eventId: string, userId: string) {
+    const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
+    const calendar = google.calendar({ version: 'v3', auth: authClient });
+    await calendar.events.delete({ calendarId: 'primary', eventId });
+    this.logger.log(`Calendar event ${eventId} deleted for user ${userId}`);
+  }
 }

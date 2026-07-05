@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Delete, Body, Headers, RawBodyRequest, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Headers, Query, RawBodyRequest, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { BillingService } from './billing.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { User } from '@microplanner/database';
+import { Public } from '../auth/decorators/public.decorator';
+import type { User, SubscriptionTierType } from '@microplanner/database';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { Request } from 'express';
 
@@ -72,6 +73,46 @@ export class BillingController {
     return result;
   }
 
+  @Get('info')
+  @ApiOperation({ summary: 'Get full billing info (subscription, payment method, period)' })
+  async getBillingInfo(@CurrentUser() user: User) {
+    return this.billingService.getBillingInfo(user.id);
+  }
+
+  @Get('usage')
+  @ApiOperation({ summary: 'Get usage vs tier limits' })
+  async getUsage(@CurrentUser() user: User) {
+    return this.billingService.getUsageStats(user.id);
+  }
+
+  @Get('can-use-feature')
+  @ApiOperation({ summary: 'Check if user can use a feature under their tier' })
+  async canUseFeature(@CurrentUser() user: User, @Query('feature') feature: string) {
+    return this.billingService.canUseFeature(user.id, feature);
+  }
+
+  @Post('upgrade')
+  @ApiOperation({ summary: 'Upgrade/change subscription tier' })
+  async upgrade(@CurrentUser() user: User, @Body('tier') tier: SubscriptionTierType) {
+    return this.billingService.upgradeSubscription(user.id, tier);
+  }
+
+  @Post('resume')
+  @ApiOperation({ summary: 'Resume a subscription set to cancel at period end' })
+  async resume(@CurrentUser() user: User) {
+    return this.billingService.resumeSubscription(user.id);
+  }
+
+  @Put('payment-method')
+  @ApiOperation({ summary: 'Update default payment method' })
+  async updatePaymentMethod(
+    @CurrentUser() user: User,
+    @Body('paymentMethodId') paymentMethodId: string
+  ) {
+    return this.billingService.updatePaymentMethod(user.id, paymentMethodId);
+  }
+
+  @Public() // Stripe calls this endpoint directly — signature verification is the auth
   @Post('webhooks/stripe')
   @ApiExcludeEndpoint() // Exclude from Swagger docs (no auth required)
   @ApiOperation({ summary: 'Handle Stripe webhook events' })

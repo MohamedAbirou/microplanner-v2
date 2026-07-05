@@ -220,6 +220,159 @@ export class PremiumService {
     return member as unknown as TeamMember;
   }
 
+  /**
+   * Update team (owner/admin only)
+   */
+  async updateTeam(
+    teamId: string,
+    userId: string,
+    updateDto: { name?: string; description?: string; maxMembers?: number; settings?: Record<string, unknown> }
+  ): Promise<Team> {
+    const membership = await this.prisma.teamMember.findFirst({
+      where: { teamId, userId, role: { in: ['owner', 'admin'] } },
+    });
+    if (!membership) {
+      throw new ForbiddenException('Only team owners/admins can update the team');
+    }
+
+    const team = await this.prisma.team.findUnique({ where: { id: teamId } });
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+
+    const updated = await this.prisma.team.update({
+      where: { id: teamId },
+      data: {
+        ...(updateDto.name !== undefined ? { name: updateDto.name } : {}),
+        ...(updateDto.description !== undefined ? { description: updateDto.description } : {}),
+        ...(updateDto.maxMembers !== undefined ? { maxMembers: updateDto.maxMembers } : {}),
+        ...(updateDto.settings !== undefined
+          ? { settings: { ...((team.settings as any) || {}), ...updateDto.settings } as any }
+          : {}),
+      },
+    });
+
+    this.logger.log(`Team updated: ${teamId} by user ${userId}`);
+    return updated as unknown as Team;
+  }
+
+  /**
+   * Delete team (owner only)
+   */
+  async deleteTeam(teamId: string, userId: string): Promise<void> {
+    const team = await this.prisma.team.findUnique({ where: { id: teamId } });
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+    if (team.ownerId !== userId) {
+      throw new ForbiddenException('Only the team owner can delete the team');
+    }
+
+    await this.prisma.team.delete({ where: { id: teamId } });
+    this.logger.log(`Team deleted: ${teamId} by user ${userId}`);
+  }
+
+  /**
+   * Get team members
+   */
+  async getTeamMembers(teamId: string, userId: string): Promise<TeamMember[]> {
+    // getTeam performs the membership check
+    await this.getTeam(teamId, userId);
+
+    const members = await this.prisma.teamMember.findMany({
+      where: { teamId },
+      include: { user: { select: { id: true, name: true, email: true, avatar: true } } },
+      orderBy: { joinedAt: 'asc' },
+    });
+
+    return members as unknown as TeamMember[];
+  }
+
+  /**
+   * Get pending team invitations
+   */
+  async getTeamInvitations(teamId: string, userId: string): Promise<TeamInvitation[]> {
+    const membership = await this.prisma.teamMember.findFirst({
+      where: { teamId, userId, role: { in: ['owner', 'admin'] } },
+    });
+    if (!membership) {
+      throw new ForbiddenException('Only team owners/admins can view invitations');
+    }
+
+    const invitations = await this.prisma.teamInvitation.findMany({
+      where: { teamId, acceptedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return invitations as unknown as TeamInvitation[];
+  }
+
+  /**
+   * Remove a member from the team (owner/admin only; owner cannot be removed)
+   */
+  async removeMember(teamId: string, memberId: string, userId: string): Promise<void> {
+    const actor = await this.prisma.teamMember.findFirst({
+      where: { teamId, userId, role: { in: ['owner', 'admin'] } },
+    });
+    if (!actor) {
+      throw new ForbiddenException('Only team owners/admins can remove members');
+    }
+
+    const member = await this.prisma.teamMember.findFirst({
+      where: { id: memberId, teamId },
+    });
+    if (!member) {
+      throw new NotFoundException('Team member not found');
+    }
+    if (member.role === 'owner') {
+      throw new BadRequestException('The team owner cannot be removed');
+    }
+
+    await this.prisma.teamMember.delete({ where: { id: memberId } });
+    this.logger.log(`Member ${memberId} removed from team ${teamId} by ${userId}`);
+  }
+
+  /**
+   * Change a member's role (owner only; cannot change the owner's role)
+   */
+  async updateMemberRole(
+    teamId: string,
+    memberId: string,
+    role: string,
+    userId: string
+  ): Promise<TeamMember> {
+    const validRoles = ['admin', 'member', 'viewer'];
+    if (!validRoles.includes(role)) {
+      throw new BadRequestException(`Role must be one of: ${validRoles.join(', ')}`);
+    }
+
+    const team = await this.prisma.team.findUnique({ where: { id: teamId } });
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+    if (team.ownerId !== userId) {
+      throw new ForbiddenException('Only the team owner can change member roles');
+    }
+
+    const member = await this.prisma.teamMember.findFirst({
+      where: { id: memberId, teamId },
+    });
+    if (!member) {
+      throw new NotFoundException('Team member not found');
+    }
+    if (member.role === 'owner') {
+      throw new BadRequestException("The owner's role cannot be changed");
+    }
+
+    const updated = await this.prisma.teamMember.update({
+      where: { id: memberId },
+      data: { role },
+    });
+
+    this.logger.log(`Member ${memberId} role changed to ${role} in team ${teamId}`);
+    return updated as unknown as TeamMember;
+  }
+
   // ==================== API ACCESS ====================
 
   /**
@@ -288,6 +441,42 @@ export class PremiumService {
       ...key,
       key: '***', // Masked
     })) as unknown as ApiKey[];
+  }
+
+  /**
+   * Get a single API key (masked)
+   */
+  async getApiKey(keyId: string, userId: string): Promise<ApiKey> {
+    const apiKey = await this.prisma.apiKey.findFirst({
+      where: { id: keyId, userId },
+    });
+
+    if (!apiKey) {
+      throw new NotFoundException('API key not found');
+    }
+
+    return { ...apiKey, key: '***' } as unknown as ApiKey;
+  }
+
+  /**
+   * Toggle API key active state
+   */
+  async toggleApiKey(keyId: string, userId: string): Promise<ApiKey> {
+    const apiKey = await this.prisma.apiKey.findFirst({
+      where: { id: keyId, userId },
+    });
+
+    if (!apiKey) {
+      throw new NotFoundException('API key not found');
+    }
+
+    const updated = await this.prisma.apiKey.update({
+      where: { id: keyId },
+      data: { isActive: !apiKey.isActive },
+    });
+
+    this.logger.log(`API key ${keyId} ${updated.isActive ? 'enabled' : 'disabled'}`);
+    return { ...updated, key: '***' } as unknown as ApiKey;
   }
 
   /**

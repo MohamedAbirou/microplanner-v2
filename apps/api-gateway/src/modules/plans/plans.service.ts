@@ -352,6 +352,65 @@ export class PlansService {
   }
 
   /**
+   * Create a plan manually (empty draft, no AI generation).
+   * title/description live inside planJson — the WeeklyPlan model has no such columns.
+   */
+  async createManual(
+    userId: string,
+    input: { title: string; description?: string; weekStartDate: string; goalIds?: string[] }
+  ): Promise<WeeklyPlan> {
+    const { weekStartDate, weekEndDate } = this.calculateWeekBoundaries(input.weekStartDate);
+
+    return this.prisma.weeklyPlan.create({
+      data: {
+        userId,
+        weekStartDate,
+        weekEndDate,
+        status: PlanStatus.DRAFT,
+        aiModel: 'manual',
+        planJson: {
+          title: input.title,
+          description: input.description || null,
+          goalIds: input.goalIds || [],
+          days: [],
+        },
+      },
+    });
+  }
+
+  /**
+   * Update plan metadata (title/description in planJson) and/or status.
+   */
+  async update(
+    planId: string,
+    userId: string,
+    input: { title?: string; description?: string; status?: PlanStatus }
+  ): Promise<WeeklyPlan> {
+    const plan = await this.findOne(planId, userId);
+
+    const planJson: any =
+      plan.planJson && typeof plan.planJson === 'object' ? { ...(plan.planJson as any) } : {};
+    if (input.title !== undefined) planJson.title = input.title;
+    if (input.description !== undefined) planJson.description = input.description;
+
+    return this.prisma.weeklyPlan.update({
+      where: { id: planId },
+      data: {
+        planJson,
+        ...(input.status
+          ? {
+              status: input.status,
+              ...(input.status === PlanStatus.ACCEPTED ? { acceptedAt: new Date() } : {}),
+              ...(input.status === PlanStatus.APPLIED ? { appliedAt: new Date() } : {}),
+              ...(input.status === PlanStatus.ARCHIVED ? { archivedAt: new Date() } : {}),
+            }
+          : {}),
+        editCount: { increment: 1 },
+      },
+    });
+  }
+
+  /**
    * Regenerate a plan (create new version based on same week)
    */
   async regenerate(planId: string, userId: string, user: User): Promise<WeeklyPlan> {

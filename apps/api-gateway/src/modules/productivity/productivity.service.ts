@@ -523,6 +523,26 @@ export class ProductivityService {
   }
 
   /**
+   * Get a single Kanban board by ID
+   */
+  async getKanbanBoard(boardId: string, userId: string): Promise<KanbanBoard> {
+    const board = await this.prisma.kanbanBoard.findFirst({
+      where: { id: boardId, userId },
+      include: {
+        columns: {
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (!board) {
+      throw new NotFoundException('Kanban board not found');
+    }
+
+    return board as unknown as KanbanBoard;
+  }
+
+  /**
    * Update Kanban board
    */
   async updateKanbanBoard(

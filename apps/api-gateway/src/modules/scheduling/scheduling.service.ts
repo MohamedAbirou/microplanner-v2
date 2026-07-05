@@ -386,6 +386,82 @@ export class SchedulingService {
   }
 
   /**
+   * Get a single scheduling link by ID (owner only)
+   */
+  async getSchedulingLink(linkId: string, userId: string): Promise<SchedulingLink> {
+    const link = await this.prisma.schedulingLink.findFirst({
+      where: { id: linkId, userId },
+    });
+
+    if (!link) {
+      throw new NotFoundException('Scheduling link not found');
+    }
+
+    return link as unknown as SchedulingLink;
+  }
+
+  /**
+   * Toggle a scheduling link's active state
+   */
+  async toggleSchedulingLink(linkId: string, userId: string): Promise<SchedulingLink> {
+    const link = await this.prisma.schedulingLink.findFirst({
+      where: { id: linkId, userId },
+    });
+
+    if (!link) {
+      throw new NotFoundException('Scheduling link not found');
+    }
+
+    const updated = await this.prisma.schedulingLink.update({
+      where: { id: linkId },
+      data: { isActive: !link.isActive },
+    });
+
+    this.logger.log(`Scheduling link ${linkId} ${updated.isActive ? 'activated' : 'deactivated'}`);
+    return updated as unknown as SchedulingLink;
+  }
+
+  /**
+   * Get all bookings across the user's links (optionally filtered)
+   */
+  async getUserBookings(
+    userId: string,
+    filters: { linkId?: string; status?: string } = {}
+  ): Promise<Booking[]> {
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        link: { userId },
+        ...(filters.linkId ? { linkId: filters.linkId } : {}),
+        ...(filters.status ? { status: filters.status } : {}),
+      },
+      include: { link: { select: { id: true, name: true, slug: true } } },
+      orderBy: { startTime: 'desc' },
+    });
+
+    return bookings as unknown as Booking[];
+  }
+
+  /**
+   * Get a single booking (owner only)
+   */
+  async getBooking(bookingId: string, userId: string): Promise<Booking> {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { link: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    if (booking.link.userId !== userId) {
+      throw new ForbiddenException('You do not own this booking');
+    }
+
+    return booking as unknown as Booking;
+  }
+
+  /**
    * Update booking status
    */
   async updateBookingStatus(

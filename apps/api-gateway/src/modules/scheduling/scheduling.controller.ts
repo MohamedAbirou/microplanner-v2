@@ -44,7 +44,7 @@ export class SchedulingController {
   @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
   async createLink(@Request() req: any, @Body() createDto: CreateSchedulingLinkDto) {
     return this.schedulingService.createSchedulingLink(
-      req.user.userId,
+      req.user.id,
       createDto,
       req.user.tier,
     );
@@ -55,7 +55,7 @@ export class SchedulingController {
    */
   @Get('links')
   async getUserLinks(@Request() req: any) {
-    return this.schedulingService.getUserSchedulingLinks(req.user.userId);
+    return this.schedulingService.getUserSchedulingLinks(req.user.id);
   }
 
   /**
@@ -68,6 +68,22 @@ export class SchedulingController {
   }
 
   /**
+   * Get a single scheduling link by ID (owner)
+   */
+  @Get('links/:id')
+  async getLink(@Request() req: any, @Param('id') linkId: string) {
+    return this.schedulingService.getSchedulingLink(linkId, req.user.id);
+  }
+
+  /**
+   * Toggle a scheduling link's active state
+   */
+  @Put('links/:id/toggle')
+  async toggleLink(@Request() req: any, @Param('id') linkId: string) {
+    return this.schedulingService.toggleSchedulingLink(linkId, req.user.id);
+  }
+
+  /**
    * Update scheduling link
    */
   @Put('links/:id')
@@ -76,7 +92,7 @@ export class SchedulingController {
     @Param('id') linkId: string,
     @Body() updateDto: UpdateSchedulingLinkDto,
   ) {
-    return this.schedulingService.updateSchedulingLink(linkId, req.user.userId, updateDto);
+    return this.schedulingService.updateSchedulingLink(linkId, req.user.id, updateDto);
   }
 
   /**
@@ -85,7 +101,7 @@ export class SchedulingController {
   @Delete('links/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteLink(@Request() req: any, @Param('id') linkId: string) {
-    await this.schedulingService.deleteSchedulingLink(linkId, req.user.userId);
+    await this.schedulingService.deleteSchedulingLink(linkId, req.user.id);
   }
 
   // ==================== AVAILABILITY ====================
@@ -124,7 +140,39 @@ export class SchedulingController {
    */
   @Get('links/:id/bookings')
   async getLinkBookings(@Request() req: any, @Param('id') linkId: string) {
-    return this.schedulingService.getLinkBookings(linkId, req.user.userId);
+    return this.schedulingService.getLinkBookings(linkId, req.user.id);
+  }
+
+  /**
+   * Get all bookings across the user's links
+   */
+  @Get('bookings')
+  async getBookings(
+    @Request() req: any,
+    @Query('linkId') linkId?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.schedulingService.getUserBookings(req.user.id, { linkId, status });
+  }
+
+  /**
+   * Get a single booking (owner)
+   */
+  @Get('bookings/:id')
+  async getBooking(@Request() req: any, @Param('id') bookingId: string) {
+    return this.schedulingService.getBooking(bookingId, req.user.id);
+  }
+
+  /**
+   * Confirm a booking (owner)
+   */
+  @Post('bookings/:id/confirm')
+  async confirmBooking(@Request() req: any, @Param('id') bookingId: string) {
+    return this.schedulingService.updateBookingStatus(
+      bookingId,
+      req.user.id,
+      'confirmed' as BookingStatus,
+    );
   }
 
   /**
@@ -136,7 +184,7 @@ export class SchedulingController {
     @Param('id') bookingId: string,
     @Body('status') status: BookingStatus,
   ) {
-    return this.schedulingService.updateBookingStatus(bookingId, req.user.userId, status);
+    return this.schedulingService.updateBookingStatus(bookingId, req.user.id, status);
   }
 
   /**

@@ -61,9 +61,15 @@ for (const name of readdirSync(dsDir)) {
     const base = baseMatch ? baseMatch[1] : null;
     if (!base || !base.startsWith('/api')) continue;
 
+    // Strip commented-out lines so disabled calls don't count as contract misses
+    const activeBlock = block
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('//'))
+      .join('\n');
+
     const callRe = /this\.client\.(get|post|put|patch|delete)\(\s*(`[^`]*`|'[^']*'|"[^"]*")/g;
     let km;
-    while ((km = callRe.exec(block))) {
+    while ((km = callRe.exec(activeBlock))) {
       const method = km[1].toUpperCase();
       let p = km[2].slice(1, -1); // strip quotes/backticks
       p = p.replace(/\$\{[^}]+\}/g, ':param');

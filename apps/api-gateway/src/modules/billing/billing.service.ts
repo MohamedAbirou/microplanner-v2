@@ -418,4 +418,189 @@ export class BillingService {
       };
     }
   }
+
+  /**
+   * Full billing info: subscription + payment method + period (best effort —
+   * Stripe details are optional so a missing/failed Stripe call never breaks the page).
+   */
+  async getBillingInfo(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const plan = PRICING_PLANS.find(p => p.tier === user.tier);
+
+    let paymentMethod: { brand: string; last4: string } | null = null;
+    let currentPeriodEnd: string | null = null;
+    let cancelAtPeriodEnd = false;
+
+    if (user.subscriptionId) {
+      try {
+        const sub = await this.stripe.subscriptions.retrieve(user.subscriptionId, {
+          expand: ['default_payment_method'],
+        });
+        cancelAtPeriodEnd = sub.cancel_at_period_end;
+        const periodEnd = (sub as any).current_period_end;
+        if (periodEnd) currentPeriodEnd = new Date(periodEnd * 1000).toISOString();
+        const pm = sub.default_payment_method as Stripe.PaymentMethod | null;
+        if (pm && typeof pm === 'object' && pm.card) {
+          paymentMethod = { brand: pm.card.brand, last4: pm.card.last4 };
+        }
+      } catch (error) {
+        this.logger.warn(`Could not fetch Stripe subscription for user ${userId}`);
+      }
+    }
+
+    return {
+      tier: user.tier,
+      status: user.subscriptionStatus,
+      plan: plan
+        ? { name: plan.name, price: plan.price / 100, interval: plan.interval, features: plan.features }
+        : null,
+      paymentMethod,
+      currentPeriodEnd,
+      cancelAtPeriodEnd,
+    };
+  }
+
+  /**
+   * Usage vs tier limits
+   */
+  async getUsageStats(userId: string) {
+    const [goals, plans] = await Promise.all([
+      this.checkFeatureLimit(userId, 'goals'),
+      this.checkFeatureLimit(userId, 'plans'),
+    ]);
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const tasksToday = await this.prisma.task.count({
+      where: { userId, createdAt: { gte: startOfToday } },
+    });
+
+    return {
+      goals: { current: goals.current, limit: goals.limit },
+      plansThisWeek: { current: plans.current, limit: plans.limit },
+      tasksCreatedToday: tasksToday,
+    };
+  }
+
+  /**
+   * Can the user use a feature? Countable features (goals/plans) check limits;
+   * boolean features come from the pricing plan feature map.
+   */
+  async canUseFeature(userId: string, feature: string): Promise<{ canUse: boolean }> {
+    if (feature === 'goals' || feature === 'plans') {
+      const result = await this.checkFeatureLimit(userId, feature);
+      return { canUse: result.allowed };
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const plan = PRICING_PLANS.find(p => p.tier === user.tier);
+    const value = plan ? (plan.features as Record<string, unknown>)[feature] : undefined;
+    return { canUse: Boolean(value) };
+  }
+
+  /**
+   * Upgrade (or change) subscription tier. With an active Stripe subscription
+   * the price is swapped in place; otherwise falls back to a checkout session.
+   */
+  async upgradeSubscription(userId: string, tier: SubscriptionTierType) {
+    if (tier === SubscriptionTier.FREE) {
+      throw new BadRequestException('Use cancel to downgrade to the free tier');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const plan = PRICING_PLANS.find(p => p.tier === tier);
+    if (!plan || !plan.priceId) {
+      throw new BadRequestException('Invalid tier');
+    }
+
+    if (!user.subscriptionId) {
+      // No subscription yet — checkout flow instead
+      return this.createCheckoutSession(userId, { tier } as CreateCheckoutDto);
+    }
+
+    const sub = await this.stripe.subscriptions.retrieve(user.subscriptionId);
+    await this.stripe.subscriptions.update(user.subscriptionId, {
+      items: [{ id: sub.items.data[0].id, price: plan.priceId }],
+      proration_behavior: 'create_prorations',
+      cancel_at_period_end: false,
+      metadata: { userId: user.id, tier },
+    });
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { tier, subscriptionStatus: SubscriptionStatus.ACTIVE },
+    });
+
+    this.logger.log(`Upgraded user ${userId} to ${tier}`);
+    return { message: `Subscription upgraded to ${plan.name}`, tier };
+  }
+
+  /**
+   * Resume a subscription that was set to cancel at period end
+   */
+  async resumeSubscription(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.subscriptionId) {
+      throw new BadRequestException('No subscription to resume');
+    }
+
+    await this.stripe.subscriptions.update(user.subscriptionId, {
+      cancel_at_period_end: false,
+    });
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { subscriptionStatus: SubscriptionStatus.ACTIVE },
+    });
+
+    this.logger.log(`Resumed subscription for user ${userId}`);
+    return { message: 'Subscription resumed' };
+  }
+
+  /**
+   * Attach a new default payment method to the customer
+   */
+  async updatePaymentMethod(userId: string, paymentMethodId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.stripeCustomerId) {
+      throw new BadRequestException('No Stripe customer found. Please subscribe first.');
+    }
+
+    await this.stripe.paymentMethods.attach(paymentMethodId, {
+      customer: user.stripeCustomerId,
+    });
+
+    await this.stripe.customers.update(user.stripeCustomerId, {
+      invoice_settings: { default_payment_method: paymentMethodId },
+    });
+
+    if (user.subscriptionId) {
+      await this.stripe.subscriptions.update(user.subscriptionId, {
+        default_payment_method: paymentMethodId,
+      });
+    }
+
+    this.logger.log(`Updated payment method for user ${userId}`);
+    return { message: 'Payment method updated' };
+  }
 }
