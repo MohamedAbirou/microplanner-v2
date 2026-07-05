@@ -1,6 +1,46 @@
 import axios, { AxiosInstance } from 'axios';
+import { GraphQLError } from 'graphql';
 
 const API_BASE_URL = process.env.API_GATEWAY_URL || 'http://localhost:3001';
+
+const STATUS_TO_CODE: Record<number, string> = {
+  400: 'BAD_REQUEST',
+  401: 'UNAUTHENTICATED',
+  403: 'FORBIDDEN',
+  404: 'NOT_FOUND',
+  409: 'CONFLICT',
+  422: 'UNPROCESSABLE_ENTITY',
+  429: 'TOO_MANY_REQUESTS',
+};
+
+/**
+ * Create an axios client that converts REST error responses into GraphQL
+ * errors carrying the backend's message and a proper extensions.code, so
+ * limit/permission errors reach the frontend intact instead of being
+ * masked as 'Internal server error'.
+ */
+function createApiClient(baseURL: string, token?: string): AxiosInstance {
+  const client = axios.create({
+    baseURL,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  client.interceptors.response.use(undefined, (error) => {
+    const status: number | undefined = error?.response?.status;
+    const body = error?.response?.data;
+    const rawMessage = body?.message ?? error?.message ?? 'Request failed';
+    const message = Array.isArray(rawMessage) ? rawMessage.join(', ') : String(rawMessage);
+
+    if (status && STATUS_TO_CODE[status]) {
+      throw new GraphQLError(message, {
+        extensions: { code: STATUS_TO_CODE[status], statusCode: status },
+      });
+    }
+    throw error;
+  });
+
+  return client;
+}
 
 export { OnboardingAPI } from './onboarding-api';
 
@@ -9,10 +49,7 @@ export class WaitlistAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/waitlist`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/waitlist`, token);
   }
 
   // Join waitlist
@@ -66,10 +103,7 @@ export class UserAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/users`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/users`, token);
   }
 
   // Sync/create user from Clerk (no REST endpoint - handled by JWT auth)
@@ -166,10 +200,7 @@ export class GoalsAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/goals`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/goals`, token);
   }
 
   async getGoal(id: string, userId: string) {
@@ -253,10 +284,7 @@ export class TasksAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/tasks`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/tasks`, token);
   }
 
   async getTask(id: string, userId: string) {
@@ -559,10 +587,7 @@ export class ProductivityAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/productivity`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/productivity`, token);
   }
 
   // ==================== WORK HOURS ====================
@@ -789,10 +814,7 @@ export class ProjectsAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/tasks/advanced/projects`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/tasks/advanced/projects`, token);
   }
 
   async getProject(id: string, userId: string) {
@@ -865,10 +887,7 @@ export class PlansAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/plans`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/plans`, token);
   }
 
   // Generate plan
@@ -961,12 +980,11 @@ export class PlansAPI {
 // ==================== ANALYTICS API ====================
 export class AnalyticsAPI {
   private client: AxiosInstance;
+  private token?: string;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/analytics`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.token = token;
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/analytics`, token);
   }
 
   async getDashboardStats(userId: string) {
@@ -1017,10 +1035,10 @@ export class AnalyticsAPI {
 
   async getProductivityScores(userId: string, startDate: string, endDate: string) {
     // Note: /score/range is in ProductivityAPI, not Analytics API
-    const productivityClient = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/productivity`,
-      headers: this.client.defaults.headers,
-    });
+    const productivityClient = createApiClient(
+      `${API_BASE_URL}/api/v1/productivity`,
+      this.token
+    );
     const { data } = await productivityClient.get('/score/range', {
       headers: { 'x-user-id': userId },
       params: { startDate, endDate },
@@ -1030,10 +1048,7 @@ export class AnalyticsAPI {
 
   async getGoalAnalyticsReport(goalId: string, userId: string) {
     // Note: Goal analytics is in GoalsAPI at /goals/:id/analytics
-    const goalsClient = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/goals`,
-      headers: this.client.defaults.headers,
-    });
+    const goalsClient = createApiClient(`${API_BASE_URL}/api/v1/goals`, this.token);
     const { data } = await goalsClient.get(`/${goalId}/analytics`, {
       headers: { 'x-user-id': userId },
     });
@@ -1085,10 +1100,7 @@ export class CalendarAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/calendar`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/calendar`, token);
   }
 
   async getConnections(userId: string) {
@@ -1201,10 +1213,7 @@ export class TeamsAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/teams`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/teams`, token);
   }
 
   async getTeams(userId: string) {
@@ -1322,10 +1331,7 @@ export class SchedulingAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/scheduling`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/scheduling`, token);
   }
 
   async getSchedulingLinks(userId: string) {
@@ -1437,10 +1443,7 @@ export class IntegrationsAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/integrations`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/integrations`, token);
   }
 
   async getIntegrations(userId: string, type?: string) {
@@ -1547,10 +1550,7 @@ export class BillingAPI {
   private client: AxiosInstance;
 
   constructor(token?: string) {
-    this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/billing`,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/billing`, token);
   }
 
   async getSubscription(userId: string) {

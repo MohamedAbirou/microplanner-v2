@@ -149,21 +149,30 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
 ];
 
+/**
+ * Single source of truth for tier usage limits.
+ * Consumed by UsageLimitService (enforcement) and mirrored by the frontend
+ * tier-context.tsx (display). Infinity = unlimited.
+ */
 export const TIER_LIMITS = {
   [SubscriptionTier.FREE]: {
     maxGoals: 2,
     maxPlansPerWeek: 5,
+    maxTasksPerDay: 20,
   },
   [SubscriptionTier.STARTER]: {
     maxGoals: 5,
     maxPlansPerWeek: 20,
+    maxTasksPerDay: 40,
   },
   [SubscriptionTier.PRO]: {
     maxGoals: Infinity,
     maxPlansPerWeek: Infinity,
+    maxTasksPerDay: 100,
   },
   [SubscriptionTier.PREMIUM]: {
     maxGoals: Infinity,
     maxPlansPerWeek: Infinity,
+    maxTasksPerDay: Infinity,
   },
 };

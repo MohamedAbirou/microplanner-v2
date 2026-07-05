@@ -1,32 +1,11 @@
 import { Injectable, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
+import { TIER_LIMITS } from '../../modules/billing/billing.constants';
 
-/**
- * Tier limits configuration matching frontend tier-context.tsx
- */
-const TIER_LIMITS = {
-  FREE: {
-    maxActiveGoals: 3,
-    maxPlansPerWeek: 7,
-    maxTasksPerDay: 20,
-  },
-  STARTER: {
-    maxActiveGoals: 5,
-    maxPlansPerWeek: 15,
-    maxTasksPerDay: 40,
-  },
-  PRO: {
-    maxActiveGoals: 15,
-    maxPlansPerWeek: -1, // Unlimited
-    maxTasksPerDay: 100,
-  },
-  PREMIUM: {
-    maxActiveGoals: -1, // Unlimited
-    maxPlansPerWeek: -1,
-    maxTasksPerDay: -1,
-  },
-};
+// Limits come from billing.constants (single source of truth, shared with
+// the billing checkFeatureLimit checks). Infinity = unlimited.
+const isUnlimited = (limit: number) => limit === Infinity || limit === -1;
 
 type LimitType = 'goals' | 'plans' | 'tasks';
 
@@ -44,10 +23,9 @@ export class UsageLimitService {
    * @throws ForbiddenException if limit exceeded
    */
   async checkGoalLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
-    const limit = TIER_LIMITS[userTier].maxActiveGoals;
+    const limit = TIER_LIMITS[userTier].maxGoals;
 
-    // Unlimited
-    if (limit === -1) return;
+    if (isUnlimited(limit)) return;
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -73,8 +51,7 @@ export class UsageLimitService {
   async checkPlanLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
     const limit = TIER_LIMITS[userTier].maxPlansPerWeek;
 
-    // Unlimited
-    if (limit === -1) return;
+    if (isUnlimited(limit)) return;
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -118,8 +95,7 @@ export class UsageLimitService {
   async checkTaskLimit(userId: string, userTier: SubscriptionTierType): Promise<void> {
     const limit = TIER_LIMITS[userTier].maxTasksPerDay;
 
-    // Unlimited
-    if (limit === -1) return;
+    if (isUnlimited(limit)) return;
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -220,22 +196,27 @@ export class UsageLimitService {
 
     const limits = TIER_LIMITS[userTier];
 
+    // Serialize unlimited as -1 (Infinity does not survive JSON)
+    const asJsonLimit = (limit: number) => (isUnlimited(limit) ? -1 : limit);
+    const remainingOf = (limit: number, current: number) =>
+      isUnlimited(limit) ? -1 : Math.max(0, limit - current);
+
     return {
       goals: {
         current: user.activeGoalsCount,
-        limit: limits.maxActiveGoals,
-        remaining: limits.maxActiveGoals === -1 ? -1 : Math.max(0, limits.maxActiveGoals - user.activeGoalsCount),
+        limit: asJsonLimit(limits.maxGoals),
+        remaining: remainingOf(limits.maxGoals, user.activeGoalsCount),
       },
       plans: {
         current: user.plansCreatedThisWeek,
-        limit: limits.maxPlansPerWeek,
-        remaining: limits.maxPlansPerWeek === -1 ? -1 : Math.max(0, limits.maxPlansPerWeek - user.plansCreatedThisWeek),
+        limit: asJsonLimit(limits.maxPlansPerWeek),
+        remaining: remainingOf(limits.maxPlansPerWeek, user.plansCreatedThisWeek),
         resetAt: user.weeklyPlanResetAt,
       },
       tasks: {
         current: user.tasksCreatedToday,
-        limit: limits.maxTasksPerDay,
-        remaining: limits.maxTasksPerDay === -1 ? -1 : Math.max(0, limits.maxTasksPerDay - user.tasksCreatedToday),
+        limit: asJsonLimit(limits.maxTasksPerDay),
+        remaining: remainingOf(limits.maxTasksPerDay, user.tasksCreatedToday),
         resetAt: user.dailyTaskResetAt,
       },
     };

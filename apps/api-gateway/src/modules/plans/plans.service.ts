@@ -112,41 +112,108 @@ export class PlansService {
       qualityScore = result.qualityScore;
       generationCost = 0; // Free!
     } else if (user.tier === SubscriptionTier.STARTER) {
-      // Use GPT-4o-mini for STARTER tier (cost-effective AI)
+      // GPT-4o-mini for STARTER; if the LLM call fails (missing/expired key,
+      // outage, malformed response), fall back to the rule-based planner so
+      // paying users always get a plan.
       this.logger.log(`Using GPT-4o-mini planner for STARTER tier user ${userId}`);
 
-      const result = await this.gpt4oMiniPlanner.generatePlan(
-        user,
-        goals,
-        weekStartDate,
-        calendarEvents,
-      );
+      try {
+        const result = await this.gpt4oMiniPlanner.generatePlan(
+          user,
+          goals,
+          weekStartDate,
+          calendarEvents,
+        );
 
-      planJson = { tasks: result.tasks };
-      reasoning = result.reasoning || null;
-      aiModel = 'gpt-4o-mini';
-      qualityScore = result.qualityScore;
-      // Estimate token usage (roughly 2000 input + 2000 output per plan)
-      tokenUsage = 4000;
-      generationCost = this.calculateCost(aiModel, tokenUsage);
+        planJson = { tasks: result.tasks };
+        reasoning = result.reasoning || null;
+        aiModel = 'gpt-4o-mini';
+        qualityScore = result.qualityScore;
+        // Estimate token usage (roughly 2000 input + 2000 output per plan)
+        tokenUsage = 4000;
+        generationCost = this.calculateCost(aiModel, tokenUsage);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(
+          `GPT-4o-mini planner failed (${message}) — falling back to rule-based planner`
+        );
+
+        const result = await this.ruleBasedPlanner.generatePlan(
+          user,
+          goals,
+          weekStartDate,
+          calendarEvents,
+        );
+
+        planJson = { tasks: result.tasks };
+        reasoning = null;
+        aiModel = 'rule-based (gpt-4o-mini unavailable)';
+        qualityScore = result.qualityScore;
+        tokenUsage = 0;
+        generationCost = 0;
+      }
     } else {
-      // Use Claude Sonnet 3.5 for PRO/PREMIUM tiers (advanced AI)
+      // Claude Sonnet for PRO/PREMIUM; degrade Claude → GPT-4o-mini →
+      // rule-based so a provider outage never blocks plan generation.
       this.logger.log(`Using Claude Sonnet 3.5 planner for ${user.tier} tier user ${userId}`);
 
-      const result = await this.claudeSonnetPlanner.generatePlan(
-        user,
-        goals,
-        weekStartDate,
-        calendarEvents,
-      );
+      try {
+        const result = await this.claudeSonnetPlanner.generatePlan(
+          user,
+          goals,
+          weekStartDate,
+          calendarEvents,
+        );
 
-      planJson = { tasks: result.tasks };
-      reasoning = result.reasoning || null;
-      aiModel = 'claude-sonnet-3.5';
-      qualityScore = result.qualityScore;
-      // Estimate token usage (roughly 3000 input + 5000 output per plan)
-      tokenUsage = 8000;
-      generationCost = this.calculateCost(aiModel, tokenUsage);
+        planJson = { tasks: result.tasks };
+        reasoning = result.reasoning || null;
+        aiModel = 'claude-sonnet-3.5';
+        qualityScore = result.qualityScore;
+        // Estimate token usage (roughly 3000 input + 5000 output per plan)
+        tokenUsage = 8000;
+        generationCost = this.calculateCost(aiModel, tokenUsage);
+      } catch (claudeError) {
+        const claudeMessage =
+          claudeError instanceof Error ? claudeError.message : 'Unknown error';
+        this.logger.warn(
+          `Claude planner failed (${claudeMessage}) — falling back to GPT-4o-mini`
+        );
+
+        try {
+          const result = await this.gpt4oMiniPlanner.generatePlan(
+            user,
+            goals,
+            weekStartDate,
+            calendarEvents,
+          );
+
+          planJson = { tasks: result.tasks };
+          reasoning = result.reasoning || null;
+          aiModel = 'gpt-4o-mini (claude unavailable)';
+          qualityScore = result.qualityScore;
+          tokenUsage = 4000;
+          generationCost = this.calculateCost('gpt-4o-mini', tokenUsage);
+        } catch (gptError) {
+          const gptMessage = gptError instanceof Error ? gptError.message : 'Unknown error';
+          this.logger.warn(
+            `GPT-4o-mini fallback also failed (${gptMessage}) — using rule-based planner`
+          );
+
+          const result = await this.ruleBasedPlanner.generatePlan(
+            user,
+            goals,
+            weekStartDate,
+            calendarEvents,
+          );
+
+          planJson = { tasks: result.tasks };
+          reasoning = null;
+          aiModel = 'rule-based (llm unavailable)';
+          qualityScore = result.qualityScore;
+          tokenUsage = 0;
+          generationCost = 0;
+        }
+      }
     }
 
     // 7. Calculate generation metrics
