@@ -31,8 +31,35 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleInit() {
-    await this.$connect();
-    this.logger.log('✓ Database connected');
+    try {
+      await this.$connect();
+      this.logger.log('✓ Database connected');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      if (message.includes('tenant/user') && message.includes('not found')) {
+        this.logger.error(
+          'DATABASE_URL points to a Neon user/project that no longer exists (tenant/user not found). ' +
+            'In Render: create a Postgres database, set DATABASE_URL to its Internal URL, ' +
+            'and set DIRECT_URL to the same value. Remove any stale Neon connection strings.',
+        );
+      } else if (!process.env.DIRECT_URL) {
+        this.logger.error(
+          'DIRECT_URL is not set. Prisma requires it alongside DATABASE_URL. ' +
+            'For Render Postgres, set DIRECT_URL to the same connection string as DATABASE_URL.',
+        );
+      } else if (
+        message.includes('ENOTFOUND') ||
+        message.includes('ECONNREFUSED') ||
+        message.includes('Environment variable not found')
+      ) {
+        this.logger.error(
+          'Cannot connect to Postgres. Verify DATABASE_URL and DIRECT_URL in Render environment variables.',
+        );
+      }
+
+      throw error;
+    }
   }
 
   async onModuleDestroy() {
