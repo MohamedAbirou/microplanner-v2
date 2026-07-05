@@ -15,10 +15,11 @@ import { GPT4oMiniPlannerService } from './strategies/gpt-4o-mini-planner.servic
 import { RuleBasedPlannerService } from './strategies/rule-based-planner.service';
 
 // Cost per 1000 tokens (in USD cents)
-const TOKEN_COSTS = {
+const TOKEN_COSTS: Record<string, number> = {
   'rule-based': 0, // Free
   'gpt-4o-mini': 0.015, // $0.15 per 1M tokens (avg input+output)
-  'claude-sonnet-3.5': 0.09, // $3 per 1M input, $15 per 1M output (avg ~$9 per 1M)
+  'claude-sonnet-5': 0.09, // approx avg input+output blend
+  'claude-sonnet-3.5': 0.09, // legacy label kept for stored plans
   'gpt-4o': 0.25, // $2.50 per 1M tokens
 };
 
@@ -167,7 +168,7 @@ export class PlansService {
 
         planJson = { tasks: result.tasks };
         reasoning = result.reasoning || null;
-        aiModel = 'claude-sonnet-3.5';
+        aiModel = process.env.ANTHROPIC_PLANNER_MODEL || 'claude-sonnet-5';
         qualityScore = result.qualityScore;
         // Estimate token usage (roughly 3000 input + 5000 output per plan)
         tokenUsage = 8000;

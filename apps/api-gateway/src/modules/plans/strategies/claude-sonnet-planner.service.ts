@@ -81,12 +81,14 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
       // Build prompt with learned patterns
       const prompt = this.buildPrompt(user, goals, weekStart, existingEvents, insights);
 
-      // Call Anthropic API
-      this.logger.debug('Calling Claude Sonnet 3.5 for plan generation...');
+      // Call Anthropic API. Model is env-overridable so a deprecated model
+      // ID never hard-breaks PRO plan generation (fallback chain catches
+      // errors regardless).
+      this.logger.debug('Calling Claude for plan generation...');
       const message = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: process.env.ANTHROPIC_PLANNER_MODEL || 'claude-sonnet-5',
         max_tokens: 8000,
-        temperature: 0.7,
+        // temperature intentionally omitted — deprecated on current models
         system: this.getSystemPrompt(),
         messages: [
           {
@@ -96,8 +98,12 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
         ],
       });
 
-      // Extract response
-      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      // Extract response — newer models may return multiple content blocks
+      // (e.g. thinking blocks before the text), so take ALL text blocks
+      const responseText = message.content
+        .filter((block): block is { type: 'text'; text: string } & typeof block => block.type === 'text')
+        .map(block => block.text)
+        .join('');
       if (!responseText) {
         throw new Error('Empty response from Claude Sonnet 3.5');
       }
