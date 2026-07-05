@@ -31,9 +31,13 @@ export default function AppLayout({
   const { createTask } = useCreateTask();
 
   // Check onboarding status from database via GraphQL
-  const { data: onboardingData, loading: onboardingLoading } = useQuery(ONBOARDING_STATUS, {
-    skip: !isLoaded || !user,
-  });
+  const { data: onboardingData, loading: onboardingLoading, error: onboardingError } = useQuery(
+    ONBOARDING_STATUS,
+    {
+      skip: !isLoaded || !user,
+      errorPolicy: 'all',
+    },
+  );
 
   // Listen for quick add task event from keyboard shortcuts
   useEffect(() => {
@@ -44,15 +48,17 @@ export default function AppLayout({
 
   // Redirect to onboarding if not completed (using database data, not Clerk metadata)
   useEffect(() => {
-    if (isLoaded && user && !onboardingLoading) {
-      const isOnboardingComplete = onboardingData?.onboardingStatus?.completed;
-      const isOnboardingPage = pathname?.startsWith('/onboarding');
-
-      if (!isOnboardingComplete && !isOnboardingPage) {
-        router.push('/onboarding');
-      }
+    if (!isLoaded || !user || onboardingLoading || onboardingError) {
+      return;
     }
-  }, [isLoaded, user, onboardingLoading, onboardingData, pathname, router]);
+
+    const isOnboardingComplete = onboardingData?.onboardingStatus?.completed;
+    const isOnboardingPage = pathname?.startsWith('/onboarding');
+
+    if (!isOnboardingComplete && !isOnboardingPage) {
+      router.push('/onboarding');
+    }
+  }, [isLoaded, user, onboardingLoading, onboardingError, onboardingData, pathname, router]);
 
   const userTier = (user?.publicMetadata?.tier as 'FREE' | 'STARTER' | 'PRO' | 'PREMIUM') || 'FREE';
 
@@ -70,6 +76,14 @@ export default function AppLayout({
   };
 
   console.log("Collapsed: ", sidebarCollapsed);
+
+  if (isLoaded && user && onboardingLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <TierProvider>

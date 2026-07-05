@@ -41,23 +41,31 @@ import {
 import * as jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
 import 'dotenv/config';
+import { resolveRedisConfig } from './redis-config';
 
-// Redis setup
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-  retryStrategy: (times) => {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-});
+const redisConfig = resolveRedisConfig();
+const redis = redisConfig
+  ? new Redis({
+      ...redisConfig,
+      retryStrategy: (times) => Math.min(times * 50, 2000),
+      maxRetriesPerRequest: 3,
+      enableOfflineQueue: false,
+    })
+  : null;
 
-// Pub/Sub for subscriptions
-const pubsub = new RedisPubSub({
-  publisher: redis.duplicate(),
-  subscriber: redis.duplicate(),
-});
+if (!redis) {
+  console.warn(
+    '⚠ Redis not configured — subscriptions/pubsub disabled. Set REDIS_URL in production.',
+  );
+}
+
+// In-memory pubsub fallback when Redis is unavailable (dev / minimal deploy)
+const pubsub = redis
+  ? new RedisPubSub({
+      publisher: redis.duplicate(),
+      subscriber: redis.duplicate(),
+    })
+  : null;
 
 // Clerk JWKS client — verifies JWT signatures against Clerk's public keys.
 // CLERK_DOMAIN (e.g. "clerk.example.com" or "xxx.clerk.accounts.dev") is
@@ -229,7 +237,8 @@ async function startServer() {
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
     process.env.FRONTEND_URL,
-  ].filter(Boolean);
+    ...(process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()) || []),
+  ].filter(Boolean) as string[];
 
   app.use(
     '/graphql',
@@ -239,6 +248,11 @@ async function startServer() {
         if (!origin) return callback(null, true);
 
         if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else if (
+          process.env.NODE_ENV === 'production' &&
+          origin.endsWith('.vercel.app')
+        ) {
           callback(null, true);
         } else {
           console.warn(`CORS blocked origin: ${origin}`);
@@ -321,8 +335,8 @@ async function startServer() {
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n⏳ Shutting down GraphQL Gateway...');
-  await redis.quit();
-  await pubsub.close();
+  if (redis) await redis.quit();
+  if (pubsub) await pubsub.close();
   process.exit(0);
 });
 

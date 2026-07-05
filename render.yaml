@@ -1,20 +1,16 @@
 services:
   - type: web
     name: microplanner-api
-    runtime: node
+    runtime: docker
+    dockerfilePath: ./apps/api-gateway/Dockerfile
+    dockerContext: .
     plan: starter
-    buildCommand: |
-      npm install -g pnpm@8.15.4
-      pnpm install --no-frozen-lockfile
-      cd packages/database
-      pnpm prisma generate
-      cd ../..
-      pnpm build --filter=@microplanner/api-gateway
-    startCommand: node apps/api-gateway/dist/main.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
         sync: false
       - key: REDIS_URL
         sync: false
@@ -29,4 +25,26 @@ services:
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+  - type: web
+    name: microplanner-graphql
+    runtime: docker
+    dockerfilePath: ./apps/graphql-gateway/Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: API_GATEWAY_URL
+        sync: false
+      - key: NEST_GRAPHQL_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CLERK_DOMAIN
+        sync: false
+      - key: FRONTEND_URL
         sync: false
