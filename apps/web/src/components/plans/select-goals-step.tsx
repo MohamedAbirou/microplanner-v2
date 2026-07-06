@@ -117,7 +117,7 @@ export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }:
               <Button
                 variant="link"
                 className="px-1 h-auto py-0 text-destructive"
-                onClick={() => (window.location.href = '/settings?tab=billing')}
+                onClick={() => (window.location.href = '/billing')}
               >
                 Upgrade to Starter
               </Button>

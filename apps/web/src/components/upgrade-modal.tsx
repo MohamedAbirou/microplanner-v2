@@ -9,6 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { UpgradeButton } from '@/components/upgrade-button';
+import type { UserTier } from '@/contexts/tier-context';
 import { Sparkles } from 'lucide-react';
 
 interface UpgradeModalProps {
@@ -17,6 +19,7 @@ interface UpgradeModalProps {
   title?: string;
   description?: string;
   feature?: string;
+  targetTier?: UserTier;
 }
 
 export function UpgradeModal({
@@ -25,6 +28,7 @@ export function UpgradeModal({
   title = 'Upgrade Required',
   description,
   feature = 'this feature',
+  targetTier = 'STARTER',
 }: UpgradeModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -63,12 +67,9 @@ export function UpgradeModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Maybe Later
           </Button>
-          <Button onClick={() => {
-            window.location.href = '/pricing';
-          }}>
-            <Sparkles className="mr-2 h-4 w-4" />
+          <UpgradeButton targetTier={targetTier} onClick={() => onOpenChange(false)}>
             Upgrade Now
-          </Button>
+          </UpgradeButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

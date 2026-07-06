@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useTier, type UserTier } from '@/contexts/tier-context';
+import { UpgradeButton } from '@/components/upgrade-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -77,9 +78,9 @@ export function TierGate({
               <CardDescription>{feature} is available in {requiredTier} tier</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild className="w-full">
-                <Link href="/settings/billing">Upgrade Now</Link>
-              </Button>
+              <UpgradeButton className="w-full" targetTier={requiredTier}>
+                Upgrade Now
+              </UpgradeButton>
             </CardContent>
           </Card>
         </div>
@@ -152,11 +153,9 @@ function UpgradePrompt({
 
           {/* CTA */}
           <div className="flex gap-3">
-            <Button asChild className="flex-1" size="lg">
-              <Link href="/settings/billing">
-                Upgrade to {requiredTier}
-              </Link>
-            </Button>
+            <UpgradeButton className="flex-1" size="lg" targetTier={requiredTier}>
+              Upgrade to {requiredTier}
+            </UpgradeButton>
             <Button asChild variant="outline" className="flex-1" size="lg">
               <Link href="/pricing">
                 Compare Plans

@@ -151,7 +151,7 @@ export function UpgradeToPro({ feature }: { feature: string }) {
         <p className="text-muted-foreground mb-6 max-w-md">
           {feature} is a PRO feature. Upgrade your plan to unlock unlimited goals, calendar sync, advanced AI models, and more!
         </p>
-        <Link href="/settings?tab=billing">
+        <Link href="/billing">
           <Button size="lg">
             View Plans
           </Button>

@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
+import { UpgradeButton } from '@/components/upgrade-button';
 import {
   exportTasksToCSV,
   exportGoalsToCSV,
@@ -41,6 +42,14 @@ export default function SettingsPage() {
   const router = useRouter();
   const [isSaving, setIsSaving] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('profile');
+
+  React.useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, []);
 
   // Fetch user settings from GraphQL
   const { settings, loading: settingsLoading } = useUserSettings();
@@ -254,7 +263,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Settings Tabs */}
-      <Tabs defaultValue="profile" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile">
             <User className="h-4 w-4 mr-2" />
@@ -618,7 +627,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted-foreground mb-3">
                       Unlock unlimited goals, calendar sync, AI-powered insights, and more!
                     </p>
-                    <Button>View Plans</Button>
+                    <UpgradeButton targetTier="STARTER">View Plans</UpgradeButton>
                   </div>
                 )}
 

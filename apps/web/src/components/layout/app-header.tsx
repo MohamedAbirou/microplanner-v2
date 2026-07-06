@@ -12,6 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useUpgradeCheckout } from '@/hooks/use-upgrade-checkout';
+import { formatTierLabel } from '@/lib/upgrade';
 import { getInitials } from '@/lib/utils';
 import { useUser } from '@clerk/nextjs';
 import { Command, HelpCircle, LogOut, Menu, Plus, Settings as SettingsIcon, Sparkles, User } from 'lucide-react';
@@ -26,6 +28,7 @@ interface AppHeaderProps {
 export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppHeaderProps) {
   const { user } = useUser();
   const tier = (user?.publicMetadata?.tier as string) || 'FREE';
+  const { upgrade, loading: upgradeLoading } = useUpgradeCheckout();
 
   const tierColors = {
     FREE: 'bg-slate-500/10 text-slate-700 dark:text-slate-300',
@@ -129,12 +132,19 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
               {(tier === 'FREE' || tier === 'STARTER') && (
                 <>
                   <DropdownMenuSeparator />
-                  <Link href="/billing">
-                    <DropdownMenuItem className="cursor-pointer bg-gradient-to-r from-primary/5 to-primary/10 text-primary font-medium">
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Upgrade to {tier === 'FREE' ? 'Starter' : 'Pro'}
-                    </DropdownMenuItem>
-                  </Link>
+                  <DropdownMenuItem
+                    className="cursor-pointer bg-gradient-to-r from-primary/5 to-primary/10 text-primary font-medium"
+                    disabled={upgradeLoading}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      upgrade();
+                    }}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    {upgradeLoading
+                      ? 'Redirecting…'
+                      : `Upgrade to ${formatTierLabel(tier === 'FREE' ? 'STARTER' : 'PRO')}`}
+                  </DropdownMenuItem>
                 </>
               )}
               <DropdownMenuSeparator />

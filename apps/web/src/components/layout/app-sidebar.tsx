@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react';
+import { UpgradeButton } from '@/components/upgrade-button';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -223,13 +224,13 @@ export function AppSidebar({ collapsed, onToggle, userTier = 'FREE' }: AppSideba
               <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
                 Unlock {userTier === 'FREE' ? 'more goals & plans' : 'AI Sonnet 3.5 & unlimited plans'}
               </p>
-              <Button
+              <UpgradeButton
                 className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25"
                 size="sm"
+                targetTier={userTier === 'FREE' ? 'STARTER' : 'PRO'}
               >
-                <Sparkles className="h-3.5 w-3.5 mr-2" />
                 Upgrade Now
-              </Button>
+              </UpgradeButton>
             </div>
           </div>
         </div>
