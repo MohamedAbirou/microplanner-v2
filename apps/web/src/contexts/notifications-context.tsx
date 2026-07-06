@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   GET_NOTIFICATIONS,
@@ -46,6 +47,8 @@ function mapServerType(serverType: string): { type: Notification['type']; icon: 
 }
 
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
+  const { isSignedIn, isLoaded } = useAuth();
+
   // Server notifications (SmartNotification rows) — polled for freshness.
   // errorPolicy 'all' keeps the app working when unauthenticated or offline.
   const { data } = useQuery(GET_NOTIFICATIONS, {
@@ -53,6 +56,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     pollInterval: 60_000,
     errorPolicy: 'all',
     fetchPolicy: 'cache-and-network',
+    skip: !isLoaded || !isSignedIn,
   });
 
   const [markNotificationAsRead] = useMutation(MARK_NOTIFICATION_AS_READ, {

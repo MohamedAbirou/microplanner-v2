@@ -65,12 +65,10 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
         extensions
       );
 
-      // Handle authentication errors
+      // Auth redirects are handled by Clerk middleware — do not hard-navigate here
+      // (redirecting from /sign-in on UNAUTHENTICATED causes an infinite reload loop)
       if (extensions?.code === 'UNAUTHENTICATED') {
-        // Redirect to sign in or refresh token
-        if (typeof window !== 'undefined') {
-          window.location.href = '/sign-in';
-        }
+        console.warn('[GraphQL] Unauthenticated request:', operation.operationName);
       }
 
       // Handle authorization errors
