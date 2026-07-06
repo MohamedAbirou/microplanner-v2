@@ -4,7 +4,8 @@ import * as React from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useUserSettings, useUpdateUserSettings, useTasks, useGoals, usePlans, useConnectCalendar } from '@/hooks/use-graphql';
+import { useUserSettings, useUpdateUserSettings, useUpdateUserProfile, useTasks, useGoals, usePlans } from '@/hooks/use-graphql';
+import { useTheme } from 'next-themes';
 import {
   User,
   Bell,
@@ -38,6 +39,28 @@ import {
   exportAllDataToJSON,
 } from '@/lib/export';
 
+// The UI offers 4 chronotypes but the backend stores a 3-value EnergyPattern.
+// Map both directions (dolphin folds into BALANCED on the way in).
+const CHRONOTYPE_TO_ENERGY: Record<string, string> = {
+  lion: 'MORNING_PERSON',
+  bear: 'BALANCED',
+  wolf: 'NIGHT_OWL',
+  dolphin: 'BALANCED',
+};
+
+const ENERGY_TO_CHRONOTYPE: Record<string, string> = {
+  MORNING_PERSON: 'lion',
+  BALANCED: 'bear',
+  NIGHT_OWL: 'wolf',
+};
+
+// UI theme values are lowercase; the schema Theme enum is uppercase.
+const THEME_TO_ENUM: Record<string, string> = {
+  light: 'LIGHT',
+  dark: 'DARK',
+  system: 'SYSTEM',
+};
+
 export default function SettingsPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -53,9 +76,10 @@ export default function SettingsPage() {
   }, []);
 
   // Fetch user settings from GraphQL
-  const { settings, loading: settingsLoading } = useUserSettings();
+  const { user: dbUser, settings, loading: settingsLoading } = useUserSettings();
   const { updateSettings } = useUpdateUserSettings();
-  const { connectCalendar } = useConnectCalendar();
+  const { updateProfile } = useUpdateUserProfile();
+  const { setTheme } = useTheme();
 
   // Fetch data for export
   const { tasks } = useTasks();
@@ -66,45 +90,44 @@ export default function SettingsPage() {
   const [profileSettings, setProfileSettings] = React.useState({
     name: user?.fullName || '',
     email: user?.primaryEmailAddress?.emailAddress || '',
-    chronotype: settings?.chronotype || 'lion',
-    timezone: settings?.timezone || 'America/New_York',
+    chronotype: 'bear',
+    timezone: 'America/New_York',
   });
 
   const [notificationSettings, setNotificationSettings] = React.useState({
-    emailNotifications: settings?.notifications?.email ?? true,
-    pushNotifications: settings?.notifications?.push ?? true,
-    weeklyPlanReminder: settings?.notifications?.weeklyPlan ?? true,
-    dailyTaskReminder: settings?.notifications?.dailyTask ?? true,
-    goalMilestones: settings?.notifications?.goalMilestones ?? true,
+    email: true,
+    planReminders: true,
+    taskReminders: true,
+    goalMilestones: true,
+    productivityInsights: true,
   });
 
   const [appearanceSettings, setAppearanceSettings] = React.useState({
-    theme: settings?.appearance?.theme || 'system',
-    compactMode: settings?.appearance?.compactMode ?? false,
+    theme: 'system',
   });
 
   // Update local state when settings are loaded
   React.useEffect(() => {
-    if (settings) {
+    if (settings || dbUser) {
+      const energy = settings?.energyPattern || dbUser?.energyPattern;
       setProfileSettings({
         name: user?.fullName || '',
         email: user?.primaryEmailAddress?.emailAddress || '',
-        chronotype: settings.chronotype || 'lion',
-        timezone: settings.timezone || 'America/New_York',
+        chronotype: (energy && ENERGY_TO_CHRONOTYPE[energy]) || 'bear',
+        timezone: dbUser?.timezone || 'America/New_York',
       });
       setNotificationSettings({
-        emailNotifications: settings.notifications?.email ?? true,
-        pushNotifications: settings.notifications?.push ?? true,
-        weeklyPlanReminder: settings.notifications?.weeklyPlan ?? true,
-        dailyTaskReminder: settings.notifications?.dailyTask ?? true,
-        goalMilestones: settings.notifications?.goalMilestones ?? true,
+        email: settings?.notifications?.email ?? true,
+        planReminders: settings?.notifications?.planReminders ?? true,
+        taskReminders: settings?.notifications?.taskReminders ?? true,
+        goalMilestones: settings?.notifications?.goalMilestones ?? true,
+        productivityInsights: settings?.notifications?.productivityInsights ?? true,
       });
       setAppearanceSettings({
-        theme: settings.appearance?.theme || 'system',
-        compactMode: settings.appearance?.compactMode ?? false,
+        theme: settings?.theme ? settings.theme.toLowerCase() : 'system',
       });
     }
-  }, [settings, user]);
+  }, [settings, dbUser, user]);
 
   const { tier: userTier } = useTier();
 
@@ -112,14 +135,25 @@ export default function SettingsPage() {
     setIsSaving(true);
 
     try {
-      await updateSettings({
-        variables: {
-          input: {
-            chronotype: profileSettings.chronotype,
-            timezone: profileSettings.timezone,
+      // Name + timezone live on the user profile; chronotype maps to the
+      // settings-level EnergyPattern. Persist both.
+      await Promise.all([
+        updateProfile({
+          variables: {
+            input: {
+              name: profileSettings.name,
+              timezone: profileSettings.timezone,
+            },
           },
-        },
-      });
+        }),
+        updateSettings({
+          variables: {
+            input: {
+              energyPattern: CHRONOTYPE_TO_ENERGY[profileSettings.chronotype] ?? 'BALANCED',
+            },
+          },
+        }),
+      ]);
     } catch (error) {
       console.error('Failed to save profile:', error);
     } finally {
@@ -128,16 +162,14 @@ export default function SettingsPage() {
   };
 
   const handleNotificationChange = async (key: keyof typeof notificationSettings, value: boolean) => {
-    setNotificationSettings({ ...notificationSettings, [key]: value });
+    const next = { ...notificationSettings, [key]: value };
+    setNotificationSettings(next);
 
     try {
       await updateSettings({
         variables: {
           input: {
-            notifications: {
-              ...notificationSettings,
-              [key]: value,
-            },
+            notifications: next,
           },
         },
       });
@@ -148,24 +180,25 @@ export default function SettingsPage() {
     }
   };
 
-  const handleAppearanceChange = async (key: keyof typeof appearanceSettings, value: any) => {
-    setAppearanceSettings({ ...appearanceSettings, [key]: value });
+  const handleThemeChange = async (value: string) => {
+    const previous = appearanceSettings.theme;
+    setAppearanceSettings({ theme: value });
+    // Apply immediately in the UI via next-themes.
+    setTheme(value);
 
     try {
       await updateSettings({
         variables: {
           input: {
-            appearance: {
-              ...appearanceSettings,
-              [key]: value,
-            },
+            theme: THEME_TO_ENUM[value] ?? 'SYSTEM',
           },
         },
       });
     } catch (error) {
       console.error('Failed to update appearance:', error);
       // Revert on error
-      setAppearanceSettings({ ...appearanceSettings, [key]: value });
+      setAppearanceSettings({ theme: previous });
+      setTheme(previous);
     }
   };
 
@@ -217,18 +250,6 @@ export default function SettingsPage() {
       toast.error('Failed to export data', {
         description: 'Please try again or contact support if the problem persists',
       });
-    }
-  };
-
-  const handleConnectCalendar = async (provider: string) => {
-    try {
-      await connectCalendar({
-        variables: {
-          provider,
-        },
-      });
-    } catch (error) {
-      console.error(`Failed to connect ${provider}:`, error);
     }
   };
 
@@ -400,24 +421,8 @@ export default function SettingsPage() {
                 </div>
                 <Switch
                   id="email-notifications"
-                  checked={notificationSettings.emailNotifications}
-                  onCheckedChange={(checked) => handleNotificationChange('emailNotifications', checked)}
-                />
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="push-notifications">Push Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive push notifications on your devices
-                  </p>
-                </div>
-                <Switch
-                  id="push-notifications"
-                  checked={notificationSettings.pushNotifications}
-                  onCheckedChange={(checked) => handleNotificationChange('pushNotifications', checked)}
+                  checked={notificationSettings.email}
+                  onCheckedChange={(checked) => handleNotificationChange('email', checked)}
                 />
               </div>
 
@@ -432,8 +437,8 @@ export default function SettingsPage() {
                 </div>
                 <Switch
                   id="weekly-plan"
-                  checked={notificationSettings.weeklyPlanReminder}
-                  onCheckedChange={(checked) => handleNotificationChange('weeklyPlanReminder', checked)}
+                  checked={notificationSettings.planReminders}
+                  onCheckedChange={(checked) => handleNotificationChange('planReminders', checked)}
                 />
               </div>
 
@@ -448,8 +453,8 @@ export default function SettingsPage() {
                 </div>
                 <Switch
                   id="daily-task"
-                  checked={notificationSettings.dailyTaskReminder}
-                  onCheckedChange={(checked) => handleNotificationChange('dailyTaskReminder', checked)}
+                  checked={notificationSettings.taskReminders}
+                  onCheckedChange={(checked) => handleNotificationChange('taskReminders', checked)}
                 />
               </div>
 
@@ -468,6 +473,22 @@ export default function SettingsPage() {
                   onCheckedChange={(checked) => handleNotificationChange('goalMilestones', checked)}
                 />
               </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="productivity-insights">Productivity Insights</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Weekly summaries of your productivity trends
+                  </p>
+                </div>
+                <Switch
+                  id="productivity-insights"
+                  checked={notificationSettings.productivityInsights}
+                  onCheckedChange={(checked) => handleNotificationChange('productivityInsights', checked)}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -478,7 +499,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>Calendar Integrations</CardTitle>
               <CardDescription>
-                Connect your calendars to sync tasks and events
+                Sync your tasks with your calendar
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -490,54 +511,16 @@ export default function SettingsPage() {
                   <div>
                     <div className="font-medium">Google Calendar</div>
                     <div className="text-sm text-muted-foreground">
-                      Sync your MicroPlanner tasks with Google Calendar
+                      Two-way sync between MicroPlanner and Google Calendar
                     </div>
                   </div>
                 </div>
-                {userTier === 'FREE' ? (
-                  <Badge variant="secondary">PRO Feature</Badge>
-                ) : (
-                  <Button onClick={() => handleConnectCalendar('Google Calendar')}>Connect</Button>
-                )}
+                <Badge variant="secondary">Coming soon</Badge>
               </div>
-
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                    O
-                  </div>
-                  <div>
-                    <div className="font-medium">Outlook Calendar</div>
-                    <div className="text-sm text-muted-foreground">
-                      Sync your MicroPlanner tasks with Outlook
-                    </div>
-                  </div>
-                </div>
-                {userTier === 'FREE' ? (
-                  <Badge variant="secondary">PRO Feature</Badge>
-                ) : (
-                  <Button onClick={() => handleConnectCalendar('Outlook Calendar')}>Connect</Button>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold">
-                    iC
-                  </div>
-                  <div>
-                    <div className="font-medium">Apple Calendar (iCal)</div>
-                    <div className="text-sm text-muted-foreground">
-                      Export tasks to Apple Calendar via iCal feed
-                    </div>
-                  </div>
-                </div>
-                {userTier === 'FREE' ? (
-                  <Badge variant="secondary">PRO Feature</Badge>
-                ) : (
-                  <Button variant="outline">Get iCal URL</Button>
-                )}
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Calendar sync is on the way. Manage integrations from the{' '}
+                <a href="/integrations" className="underline">Integrations</a> page.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -558,7 +541,7 @@ export default function SettingsPage() {
                   <Button
                     variant={appearanceSettings.theme === 'light' ? 'default' : 'outline'}
                     className="flex-col h-auto py-3"
-                    onClick={() => handleAppearanceChange('theme', 'light')}
+                    onClick={() => handleThemeChange('light')}
                   >
                     <Sun className="h-5 w-5 mb-1" />
                     <span>Light</span>
@@ -566,7 +549,7 @@ export default function SettingsPage() {
                   <Button
                     variant={appearanceSettings.theme === 'dark' ? 'default' : 'outline'}
                     className="flex-col h-auto py-3"
-                    onClick={() => handleAppearanceChange('theme', 'dark')}
+                    onClick={() => handleThemeChange('dark')}
                   >
                     <Moon className="h-5 w-5 mb-1" />
                     <span>Dark</span>
@@ -574,28 +557,12 @@ export default function SettingsPage() {
                   <Button
                     variant={appearanceSettings.theme === 'system' ? 'default' : 'outline'}
                     className="flex-col h-auto py-3"
-                    onClick={() => handleAppearanceChange('theme', 'system')}
+                    onClick={() => handleThemeChange('system')}
                   >
                     <Laptop className="h-5 w-5 mb-1" />
                     <span>System</span>
                   </Button>
                 </div>
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="compact-mode">Compact Mode</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Use denser spacing throughout the app
-                  </p>
-                </div>
-                <Switch
-                  id="compact-mode"
-                  checked={appearanceSettings.compactMode}
-                  onCheckedChange={(checked) => handleAppearanceChange('compactMode', checked)}
-                />
               </div>
             </CardContent>
           </Card>

@@ -1,3 +1,4 @@
+import { MarketingMobileNav } from '@/components/marketing/mobile-nav';
 import { ArrowRight, Github, Linkedin } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -51,15 +52,16 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               </Link>
             </nav>
 
-            {/* CTA Button */}
+            {/* CTA Button + Mobile menu */}
             <div className="flex items-center gap-3">
               <Link
                 href="/sign-up"
-                className="inline-flex items-center justify-center rounded-lg bg-gradient-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md hover:scale-105"
+                className="hidden sm:inline-flex items-center justify-center rounded-lg bg-gradient-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md hover:scale-105"
               >
                 Get Started Free
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
+              <MarketingMobileNav />
             </div>
           </div>
         </div>

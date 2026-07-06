@@ -272,11 +272,11 @@ export function WeekCalendarDnd({
                                             snapshot.isDragging && 'shadow-xl'
                                           )}
                                           style={{
-                                            borderLeftColor: task.goal.color,
+                                            borderLeftColor: task.goal?.color ?? '#94a3b8',
                                           }}
                                         >
                                           <div className="flex items-start gap-1 mb-1">
-                                            <span className="text-sm">{task.goal.emoji}</span>
+                                            <span className="text-sm">{task.goal?.emoji ?? '📌'}</span>
                                             <div className="flex-1 min-w-0">
                                               <div className={cn(
                                                 'text-xs font-medium truncate',

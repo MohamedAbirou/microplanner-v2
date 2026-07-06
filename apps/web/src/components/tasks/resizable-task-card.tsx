@@ -84,7 +84,7 @@ export function ResizableTaskCard({
         }
       }}
       style={{
-        backgroundColor: `${task.goal.color}10`,
+        backgroundColor: `${task.goal?.color ?? '#94a3b8'}10`,
       }}
     >
       {/* Top Resize Handle */}
@@ -111,7 +111,7 @@ export function ResizableTaskCard({
         {/* Task Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            {task.goal.emoji && <span className="text-sm">{task.goal.emoji}</span>}
+            {task.goal?.emoji && <span className="text-sm">{task.goal.emoji}</span>}
             <h3
               className={cn(
                 'text-sm font-medium truncate',

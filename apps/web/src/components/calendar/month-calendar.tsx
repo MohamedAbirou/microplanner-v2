@@ -156,7 +156,7 @@ export function MonthCalendar({
 
               // Get unique goal colors for this day
               const goalColors = Array.from(
-                new Set(dayTasks.map(t => t.goal.color))
+                new Set(dayTasks.map(t => t.goal?.color ?? '#94a3b8'))
               ).slice(0, 3); // Show max 3 dots
 
               return (
@@ -218,11 +218,11 @@ export function MonthCalendar({
                             task.isCompleted && 'line-through opacity-60'
                           )}
                           style={{
-                            backgroundColor: `${task.goal.color}15`,
-                            color: task.goal.color,
+                            backgroundColor: `${task.goal?.color ?? '#94a3b8'}15`,
+                            color: task.goal?.color ?? '#94a3b8',
                           }}
                         >
-                          {task.goal.emoji} {task.title}
+                          {task.goal?.emoji ?? '📌'} {task.title}
                         </div>
                       ))}
                       {dayTasks.length > 2 && (
@@ -253,11 +253,11 @@ export function MonthCalendar({
                   'p-3 rounded-lg border-l-4 cursor-pointer hover:bg-accent/50 transition-colors',
                   task.isCompleted && 'opacity-60'
                 )}
-                style={{ borderLeftColor: task.goal.color }}
+                style={{ borderLeftColor: task.goal?.color ?? '#94a3b8' }}
                 onClick={() => onTaskClick?.(task)}
               >
                 <div className="flex items-start gap-2">
-                  <span className="text-lg">{task.goal.emoji}</span>
+                  <span className="text-lg">{task.goal?.emoji ?? '📌'}</span>
                   <div className="flex-1 min-w-0">
                     <div className={cn(
                       'font-medium text-sm mb-1',
@@ -268,9 +268,9 @@ export function MonthCalendar({
                     <Badge
                       variant="outline"
                       className="text-xs"
-                      style={{ borderColor: task.goal.color, color: task.goal.color }}
+                      style={{ borderColor: task.goal?.color ?? '#94a3b8', color: task.goal?.color ?? '#94a3b8' }}
                     >
-                      {task.goal.title}
+                      {task.goal?.title ?? 'No goal'}
                     </Badge>
                   </div>
                 </div>

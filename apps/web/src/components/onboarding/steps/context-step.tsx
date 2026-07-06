@@ -14,8 +14,7 @@ import {
 
 interface ContextStepProps {
   value?: UserContext;
-  onChange: (context: UserContext) => void;
-  onNext: () => void;
+  onSelect: (context: UserContext) => void;
 }
 
 const contexts = [
@@ -77,13 +76,9 @@ const contexts = [
   },
 ];
 
-export function ContextStep({ value, onChange, onNext }: ContextStepProps) {
+export function ContextStep({ value, onSelect }: ContextStepProps) {
   const handleSelect = (context: UserContext) => {
-    onChange(context);
-    // Auto-advance after selection with a slight delay (allows user to see selection animation)
-    setTimeout(() => {
-      onNext();
-    }, 600); // Slightly longer to show encouraging message
+    onSelect(context);
   };
 
   return (

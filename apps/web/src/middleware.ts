@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
  */
 const isPublicRoute = createRouteMatcher([
   '/',
+  '/home(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/about(.*)',
@@ -96,8 +97,10 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Skip Next.js internals, static files, and the PWA manifest
+    // (manifest.json must be excluded explicitly — the generic `js(?!on)`
+    //  lets `.json` through, which would 307-redirect the manifest to /sign-in)
+    '/((?!_next|manifest\\.json|manifest\\.webmanifest|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],

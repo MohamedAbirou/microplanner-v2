@@ -70,8 +70,8 @@ export default function ContactSupportPage() {
       description="Get the support you need when you need it. Our team is dedicated to your success."
       features={features}
       benefits={benefits}
-      ctaText="Open a Support Ticket"
-      ctaLink="https://support.microplanner.com/tickets"
+      ctaText="Email Support"
+      ctaLink="mailto:support@microplanner.com"
     >
       <div className="mb-16 grid gap-8 md:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-8 text-center">

@@ -651,6 +651,9 @@ export const UPDATE_GOAL = gql`
       title
       description
       color
+      isActive
+      isPaused
+      pausedUntil
       updatedAt
     }
   }
@@ -827,8 +830,11 @@ export const GET_USER_SETTINGS = gql`
       email
       fullName
       tier
+      timezone
+      energyPattern
       settings {
         theme
+        energyPattern
         workingHours {
           start
           end
@@ -836,8 +842,11 @@ export const GET_USER_SETTINGS = gql`
         defaultTaskDuration
         notifications {
           email
-          push
-          reminders
+          weeklySummary
+          planReminders
+          taskReminders
+          goalMilestones
+          productivityInsights
         }
         calendarIntegrations {
           provider
@@ -850,11 +859,23 @@ export const GET_USER_SETTINGS = gql`
   }
 `;
 
+export const UPDATE_USER_PROFILE = gql`
+  mutation UpdateUserProfile($input: UpdateUserProfileInput!) {
+    updateUserProfile(input: $input) {
+      id
+      name
+      fullName
+      timezone
+    }
+  }
+`;
+
 export const UPDATE_USER_SETTINGS = gql`
   mutation UpdateUserSettings($input: UpdateUserSettingsInput!) {
     updateUserSettings(input: $input) {
       id
       theme
+      energyPattern
       workingHours {
         start
         end
@@ -862,8 +883,11 @@ export const UPDATE_USER_SETTINGS = gql`
       defaultTaskDuration
       notifications {
         email
-        push
-        reminders
+        weeklySummary
+        planReminders
+        taskReminders
+        goalMilestones
+        productivityInsights
       }
     }
   }

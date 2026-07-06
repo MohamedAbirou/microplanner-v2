@@ -11,6 +11,7 @@ interface GeneratingStepProps {
   selectedGoals: string[];
   preferences: any;
   onComplete: (planId: string) => void;
+  onError?: () => void;
 }
 
 const stages = [
@@ -21,47 +22,37 @@ const stages = [
   { label: 'Finalizing your plan...', progress: 95 },
 ];
 
-export function GeneratingStep({ selectedGoals, preferences, onComplete }: GeneratingStepProps) {
+export function GeneratingStep({ selectedGoals, preferences, onComplete, onError }: GeneratingStepProps) {
   const [currentStage, setCurrentStage] = useState(0);
   const [progress, setProgress] = useState(0);
   const { generatePlan } = useGeneratePlan();
 
   useEffect(() => {
-    // Simulate plan generation
-    const interval = setInterval(() => {
-      setCurrentStage((prev) => {
-        if (prev < stages.length - 1) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, 1500);
+    let cancelled = false;
 
+    // Advance the stage labels / progress bar as visual feedback. This is
+    // purely cosmetic — the redirect is driven off the resolved mutation
+    // below, NOT a fixed timer, so a fast (rule-based) or slow (LLM)
+    // generation both land on the review page as soon as the plan exists.
+    const stageInterval = setInterval(() => {
+      setCurrentStage((prev) => (prev < stages.length - 1 ? prev + 1 : prev));
+    }, 1200);
+
+    // Creep toward 90% while we wait; the real completion snaps it to 100%.
     const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev < 100) {
-          return Math.min(prev + 2, 100);
-        }
-        return prev;
-      });
+      setProgress((prev) => (prev < 90 ? Math.min(prev + 2, 90) : prev));
     }, 150);
 
-    // Complete after 8 seconds
-    const timeout = setTimeout(async () => {
-      clearInterval(interval);
-      clearInterval(progressInterval);
-
+    (async () => {
       try {
-        // Restructure input to match GraphQL schema
-        // weekStartDate and aiModel go at root level, not in preferences
+        // The server selects the AI model by tier — do not send an aiModel.
         const result = await generatePlan({
           variables: {
             input: {
               goalIds: selectedGoals,
               weekStartDate: preferences.weekStartDate,
-              aiModel: preferences.aiModel,
               preferences: {
-                prioritizeMornings: preferences.prioritizePeakHours, // Rename to match schema
+                prioritizeMornings: preferences.prioritizePeakHours,
                 avoidWeekends: preferences.avoidWeekends,
                 bufferTime: preferences.bufferTime,
                 focusBlockDuration: preferences.focusBlockDuration,
@@ -70,23 +61,36 @@ export function GeneratingStep({ selectedGoals, preferences, onComplete }: Gener
           },
         });
 
+        if (cancelled) return;
+
         if (result.data?.generatePlan) {
+          // Finish the progress bar, then redirect off the resolved result.
+          clearInterval(stageInterval);
+          clearInterval(progressInterval);
+          setCurrentStage(stages.length - 1);
+          setProgress(100);
           onComplete(result.data.generatePlan.id);
+        } else {
+          throw new Error('Plan generation returned no plan');
         }
       } catch (error) {
+        if (cancelled) return;
+        clearInterval(stageInterval);
+        clearInterval(progressInterval);
         console.error('Failed to generate plan:', error);
         toast.error('Failed to generate plan', {
           description: 'Please try again or contact support if the problem persists',
         });
+        onError?.();
       }
-    }, 8000);
+    })();
 
     return () => {
-      clearInterval(interval);
+      cancelled = true;
+      clearInterval(stageInterval);
       clearInterval(progressInterval);
-      clearTimeout(timeout);
     };
-  }, [generatePlan, selectedGoals, preferences, onComplete]);
+  }, [generatePlan, selectedGoals, preferences, onComplete, onError]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[600px] space-y-8">

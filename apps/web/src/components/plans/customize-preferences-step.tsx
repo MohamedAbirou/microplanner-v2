@@ -19,7 +19,6 @@ interface CustomizePreferencesStepProps {
     avoidWeekends: boolean;
     bufferTime: number;
     focusBlockDuration: number;
-    aiModel: string;
   };
   selectedGoals: string[];
   onNext: (preferences: any) => void;
@@ -176,49 +175,23 @@ export function CustomizePreferencesStep({
           </CardContent>
         </Card>
 
-        {/* AI Model Selection (PRO/PREMIUM only) */}
+        {/* AI Planning Model — the model is selected server-side by tier
+            (PRO/PREMIUM use Claude, STARTER GPT-4o-mini, FREE rule-based),
+            so we surface it as read-only info rather than a fake chooser. */}
         {(tier === 'PRO' || tier === 'PREMIUM') && (
           <Card>
             <CardHeader>
               <CardTitle>AI Planning Model</CardTitle>
-              <CardDescription>Choose which AI model to use for plan generation</CardDescription>
+              <CardDescription>Your tier uses our most advanced planning model</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div
-                  className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                    preferences.aiModel === 'gpt-4o-mini'
-                      ? 'border-primary bg-primary/5'
-                      : 'hover:bg-accent'
-                  }`}
-                  onClick={() => setPreferences({ ...preferences, aiModel: 'gpt-4o-mini' })}
-                >
-                  <div className="flex-1">
-                    <div className="font-medium">GPT-4o Mini</div>
-                    <div className="text-sm text-muted-foreground">
-                      Fast, efficient planning • Quality: 80-90/100
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                    preferences.aiModel === 'claude-sonnet-3.5'
-                      ? 'border-primary bg-primary/5'
-                      : 'hover:bg-accent'
-                  }`}
-                  onClick={() => setPreferences({ ...preferences, aiModel: 'claude-sonnet-3.5' })}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Claude Sonnet 3.5</span>
-                      <Badge>Recommended</Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Advanced reasoning & context • Quality: 85-95/100
-                    </div>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Claude Sonnet</span>
+                <Badge>Included with {tier}</Badge>
               </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Advanced reasoning &amp; context • Quality: 85–95/100
+              </p>
             </CardContent>
           </Card>
         )}

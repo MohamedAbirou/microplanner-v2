@@ -344,6 +344,7 @@ export function useCreateGoal() {
 
 export function useUpdateGoal() {
   const [updateGoal, { loading, error }] = useMutation(operations.UPDATE_GOAL, {
+    refetchQueries: [{ query: operations.GET_GOALS }],
     onCompleted: () => {
       toast.success('Goal updated successfully');
     },
@@ -490,6 +491,7 @@ export function useUserSettings() {
 
 export function useUpdateUserSettings() {
   const [updateSettings, { loading, error }] = useMutation(operations.UPDATE_USER_SETTINGS, {
+    refetchQueries: [{ query: operations.GET_USER_SETTINGS }],
     onCompleted: () => {
       toast.success('Settings updated successfully');
     },
@@ -501,6 +503,22 @@ export function useUpdateUserSettings() {
   });
 
   return { updateSettings, loading, error };
+}
+
+export function useUpdateUserProfile() {
+  const [updateProfile, { loading, error }] = useMutation(operations.UPDATE_USER_PROFILE, {
+    refetchQueries: [{ query: operations.GET_USER_SETTINGS }],
+    onCompleted: () => {
+      toast.success('Profile updated successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to update profile', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { updateProfile, loading, error };
 }
 
 // ============================================================================

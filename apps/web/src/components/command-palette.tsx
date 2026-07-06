@@ -13,6 +13,7 @@ import {
     BarChart3,
     Calendar,
     CheckCircle2,
+    Circle,
     Plus,
     Settings,
     Sparkles,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
+import { useGoals, useTasks } from '@/hooks/use-graphql';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -30,6 +32,8 @@ interface CommandPaletteProps {
 export function CommandPalette({ open, onOpenChange, onQuickAddClick }: CommandPaletteProps) {
   const router = useRouter();
   const [search, setSearch] = React.useState('');
+  const { goals } = useGoals();
+  const { tasks } = useTasks();
 
   // Handle command selection
   const runCommand = React.useCallback((command: () => void) => {
@@ -62,18 +66,25 @@ export function CommandPalette({ open, onOpenChange, onQuickAddClick }: CommandP
 
   // Action commands
   const actionCommands = [
-    { icon: Plus, label: 'Create New Task', action: () => onQuickAddClick?.(), shortcut: 'T' },
-    { icon: Target, label: 'Create New Goal', action: () => router.push('/goals/new'), shortcut: 'G' },
+    { icon: Plus, label: 'Create New Task', action: () => onQuickAddClick?.(), shortcut: 'N' },
+    { icon: Target, label: 'Create New Goal', action: () => router.push('/goals/new') },
     { icon: Sparkles, label: 'Generate Weekly Plan', action: () => router.push('/plans/generate'), shortcut: 'P' },
-    { icon: CheckCircle2, label: 'Quick Complete Task', action: () => console.log('Quick complete'), shortcut: 'C' },
   ];
 
-  // Recent items (mock - would come from user activity)
-  const recentItems = [
-    { icon: Target, label: 'Career Growth', type: 'Goal', action: () => router.push('/goals/1') },
-    { icon: CheckCircle2, label: 'Morning workout', type: 'Task', action: () => console.log('Open task') },
-    { icon: Sparkles, label: 'Last Week\'s Plan', type: 'Plan', action: () => router.push('/plans/1') },
-  ];
+  // Recent items — real goals and tasks from the user's data (no mock ids).
+  const recentGoals = (goals ?? []).slice(0, 3).map((goal: any) => ({
+    icon: Target,
+    label: goal.title,
+    type: 'Goal',
+    action: () => router.push(`/goals/${goal.id}`),
+  }));
+  const recentTasks = (tasks ?? []).slice(0, 3).map((task: any) => ({
+    icon: task.isCompleted ? CheckCircle2 : Circle,
+    label: task.title,
+    type: 'Task',
+    action: () => router.push('/tasks'),
+  }));
+  const recentItems = [...recentGoals, ...recentTasks];
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -86,7 +97,7 @@ export function CommandPalette({ open, onOpenChange, onQuickAddClick }: CommandP
         <CommandEmpty>No results found.</CommandEmpty>
 
         {/* Recent Items */}
-        {!search && (
+        {!search && recentItems.length > 0 && (
           <>
             <CommandGroup heading="Recent">
               {recentItems.map((item, index) => {

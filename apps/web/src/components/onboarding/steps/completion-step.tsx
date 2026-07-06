@@ -2,6 +2,10 @@
 
 import { motion } from 'framer-motion';
 import { OnboardingData } from '../onboarding-wizard';
+import {
+  formatContextLabel,
+  formatFocusAreaLabel,
+} from '../onboarding-labels';
 import { Button } from '@/components/ui/button';
 import {
   CheckCircle2,
@@ -18,30 +22,6 @@ interface CompletionStepProps {
 }
 
 export function CompletionStep({ data, onComplete }: CompletionStepProps) {
-  const focusAreaLabels: Record<string, string> = {
-    career: 'Career',
-    learning: 'Learning',
-    health: 'Health & Fitness',
-    creative: 'Creative Projects',
-    business: 'Business',
-    job_search: 'Job Search',
-    family: 'Family & Relationships',
-    home: 'Home & Organization',
-    writing: 'Writing',
-    hobbies: 'Hobbies & Fun',
-  };
-
-  const contextLabels: Record<string, string> = {
-    employed_fulltime: 'Employed Full-Time',
-    employed_parttime: 'Employed Part-Time',
-    student: 'Student',
-    freelancer: 'Freelancer',
-    between_opportunities: 'Between Opportunities',
-    retired: 'Retired',
-    parent_caregiver: 'Parent/Caregiver',
-    other: 'Other',
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -99,21 +79,25 @@ export function CompletionStep({ data, onComplete }: CompletionStepProps) {
                 <div>
                   <span className="text-sm text-muted-foreground">Status: </span>
                   <span className="text-sm font-medium">
-                    {data.context ? contextLabels[data.context] : 'Not set'}
+                    {formatContextLabel(data.context)}
                   </span>
                 </div>
                 <div>
                   <span className="text-sm text-muted-foreground">Focus Areas: </span>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {data.focusAreas.map((area) => (
-                      <span
-                        key={area}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary"
-                      >
-                        {focusAreaLabels[area] || area}
-                      </span>
-                    ))}
-                  </div>
+                  {data.focusAreas.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {data.focusAreas.map((area) => (
+                        <span
+                          key={area}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary"
+                        >
+                          {formatFocusAreaLabel(area)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-sm font-medium">Not set</span>
+                  )}
                 </div>
               </div>
             </div>

@@ -211,9 +211,9 @@ export default function PlanReviewPage() {
                         >
                           <div
                             className="w-1 h-12 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: task.goal.color }}
+                            style={{ backgroundColor: task.goal?.color ?? '#94a3b8' }}
                           />
-                          <span className="text-2xl">{task.goal.emoji}</span>
+                          <span className="text-2xl">{task.goal?.emoji ?? '📌'}</span>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium">{task.title}</div>
                             <div className="text-sm text-muted-foreground">
@@ -222,9 +222,9 @@ export default function PlanReviewPage() {
                           </div>
                           <Badge
                             variant="outline"
-                            style={{ borderColor: task.goal.color, color: task.goal.color }}
+                            style={{ borderColor: task.goal?.color ?? '#94a3b8', color: task.goal?.color ?? '#94a3b8' }}
                           >
-                            {task.goal.title}
+                            {task.goal?.title ?? 'No goal'}
                           </Badge>
                           {task.priority === 1 && (
                             <Badge variant="destructive">High Priority</Badge>

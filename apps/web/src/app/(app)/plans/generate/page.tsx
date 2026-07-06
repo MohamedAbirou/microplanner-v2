@@ -19,7 +19,7 @@ export default function GeneratePlanPage() {
     avoidWeekends: false,
     bufferTime: 15,
     focusBlockDuration: 90,
-    aiModel: 'claude-sonnet-3.5',
+    // aiModel intentionally omitted — the server selects the model by tier.
   });
 
   const steps = {
@@ -84,6 +84,7 @@ export default function GeneratePlanPage() {
             selectedGoals={selectedGoals}
             preferences={preferences}
             onComplete={handlePlanGenerated}
+            onError={() => setCurrentStep('customize')}
           />
         )}
       </div>

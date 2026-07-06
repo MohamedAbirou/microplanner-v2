@@ -16,9 +16,10 @@ import { useTier } from '@/contexts/tier-context';
 import { useUpgradeCheckout } from '@/hooks/use-upgrade-checkout';
 import { formatTierLabel } from '@/lib/upgrade';
 import { getInitials } from '@/lib/utils';
-import { useUser } from '@clerk/nextjs';
+import { useClerk, useUser } from '@clerk/nextjs';
 import { Command, HelpCircle, LogOut, Menu, Plus, Settings as SettingsIcon, Sparkles, User } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface AppHeaderProps {
   onMenuClick: () => void;
@@ -28,6 +29,8 @@ interface AppHeaderProps {
 
 export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppHeaderProps) {
   const { user } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
   const { tier } = useTier();
   const { upgrade, loading: upgradeLoading } = useUpgradeCheckout();
 
@@ -126,10 +129,12 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
                   Settings
                 </DropdownMenuItem>
               </Link>
-              <DropdownMenuItem className="cursor-pointer">
-                <HelpCircle className="mr-2 h-4 w-4" />
-                Help & Support
-              </DropdownMenuItem>
+              <Link href="/help">
+                <DropdownMenuItem className="cursor-pointer">
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  Help & Support
+                </DropdownMenuItem>
+              </Link>
               {(tier === 'FREE' || tier === 'STARTER') && (
                 <>
                   <DropdownMenuSeparator />
@@ -149,7 +154,13 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
                 </>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+              <DropdownMenuItem
+                className="cursor-pointer text-destructive focus:text-destructive"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  signOut(() => router.push('/sign-in'));
+                }}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>

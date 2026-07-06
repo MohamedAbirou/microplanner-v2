@@ -60,12 +60,48 @@ if (!redis) {
 }
 
 // In-memory pubsub fallback when Redis is unavailable (dev / minimal deploy)
-const pubsub = redis
+const realPubsub = redis
   ? new RedisPubSub({
       publisher: redis.duplicate(),
       subscriber: redis.duplicate(),
     })
   : null;
+
+/**
+ * Safe pubsub facade exposed on the GraphQL context.
+ *
+ * A `publish` failure (Redis down, or REDIS_URL unset entirely) must NEVER
+ * fail a mutation whose DB write already succeeded — otherwise resolvers that
+ * publish after a write surface a false "Internal server error" to the user
+ * even though the change persisted. `publish` here always resolves; when Redis
+ * is absent, `asyncIterator` returns an empty stream so subscriptions simply
+ * never fire (they can't work without Redis anyway) instead of throwing.
+ */
+const pubsub = {
+  async publish(channel: string, payload: any): Promise<void> {
+    if (!realPubsub) return;
+    try {
+      await realPubsub.publish(channel, payload);
+    } catch (err) {
+      console.warn(`[pubsub] publish to ${channel} failed (ignored):`, err);
+    }
+  },
+  asyncIterator(channels: string | string[]): AsyncIterator<any> {
+    if (realPubsub) return realPubsub.asyncIterator(channels);
+    // No Redis → an iterator that never yields (subscription stays open, idle).
+    return {
+      next: () => new Promise<IteratorResult<any>>(() => {}),
+      return: () => Promise.resolve({ value: undefined, done: true }),
+      throw: (err: any) => Promise.reject(err),
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+    } as AsyncIterator<any>;
+  },
+  async close(): Promise<void> {
+    if (realPubsub) await realPubsub.close();
+  },
+};
 
 // Clerk JWKS client — verifies JWT signatures against Clerk's public keys.
 // CLERK_DOMAIN (e.g. "clerk.example.com" or "xxx.clerk.accounts.dev") is

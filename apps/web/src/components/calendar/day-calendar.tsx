@@ -193,11 +193,11 @@ export function DayCalendar({
                           task.isCompleted && 'opacity-60 bg-muted/50'
                         )}
                         style={{
-                          borderLeftColor: task.goal.color,
+                          borderLeftColor: task.goal?.color ?? '#94a3b8',
                         }}
                       >
                         <div className="flex items-start gap-2 mb-2">
-                          <span className="text-lg">{task.goal.emoji}</span>
+                          <span className="text-lg">{task.goal?.emoji ?? '📌'}</span>
                           <div className="flex-1 min-w-0">
                             <div className={cn(
                               'font-semibold mb-1',
@@ -218,9 +218,9 @@ export function DayCalendar({
                         <div className="flex items-center gap-2">
                           <Badge
                             variant="outline"
-                            style={{ borderColor: task.goal.color, color: task.goal.color }}
+                            style={{ borderColor: task.goal?.color ?? '#94a3b8', color: task.goal?.color ?? '#94a3b8' }}
                           >
-                            {task.goal.title}
+                            {task.goal?.title ?? 'No goal'}
                           </Badge>
                           {task.priority === 1 && (
                             <Badge variant="destructive">High Priority</Badge>

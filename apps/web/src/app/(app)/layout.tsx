@@ -9,6 +9,7 @@ import { QuickAddTaskModal, type TaskFormData } from '@/components/tasks/quick-a
 import { TierProvider } from '@/contexts/tier-context';
 import { ONBOARDING_STATUS } from '@/graphql/operations';
 import { useCreateTask, useGoals } from '@/hooks/use-graphql';
+import { useKeyboardShortcuts, useGlobalKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useQuery } from '@apollo/client';
 import { useUser } from '@clerk/nextjs';
 import { usePathname, useRouter } from 'next/navigation';
@@ -23,12 +24,34 @@ export default function AppLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
 
   // Fetch goals from GraphQL
   const { goals } = useGoals();
   const { createTask } = useCreateTask();
+
+  // Register global keyboard shortcuts (T/D/W/M/G/P/A/S nav, N new task, ? help).
+  useKeyboardShortcuts(useGlobalKeyboardShortcuts());
+
+  // Track viewport so the sidebar defaults to collapsed (overlay) on mobile
+  // and content isn't squished into a narrow strip.
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)');
+    const apply = () => {
+      setIsMobile(mql.matches);
+      setSidebarCollapsed(mql.matches);
+    };
+    apply();
+    mql.addEventListener('change', apply);
+    return () => mql.removeEventListener('change', apply);
+  }, []);
+
+  // Collapse the mobile overlay sidebar whenever the route changes.
+  useEffect(() => {
+    if (isMobile) setSidebarCollapsed(true);
+  }, [pathname, isMobile]);
 
   // Check onboarding status from database via GraphQL
   const { data: onboardingData, loading: onboardingLoading, error: onboardingError } = useQuery(
@@ -73,8 +96,6 @@ export default function AppLayout({
     }
   };
 
-  console.log("Collapsed: ", sidebarCollapsed);
-
   if (isLoaded && user && onboardingLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -105,11 +126,30 @@ export default function AppLayout({
           {/* Keyboard Shortcuts Dialog */}
           <KeyboardShortcutsDialog />
 
-          {/* Sidebar */}
-          <AppSidebar
-            collapsed={sidebarCollapsed}
-            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          />
+          {/* Mobile backdrop — tap to close the overlay sidebar */}
+          {isMobile && !sidebarCollapsed && (
+            <div
+              className="fixed inset-0 z-30 bg-black/50 md:hidden"
+              onClick={() => setSidebarCollapsed(true)}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Sidebar — on mobile it slides in/out as an overlay */}
+          <div
+            className={
+              isMobile
+                ? `fixed inset-y-0 left-0 z-40 transition-transform duration-300 ${
+                    sidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
+                  }`
+                : ''
+            }
+          >
+            <AppSidebar
+              collapsed={isMobile ? false : sidebarCollapsed}
+              onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+            />
+          </div>
 
           {/* Header */}
           <AppHeader
@@ -122,7 +162,7 @@ export default function AppLayout({
           <main
             className="pt-16 transition-all duration-300"
             style={{
-              marginLeft: sidebarCollapsed ? '70px' : '260px',
+              marginLeft: isMobile ? '0px' : sidebarCollapsed ? '70px' : '260px',
             }}
           >
             {children}

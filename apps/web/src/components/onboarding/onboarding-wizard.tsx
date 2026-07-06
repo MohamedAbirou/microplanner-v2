@@ -126,6 +126,14 @@ export function OnboardingWizard() {
     setData((prev) => ({ ...prev, ...updates }));
   };
 
+  /** Step 1 auto-advance: set context and advance in one atomic state update. */
+  const handleContextSelect = (context: UserContext) => {
+    setData((prev) => ({ ...prev, context }));
+    setTimeout(() => {
+      setCurrentStep(2);
+    }, 600);
+  };
+
   const canProceed = () => {
     switch (currentStep) {
       case 1:
@@ -189,8 +197,7 @@ export function OnboardingWizard() {
               <ContextStep
                 key="context"
                 value={data.context}
-                onChange={(context) => updateData({ context })}
-                onNext={handleNext}
+                onSelect={handleContextSelect}
               />
             )}
 

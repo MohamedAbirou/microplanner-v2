@@ -129,7 +129,7 @@ export function TaskDetailModal({
       setEditedTask({
         title: task.title,
         notes: task.notes || '',
-        goalId: task.goal.id,
+        goalId: task.goal?.id ?? undefined,
         scheduledDate: format(new Date(task.scheduledDate), 'yyyy-MM-dd'),
         startTime: task.startTime,
         durationMinutes: task.durationMinutes,
@@ -199,7 +199,7 @@ export function TaskDetailModal({
     }
   };
 
-  const selectedGoal = goals.find((g) => g.id === (editedTask.goalId || task.goal.id));
+  const selectedGoal = goals.find((g) => g.id === (editedTask.goalId || task.goal?.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -229,13 +229,15 @@ export function TaskDetailModal({
 
               {!isEditing && (
                 <div className="flex items-center gap-2 mt-2">
-                  <Badge
-                    variant="outline"
-                    style={{ borderColor: task.goal.color, color: task.goal.color }}
-                  >
-                    <span className="mr-1">{task.goal.emoji}</span>
-                    {task.goal.title}
-                  </Badge>
+                  {task.goal && (
+                    <Badge
+                      variant="outline"
+                      style={{ borderColor: task.goal.color, color: task.goal.color }}
+                    >
+                      <span className="mr-1">{task.goal.emoji}</span>
+                      {task.goal.title}
+                    </Badge>
+                  )}
                   {task.priority === 1 && (
                     <Badge variant="destructive">High Priority</Badge>
                   )}

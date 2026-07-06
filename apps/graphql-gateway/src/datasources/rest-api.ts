@@ -238,7 +238,27 @@ export class GoalsAPI {
   }
 
   async updateGoal(id: string, userId: string, input: UpdateGoalInput) {
-    const { data } = await this.client.put(`/${id}`, input, {
+    // `isPaused` is not a column the generic PUT /goals/:id accepts (the REST
+    // UpdateGoalDto whitelists CreateGoalDto fields only, so a raw `isPaused`
+    // is rejected by forbidNonWhitelisted). Route pause/resume to the
+    // dedicated endpoints, then apply any remaining editable fields.
+    const { isPaused, ...rest } = (input ?? {}) as any;
+
+    if (isPaused === true) {
+      await this.pauseGoal(id, userId);
+    } else if (isPaused === false) {
+      await this.resumeGoal(id, userId);
+    }
+
+    if (Object.keys(rest).length === 0) {
+      // Pause/resume only — fetch the updated goal to return.
+      const { data } = await this.client.get(`/${id}`, {
+        headers: { 'x-user-id': userId },
+      });
+      return data.goal || data;
+    }
+
+    const { data } = await this.client.put(`/${id}`, rest, {
       headers: { 'x-user-id': userId },
     });
     // API returns { message, goal }, extract the goal
@@ -259,7 +279,8 @@ export class GoalsAPI {
         headers: { 'x-user-id': userId },
       }
     );
-    return data;
+    // API returns { message, goal }, extract the goal
+    return data.goal || data;
   }
 
   async resumeGoal(id: string, userId: string) {
@@ -270,7 +291,8 @@ export class GoalsAPI {
         headers: { 'x-user-id': userId },
       }
     );
-    return data;
+    // API returns { message, goal }, extract the goal
+    return data.goal || data;
   }
 
   async getGoalsByProject(projectId: string, userId: string) {

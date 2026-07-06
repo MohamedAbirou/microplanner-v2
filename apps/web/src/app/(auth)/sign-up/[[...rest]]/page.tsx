@@ -95,12 +95,12 @@ export default function SignUpPage() {
               </p>
             </div>
 
-            {/* Stats */}
+            {/* Value props */}
             <div className="grid grid-cols-3 gap-8 pt-8">
               {[
-                { value: '10K+', label: 'Active Users' },
-                { value: '50K+', label: 'Plans Generated' },
-                { value: '95%', label: 'Satisfaction' },
+                { value: 'AI', label: 'Plans your week' },
+                { value: 'Free', label: 'To get started' },
+                { value: '2 min', label: 'To your first plan' },
               ].map((stat, index) => (
                 <div key={index} className="space-y-1">
                   <p className="text-3xl font-bold">{stat.value}</p>
@@ -113,8 +113,8 @@ export default function SignUpPage() {
             <div className="space-y-4 pt-8">
               {[
                 'Free tier available - no credit card required',
-                'AI-powered planning with multiple models',
-                'Calendar sync with Google, Outlook & Apple',
+                'AI-powered planning that adapts to your chronotype',
+                'Google Calendar sync (coming soon)',
                 'Mobile apps for iOS and Android (coming soon)',
               ].map((feature, index) => (
                 <div key={index} className="flex items-center gap-3">
