@@ -9,6 +9,7 @@ import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import { startOfWeek, endOfWeek } from 'date-fns';
+import { organizeCalendarTasks } from '@/lib/calendar-utils';
 
 export default function WeekPage() {
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
@@ -25,11 +26,12 @@ export default function WeekPage() {
 
   // Filter tasks for current week on client side
   const tasks = React.useMemo(() => {
-    return allTasks.filter((task: any) => {
+    const weekTasks = allTasks.filter((task: any) => {
       if (!task.scheduledDate) return false;
       const taskDate = new Date(task.scheduledDate);
       return taskDate >= weekStart && taskDate <= weekEnd;
     });
+    return organizeCalendarTasks(weekTasks);
   }, [allTasks, weekStart, weekEnd]);
 
   const { goals } = useGoals();

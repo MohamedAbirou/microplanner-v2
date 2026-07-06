@@ -1,94 +1,29 @@
 'use client';
 
 import * as React from 'react';
-import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks, startOfDay } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from 'date-fns';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-
-// Time slots from 6 AM to 11 PM (configurable later)
-const HOUR_START = 6;
-const HOUR_END = 23;
-const HOURS = Array.from({ length: HOUR_END - HOUR_START + 1 }, (_, i) => i + HOUR_START);
-
-interface Task {
-  id: string;
-  title: string;
-  notes?: string | null;
-  startTime: string;
-  endTime: string;
-  scheduledDate: string;
-  durationMinutes: number;
-  isCompleted: boolean;
-  priority: number;
-  goal: {
-    id: string;
-    emoji: string;
-    title: string;
-    color: string;
-  };
-}
+import { CalendarTaskBlock } from '@/components/calendar/calendar-task-block';
+import {
+  CALENDAR_HOURS,
+  CALENDAR_SLOT_HEIGHT_PX,
+  CalendarTaskLike,
+  formatHourLabel,
+  getTaskDurationMinutes,
+  getTaskHeightPx,
+  getTaskTopPx,
+  organizeCalendarTasks,
+} from '@/lib/calendar-utils';
 
 interface WeekCalendarProps {
-  tasks: Task[];
+  tasks: CalendarTaskLike[];
   currentDate?: Date;
   onDateChange?: (date: Date) => void;
-  onTaskClick?: (task: Task) => void;
+  onTaskClick?: (task: CalendarTaskLike) => void;
   onTimeSlotClick?: (date: Date, hour: number) => void;
 }
-
-// Memoized task card component for better performance
-const TaskCard = React.memo<{
-  task: Task;
-  top: number;
-  height: number;
-  onClick?: (task: Task) => void;
-}>(({ task, top, height, onClick }) => {
-  return (
-    <div
-      className="absolute left-1 right-1 pointer-events-auto cursor-pointer"
-      style={{
-        top: `${top}%`,
-        height: `${height}%`,
-      }}
-      onClick={() => onClick?.(task)}
-    >
-      <Card
-        className={cn(
-          'h-full p-2 border-l-4 overflow-hidden hover:shadow-md transition-shadow',
-          task.isCompleted && 'opacity-60'
-        )}
-        style={{
-          borderLeftColor: task.goal?.color ?? '#94a3b8',
-        }}
-      >
-        <div className="flex items-start gap-1 mb-1">
-          <span className="text-sm">{task.goal?.emoji ?? '📌'}</span>
-          <div className="flex-1 min-w-0">
-            <div className={cn(
-              'text-xs font-medium truncate',
-              task.isCompleted && 'line-through'
-            )}>
-              {task.title}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {task.startTime} - {task.endTime}
-            </div>
-          </div>
-        </div>
-        {task.priority === 1 && (
-          <Badge variant="destructive" className="text-[10px] h-4 px-1">
-            High
-          </Badge>
-        )}
-      </Card>
-    </div>
-  );
-});
-
-TaskCard.displayName = 'TaskCard';
 
 export function WeekCalendar({
   tasks,
@@ -98,6 +33,11 @@ export function WeekCalendar({
   onTimeSlotClick,
 }: WeekCalendarProps) {
   const [selectedDate, setSelectedDate] = React.useState(currentDate);
+
+  const organizedTasks = React.useMemo(
+    () => organizeCalendarTasks(tasks),
+    [tasks]
+  );
 
   const weekStart = React.useMemo(
     () => startOfWeek(selectedDate, { weekStartsOn: 1 }),
@@ -127,35 +67,19 @@ export function WeekCalendar({
     onDateChange?.(today);
   }, [onDateChange]);
 
-  // Convert time string (HH:mm) to position percentage
-  const timeToPosition = React.useCallback((timeStr: string) => {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const totalMinutes = (hours - HOUR_START) * 60 + minutes;
-    const totalSlotMinutes = (HOUR_END - HOUR_START + 1) * 60;
-    return (totalMinutes / totalSlotMinutes) * 100;
-  }, []);
-
-  // Convert duration to height percentage
-  const durationToHeight = React.useCallback((minutes: number) => {
-    const totalSlotMinutes = (HOUR_END - HOUR_START + 1) * 60;
-    return (minutes / totalSlotMinutes) * 100;
-  }, []);
-
-  // Group tasks by day
   const tasksByDay = React.useMemo(() => {
-    const grouped: Record<string, Task[]> = {};
-    weekDays.forEach(day => {
+    const grouped: Record<string, CalendarTaskLike[]> = {};
+    weekDays.forEach((day) => {
       const dayKey = format(day, 'yyyy-MM-dd');
-      grouped[dayKey] = tasks.filter(task =>
+      grouped[dayKey] = organizedTasks.filter((task) =>
         isSameDay(new Date(task.scheduledDate), day)
       );
     });
     return grouped;
-  }, [tasks, weekDays]);
+  }, [organizedTasks, weekDays]);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header with navigation */}
       <div className="flex items-center justify-between mb-4 pb-4 border-b">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold">
@@ -175,32 +99,22 @@ export function WeekCalendar({
         </div>
       </div>
 
-      {/* Calendar Grid */}
       <div className="flex-1 overflow-auto border rounded-lg">
         <div className="min-w-[800px]">
-          {/* Day headers */}
           <div className="grid grid-cols-8 border-b bg-muted/50 sticky top-0 z-10">
-            <div className="p-2 border-r" /> {/* Time column */}
+            <div className="p-2 border-r" />
             {weekDays.map((day) => {
               const isToday = isSameDay(day, new Date());
               const dayTasks = tasksByDay[format(day, 'yyyy-MM-dd')] || [];
-              const completedCount = dayTasks.filter(t => t.isCompleted).length;
+              const completedCount = dayTasks.filter((t) => t.isCompleted).length;
 
               return (
                 <div
                   key={day.toISOString()}
-                  className={cn(
-                    'p-2 text-center border-r',
-                    isToday && 'bg-primary/10'
-                  )}
+                  className={cn('p-2 text-center border-r', isToday && 'bg-primary/10')}
                 >
-                  <div className="text-xs text-muted-foreground">
-                    {format(day, 'EEE')}
-                  </div>
-                  <div className={cn(
-                    'text-lg font-semibold',
-                    isToday && 'text-primary'
-                  )}>
+                  <div className="text-xs text-muted-foreground">{format(day, 'EEE')}</div>
+                  <div className={cn('text-lg font-semibold', isToday && 'text-primary')}>
                     {format(day, 'd')}
                   </div>
                   {dayTasks.length > 0 && (
@@ -213,21 +127,19 @@ export function WeekCalendar({
             })}
           </div>
 
-          {/* Time grid */}
           <div className="grid grid-cols-8">
-            {/* Hours column */}
             <div className="border-r">
-              {HOURS.map((hour) => (
+              {CALENDAR_HOURS.map((hour) => (
                 <div
                   key={hour}
-                  className="h-16 px-2 py-1 text-xs text-muted-foreground border-b text-right"
+                  className="px-2 py-1 text-xs text-muted-foreground border-b text-right"
+                  style={{ height: CALENDAR_SLOT_HEIGHT_PX }}
                 >
-                  {format(new Date().setHours(hour, 0, 0, 0), 'ha')}
+                  {formatHourLabel(hour)}
                 </div>
               ))}
             </div>
 
-            {/* Day columns */}
             {weekDays.map((day) => {
               const dayKey = format(day, 'yyyy-MM-dd');
               const dayTasks = tasksByDay[dayKey] || [];
@@ -236,33 +148,40 @@ export function WeekCalendar({
               return (
                 <div
                   key={day.toISOString()}
-                  className={cn(
-                    'border-r relative',
-                    isToday && 'bg-primary/5'
-                  )}
+                  className={cn('border-r relative', isToday && 'bg-primary/5')}
+                  style={{ height: CALENDAR_HOURS.length * CALENDAR_SLOT_HEIGHT_PX }}
                 >
-                  {/* Time slots */}
-                  {HOURS.map((hour) => (
+                  {CALENDAR_HOURS.map((hour) => (
                     <div
                       key={hour}
-                      className="h-16 border-b hover:bg-accent/50 cursor-pointer transition-colors"
+                      className="border-b hover:bg-accent/50 cursor-pointer transition-colors absolute w-full"
+                      style={{
+                        top: (hour - CALENDAR_HOURS[0]) * CALENDAR_SLOT_HEIGHT_PX,
+                        height: CALENDAR_SLOT_HEIGHT_PX,
+                      }}
                       onClick={() => onTimeSlotClick?.(day, hour)}
                     />
                   ))}
 
-                  {/* Tasks overlay */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    <div className="relative h-full">
-                      {dayTasks.map((task) => (
-                        <TaskCard
+                  <div className="absolute inset-0 pointer-events-none z-10">
+                    {dayTasks.map((task) => {
+                      const heightPx = getTaskHeightPx(getTaskDurationMinutes(task));
+                      const topPx = getTaskTopPx(task.startTime);
+
+                      return (
+                        <div
                           key={task.id}
-                          task={task}
-                          top={timeToPosition(task.startTime)}
-                          height={durationToHeight(task.durationMinutes)}
-                          onClick={onTaskClick}
-                        />
-                      ))}
-                    </div>
+                          className="absolute left-1 right-1 pointer-events-auto"
+                          style={{ top: topPx, height: heightPx }}
+                        >
+                          <CalendarTaskBlock
+                            task={task}
+                            heightPx={heightPx}
+                            onClick={onTaskClick}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

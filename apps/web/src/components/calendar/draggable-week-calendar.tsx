@@ -5,30 +5,13 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { toast } from 'sonner';
 import { format, parse } from 'date-fns';
 import { WeekCalendar } from './week-calendar';
-
-interface Task {
-  id: string;
-  title: string;
-  notes?: string | null;
-  startTime: string;
-  endTime: string;
-  scheduledDate: string;
-  durationMinutes: number;
-  isCompleted: boolean;
-  priority: number;
-  goal: {
-    id: string;
-    emoji: string;
-    title: string;
-    color: string;
-  };
-}
+import { CalendarTaskLike, getTaskDurationMinutes } from '@/lib/calendar-utils';
 
 interface DraggableWeekCalendarProps {
-  tasks: Task[];
+  tasks: CalendarTaskLike[];
   currentDate?: Date;
   onDateChange?: (date: Date) => void;
-  onTaskClick?: (task: Task) => void;
+  onTaskClick?: (task: CalendarTaskLike) => void;
   onTimeSlotClick?: (date: Date, hour: number) => void;
   onTaskReschedule?: (taskId: string, newDate: string, newStartTime: string) => Promise<void>;
 }
@@ -41,7 +24,7 @@ export function DraggableWeekCalendar({
   onTimeSlotClick,
   onTaskReschedule,
 }: DraggableWeekCalendarProps) {
-  const [optimisticTasks, setOptimisticTasks] = React.useState<Task[]>(tasks);
+  const [optimisticTasks, setOptimisticTasks] = React.useState<CalendarTaskLike[]>(tasks);
   const [isDragging, setIsDragging] = React.useState(false);
 
   // Update optimistic tasks when tasks prop changes
@@ -79,8 +62,9 @@ export function DraggableWeekCalendar({
     const newStartTime = `${newHour.toString().padStart(2, '0')}:00`;
 
     // Calculate new end time based on duration
-    const endHour = newHour + Math.floor(task.durationMinutes / 60);
-    const endMinutes = task.durationMinutes % 60;
+    const duration = getTaskDurationMinutes(task);
+    const endHour = newHour + Math.floor(duration / 60);
+    const endMinutes = duration % 60;
     const newEndTime = `${endHour.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
 
     // Optimistically update the task
