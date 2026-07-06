@@ -25,8 +25,8 @@ import type {
   InviteTeamMemberInput,
   MoveTaskInKanbanInput,
   QueryGoalsArgs,
+  PlanFilterInput,
   QueryPlanTemplatesArgs,
-  QueryPlansArgs,
   QueryProjectsArgs,
   QueryTasksArgs,
   GoogleCalendarApiEvent,
@@ -962,8 +962,8 @@ export class PlansAPI {
     return data.plan;
   }
 
-  // Get all plans
-  async getPlans(userId: string, filter: QueryPlansArgs = {}) {
+  // Get all plans (filter is PlanFilterInput from the plans query resolver)
+  async getPlans(userId: string, filter?: PlanFilterInput) {
     const params: Record<string, string | number> = {
       page: 1,
       limit: 50,
