@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { resolvePlanDescription, resolvePlanTitle } from '../utils/plan-fields';
 
 export const planResolvers = {
   Query: {
@@ -76,6 +77,9 @@ export const planResolvers = {
   },
 
   Plan: {
+    title: (plan: any) => resolvePlanTitle(plan),
+    description: (plan: any) => resolvePlanDescription(plan),
+
     // Field resolvers with DataLoader (batching)
     tasks: async (plan: any, _: any, { taskByPlanLoader }: any) => {
       if (!taskByPlanLoader) {

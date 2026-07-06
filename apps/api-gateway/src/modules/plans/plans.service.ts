@@ -220,12 +220,24 @@ export class PlansService {
     const generationTime = (Date.now() - startTime) / 1000; // seconds
 
     // 8. Save plan to database
+    const planTitle =
+      generatePlanDto.title?.trim() ||
+      `Week of ${weekStartDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'UTC',
+      })}`;
+
     const plan = await this.prisma.weeklyPlan.create({
       data: {
         userId,
         weekStartDate,
         weekEndDate,
-        planJson,
+        planJson: {
+          ...planJson,
+          title: planTitle,
+        },
         reasoning,
         aiModel,
         complexity,
@@ -298,7 +310,15 @@ export class PlansService {
         userId,
         weekStartDate: weekStart,
         weekEndDate: weekEnd,
-        planJson: { tasks },
+        planJson: {
+          tasks,
+          title: `Week of ${weekStart.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            timeZone: 'UTC',
+          })}`,
+        },
         reasoning: 'Generated from user template',
         aiModel: 'template',
         complexity: 'simple',
