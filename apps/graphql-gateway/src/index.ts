@@ -260,7 +260,6 @@ async function startServer() {
 
   // CORS on all routes so preflight succeeds even if the client URL is misconfigured
   app.use(cors(corsOptions));
-  app.options('*', cors(corsOptions));
 
   app.get('/', (_req, res) => {
     res.json({ status: 'ok', graphql: '/graphql' });
