@@ -60,8 +60,6 @@ export default function AppLayout({
     }
   }, [isLoaded, user, onboardingLoading, onboardingError, onboardingData, pathname, router]);
 
-  const userTier = (user?.publicMetadata?.tier as 'FREE' | 'STARTER' | 'PRO' | 'PREMIUM') || 'FREE';
-
   const handleQuickAddSubmit = async (data: TaskFormData) => {
     try {
       // Remove isRecurring field - it's not in GraphQL schema
@@ -111,7 +109,6 @@ export default function AppLayout({
           <AppSidebar
             collapsed={sidebarCollapsed}
             onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-            userTier={userTier}
           />
 
           {/* Header */}

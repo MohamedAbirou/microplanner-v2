@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useQuery } from '@apollo/client';
+import { GET_ME } from '@/graphql/operations';
 
 export type UserTier = 'FREE' | 'STARTER' | 'PRO' | 'PREMIUM';
 
@@ -99,16 +100,26 @@ const tierLimits: Record<UserTier, TierLimits> = {
 const TierContext = React.createContext<TierContextValue | undefined>(undefined);
 
 export function TierProvider({ children }: { children: React.ReactNode }) {
-  const { user, isLoaded } = useUser();
+  const { data, loading, refetch } = useQuery(GET_ME, {
+    fetchPolicy: 'cache-and-network',
+  });
 
-  const tier = (user?.publicMetadata?.tier as UserTier) || 'FREE';
+  const tier = (data?.me?.tier as UserTier) || 'FREE';
   const limits = tierLimits[tier];
 
   const value: TierContextValue = {
     tier,
     limits,
-    isLoading: !isLoaded,
+    isLoading: loading,
   };
+
+  // Expose refetch for post-checkout refresh (session_id in URL)
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('session_id')) {
+      refetch();
+    }
+  }, [refetch]);
 
   return <TierContext.Provider value={value}>{children}</TierContext.Provider>;
 }

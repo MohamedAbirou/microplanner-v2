@@ -20,6 +20,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { UpgradeButton } from '@/components/upgrade-button';
+import { useTier, type UserTier } from '@/contexts/tier-context';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -56,10 +57,10 @@ const tierConfig = {
 interface AppSidebarProps {
   collapsed: boolean;
   onToggle: () => void;
-  userTier?: 'FREE' | 'STARTER' | 'PRO' | 'PREMIUM';
 }
 
-export function AppSidebar({ collapsed, onToggle, userTier = 'FREE' }: AppSidebarProps) {
+export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
+  const { tier: userTier } = useTier();
   const pathname = usePathname();
   const tierInfo = tierConfig[userTier];
   const TierIcon = tierInfo.icon;

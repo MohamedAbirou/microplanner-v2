@@ -4,10 +4,9 @@ import { UpgradeButton } from '@/components/upgrade-button';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTier, type UserTier } from '@/contexts/tier-context';
 import { useCreateBillingPortalSession } from '@/hooks/use-graphql-extended';
 import { formatTierLabel, getNextTier } from '@/lib/upgrade';
-import type { UserTier } from '@/contexts/tier-context';
-import { useUser } from '@clerk/nextjs';
 import { CreditCard } from 'lucide-react';
 
 const TIER_PRICES: Record<UserTier, string> = {
@@ -18,8 +17,7 @@ const TIER_PRICES: Record<UserTier, string> = {
 };
 
 export default function BillingPage() {
-  const { user } = useUser();
-  const tier = ((user?.publicMetadata?.tier as UserTier) || 'FREE') as UserTier;
+  const { tier } = useTier();
   const nextTier = getNextTier(tier);
   const { createPortalSession, loading: portalLoading } = useCreateBillingPortalSession();
 

@@ -27,6 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 import { UpgradeButton } from '@/components/upgrade-button';
+import { useTier } from '@/contexts/tier-context';
 import {
   exportTasksToCSV,
   exportGoalsToCSV,
@@ -105,7 +106,7 @@ export default function SettingsPage() {
     }
   }, [settings, user]);
 
-  const userTier = (user?.publicMetadata?.tier as string) || 'FREE';
+  const { tier: userTier } = useTier();
 
   const handleSaveProfile = async () => {
     setIsSaving(true);

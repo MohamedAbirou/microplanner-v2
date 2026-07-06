@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTier } from '@/contexts/tier-context';
 import { useUpgradeCheckout } from '@/hooks/use-upgrade-checkout';
 import { formatTierLabel } from '@/lib/upgrade';
 import { getInitials } from '@/lib/utils';
@@ -27,7 +28,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppHeaderProps) {
   const { user } = useUser();
-  const tier = (user?.publicMetadata?.tier as string) || 'FREE';
+  const { tier } = useTier();
   const { upgrade, loading: upgradeLoading } = useUpgradeCheckout();
 
   const tierColors = {
