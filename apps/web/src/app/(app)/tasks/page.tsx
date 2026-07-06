@@ -25,6 +25,8 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useTasks, useGoals, useUpdateTask, useBulkUpdateTasks, useBulkDeleteTasks } from '@/hooks/use-graphql';
+import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
+import { mapTaskDependencies } from '@/lib/dependencies';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 
 export default function TasksPage() {
@@ -40,6 +42,11 @@ export default function TasksPage() {
   const { updateTask } = useUpdateTask();
   const { bulkUpdateTasks } = useBulkUpdateTasks();
   const { bulkDeleteTasks } = useBulkDeleteTasks();
+
+  // Shared, fully-wired task-detail modal actions (edit/complete/delete/
+  // subtasks/dependencies). All refetch GetTasks automatically.
+  const taskActions = useTaskDetailActions(allTasks, refetch);
+  const taskDependencies = React.useMemo(() => mapTaskDependencies(allTasks), [allTasks]);
 
   const loading = tasksLoading || goalsLoading;
 
@@ -271,9 +278,9 @@ export default function TasksPage() {
           if (!open) setSelectedTaskId(null);
         }}
         goals={goals}
-        onUpdate={async () => {
-          await refetch();
-        }}
+        allTasks={allTasks}
+        dependencies={taskDependencies}
+        {...taskActions}
       />
     </div>
   );

@@ -4,6 +4,8 @@ import * as React from 'react';
 import { DayCalendar } from '@/components/calendar/day-calendar';
 import { startOfDay } from 'date-fns';
 import { useTasks, useCreateTask, useGoals } from '@/hooks/use-graphql';
+import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
+import { mapTaskDependencies } from '@/lib/dependencies';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import {
   QuickAddTaskModal,
@@ -11,7 +13,7 @@ import {
 } from '@/components/tasks/quick-add-task-modal';
 
 export default function DayPage() {
-  const [selectedTask, setSelectedTask] = React.useState<any | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
   const [quickAddTime, setQuickAddTime] = React.useState<{ hour: number; minute: number } | null>(null);
 
   // Fetch tasks for today
@@ -23,8 +25,15 @@ export default function DayPage() {
   const { goals } = useGoals();
   const { createTask } = useCreateTask();
 
+  const taskActions = useTaskDetailActions(tasks, refetch);
+  const taskDependencies = React.useMemo(() => mapTaskDependencies(tasks), [tasks]);
+  const selectedTask = React.useMemo(
+    () => tasks.find((t: any) => t.id === selectedTaskId) || null,
+    [tasks, selectedTaskId]
+  );
+
   const handleTaskClick = (task: any) => {
-    setSelectedTask(task);
+    setSelectedTaskId(task.id);
   };
 
   const handleTimeSlotClick = (hour: number, minute: number) => {
@@ -59,12 +68,12 @@ export default function DayPage() {
         task={selectedTask}
         open={!!selectedTask}
         onOpenChange={(open) => {
-          if (!open) setSelectedTask(null);
+          if (!open) setSelectedTaskId(null);
         }}
         goals={goals}
-        onUpdate={async () => {
-          await refetch();
-        }}
+        allTasks={tasks}
+        dependencies={taskDependencies}
+        {...taskActions}
       />
 
       {/* Quick Add Task Modal */}

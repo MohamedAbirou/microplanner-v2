@@ -4,12 +4,14 @@ import * as React from 'react';
 import { WeekCalendarDnd } from '@/components/calendar/week-calendar-dnd';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useTasks, useUpdateTask } from '@/hooks/use-graphql';
+import { useTasks, useGoals, useUpdateTask } from '@/hooks/use-graphql';
+import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
+import { mapTaskDependencies } from '@/lib/dependencies';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import { startOfWeek, endOfWeek } from 'date-fns';
 
 export default function WeekPage() {
-  const [selectedTask, setSelectedTask] = React.useState<any | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
 
   // Get current week's start and end dates
   const today = new Date();
@@ -30,10 +32,21 @@ export default function WeekPage() {
     });
   }, [allTasks, weekStart, weekEnd]);
 
+  const { goals } = useGoals();
   const { updateTask } = useUpdateTask();
 
+  // Fully-wired modal actions + dependency data.
+  const taskActions = useTaskDetailActions(allTasks, refetch);
+  const taskDependencies = React.useMemo(() => mapTaskDependencies(allTasks), [allTasks]);
+
+  // Derive the open task from the live list so it reflects refetches.
+  const selectedTask = React.useMemo(
+    () => allTasks.find((t: any) => t.id === selectedTaskId) || null,
+    [allTasks, selectedTaskId]
+  );
+
   const handleTaskClick = (task: any) => {
-    setSelectedTask(task);
+    setSelectedTaskId(task.id);
   };
 
   const handleTaskReschedule = async (taskId: string, newDate: string, newStartTime: string) => {
@@ -47,9 +60,14 @@ export default function WeekPage() {
           },
         },
       });
-      refetch();
     } catch (error) {
       console.error('Failed to reschedule task:', error);
+      // Re-throw so the calendar's optimistic update rolls back + shows the error toast.
+      throw error;
+    } finally {
+      // Always resync with the server even if the mutation false-errored but
+      // the REST write persisted.
+      await refetch();
     }
   };
 
@@ -74,11 +92,12 @@ export default function WeekPage() {
         task={selectedTask}
         open={!!selectedTask}
         onOpenChange={(open) => {
-          if (!open) setSelectedTask(null);
+          if (!open) setSelectedTaskId(null);
         }}
-        onUpdate={async () => {
-          await refetch();
-        }}
+        goals={goals}
+        allTasks={allTasks}
+        dependencies={taskDependencies}
+        {...taskActions}
       />
     </div>
   );

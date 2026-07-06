@@ -195,6 +195,10 @@ export class BillingService {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
+      // Pin the checkout UI to English so a US product renders "$7.00/month"
+      // rather than a geolocated locale (e.g. German "68,15 MAD pro Monat").
+      // The charge currency itself is fixed by the Stripe Price (USD).
+      locale: 'en',
       line_items: [
         {
           price: plan.priceId,

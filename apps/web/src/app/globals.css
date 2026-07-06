@@ -106,6 +106,8 @@
 
   html {
     font-size: 16px; /* Base font size - prevents zoom issues */
+    overflow-x: hidden; /* prevent page-level horizontal scroll at small widths;
+                           inner overflow-auto containers (e.g. week calendar) still scroll */
   }
 
   body {

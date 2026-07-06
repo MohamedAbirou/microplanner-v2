@@ -256,13 +256,19 @@ export function WeekCalendarDnd({
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
                                         className={cn(
-                                          'absolute left-1 right-1 z-10',
-                                          snapshot.isDragging && 'cursor-grabbing opacity-80 rotate-2 scale-105'
+                                          'z-10',
+                                          // While dragging the library sets `position: fixed` with
+                                          // computed top/left; only apply our own absolute in-slot
+                                          // positioning when NOT dragging, or the ghost jumps to the
+                                          // top-left of the page.
+                                          !snapshot.isDragging && 'absolute left-1 right-1',
+                                          snapshot.isDragging && 'cursor-grabbing opacity-90 shadow-xl'
                                         )}
-                                        style={{
-                                          ...provided.draggableProps.style,
-                                          top: '4px',
-                                        }}
+                                        style={
+                                          snapshot.isDragging
+                                            ? provided.draggableProps.style
+                                            : { ...provided.draggableProps.style, top: '4px' }
+                                        }
                                         onClick={() => !snapshot.isDragging && onTaskClick?.(task)}
                                       >
                                         <Card

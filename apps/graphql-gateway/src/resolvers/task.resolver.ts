@@ -186,15 +186,20 @@ export const taskResolvers = {
     },
 
     // Subtasks
-    createSubtask: async (_: any, { parentId, input }: any, { dataSources, user, pubsub }: any) => {
+    createSubtask: async (_: any, { input }: any, { dataSources, user, pubsub }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
 
-      const subtask = await dataSources.tasksAPI.createSubtask(parentId, user.userId, input);
+      // Schema: createSubtask(input: CreateSubtaskInput!) — parentTaskId lives
+      // inside input, not as a separate arg.
+      const parentTaskId = input?.parentTaskId;
+      const subtask = await dataSources.tasksAPI.createSubtask(parentTaskId, user.userId, input);
 
-      // Publish parent task update
-      await pubsub.publish(`TASK_UPDATED_${user.userId}`, {
-        taskUpdated: await dataSources.tasksAPI.getTask(parentId, user.userId),
-      });
+      // Publish parent task update (best-effort; never fail the mutation)
+      if (parentTaskId) {
+        await pubsub.publish(`TASK_UPDATED_${user.userId}`, {
+          taskUpdated: await dataSources.tasksAPI.getTask(parentTaskId, user.userId),
+        });
+      }
 
       return subtask;
     },

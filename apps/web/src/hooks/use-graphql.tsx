@@ -9,6 +9,24 @@ import * as operations from '@/graphql/operations';
  * Wraps Apollo Client hooks with error handling and toast notifications
  */
 
+export type MutationNotifyOptions = {
+  /** When false, the hook skips toasts — use when the UI owns feedback (e.g. TaskDetailModal). Default true. */
+  notify?: boolean;
+};
+
+function mutationToastHandlers(
+  notify: boolean,
+  successMessage: string,
+  errorMessage: string,
+) {
+  if (!notify) return {};
+  return {
+    onCompleted: () => toast.success(successMessage),
+    onError: (error: ApolloError) =>
+      toast.error(errorMessage, { description: error.message }),
+  };
+}
+
 // ============================================================================
 // TASKS
 // ============================================================================
@@ -43,7 +61,8 @@ export function useTask(id: string) {
 
 export function useCreateTask() {
   const [createTask, { loading, error }] = useMutation(operations.CREATE_TASK, {
-    refetchQueries: [{ query: operations.GET_TASKS }],
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
     onCompleted: () => {
       toast.success('Task created successfully');
     },
@@ -57,47 +76,34 @@ export function useCreateTask() {
   return { createTask, loading, error };
 }
 
-export function useUpdateTask() {
+export function useUpdateTask(options?: MutationNotifyOptions) {
+  const notify = options?.notify !== false;
   const [updateTask, { loading, error }] = useMutation(operations.UPDATE_TASK, {
-    onCompleted: () => {
-      toast.success('Task updated successfully');
-    },
-    onError: (error) => {
-      toast.error('Failed to update task', {
-        description: error.message,
-      });
-    },
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
+    ...mutationToastHandlers(notify, 'Task updated successfully', 'Failed to update task'),
   });
 
   return { updateTask, loading, error };
 }
 
-export function useDeleteTask() {
+export function useDeleteTask(options?: MutationNotifyOptions) {
+  const notify = options?.notify !== false;
   const [deleteTask, { loading, error }] = useMutation(operations.DELETE_TASK, {
-    refetchQueries: [{ query: operations.GET_TASKS }],
-    onCompleted: () => {
-      toast.success('Task deleted successfully');
-    },
-    onError: (error) => {
-      toast.error('Failed to delete task', {
-        description: error.message,
-      });
-    },
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
+    ...mutationToastHandlers(notify, 'Task deleted successfully', 'Failed to delete task'),
   });
 
   return { deleteTask, loading, error };
 }
 
-export function useCompleteTask() {
+export function useCompleteTask(options?: MutationNotifyOptions) {
+  const notify = options?.notify !== false;
   const [completeTask, { loading, error }] = useMutation(operations.COMPLETE_TASK, {
-    onCompleted: () => {
-      toast.success('Task completed!');
-    },
-    onError: (error) => {
-      toast.error('Failed to complete task', {
-        description: error.message,
-      });
-    },
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
+    ...mutationToastHandlers(notify, 'Task completed!', 'Failed to complete task'),
   });
 
   return { completeTask, loading, error };
@@ -105,7 +111,8 @@ export function useCompleteTask() {
 
 export function useBulkUpdateTasks() {
   const [bulkUpdateTasks, { loading, error }] = useMutation(operations.BULK_UPDATE_TASKS, {
-    refetchQueries: [{ query: operations.GET_TASKS }],
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
     onCompleted: (data) => {
       toast.success(`Updated ${data.bulkUpdateTasks.length} tasks`);
     },
@@ -121,7 +128,8 @@ export function useBulkUpdateTasks() {
 
 export function useBulkDeleteTasks() {
   const [bulkDeleteTasks, { loading, error }] = useMutation(operations.BULK_DELETE_TASKS, {
-    refetchQueries: [{ query: operations.GET_TASKS }],
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
     onCompleted: (data) => {
       toast.success(`Deleted ${data.bulkDeleteTasks.count} tasks`);
     },
@@ -137,6 +145,8 @@ export function useBulkDeleteTasks() {
 
 export function useSkipTask() {
   const [skipTask, { loading, error }] = useMutation(operations.SKIP_TASK, {
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
     onCompleted: () => {
       toast.success('Task skipped');
     },
@@ -150,16 +160,12 @@ export function useSkipTask() {
   return { skipTask, loading, error };
 }
 
-export function useUncompleteTask() {
+export function useUncompleteTask(options?: MutationNotifyOptions) {
+  const notify = options?.notify !== false;
   const [uncompleteTask, { loading, error }] = useMutation(operations.UNCOMPLETE_TASK, {
-    onCompleted: () => {
-      toast.success('Task marked as incomplete');
-    },
-    onError: (error) => {
-      toast.error('Failed to uncomplete task', {
-        description: error.message,
-      });
-    },
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
+    ...mutationToastHandlers(notify, 'Task marked as incomplete', 'Failed to uncomplete task'),
   });
 
   return { uncompleteTask, loading, error };
@@ -169,16 +175,12 @@ export function useUncompleteTask() {
 // SUBTASKS
 // ============================================================================
 
-export function useCreateSubtask() {
+export function useCreateSubtask(options?: MutationNotifyOptions) {
+  const notify = options?.notify !== false;
   const [createSubtask, { loading, error }] = useMutation(operations.CREATE_SUBTASK, {
-    onCompleted: () => {
-      toast.success('Subtask created successfully');
-    },
-    onError: (error) => {
-      toast.error('Failed to create subtask', {
-        description: error.message,
-      });
-    },
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
+    ...mutationToastHandlers(notify, 'Subtask created successfully', 'Failed to create subtask'),
   });
 
   return { createSubtask, loading, error };
@@ -202,31 +204,23 @@ export function useSubtasks(parentTaskId: string) {
 // TASK DEPENDENCIES
 // ============================================================================
 
-export function useCreateTaskDependency() {
+export function useCreateTaskDependency(options?: MutationNotifyOptions) {
+  const notify = options?.notify !== false;
   const [createTaskDependency, { loading, error }] = useMutation(operations.CREATE_TASK_DEPENDENCY, {
-    onCompleted: () => {
-      toast.success('Dependency added successfully');
-    },
-    onError: (error) => {
-      toast.error('Failed to add dependency', {
-        description: error.message,
-      });
-    },
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
+    ...mutationToastHandlers(notify, 'Dependency added successfully', 'Failed to add dependency'),
   });
 
   return { createTaskDependency, loading, error };
 }
 
-export function useDeleteTaskDependency() {
+export function useDeleteTaskDependency(options?: MutationNotifyOptions) {
+  const notify = options?.notify !== false;
   const [deleteTaskDependency, { loading, error }] = useMutation(operations.DELETE_TASK_DEPENDENCY, {
-    onCompleted: () => {
-      toast.success('Dependency removed successfully');
-    },
-    onError: (error) => {
-      toast.error('Failed to remove dependency', {
-        description: error.message,
-      });
-    },
+    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    awaitRefetchQueries: true,
+    ...mutationToastHandlers(notify, 'Dependency removed successfully', 'Failed to remove dependency'),
   });
 
   return { deleteTaskDependency, loading, error };

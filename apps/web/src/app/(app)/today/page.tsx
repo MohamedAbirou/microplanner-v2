@@ -30,6 +30,8 @@ import {
   useStopTimer,
   useSkipTask,
 } from '@/hooks/use-graphql';
+import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
+import { mapTaskDependencies } from '@/lib/dependencies';
 
 export default function TodayPage() {
   const [filters, setFilters] = React.useState<TaskFilters>(clearAllFilters());
@@ -59,6 +61,10 @@ export default function TodayPage() {
   const { startTimer } = useStartTimer();
   const { stopTimer } = useStopTimer();
   const { skipTask } = useSkipTask();
+
+  // Fully-wired modal actions + dependency data.
+  const taskActions = useTaskDetailActions(allTasks, refetch);
+  const taskDependencies = React.useMemo(() => mapTaskDependencies(allTasks), [allTasks]);
 
   // Apply filters and sorting
   const filteredAndSortedTasks = React.useMemo(() => {
@@ -237,9 +243,10 @@ export default function TodayPage() {
         onOpenChange={(open) => {
           if (!open) setSelectedTaskId(null);
         }}
-        onUpdate={async () => {
-          await refetch();
-        }}
+        goals={goals}
+        allTasks={allTasks}
+        dependencies={taskDependencies}
+        {...taskActions}
       />
 
       {/* Delete Confirmation Dialog */}

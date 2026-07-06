@@ -2,14 +2,16 @@
 
 import { MonthCalendar } from '@/components/calendar/month-calendar';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
-import { useTasks } from '@/hooks/use-graphql';
+import { useTasks, useGoals } from '@/hooks/use-graphql';
+import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
+import { mapTaskDependencies } from '@/lib/dependencies';
 import { endOfMonth, startOfMonth } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 
 export default function MonthPage() {
   const router = useRouter();
-  const [selectedTask, setSelectedTask] = React.useState<any | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
 
   // Fetch tasks for the current month
   const today = new Date();
@@ -28,13 +30,21 @@ export default function MonthPage() {
     });
   }, [allTasks, monthStart, monthEnd]);
 
+  const { goals } = useGoals();
+  const taskActions = useTaskDetailActions(allTasks, refetch);
+  const taskDependencies = React.useMemo(() => mapTaskDependencies(allTasks), [allTasks]);
+  const selectedTask = React.useMemo(
+    () => allTasks.find((t: any) => t.id === selectedTaskId) || null,
+    [allTasks, selectedTaskId]
+  );
+
   const handleDateClick = (date: Date) => {
     // Navigate to day view for clicked date
     router.push(`/day?date=${date.toISOString()}`);
   };
 
   const handleTaskClick = (task: any) => {
-    setSelectedTask(task);
+    setSelectedTaskId(task.id);
   };
 
   if (loading) {
@@ -58,11 +68,12 @@ export default function MonthPage() {
         task={selectedTask}
         open={!!selectedTask}
         onOpenChange={(open) => {
-          if (!open) setSelectedTask(null);
+          if (!open) setSelectedTaskId(null);
         }}
-        onUpdate={async () => {
-          await refetch();
-        }}
+        goals={goals}
+        allTasks={allTasks}
+        dependencies={taskDependencies}
+        {...taskActions}
       />
     </div>
   );

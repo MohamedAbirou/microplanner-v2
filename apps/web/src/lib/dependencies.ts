@@ -26,6 +26,28 @@ export interface Task {
 }
 
 /**
+ * Flatten the GraphQL task list into the flat `TaskDependency[]` shape this
+ * lib (and the dependencies panel) expects. GraphQL returns per-task
+ * `dependencies`/`blockedBy` with `dependentTaskId`/`blockingTaskId`; we map
+ * those to `fromTaskId`/`toTaskId` and de-duplicate by id.
+ */
+export function mapTaskDependencies(tasks: any[] = []): TaskDependency[] {
+  const byId = new Map<string, TaskDependency>();
+  for (const task of tasks) {
+    for (const dep of [...(task.dependencies || []), ...(task.blockedBy || [])]) {
+      if (!dep?.id || byId.has(dep.id)) continue;
+      byId.set(dep.id, {
+        id: dep.id,
+        fromTaskId: dep.dependentTaskId,
+        toTaskId: dep.blockingTaskId,
+        type: dep.type,
+      });
+    }
+  }
+  return Array.from(byId.values());
+}
+
+/**
  * Check if adding a dependency would create a circular dependency
  */
 export function wouldCreateCircularDependency(
