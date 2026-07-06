@@ -404,17 +404,22 @@ export class PlansService {
    * Get plan history with pagination
    */
   async findAll(userId: string, query: QueryPlansDto): Promise<{ plans: WeeklyPlan[]; total: number; page: number; limit: number }> {
-    const { page = 1, limit = 20 } = query;
+    const { page = 1, limit = 20, status } = query;
     const skip = (page - 1) * limit;
+
+    const where = {
+      userId,
+      ...(status ? { status } : {}),
+    };
 
     const [plans, total] = await Promise.all([
       this.prisma.weeklyPlan.findMany({
-        where: { userId },
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.weeklyPlan.count({ where: { userId } }),
+      this.prisma.weeklyPlan.count({ where }),
     ]);
 
     return {

@@ -1,6 +1,7 @@
-import { IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsInt, Min, Max, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { PlanStatus } from '@microplanner/database';
 
 export class QueryPlansDto {
   @ApiProperty({ required: false, default: 1, minimum: 1 })
@@ -17,4 +18,9 @@ export class QueryPlansDto {
   @Min(1)
   @Max(100)
   limit?: number = 20;
+
+  @ApiProperty({ required: false, enum: PlanStatus })
+  @IsOptional()
+  @IsEnum(PlanStatus)
+  status?: PlanStatus;
 }

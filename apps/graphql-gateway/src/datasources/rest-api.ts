@@ -964,9 +964,15 @@ export class PlansAPI {
 
   // Get all plans
   async getPlans(userId: string, filter: QueryPlansArgs = {}) {
+    const params: Record<string, string | number> = {
+      page: 1,
+      limit: 50,
+    };
+    if (filter?.status) params.status = filter.status;
+
     const { data } = await this.client.get('/', {
       headers: { 'x-user-id': userId },
-      params: filter,
+      params,
     });
     return data.plans || data.data || [];
   }

@@ -369,12 +369,18 @@ export class RuleBasedPlannerService implements IPlanningStrategy {
       return preferredDays.slice(0, sessionsNeeded);
     }
 
-    // Distribute evenly across weekdays (Monday-Friday)
+    // Distribute evenly across weekdays (Mon–Fri), maximising spacing
+    // e.g. 3 sessions → Mon, Wed, Fri — not Mon, Tue, Wed
+    const weekdays = [0, 1, 2, 3, 4]; // Mon–Fri indices in availableSlots
     const days: number[] = [];
-    const spacing = Math.floor(5 / sessionsNeeded); // 5 weekdays
 
+    if (sessionsNeeded >= weekdays.length) {
+      return weekdays.slice(0, sessionsNeeded);
+    }
+
+    const step = weekdays.length / sessionsNeeded;
     for (let i = 0; i < sessionsNeeded; i++) {
-      days.push((i * Math.max(1, spacing)) % 5); // 0-4 (Mon-Fri)
+      days.push(weekdays[Math.min(weekdays.length - 1, Math.round(i * step))]);
     }
 
     return days;
