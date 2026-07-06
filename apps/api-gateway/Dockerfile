@@ -65,8 +65,11 @@ COPY --from=build /app/apps/api-gateway/dist ./apps/api-gateway/dist
 # Copy packages source (excluding node_modules, Prisma is already generated)
 COPY --from=build /app/packages ./packages
 
+COPY scripts/docker-entrypoint-api.sh /app/scripts/docker-entrypoint-api.sh
+RUN chmod +x /app/scripts/docker-entrypoint-api.sh
+
 WORKDIR /app/apps/api-gateway
 
 EXPOSE 3001
 
-CMD ["node", "dist/main.js"]
+ENTRYPOINT ["/app/scripts/docker-entrypoint-api.sh"]

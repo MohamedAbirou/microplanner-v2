@@ -56,6 +56,24 @@ Before deploying, you need a PostgreSQL database. On Render:
 1. Create a new PostgreSQL database
 2. Copy the "Internal Database URL"
 3. Use it as `DATABASE_URL` env var
+4. Set `DIRECT_URL` to the same value (required for Prisma migrations)
+
+**Apply schema to production** (required before first deploy, or after schema changes):
+
+```bash
+# From repo root, with production DATABASE_URL and DIRECT_URL set:
+pnpm db:migrate:deploy
+```
+
+If the database was created earlier with `db push` and migrations were never baselined:
+
+```bash
+cd packages/database
+pnpm prisma db push          # sync any missing columns (e.g. User.theme)
+pnpm prisma migrate resolve --applied "20260706132606_"  # baseline migration history
+```
+
+The API Docker image runs `prisma migrate deploy` automatically on every container start.
 
 ### Redis Setup
 For background jobs and caching:
@@ -75,6 +93,9 @@ The build command:
 **Error: `nest: not found`**
 - Make sure you're building from monorepo root (`.`)
 - pnpm must be enabled via corepack
+
+**Error: `The column User.theme does not exist`**
+- Production Postgres schema is out of date. Run `pnpm db:push` against production (see Database Setup above), then redeploy.
 
 **Error: Prisma client not generated**
 - Add `cd packages/database && pnpm prisma generate && cd ../..` before the build command

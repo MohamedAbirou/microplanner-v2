@@ -21,6 +21,7 @@
     "db:generate": "cd packages/database && pnpm prisma generate",
     "db:push": "cd packages/database && pnpm prisma db push",
     "db:migrate": "cd packages/database && pnpm prisma migrate dev",
+    "db:migrate:deploy": "cd packages/database && pnpm prisma migrate deploy",
     "db:studio": "cd packages/database && pnpm prisma studio"
   },
   "devDependencies": {
