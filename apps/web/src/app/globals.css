@@ -19,83 +19,83 @@
 @layer base {
   :root {
     /* Base Colors */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 4%;
+    --background: 204 20% 98%;
+    --foreground: 204 19% 29%;
 
     /* Card */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
+    --card-foreground: 204 19% 29%;
 
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
+    --popover-foreground: 204 19% 29%;
 
-    /* Primary - Blue */
-    --primary: 221 83% 53%;
+    /* Primary — teal #0b6e63 */
+    --primary: 174 82% 24%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Purple */
-    --secondary: 264 72% 55%;
+    /* Secondary — sage #3c7a5e */
+    --secondary: 152 34% 36%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted */
-    --muted: 0 0% 98%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 204 16% 95%;
+    --muted-foreground: 204 12% 45%;
 
     /* Accent */
-    --accent: 0 0% 98%;
-    --accent-foreground: 0 0% 4%;
+    --accent: 174 30% 95%;
+    --accent-foreground: 204 19% 29%;
 
     /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     /* Border */
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 221 83% 53%;
+    --border: 204 14% 88%;
+    --input: 204 14% 88%;
+    --ring: 174 82% 24%;
 
     /* Radius */
     --radius: 0.5rem;
   }
 
   .dark {
-    /* Base Colors - True Black Background */
-    --background: 224, 71%, 4%;
-    --foreground: 0 0% 98%;
+    /* Base Colors — slate-tinted dark (#3b4c57 family) */
+    --background: 204 22% 6%;
+    --foreground: 204 10% 96%;
 
-    /* Card - Dark Surface */
-    --card: 221 , 51%, 7%;
-    --card-foreground: 0 0% 98%;
+    /* Card — slate surface */
+    --card: 204 19% 12%;
+    --card-foreground: 204 10% 96%;
 
     /* Popover */
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 204 19% 10%;
+    --popover-foreground: 204 10% 96%;
 
-    /* Primary - Blue (Same in dark mode) */
-    --primary: 221 83% 53%;
+    /* Primary — teal, slightly lifted for dark mode */
+    --primary: 174 70% 38%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Purple (Same in dark mode) */
-    --secondary: 264 72% 55%;
+    /* Secondary — sage */
+    --secondary: 152 34% 36%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted */
-    --muted: 215, 28%, 17%;
-    --muted-foreground: 0 0% 64%;
+    --muted: 204 15% 18%;
+    --muted-foreground: 204 10% 62%;
 
     /* Accent */
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 204 15% 18%;
+    --accent-foreground: 204 10% 96%;
 
     /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     /* Border */
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 221 83% 53%;
+    --border: 204 15% 20%;
+    --input: 204 15% 20%;
+    --ring: 174 70% 38%;
   }
 }
 
@@ -156,7 +156,7 @@
 @layer utilities {
   /* Text Gradient */
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-secondary-700 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent;
   }
 
   /* Glassmorphism Light */
@@ -175,11 +175,11 @@
 
   /* Gradient Background */
   .bg-gradient-primary {
-    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, #0b6e63 0%, #3c7a5e 100%);
   }
 
   .bg-gradient-hero {
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #7c3aed 100%);
+    background: linear-gradient(135deg, #0b6e63 0%, #3c7a5e 50%, #3b4c57 100%);
   }
 
   /* Smooth Scrolling */

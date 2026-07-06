@@ -49,8 +49,8 @@ const secondaryNav: NavItem[] = [
 
 const tierConfig = {
   FREE: { color: 'bg-slate-500', icon: CheckCircle2, label: 'Free' },
-  STARTER: { color: 'bg-blue-500', icon: Zap, label: 'Starter' },
-  PRO: { color: 'bg-purple-500', icon: TrendingUp, label: 'Pro' },
+  STARTER: { color: 'bg-primary-500', icon: Zap, label: 'Starter' },
+  PRO: { color: 'bg-secondary-600', icon: TrendingUp, label: 'Pro' },
   PREMIUM: { color: 'bg-amber-500', icon: Crown, label: 'Premium' },
 };
 

@@ -15,46 +15,61 @@ export const brand = {
 
   /**
    * Color Palette
-   * Blue → Purple gradient representing trust + creativity
+   * Teal → Sage gradient with slate neutrals (Claude Design system)
    */
   colors: {
-    // Primary Brand Colors
+    // Primary — deep teal (#0b6e63)
     primary: {
-      50: '#EFF6FF',
-      100: '#DBEAFE',
-      200: '#BFDBFE',
-      300: '#93C5FD',
-      400: '#60A5FA',
-      500: '#3B82F6',  // Base blue
-      600: '#2563EB',  // Primary blue (trust, focus)
-      700: '#1D4ED8',
-      800: '#1E40AF',
-      900: '#1E3A8A',
-      950: '#172554',
+      50: '#ECF8F6',
+      100: '#D1F0EB',
+      200: '#A3E0D7',
+      300: '#6EC9BC',
+      400: '#3AA899',
+      500: '#1A8A7D',
+      600: '#0B6E63',
+      700: '#095850',
+      800: '#07423C',
+      900: '#052D29',
+      950: '#031816',
     },
 
-    // Secondary Brand Colors (Purple)
+    // Secondary — sage green (#3c7a5e)
     secondary: {
-      50: '#FAF5FF',
-      100: '#F3E8FF',
-      200: '#E9D5FF',
-      300: '#D8B4FE',
-      400: '#C084FC',
-      500: '#A855F7',
-      600: '#9333EA',
-      700: '#7C3AED',  // Primary purple (creativity, AI)
-      800: '#6B21A8',
-      900: '#581C87',
-      950: '#3B0764',
+      50: '#F0F5F2',
+      100: '#DCE8E0',
+      200: '#B9D1C1',
+      300: '#8FB59F',
+      400: '#64977D',
+      500: '#4A8568',
+      600: '#3C7A5E',
+      700: '#336851',
+      800: '#2A5543',
+      900: '#183027',
+      950: '#0F1E18',
+    },
+
+    // Slate neutral (#3b4c57) — text, surfaces, borders
+    slate: {
+      50: '#F4F6F7',
+      100: '#E4E8EB',
+      200: '#C9D1D7',
+      300: '#A3B0BA',
+      400: '#7D8E9A',
+      500: '#5C6D78',
+      600: '#3B4C57',
+      700: '#2F3D46',
+      800: '#232E35',
+      900: '#171F24',
+      950: '#0D1215',
     },
 
     // Gradient Combinations
     gradients: {
-      primary: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)',
-      primaryLight: 'linear-gradient(135deg, #3B82F6 0%, #A855F7 100%)',
-      primaryDark: 'linear-gradient(135deg, #1D4ED8 0%, #6B21A8 100%)',
-      hero: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #7C3AED 100%)',
-      subtle: 'linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
+      primary: 'linear-gradient(135deg, #0B6E63 0%, #3C7A5E 100%)',
+      primaryLight: 'linear-gradient(135deg, #1A8A7D 0%, #4A8568 100%)',
+      primaryDark: 'linear-gradient(135deg, #095850 0%, #336851 100%)',
+      hero: 'linear-gradient(135deg, #0B6E63 0%, #3C7A5E 50%, #3B4C57 100%)',
+      subtle: 'linear-gradient(135deg, rgba(11, 110, 99, 0.1) 0%, rgba(60, 122, 94, 0.1) 100%)',
     },
 
     // Semantic Colors
@@ -116,31 +131,31 @@ export const brand = {
 
     // Dark Mode Palette
     dark: {
-      background: '#0A0A0A',
-      surface: '#171717',
-      surfaceHover: '#262626',
-      border: '#262626',
-      borderHover: '#404040',
+      background: '#0D1215',
+      surface: '#171F24',
+      surfaceHover: '#232E35',
+      border: '#2F3D46',
+      borderHover: '#3B4C57',
       text: {
         primary: '#FAFAFA',
-        secondary: '#A3A3A3',
-        tertiary: '#737373',
-        disabled: '#525252',
+        secondary: '#A3B0BA',
+        tertiary: '#7D8E9A',
+        disabled: '#5C6D78',
       },
     },
 
     // Light Mode Palette
     light: {
       background: '#FFFFFF',
-      surface: '#F9FAFB',
-      surfaceHover: '#F3F4F6',
-      border: '#E5E7EB',
-      borderHover: '#D1D5DB',
+      surface: '#F4F6F7',
+      surfaceHover: '#E4E8EB',
+      border: '#C9D1D7',
+      borderHover: '#A3B0BA',
       text: {
-        primary: '#0A0A0A',
-        secondary: '#525252',
-        tertiary: '#737373',
-        disabled: '#A3A3A3',
+        primary: '#3B4C57',
+        secondary: '#5C6D78',
+        tertiary: '#7D8E9A',
+        disabled: '#A3B0BA',
       },
     },
   },
@@ -280,9 +295,9 @@ export const brand = {
     none: 'none',
 
     // Colored shadows for glassmorphism
-    primaryGlow: '0 8px 32px 0 rgba(37, 99, 235, 0.2)',
-    secondaryGlow: '0 8px 32px 0 rgba(124, 58, 237, 0.2)',
-    gradientGlow: '0 8px 32px 0 rgba(37, 99, 235, 0.15), 0 8px 32px 0 rgba(124, 58, 237, 0.15)',
+    primaryGlow: '0 8px 32px 0 rgba(11, 110, 99, 0.2)',
+    secondaryGlow: '0 8px 32px 0 rgba(60, 122, 94, 0.2)',
+    gradientGlow: '0 8px 32px 0 rgba(11, 110, 99, 0.15), 0 8px 32px 0 rgba(60, 122, 94, 0.15)',
   },
 
   /**
@@ -380,8 +395,9 @@ export const brandGuidelines = {
     backgrounds: 'Use on light backgrounds or dark backgrounds with appropriate variant',
   },
   colorUsage: {
-    primary: 'Use for CTAs, links, primary actions, focus states',
-    secondary: 'Use for accents, highlights, AI-related features',
+    primary: 'Use for CTAs, links, primary actions, focus states (#0b6e63 teal)',
+    secondary: 'Use for accents, highlights, gradient partner (#3c7a5e sage)',
+    slate: 'Use for body text, dark surfaces, borders (#3b4c57)',
     gradient: 'Use for hero sections, premium features, special callouts',
   },
   typography: {

@@ -36,8 +36,8 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
 
   const tierColors = {
     FREE: 'bg-slate-500/10 text-slate-700 dark:text-slate-300',
-    STARTER: 'bg-blue-500/10 text-blue-700 dark:text-blue-300',
-    PRO: 'bg-purple-500/10 text-purple-700 dark:text-purple-300',
+    STARTER: 'bg-primary-500/10 text-primary-700 dark:text-primary-300',
+    PRO: 'bg-secondary-500/10 text-secondary-700 dark:text-secondary-300',
     PREMIUM: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
   };
 
