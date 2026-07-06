@@ -45,7 +45,6 @@ export function UserSync() {
               email: user.primaryEmailAddress?.emailAddress || '',
               name: user.fullName || user.firstName || '',
               avatar: user.imageUrl || null,
-              tier: (user.publicMetadata?.tier as string) || 'FREE',
             },
           },
         });

@@ -22,6 +22,10 @@ export const userResolvers = {
   },
 
   User: {
+    clerkId: (parent: any, _: any, { user }: any) => {
+      return parent.clerkId || user?.sub || '';
+    },
+
     /**
      * Resolve fullName from name field (compatible with frontend)
      */

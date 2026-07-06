@@ -2,24 +2,20 @@
 
 import * as React from 'react';
 import { useQuery } from '@apollo/client';
-import { GET_ME } from '@/graphql/operations';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { GET_MY_TIER } from '@/graphql/operations';
 
 export type UserTier = 'FREE' | 'STARTER' | 'PRO' | 'PREMIUM';
 
 interface TierLimits {
-  // Core limits
   maxActiveGoals: number;
   maxGoalsPerPlan: number;
   maxTasksPerDay: number;
-  maxPlansPerWeek: number; // Changed from maxPlansPerMonth!
-
-  // AI features
+  maxPlansPerWeek: number;
   aiModel: 'rule-based' | 'gpt-4o-mini' | 'claude-sonnet-3.5';
-  qualityScoreRange: [number, number]; // [min, max] expected quality
-
-  // Feature access
+  qualityScoreRange: [number, number];
   hasCalendarIntegration: boolean;
-  hasTemplateAccess: boolean; // Can create & share templates
+  hasTemplateAccess: boolean;
   hasAdvancedAnalytics: boolean;
   hasTeamWorkspace: boolean;
   hasAPIAccess: boolean;
@@ -30,14 +26,9 @@ interface TierContextValue {
   tier: UserTier;
   limits: TierLimits;
   isLoading: boolean;
+  refetchTier: () => void;
 }
 
-/**
- * Tier limits shown in the UI. The BACKEND is authoritative — these values
- * mirror apps/api-gateway/src/modules/billing/billing.constants.ts
- * (PRICING_PLANS + TIER_LIMITS); server-side enforcement lives in
- * UsageLimitService. Keep the two in sync when pricing changes.
- */
 const tierLimits: Record<UserTier, TierLimits> = {
   FREE: {
     maxActiveGoals: 2,
@@ -46,7 +37,7 @@ const tierLimits: Record<UserTier, TierLimits> = {
     maxPlansPerWeek: 5,
     aiModel: 'rule-based',
     qualityScoreRange: [70, 85],
-    hasCalendarIntegration: true, // Free tier gets manual calendar sync
+    hasCalendarIntegration: true,
     hasTemplateAccess: false,
     hasAdvancedAnalytics: false,
     hasTeamWorkspace: false,
@@ -61,28 +52,28 @@ const tierLimits: Record<UserTier, TierLimits> = {
     aiModel: 'gpt-4o-mini',
     qualityScoreRange: [80, 90],
     hasCalendarIntegration: true,
-    hasTemplateAccess: true, // Can create & share templates
+    hasTemplateAccess: true,
     hasAdvancedAnalytics: false,
     hasTeamWorkspace: false,
     hasAPIAccess: false,
     hasPrioritySupport: false,
   },
   PRO: {
-    maxActiveGoals: -1, // Unlimited (matches backend TIER_LIMITS)
+    maxActiveGoals: -1,
     maxGoalsPerPlan: 10,
     maxTasksPerDay: 100,
-    maxPlansPerWeek: -1, // Unlimited
+    maxPlansPerWeek: -1,
     aiModel: 'claude-sonnet-3.5',
     qualityScoreRange: [85, 95],
     hasCalendarIntegration: true,
     hasTemplateAccess: true,
-    hasAdvancedAnalytics: true, // AI insights, pattern recognition
+    hasAdvancedAnalytics: true,
     hasTeamWorkspace: false,
     hasAPIAccess: false,
     hasPrioritySupport: false,
   },
   PREMIUM: {
-    maxActiveGoals: -1, // Unlimited
+    maxActiveGoals: -1,
     maxGoalsPerPlan: -1,
     maxTasksPerDay: -1,
     maxPlansPerWeek: -1,
@@ -91,37 +82,73 @@ const tierLimits: Record<UserTier, TierLimits> = {
     hasCalendarIntegration: true,
     hasTemplateAccess: true,
     hasAdvancedAnalytics: true,
-    hasTeamWorkspace: true, // Premium exclusive - shared plans, team analytics
-    hasAPIAccess: true, // Premium exclusive - REST API, webhooks
+    hasTeamWorkspace: true,
+    hasAPIAccess: true,
     hasPrioritySupport: true,
   },
 };
 
 const TierContext = React.createContext<TierContextValue | undefined>(undefined);
 
-export function TierProvider({ children }: { children: React.ReactNode }) {
-  const { data, loading, refetch } = useQuery(GET_ME, {
-    fetchPolicy: 'cache-and-network',
+function TierProviderInner({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('session_id');
+
+  const { data, loading, refetch, error } = useQuery(GET_MY_TIER, {
+    fetchPolicy: sessionId ? 'network-only' : 'cache-and-network',
+    notifyOnNetworkStatusChange: true,
   });
 
   const tier = (data?.me?.tier as UserTier) || 'FREE';
-  const limits = tierLimits[tier];
+  const limits = tierLimits[tier] ?? tierLimits.FREE;
+
+  // After Stripe checkout redirect, force-refresh tier from DB and clean URL
+  React.useEffect(() => {
+    if (!sessionId) return;
+
+    let cancelled = false;
+
+    const refresh = async () => {
+      for (let attempt = 0; attempt < 5 && !cancelled; attempt++) {
+        await refetch();
+        await new Promise((r) => setTimeout(r, attempt === 0 ? 500 : 1500));
+      }
+      if (!cancelled) {
+        router.replace('/dashboard');
+      }
+    };
+
+    refresh();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, refetch, router]);
+
+  React.useEffect(() => {
+    if (error) {
+      console.error('[TierProvider] Failed to load tier from API:', error);
+    }
+  }, [error]);
 
   const value: TierContextValue = {
     tier,
     limits,
     isLoading: loading,
+    refetchTier: () => {
+      void refetch();
+    },
   };
 
-  // Expose refetch for post-checkout refresh (session_id in URL)
-  React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('session_id')) {
-      refetch();
-    }
-  }, [refetch]);
-
   return <TierContext.Provider value={value}>{children}</TierContext.Provider>;
+}
+
+export function TierProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <React.Suspense fallback={null}>
+      <TierProviderInner>{children}</TierProviderInner>
+    </React.Suspense>
+  );
 }
 
 export function useTier() {
@@ -132,8 +159,17 @@ export function useTier() {
   return context;
 }
 
-// Helper hooks for common tier checks
-export function useHasFeature(feature: keyof Pick<TierLimits, 'hasCalendarIntegration' | 'hasTemplateAccess' | 'hasAdvancedAnalytics' | 'hasTeamWorkspace' | 'hasAPIAccess' | 'hasPrioritySupport'>) {
+export function useHasFeature(
+  feature: keyof Pick<
+    TierLimits,
+    | 'hasCalendarIntegration'
+    | 'hasTemplateAccess'
+    | 'hasAdvancedAnalytics'
+    | 'hasTeamWorkspace'
+    | 'hasAPIAccess'
+    | 'hasPrioritySupport'
+  >
+) {
   const { limits } = useTier();
   return limits[feature];
 }
@@ -145,16 +181,10 @@ export function useCanExceedLimit(
   const { limits } = useTier();
   const limit = limits[limitKey];
   if (typeof limit !== 'number') return false;
-  if (limit === -1) return true; // unlimited
+  if (limit === -1) return true;
   return currentCount < limit;
 }
 
-/**
- * Check if user can perform an action based on tier
- * @param currentCount Current usage count
- * @param limitKey The limit to check against
- * @returns { canProceed: boolean, limit: number, remaining: number }
- */
 export function useCheckLimit(
   limitKey: keyof Pick<TierLimits, 'maxActiveGoals' | 'maxGoalsPerPlan' | 'maxTasksPerDay' | 'maxPlansPerWeek'>,
   currentCount: number
@@ -167,7 +197,7 @@ export function useCheckLimit(
   }
 
   if (limit === -1) {
-    return { canProceed: true, limit: -1, remaining: -1, tier }; // unlimited
+    return { canProceed: true, limit: -1, remaining: -1, tier };
   }
 
   const remaining = Math.max(0, limit - currentCount);

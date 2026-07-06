@@ -26,6 +26,16 @@ export const ONBOARDING_STATUS = gql`
   }
 `;
 
+export const GET_MY_TIER = gql`
+  query GetMyTier {
+    me {
+      id
+      tier
+      subscriptionStatus
+    }
+  }
+`;
+
 export const GET_ME = gql`
   query GetMe {
     me {

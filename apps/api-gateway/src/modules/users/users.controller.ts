@@ -19,6 +19,7 @@ export class UsersController {
     // Return full user object (password already excluded by Prisma)
     return {
       id: user.id,
+      clerkId: user.clerkId,
       email: user.email,
       name: user.name,
       avatar: user.avatar,
