@@ -57,8 +57,8 @@
 
 ### P1 — Core feature broken / launch-blocking
 
-- [ ] **Clerk running development keys in production** — every page
-  - Console on every page: *"Clerk has been loaded with development keys… strict usage limits… should not be used when deploying to production."* The sign-in/sign-up widgets show an orange **"Development mode"** badge to real users. Dev instances are rate-limited and not for production. **Owner must create a production Clerk instance and set the live keys in Vercel.**
+- [ ] **Clerk running development keys in production** — every page *(OWNER-ONLY — cannot be fixed in code)*
+  - Console on every page: *"Clerk has been loaded with development keys… strict usage limits… should not be used when deploying to production."* The sign-in/sign-up widgets show an orange **"Development mode"** badge to real users. Dev instances are rate-limited and not for production. **Owner must create a production Clerk instance and set the live keys in Vercel.** → exact env var names + gateway `CLERK_DOMAIN` documented in [`docs/PHASE5_DEPLOY_CHECKLIST.md`](PHASE5_DEPLOY_CHECKLIST.md) §1.
 
 - [x] **Settings save is completely broken (schema mismatch)** — Route: `/settings` (Profile + Notifications + Appearance tabs)
   - **FIXED (P1-8):** aligned web mutations to schema. `GET_USER_SETTINGS` now reads `timezone`/`energyPattern`/real notification fields; added `UPDATE_USER_PROFILE`. Profile save → `updateUserProfile` (name+timezone) + `updateUserSettings` (chronotype↔`energyPattern` map). Notifications use `email/planReminders/taskReminders/goalMilestones/productivityInsights`. Theme → `theme` enum + applied live via `next-themes`. Removed dead push/compact toggles (no backing field). All hooks refetch `GET_USER_SETTINGS`. Operations audit still 0-invalid.
@@ -122,33 +122,32 @@
 
 ### P2 — Wrong behavior / edge case
 
-- [ ] **`manifest.json` 307-redirects to `/sign-in`** → console error `Manifest: Line: 1, column: 1, Syntax error.` on **every** page (logged in and out). The middleware matcher excludes `.js` but deliberately lets `.json` through (`js(?!on)`), so the PWA manifest request hits auth and gets HTML. Fix: exclude `/manifest.json` (or `.webmanifest`) from the matcher / mark public.
+- [x] **`manifest.json` 307-redirects to `/sign-in`** — **FIXED (P2-1):** added explicit `manifest\.json`/`manifest\.webmanifest` exclusions to the `middleware.ts` matcher so the PWA manifest is served directly instead of hitting auth.
 
-- [ ] **Command palette "Recent" items are hardcoded mock data** — `⌘K` shows "Career Growth" (Goal), "Morning workout" (Task), "Last Week's Plan" (Plan) for every user. Clicking "Career Growth" navigates to `/goals/1` → **404** (`command-palette.tsx:73-75`). "Morning workout" just `console.log('Open task')`. These are dead/mock affordances shipped to users.
+- [x] **Command palette "Recent" items are hardcoded mock data** — **FIXED (P2-2):** `command-palette.tsx` recents now come from real `useGoals()`/`useTasks()` data (goals link to `/goals/:id`, tasks → `/tasks`); the mock `/goals/1`/`/plans/1` items and the `console.log`-only "Quick Complete" action were removed. The "Recent" group only renders when there's real data.
 
-- [ ] **Google/Outlook/Apple calendar "Connect" is a mock** — `/integrations` "Connect" calls `connectCalendar` with a hardcoded `authCode: 'mock-auth-code'` ([integrations/page.tsx:66](apps/web/src/app/(app)/integrations/page.tsx#L66)) — no real OAuth redirect. Also inconsistent: the `/integrations` page presents all three as connectable, while **Settings → Integrations** labels all three "PRO Feature". Neither actually connects. Decide one story and hide the rest.
+- [x] **Google/Outlook/Apple calendar "Connect" is a mock** — **FIXED (P2-3, Option A):** removed the mock `authCode` connect flow entirely. `/integrations` calendar tab now shows an honest "Coming soon" (Google-only story) and Settings → Integrations matches ("Coming soon" badge, no PRO/Connect buttons). No reachable mock OAuth path remains.
 
-- [ ] **`support.microplanner.com` does not resolve (DNS)** — linked as `https://support.microplanner.com/tickets` from Help/Support pages. Dead external link.
+- [x] **`support.microplanner.com` does not resolve (DNS)** — **FIXED (P2-4):** the support CTA now uses `mailto:support@microplanner.com`; the header "Help & Support" item links to in-app `/help`. No DNS-dead links remain (documented in deploy checklist for the owner if they want a real help desk).
 
-- [ ] **Marketing header has no mobile menu** — at 375px only the logo + "Get Started Free" CTA render; all nav links (Features/Pricing/About/…) are unreachable on phones. No hamburger in `components/marketing/page-template.tsx`.
+- [x] **Marketing header has no mobile menu** — **FIXED (P2-5):** added a client `MarketingMobileNav` (hamburger + slide-in drawer with backdrop) wired into `(marketing)/layout.tsx`; nav links + "Get Started Free" are reachable at 375px.
 
-- [ ] **App sidebar is expanded by default on mobile, squishing content** — at 375px the full sidebar occupies most of the viewport; the main content is a narrow strip and pages read as "Loading…" with no room. There is a collapse chevron, but the default state should be collapsed/overlay on mobile.
+- [x] **App sidebar is expanded by default on mobile, squishing content** — **FIXED (P2-6):** `(app)/layout.tsx` now tracks `isMobile` (`max-width:767px`), defaults the sidebar collapsed on mobile, renders it as a slide-in overlay with a tap-to-close backdrop, and sets `marginLeft:0` for main content on mobile. Route changes auto-close the overlay.
 
-- [ ] **Fabricated social proof / unbuilt-feature claims on auth + marketing** — sign-up page: "10K+ Active Users / 50K+ Plans Generated / 95% Satisfaction" (DB has a handful of users) and "Calendar sync with Google, Outlook & Apple" (only Google is even stubbed, and that's a mock). Honesty risk for a sellable product.
+- [x] **Fabricated social proof / unbuilt-feature claims on auth + marketing** — **FIXED (P2-7):** sign-up "10K+/50K+/95%" replaced with honest value props (AI / Free / 2 min); "Calendar sync with Google, Outlook & Apple" → "Google Calendar sync (coming soon)".
 
-- [ ] **Currency shows MAD in Stripe checkout** — checkout renders "68,15 MAD pro Monat" (≈$7 at the shown FX) with a German locale, because Stripe geolocated the test session to Morocco. Functionally correct (charged as USD-equivalent) but a US buyer expects "$7.00/month". Consider pinning `currency`/`locale` on the Checkout Session.
+- [x] **Currency shows MAD in Stripe checkout** — **FIXED (P2-8):** pinned `locale: 'en'` on the Checkout Session in `billing.service.ts` so the UI renders in English/USD formatting. (Charge currency is already USD, fixed by the Stripe Price; per-session `currency` override isn't available with a fixed `price` — noted in deploy checklist.)
 
-- [ ] **Day and Month views have no drag-and-drop** — Routes: `/day`, `/month`
-  - Week has `WeekCalendarDnd`; day uses `DayCalendar` (click time-slot → quick add only); month uses `MonthCalendar` (click date → `/day`, click task → modal). **No reschedule-by-drag** on day/month. If product expects parity with week view, implement DnD or remove drag affordances and document click-only UX.
+- [x] **Day and Month views have no drag-and-drop** — **DECISION (P2-9): keep click-only, no false affordance.** Day/Month have **zero** drag affordances (verified — no drag/drop/reschedule markup), so there is nothing misleading to remove. Rescheduling on day/month is done via the (now fully wired) task-detail modal (edit date/time). Week keeps drag-to-reschedule. No code change; documented as intentional.
 
 ### P3 — Polish
 
-- [ ] Apollo Client logs a deprecation warning on every page load (~75×): `connectToDevTools` → use `devtools.enabled` (`providers.tsx`).
-- [ ] Slight horizontal overflow (`scrollWidth > clientWidth`) at 375px on `/pricing`, `/features`, and app `/day`, `/settings`, `/plans/generate`.
-- [ ] All marketing pages share one generic `<title>` ("MicroPlanner - AI-Powered Weekly Planning") — no per-page titles for SEO/tabs (except auth pages, which are correct).
-- [ ] Radix `DialogContent` a11y warnings: "requires a `DialogTitle`" / "Missing `Description` or `aria-describedby`" (seen when the command palette opens).
-- [ ] React "Minified error #185" (setState on unmounted / update loop) thrown alongside the goal-color crash on `/week` — will likely vanish once the P0 null-guard lands, but worth confirming.
-- [ ] Onboarding "Skip for now" on step 4 (wake time) — Continue is disabled until a wake time is chosen; the skip affordance exists but the flow still effectively requires it. Minor.
+- [x] **FIXED (P3-1):** Apollo `connectToDevTools` → `devtools: { enabled: NODE_ENV === 'development' }` in `lib/apollo/client.ts` (kills the ~75×/page deprecation warning).
+- [x] **FIXED (P3-2):** added `overflow-x: hidden` to `html` in `globals.css` so the page can't scroll horizontally at 375px; inner `overflow-auto` containers (week calendar) still scroll normally.
+- [x] **FIXED (P3-3):** each marketing route (`features`, `pricing`, `about`, `story`, `how-it-works`, `roadmap`, `help`, `blog`, `changelog`, `glossary`, `contact/sales`, `contact/support`) now has a server `layout.tsx` exporting a per-page `title` (+ description). The root layout's `%s | MicroPlanner` template composes them.
+- [x] **FIXED (P3-4):** `command.tsx` `CommandDialog` now renders an `sr-only` `DialogTitle` + `DialogDescription`, removing the Radix a11y warnings.
+- [x] **RESOLVED (P3-5):** React #185 was secondary to the P0 goal-color crash (error-boundary remount loop). With P0-1's null-guards in place the crash no longer fires, so the loop can't occur. (Final visual confirm belongs to Tier D.)
+- [x] **RESOLVED (P3-6):** onboarding step 4 "Skip for now" **is wired** — it sets a sensible default wake time (`07:00`) and calls `onNext()`, so it genuinely advances the flow (not a dead affordance). No change needed.
 
 ---
 
@@ -276,8 +275,8 @@
 9. **P1 — Fix plan-gen redirect** — `generating-step.tsx`: drive `onComplete` off the resolved mutation, drop the 8s race, fix `aiModel` id.
 10. **P1 — Fix goal pause** — align `isPaused` with `UpdateGoalInput`.
 11. **P1 — Register keyboard shortcuts** — `useKeyboardShortcuts(useGlobalKeyboardShortcuts())` in the app shell.
-12. **P2 — Config/content:** production Clerk keys (owner); exclude `manifest.json` from middleware; replace/remove ⌘K mock recents; decide Google Calendar (real OAuth or hide); fix/remove `support.microplanner.com`; marketing mobile menu; mobile sidebar default-collapsed; replace fabricated stats; day/month DnD decision.
-13. **P3 — Polish:** Apollo `devtools.enabled`; per-page `<title>`; Dialog a11y title/description; horizontal-overflow trims.
+12. **P2 — Config/content: ✅ DONE (code side).** manifest.json excluded ✓; ⌘K real recents ✓; Google Calendar hidden as "Coming soon" ✓; support.microplanner.com → mailto/`/help` ✓; marketing mobile menu ✓; mobile sidebar overlay ✓; fabricated stats replaced ✓; Stripe `locale:'en'` ✓; day/month DnD → click-only decision ✓. **Owner-only remainder:** production Clerk keys (deploy checklist §1).
+13. **P3 — Polish: ✅ DONE.** Apollo `devtools.enabled` ✓; per-page `<title>` ✓; Dialog a11y title/description ✓; horizontal-overflow guard ✓; React #185 resolved-by-P0-1 ✓; onboarding skip verified wired ✓.
 
 ### Implementation agent checklist (mark `[x]` only after browser-verified)
 
@@ -306,9 +305,9 @@ After steps 1–7, **owner** manually verifies on production (or local against p
 **Why agents skip tier D:** Clerk/Google sign-in is interactive. Cursor agents and MCP browser tools cannot complete OAuth on your behalf in a non-interactive session. Opus correctly treats tier D as owner-in-the-loop — not a failure of the fix, a limitation of the harness.
 
 **Autonomous run (2026-07-06, this session):**
-- [x] Tier A — `node scripts/audit-contracts.mjs` + `audit-operations.mjs` → green (195 REST routes, 101 GraphQL docs)
-- [x] Tier A — `pnpm type-check` in `apps/web` → green
-- [x] Tier B — `pnpm build` in `apps/web` → green (42 routes)
+- [x] Tier A — `node scripts/audit-contracts.mjs` + `audit-operations.mjs` → green (0 unmatched, 101 GraphQL docs valid) — re-run after P2/P3
+- [x] Tier A — `tsc --noEmit` in `apps/web` + `apps/api-gateway` + `apps/graphql-gateway` → all exit 0
+- [x] Tier B — `next build` in `apps/web` → green (42 routes) after all P0–P3 code changes
 - [ ] Tier C — local GraphQL mutation smoke: **blocked autonomously.** Postgres+Redis are up, but the gateway verifies every request against Clerk JWKS (no dev bypass), so a valid JWT requires an interactive `window.Clerk.session.getToken()` from a signed-in browser. Owner can run it, or it falls to Tier D.
 - [ ] Tier D — owner browser checklist above
 
