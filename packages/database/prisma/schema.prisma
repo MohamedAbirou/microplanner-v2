@@ -43,6 +43,7 @@ model User {
   workEndTime       String              @default("17:00")
   productivityPeaks String[]           @default([])
   energyPattern     EnergyPattern?
+  theme             Theme               @default(SYSTEM)
   blockedTimes      Json?               // [{day: "monday", start: "12:00", end: "13:00"}]
 
   // Device tokens for push notifications
@@ -123,6 +124,12 @@ enum EnergyPattern {
   MORNING_PERSON
   NIGHT_OWL
   BALANCED
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
 }
 
 // ============================================

@@ -40,7 +40,7 @@ export const userResolvers = {
       try {
         // Return a settings object compatible with frontend queries
         return {
-          theme: 'SYSTEM',
+          theme: parent.theme ?? 'SYSTEM',
           workingHours: {
             start: parent.workStartTime || '09:00',
             end: parent.workEndTime || '17:00',

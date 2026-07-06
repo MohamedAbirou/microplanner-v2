@@ -34,6 +34,7 @@ export class UsersController {
       workEndTime: user.workEndTime,
       productivityPeaks: user.productivityPeaks,
       energyPattern: user.energyPattern,
+      theme: user.theme,
       blockedTimes: user.blockedTimes,
 
       // Metadata
@@ -88,6 +89,7 @@ export class UsersController {
         workEndTime: updatedUser.workEndTime,
         productivityPeaks: updatedUser.productivityPeaks,
         energyPattern: updatedUser.energyPattern,
+        theme: updatedUser.theme,
         blockedTimes: updatedUser.blockedTimes,
       },
     };

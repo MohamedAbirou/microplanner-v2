@@ -165,10 +165,34 @@ export class UserAPI {
 
   // Update user settings (preferences)
   async updateUserSettings(userId: string, input: UpdateUserSettingsInput) {
-    const { data } = await this.client.put('/me/preferences', input, {
+    // Only forward fields the REST preferences DTO accepts.
+    const payload: Pick<UpdateUserSettingsInput, 'theme' | 'energyPattern'> = {};
+    if (input.theme !== undefined) payload.theme = input.theme;
+    if (input.energyPattern !== undefined) payload.energyPattern = input.energyPattern;
+
+    await this.client.put('/me/preferences', payload, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+
+    const user = await this.getUser(userId);
+    return {
+      id: user.id,
+      theme: user.theme ?? input.theme ?? 'SYSTEM',
+      energyPattern: user.energyPattern,
+      workingHours: {
+        start: user.workStartTime ?? '09:00',
+        end: user.workEndTime ?? '17:00',
+      },
+      defaultTaskDuration: 30,
+      notifications: {
+        email: true,
+        weeklySummary: true,
+        planReminders: true,
+        taskReminders: true,
+        goalMilestones: true,
+        productivityInsights: true,
+      },
+    };
   }
 
   // Get onboarding status (handled by OnboardingAPI GraphQL)

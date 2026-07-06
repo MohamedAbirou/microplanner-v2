@@ -1,4 +1,4 @@
-import { EnergyPattern, EnergyPatternType } from '@microplanner/database';
+import { EnergyPattern, EnergyPatternType, Theme, ThemeType } from '@microplanner/database';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsEnum, IsObject, IsOptional, IsString } from 'class-validator';
 
@@ -40,6 +40,15 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @IsEnum(EnergyPattern)
   energyPattern?: EnergyPatternType;
+
+  @ApiProperty({
+    example: 'SYSTEM',
+    enum: Theme,
+    description: 'UI color theme preference',
+  })
+  @IsOptional()
+  @IsEnum(Theme)
+  theme?: ThemeType;
 
   @ApiProperty({
     example: [{ day: 'monday', start: '12:00', end: '13:00' }],

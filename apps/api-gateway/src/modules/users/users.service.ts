@@ -121,6 +121,7 @@ export class UsersService {
         workEndTime: data.workEndTime,
         productivityPeaks: data.productivityPeaks,
         energyPattern: data.energyPattern,
+        theme: data.theme,
         blockedTimes: data.blockedTimes,
       },
     });
