@@ -26,4 +26,9 @@ export class CreateCheckoutDto {
   })
   @IsOptional()
   cancelUrl?: string;
+
+  /** Accepted for GraphQL compatibility; only monthly prices exist today. */
+  @ApiProperty({ required: false, enum: ['MONTHLY', 'YEARLY'] })
+  @IsOptional()
+  interval?: 'MONTHLY' | 'YEARLY';
 }
