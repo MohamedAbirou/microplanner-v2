@@ -26,9 +26,11 @@ export default function PlansPage() {
   // Fetch plans from GraphQL
   const { plans, loading } = usePlans();
 
-  // Separate active and completed plans
-  const activePlan = plans.find((p: any) => p.status === 'active');
-  const planHistory = plans.filter((p: any) => p.status === 'completed');
+  const draftPlan = plans.find((p: any) => p.status === 'DRAFT');
+  const activePlan = plans.find(
+    (p: any) => p.status === 'ACCEPTED' || p.status === 'APPLIED'
+  );
+  const planHistory = plans.filter((p: any) => p.status === 'ARCHIVED');
 
   const completionPercentage = activePlan
     ? Math.round((activePlan.completedTasks / activePlan.totalTasks) * 100)
@@ -59,7 +61,7 @@ export default function PlansPage() {
     );
   }
 
-  if (!activePlan) {
+  if (!activePlan && !draftPlan) {
     return (
       <div className="space-y-6 p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
@@ -103,25 +105,44 @@ export default function PlansPage() {
         </Link>
       </div>
 
-      {/* Active Plan Card */}
+      {draftPlan && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <CardTitle>Draft Plan Ready for Review</CardTitle>
+                <CardDescription>
+                  {draftPlan.title} — accept it to add tasks to your calendar
+                </CardDescription>
+              </div>
+              <Button onClick={() => router.push(`/plans/review?id=${draftPlan.id}`)}>
+                <Eye className="mr-2 h-4 w-4" />
+                Review Plan
+              </Button>
+            </div>
+          </CardHeader>
+        </Card>
+      )}
+
+      {activePlan && (
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <CardTitle>Active Plan</CardTitle>
-                <Badge variant="default">Current Week</Badge>
+                <Badge variant="default">{activePlan.status}</Badge>
               </div>
               <CardDescription>
-                {format(new Date(activePlan.weekStart), 'MMM d')} -{' '}
-                {format(new Date(activePlan.weekEnd), 'MMM d, yyyy')}
+                {format(new Date(activePlan.weekStartDate), 'MMM d')} -{' '}
+                {format(new Date(activePlan.weekEndDate), 'MMM d, yyyy')}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push('/plans/review')}
+                onClick={() => router.push(`/plans/review?id=${activePlan.id}`)}
               >
                 <Eye className="mr-2 h-4 w-4" />
                 View Details
@@ -197,7 +218,7 @@ export default function PlansPage() {
           <div>
             <h4 className="text-sm font-medium mb-3">Goal Breakdown</h4>
             <div className="grid gap-2 md:grid-cols-2">
-              {activePlan.goals.map((goal: any) => (
+              {(activePlan.goals ?? []).map((goal: any) => (
                 <div
                   key={goal.id}
                   className="flex items-center justify-between p-3 rounded-lg border"
@@ -214,6 +235,7 @@ export default function PlansPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Plan History */}
       <Tabs defaultValue="history" className="w-full">
@@ -251,8 +273,8 @@ export default function PlansPage() {
                       </div>
                       <div className="flex-1">
                         <div className="font-medium mb-1">
-                          {format(new Date(plan.weekStart), 'MMM d')} -{' '}
-                          {format(new Date(plan.weekEnd), 'MMM d, yyyy')}
+                          {format(new Date(plan.weekStartDate), 'MMM d')} -{' '}
+                          {format(new Date(plan.weekEndDate), 'MMM d, yyyy')}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>

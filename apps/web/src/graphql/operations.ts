@@ -713,6 +713,51 @@ export const GET_PLANS = gql`
   }
 `;
 
+export const GET_PLAN = gql`
+  query GetPlan($id: ID!) {
+    plan(id: $id) {
+      id
+      title
+      description
+      status
+      qualityScore
+      qualityMetrics
+      aiModel
+      reasoning
+      weekStartDate
+      weekEndDate
+      generationTime
+      totalTasks
+      completedTasks
+      completionRate
+      goals {
+        id
+        emoji
+        title
+        color
+      }
+      tasks {
+        id
+        title
+        scheduledDate
+        startTime
+        endTime
+        durationMinutes
+        isCompleted
+        priority
+        goal {
+          id
+          emoji
+          title
+          color
+        }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 export const CREATE_PLAN = gql`
   mutation CreatePlan($input: CreatePlanInput!) {
     createPlan(input: $input) {

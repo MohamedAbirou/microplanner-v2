@@ -267,7 +267,7 @@ export default function SearchPage() {
                                 </div>
                               </div>
                               {plan.status && (
-                                <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
+                                <Badge variant={plan.status === 'ACCEPTED' || plan.status === 'APPLIED' ? 'default' : 'secondary'}>
                                   {plan.status}
                                 </Badge>
                               )}
@@ -389,7 +389,7 @@ export default function SearchPage() {
                           </div>
                         </div>
                         {plan.status && (
-                          <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
+                          <Badge variant={plan.status === 'ACCEPTED' || plan.status === 'APPLIED' ? 'default' : 'secondary'}>
                             {plan.status}
                           </Badge>
                         )}

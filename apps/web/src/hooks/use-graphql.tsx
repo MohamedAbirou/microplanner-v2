@@ -374,11 +374,25 @@ export function useDeleteGoal() {
 
 export function usePlans(filter?: any) {
   const { data, loading, error, refetch } = useQuery(operations.GET_PLANS, {
-    variables: { filter },
+    variables: filter ? { filter } : undefined,
   });
 
   return {
     plans: data?.plans || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function usePlan(id?: string | null) {
+  const { data, loading, error, refetch } = useQuery(operations.GET_PLAN, {
+    variables: { id },
+    skip: !id,
+  });
+
+  return {
+    plan: data?.plan ?? null,
     loading,
     error,
     refetch,
@@ -419,7 +433,8 @@ export function useUpdatePlan() {
 
 export function useAcceptPlan() {
   const [acceptPlan, { loading, error }] = useMutation(operations.ACCEPT_PLAN, {
-    refetchQueries: [{ query: operations.GET_PLANS }],
+    refetchQueries: [{ query: operations.GET_PLANS }, { query: operations.GET_TASKS }],
+    awaitRefetchQueries: true,
     onCompleted: () => {
       toast.success('Plan accepted successfully!');
     },
