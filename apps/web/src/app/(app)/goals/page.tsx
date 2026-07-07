@@ -53,17 +53,17 @@ export default function GoalsPage() {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Goals</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Goals</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
             Track your progress and achievements
           </p>
         </div>
         <Link href="/goals/new">
-          <Button>
+          <Button className="h-9">
             <Plus className="mr-2 h-4 w-4" />
             Create Goal
           </Button>

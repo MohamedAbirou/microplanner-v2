@@ -16,11 +16,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function IntegrationsPage() {
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Integrations</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
+        <p className="text-[13px] text-muted-foreground mt-1">
           Connect MicroPlanner with your favorite tools and services
         </p>
       </div>
@@ -44,7 +44,7 @@ export default function IntegrationsPage() {
 
         {/* Calendar Sync Tab */}
         <TabsContent value="calendar" className="space-y-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Calendar Sync</CardTitle>
               <CardDescription>
@@ -67,7 +67,7 @@ export default function IntegrationsPage() {
 
         {/* API & Webhooks Tab */}
         <TabsContent value="api" className="space-y-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>API Access</CardTitle>
               <CardDescription>
@@ -88,7 +88,7 @@ export default function IntegrationsPage() {
 
         {/* Import/Export Tab */}
         <TabsContent value="data" className="space-y-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Data Import/Export</CardTitle>
               <CardDescription>

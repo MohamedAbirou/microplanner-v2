@@ -96,7 +96,8 @@ function TierProviderInner({ children }: { children: React.ReactNode }) {
   const sessionId = searchParams.get('session_id');
 
   const { data, loading, refetch, error } = useQuery(GET_MY_TIER, {
-    fetchPolicy: sessionId ? 'network-only' : 'cache-and-network',
+    fetchPolicy: sessionId ? 'network-only' : 'cache-first',
+    nextFetchPolicy: 'cache-first',
     notifyOnNetworkStatusChange: true,
   });
 

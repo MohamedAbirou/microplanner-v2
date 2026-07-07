@@ -51,15 +51,15 @@ export default function GeneratePlanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mp-fade-in">
       <div className="max-w-4xl mx-auto p-6">
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">
+            <span className="text-[13px] font-medium">
               Step {currentStep === 'select-goals' ? 1 : currentStep === 'customize' ? 2 : 3} of 3
             </span>
-            <span className="text-sm text-muted-foreground">{steps[currentStep].label}</span>
+            <span className="text-[13px] text-muted-foreground">{steps[currentStep].label}</span>
           </div>
           <Progress value={steps[currentStep].progress} />
         </div>

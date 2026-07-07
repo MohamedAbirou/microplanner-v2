@@ -186,7 +186,10 @@ export function createApolloClient() {
     cache,
     defaultOptions: {
       watchQuery: {
-        fetchPolicy: 'cache-and-network',
+        // cache-first avoids refetching every query on each page navigation
+        // (cache-and-network was causing API rate-limit storms in production).
+        fetchPolicy: 'cache-first',
+        nextFetchPolicy: 'cache-first',
         errorPolicy: 'all',
       },
       query: {

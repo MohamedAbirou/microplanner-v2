@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useGoal, useUpdateGoal, useDeleteGoal } from '@/hooks/use-graphql';
 import { format } from 'date-fns';
 import { ArrowLeft, BarChart3, CheckCircle2, Circle, Clock, Flame, Pause, Play, Target, Trash2 } from 'lucide-react';
@@ -43,21 +44,34 @@ export default function GoalDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6 p-6 max-w-4xl mx-auto">
-        <div className="text-center py-12 text-muted-foreground">Loading goal...</div>
+        <Skeleton className="h-5 w-28 rounded-[6px]" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-14 h-14 rounded-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-48 rounded-[6px]" />
+            <Skeleton className="h-4 w-64 rounded-[6px]" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-[10px]" />
+          ))}
+        </div>
+        <Skeleton className="h-40 rounded-[14px]" />
       </div>
     );
   }
 
   if (!goal) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Target className="h-16 w-16 text-muted-foreground mb-4" />
-        <h3 className="text-xl font-semibold mb-2">Goal not found</h3>
-        <p className="text-muted-foreground mb-6">
+      <div className="flex flex-col items-center justify-center py-20 text-center rounded-[14px] border border-border bg-accent max-w-4xl mx-auto mt-6">
+        <Target className="h-12 w-12 text-accent-foreground/60 mb-4" />
+        <h3 className="text-[15px] font-semibold mb-1.5 text-accent-foreground">Goal not found</h3>
+        <p className="text-[13px] text-muted-foreground mb-6">
           This goal may have been deleted or you don&apos;t have access to it.
         </p>
         <Link href="/goals">
-          <Button>Back to Goals</Button>
+          <Button className="h-9">Back to Goals</Button>
         </Link>
       </div>
     );
@@ -66,7 +80,7 @@ export default function GoalDetailPage() {
   const tasks = goal.tasks || [];
 
   return (
-    <div className="space-y-6 p-6 max-w-4xl mx-auto">
+    <div className="space-y-6 p-6 max-w-4xl mx-auto mp-fade-in">
       {/* Back */}
       <Link href="/goals" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4 mr-1" />
@@ -84,16 +98,16 @@ export default function GoalDetailPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">{goal.title}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">{goal.title}</h1>
               {goal.isPaused && <Badge variant="secondary">Paused</Badge>}
             </div>
             {goal.description && (
-              <p className="text-muted-foreground mt-1">{goal.description}</p>
+              <p className="text-[13px] text-muted-foreground mt-1">{goal.description}</p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handlePauseToggle}>
+          <Button variant="outline" className="h-9" onClick={handlePauseToggle}>
             {goal.isPaused ? (
               <>
                 <Play className="h-4 w-4 mr-2" />
@@ -106,7 +120,7 @@ export default function GoalDetailPage() {
               </>
             )}
           </Button>
-          <Button variant="outline" className="text-destructive" onClick={() => setShowDelete(true)}>
+          <Button variant="outline" className="h-9 text-destructive" onClick={() => setShowDelete(true)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -114,22 +128,22 @@ export default function GoalDetailPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="text-center p-4 rounded-lg bg-muted/50">
+        <div className="text-center p-4 rounded-[10px] bg-muted/50">
           <div className="text-2xl font-bold">{goal.completionRate}%</div>
           <div className="text-xs text-muted-foreground mt-1">Completion Rate</div>
         </div>
-        <div className="text-center p-4 rounded-lg bg-muted/50">
+        <div className="text-center p-4 rounded-[10px] bg-muted/50">
           <div className="text-2xl font-bold flex items-center justify-center gap-1">
             <Flame className="h-5 w-5 text-orange-500" />
             {goal.currentStreak}
           </div>
           <div className="text-xs text-muted-foreground mt-1">Current Streak</div>
         </div>
-        <div className="text-center p-4 rounded-lg bg-muted/50">
+        <div className="text-center p-4 rounded-[10px] bg-muted/50">
           <div className="text-2xl font-bold">{goal.frequencyPerWeek}x</div>
           <div className="text-xs text-muted-foreground mt-1">Per Week</div>
         </div>
-        <div className="text-center p-4 rounded-lg bg-muted/50">
+        <div className="text-center p-4 rounded-[10px] bg-muted/50">
           <div className="text-2xl font-bold flex items-center justify-center gap-1">
             <Clock className="h-5 w-5" />
             {goal.durationMinutes}m
@@ -139,9 +153,9 @@ export default function GoalDetailPage() {
       </div>
 
       {/* Progress */}
-      <Card>
+      <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2 text-[15px]">
             <BarChart3 className="h-4 w-4" />
             Progress
           </CardTitle>
@@ -178,21 +192,23 @@ export default function GoalDetailPage() {
       </Card>
 
       {/* Tasks */}
-      <Card>
+      <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
         <CardHeader>
-          <CardTitle className="text-base">Tasks ({tasks.length})</CardTitle>
+          <CardTitle className="text-[15px]">Tasks ({tasks.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {tasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              No tasks scheduled for this goal yet. Generate a weekly plan to create some.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8 text-center rounded-[10px] border border-border bg-accent">
+              <p className="text-[13px] text-muted-foreground">
+                No tasks scheduled for this goal yet. Generate a weekly plan to create some.
+              </p>
+            </div>
           ) : (
             <div className="space-y-2">
               {tasks.map((task: any) => (
                 <div
                   key={task.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border"
+                  className="flex items-center gap-3 p-3 rounded-[10px] border border-border"
                 >
                   {task.isCompleted ? (
                     <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />

@@ -4,7 +4,8 @@ import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Target, Clock, Zap, Award, Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Target, Clock, Zap, Award } from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -210,23 +211,34 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-3 text-muted-foreground">Loading analytics...</span>
+      <div className="space-y-6 p-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-40 rounded-[6px]" />
+            <Skeleton className="h-4 w-64 rounded-[6px]" />
+          </div>
+          <Skeleton className="h-10 w-[180px] rounded-[10px]" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-[14px]" />
+          ))}
+        </div>
+        <Skeleton className="h-[360px] rounded-[14px]" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground mt-1">Track your productivity and insights</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">Track your productivity and insights</p>
         </div>
         <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] h-9">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -240,7 +252,7 @@ export default function AnalyticsPage() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tasks Completed</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
@@ -253,7 +265,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
             <Zap className="h-4 w-4 text-muted-foreground" />
@@ -264,7 +276,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
@@ -275,7 +287,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Time</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -298,16 +310,18 @@ export default function AnalyticsPage() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
-              <CardTitle>Weekly Completion</CardTitle>
-              <CardDescription>Completed vs planned tasks per week</CardDescription>
+              <CardTitle className="text-[15px]">Weekly Completion</CardTitle>
+              <CardDescription className="text-[13px]">Completed vs planned tasks per week</CardDescription>
             </CardHeader>
             <CardContent>
               {weeklyCompletionData.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-12 text-center">
-                  No tasks scheduled in this range yet. Generate a plan or add tasks to see trends.
-                </p>
+                <div className="flex items-center justify-center text-center rounded-[10px] border border-border bg-accent py-12">
+                  <p className="text-[13px] text-muted-foreground max-w-sm">
+                    No tasks scheduled in this range yet. Generate a plan or add tasks to see trends.
+                  </p>
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={weeklyCompletionData}>
@@ -346,16 +360,18 @@ export default function AnalyticsPage() {
         {/* Goals Tab */}
         <TabsContent value="goals" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <Card>
+            <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
               <CardHeader>
-                <CardTitle>Goal Distribution</CardTitle>
-                <CardDescription>Hours spent per goal (completed tasks)</CardDescription>
+                <CardTitle className="text-[15px]">Goal Distribution</CardTitle>
+                <CardDescription className="text-[13px]">Hours spent per goal (completed tasks)</CardDescription>
               </CardHeader>
               <CardContent>
                 {goalDistributionData.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-12 text-center">
-                    Complete some goal tasks to see how your time is distributed.
-                  </p>
+                  <div className="flex items-center justify-center text-center rounded-[10px] border border-border bg-accent py-12">
+                    <p className="text-[13px] text-muted-foreground max-w-xs">
+                      Complete some goal tasks to see how your time is distributed.
+                    </p>
+                  </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
@@ -380,16 +396,18 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
               <CardHeader>
-                <CardTitle>Goal Progress</CardTitle>
-                <CardDescription>Completion rate per goal (%)</CardDescription>
+                <CardTitle className="text-[15px]">Goal Progress</CardTitle>
+                <CardDescription className="text-[13px]">Completion rate per goal (%)</CardDescription>
               </CardHeader>
               <CardContent>
                 {goalProgressData.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-12 text-center">
-                    Schedule tasks against your goals to see completion rates.
-                  </p>
+                  <div className="flex items-center justify-center text-center rounded-[10px] border border-border bg-accent py-12">
+                    <p className="text-[13px] text-muted-foreground max-w-xs">
+                      Schedule tasks against your goals to see completion rates.
+                    </p>
+                  </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={goalProgressData} layout="vertical">
@@ -412,10 +430,10 @@ export default function AnalyticsPage() {
 
         {/* Patterns Tab */}
         <TabsContent value="patterns" className="space-y-4">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
-              <CardTitle>Productivity by Hour</CardTitle>
-              <CardDescription>Completed tasks by scheduled start hour</CardDescription>
+              <CardTitle className="text-[15px]">Productivity by Hour</CardTitle>
+              <CardDescription className="text-[13px]">Completed tasks by scheduled start hour</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -428,8 +446,8 @@ export default function AnalyticsPage() {
                 </BarChart>
               </ResponsiveContainer>
               {peakHour && (
-                <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <p className="text-sm">
+                <div className="mt-4 p-4 bg-accent border border-border rounded-[10px]">
+                  <p className="text-[13px] text-accent-foreground">
                     <strong>Insight:</strong> Your peak completion hour is around {peakHour}.
                     Consider scheduling high-priority tasks near that time.
                   </p>
@@ -441,10 +459,10 @@ export default function AnalyticsPage() {
 
         {/* Streaks Tab */}
         <TabsContent value="streaks" className="space-y-4">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
-              <CardTitle>Daily Completions</CardTitle>
-              <CardDescription>Tasks completed per day over the last two weeks</CardDescription>
+              <CardTitle className="text-[15px]">Daily Completions</CardTitle>
+              <CardDescription className="text-[13px]">Tasks completed per day over the last two weeks</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -464,16 +482,16 @@ export default function AnalyticsPage() {
                 </LineChart>
               </ResponsiveContainer>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
-                <div className="p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{currentStreak}</div>
+                <div className="p-4 rounded-[10px] bg-muted/50">
+                  <div className="text-2xl font-bold text-[hsl(var(--success))]">{currentStreak}</div>
                   <div className="text-sm text-muted-foreground">Current Streak</div>
                 </div>
-                <div className="p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{longestStreak}</div>
+                <div className="p-4 rounded-[10px] bg-muted/50">
+                  <div className="text-2xl font-bold text-primary">{longestStreak}</div>
                   <div className="text-sm text-muted-foreground">Longest Streak</div>
                 </div>
-                <div className="p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{consistency}%</div>
+                <div className="p-4 rounded-[10px] bg-muted/50">
+                  <div className="text-2xl font-bold text-accent-foreground">{consistency}%</div>
                   <div className="text-sm text-muted-foreground">Consistency (14d)</div>
                 </div>
               </div>

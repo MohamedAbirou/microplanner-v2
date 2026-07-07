@@ -203,7 +203,7 @@ export function TaskDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] rounded-[14px]">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -215,11 +215,11 @@ export function TaskDetailModal({
                   placeholder="Task title..."
                 />
               ) : (
-                <DialogTitle className="text-2xl flex items-center gap-2">
+                <DialogTitle className="text-xl flex items-center gap-2">
                   {task.isCompleted ? (
-                    <CheckCircle2 className="h-6 w-6 text-green-600" />
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
                   ) : (
-                    <Circle className="h-6 w-6 text-muted-foreground" />
+                    <Circle className="h-5 w-5 text-muted-foreground" />
                   )}
                   <span className={cn(task.isCompleted && 'line-through text-muted-foreground')}>
                     {task.title}
@@ -250,6 +250,7 @@ export function TaskDetailModal({
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="h-9 w-9"
                   onClick={() => setIsEditing(true)}
                 >
                   <Edit2 className="h-4 w-4" />
@@ -258,6 +259,7 @@ export function TaskDetailModal({
               <Button
                 variant="ghost"
                 size="icon"
+                className="h-9 w-9"
                 onClick={() => setShowDeleteDialog(true)}
                 disabled={isDeleting}
               >
@@ -339,7 +341,7 @@ export function TaskDetailModal({
                     onChange={(e) => setEditedTask({ ...editedTask, scheduledDate: e.target.value } as any)}
                   />
                 ) : (
-                  <div className="text-sm p-2 rounded-md bg-muted">
+                  <div className="text-sm p-2 rounded-[10px] bg-muted">
                     {format(new Date(task.scheduledDate), 'EEEE, MMM d, yyyy')}
                   </div>
                 )}
@@ -357,7 +359,7 @@ export function TaskDetailModal({
                     onChange={(e) => setEditedTask({ ...editedTask, startTime: e.target.value } as any)}
                   />
                 ) : (
-                  <div className="text-sm p-2 rounded-md bg-muted">
+                  <div className="text-sm p-2 rounded-[10px] bg-muted">
                     {task.startTime} - {task.endTime}
                   </div>
                 )}
@@ -386,7 +388,7 @@ export function TaskDetailModal({
                   </SelectContent>
                 </Select>
               ) : (
-                <div className="text-sm p-2 rounded-md bg-muted">
+                <div className="text-sm p-2 rounded-[10px] bg-muted">
                   {task.durationMinutes} minutes
                 </div>
               )}
@@ -432,11 +434,11 @@ export function TaskDetailModal({
                   placeholder="Add any additional details..."
                 />
               ) : task.notes ? (
-                <div className="text-sm p-3 rounded-md bg-muted whitespace-pre-wrap">
+                <div className="text-sm p-3 rounded-[10px] bg-muted whitespace-pre-wrap">
                   {task.notes}
                 </div>
               ) : (
-                <div className="text-sm p-3 rounded-md bg-muted text-muted-foreground italic">
+                <div className="text-sm p-3 rounded-[10px] bg-muted text-muted-foreground italic">
                   No notes
                 </div>
               )}
@@ -473,18 +475,19 @@ export function TaskDetailModal({
         <DialogFooter>
           {isEditing ? (
             <>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
+              <Button variant="outline" className="h-9" onClick={() => setIsEditing(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button className="h-9" onClick={handleSave}>Save Changes</Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
               <Button
                 variant={task.isCompleted ? 'secondary' : 'default'}
+                className="h-9"
                 onClick={handleToggleComplete}
               >
                 {task.isCompleted ? (

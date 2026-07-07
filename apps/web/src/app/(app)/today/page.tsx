@@ -13,6 +13,7 @@ import { TaskFiltersPanel } from '@/components/filters/task-filters-panel';
 import { TaskSortMenu } from '@/components/filters/task-sort-menu';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   TaskFilters,
   TaskSort,
@@ -115,28 +116,28 @@ export default function TodayPage() {
   };
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Today</h1>
-          <p className="text-muted-foreground mt-1">
-            {format(new Date(), 'EEEE, MMMM d, yyyy')}
-          </p>
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {format(new Date(), 'EEEE · MMM d')}
+          </div>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Today</h1>
         </div>
-        <Button>
+        <Button className="h-9">
           <Plus className="mr-2 h-4 w-4" />
           Add Task
         </Button>
       </div>
 
       {/* Progress Overview */}
-      <Card>
+      <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Today's Progress</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[15px]">Today's Progress</CardTitle>
+              <CardDescription className="text-[13px]">
                 {stats.completed} of {stats.total} tasks completed
               </CardDescription>
             </div>
@@ -148,9 +149,9 @@ export default function TodayPage() {
         <CardContent>
           <Progress value={completionPercentage} className="h-3" />
           {completionPercentage === 100 && (
-            <div className="flex items-center gap-2 mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <p className="text-sm font-medium text-green-700 dark:text-green-400">
+            <div className="flex items-center gap-2 mt-4 p-4 bg-accent border border-border rounded-[10px]">
+              <CheckCircle2 className="h-5 w-5 text-[hsl(var(--success))]" />
+              <p className="text-sm font-medium text-accent-foreground">
                 Awesome! You've completed all tasks for today! 🎉
               </p>
             </div>
@@ -173,19 +174,19 @@ export default function TodayPage() {
       </div>
 
       {/* Tasks List */}
-      <Card>
+      <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Your Tasks</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[15px]">Your Tasks</CardTitle>
+              <CardDescription className="text-[13px]">
                 {filteredAndSortedTasks.length === allTasks.length
                   ? 'All tasks scheduled for today'
                   : `${filteredAndSortedTasks.length} of ${allTasks.length} tasks`}
               </CardDescription>
             </div>
             {filteredAndSortedTasks.length !== allTasks.length && (
-              <Button variant="ghost" size="sm" onClick={() => setFilters(clearAllFilters())}>
+              <Button variant="ghost" size="sm" className="h-9" onClick={() => setFilters(clearAllFilters())}>
                 Clear filters
               </Button>
             )}
@@ -208,26 +209,26 @@ export default function TodayPage() {
 
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
+              <div className="text-3xl font-bold text-[hsl(var(--success))]">{stats.completed}</div>
               <div className="text-sm text-muted-foreground mt-1">Completed</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">{stats.incomplete}</div>
+              <div className="text-3xl font-bold text-primary">{stats.incomplete}</div>
               <div className="text-sm text-muted-foreground mt-1">Remaining</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600">
+              <div className="text-3xl font-bold text-accent-foreground">
                 {filteredAndSortedTasks.reduce((acc, task) => acc + (task.durationMinutes || 0), 0)}m
               </div>
               <div className="text-sm text-muted-foreground mt-1">Total Time</div>
@@ -263,9 +264,11 @@ export default function TodayPage() {
       {/* Loading State */}
       {(tasksLoading || goalsLoading) && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading tasks...</p>
+          <div className="w-full max-w-md space-y-3 px-6">
+            <Skeleton className="h-5 w-40 mx-auto rounded-[6px]" />
+            <Skeleton className="h-16 w-full rounded-[14px]" />
+            <Skeleton className="h-16 w-full rounded-[14px]" />
+            <Skeleton className="h-16 w-full rounded-[14px]" />
           </div>
         </div>
       )}

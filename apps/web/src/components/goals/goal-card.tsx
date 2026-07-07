@@ -32,7 +32,7 @@ export const GoalCard = React.memo<GoalCardProps>(function GoalCard({ goal, comp
   if (compact) {
     return (
       <Link href={`/goals/${goal.id}`}>
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)] hover:shadow-[var(--sh-md)] transition-shadow cursor-pointer">
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -71,7 +71,7 @@ export const GoalCard = React.memo<GoalCardProps>(function GoalCard({ goal, comp
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="rounded-[14px] shadow-[var(--sh-sm)] hover:shadow-[var(--sh-md)] transition-shadow">
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">

@@ -4,6 +4,7 @@ import { NoSearchResultsEmptyState } from '@/components/empty-states';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoals, usePlans, useTasks } from '@/hooks/use-graphql';
 import { cn } from '@/lib/utils';
@@ -87,11 +88,11 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Search</h1>
-        <p className="text-muted-foreground mt-1">Search across all your tasks, goals, and plans</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Search</h1>
+        <p className="text-[13px] text-muted-foreground mt-1">Search across all your tasks, goals, and plans</p>
       </div>
 
       {/* Search Input */}
@@ -116,8 +117,10 @@ export default function SearchPage() {
       </div>
 
       {loading && searchQuery && (
-        <div className="text-center py-12 text-muted-foreground">
-          Searching...
+        <div className="space-y-2">
+          <Skeleton className="h-16 w-full rounded-[10px]" />
+          <Skeleton className="h-16 w-full rounded-[10px]" />
+          <Skeleton className="h-16 w-full rounded-[10px]" />
         </div>
       )}
 
@@ -165,7 +168,7 @@ export default function SearchPage() {
                       {filteredResults.tasks.map((task: any) => (
                         <Card
                           key={task.id}
-                          className="cursor-pointer hover:bg-accent/50 transition-colors"
+                          className="rounded-[10px] shadow-[var(--sh-sm)] cursor-pointer hover:bg-accent/50 transition-colors"
                           onClick={() => handleTaskClick(task.id)}
                         >
                           <CardContent className="p-4">
@@ -212,7 +215,7 @@ export default function SearchPage() {
                       {filteredResults.goals.map((goal: any) => (
                         <Card
                           key={goal.id}
-                          className="cursor-pointer hover:bg-accent/50 transition-colors"
+                          className="rounded-[10px] shadow-[var(--sh-sm)] cursor-pointer hover:bg-accent/50 transition-colors"
                           onClick={() => handleGoalClick(goal.id)}
                         >
                           <CardContent className="p-4">
@@ -243,7 +246,7 @@ export default function SearchPage() {
                       {filteredResults.plans.map((plan: any) => (
                         <Card
                           key={plan.id}
-                          className="cursor-pointer hover:bg-accent/50 transition-colors"
+                          className="rounded-[10px] shadow-[var(--sh-sm)] cursor-pointer hover:bg-accent/50 transition-colors"
                           onClick={() => handlePlanClick(plan.id)}
                         >
                           <CardContent className="p-4">
@@ -289,7 +292,7 @@ export default function SearchPage() {
                 filteredResults.tasks.map((task: any) => (
                   <Card
                     key={task.id}
-                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    className="rounded-[10px] shadow-[var(--sh-sm)] cursor-pointer hover:bg-accent/50 transition-colors"
                     onClick={() => handleTaskClick(task.id)}
                   >
                     <CardContent className="p-4">
@@ -335,7 +338,7 @@ export default function SearchPage() {
                 filteredResults.goals.map((goal: any) => (
                   <Card
                     key={goal.id}
-                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    className="rounded-[10px] shadow-[var(--sh-sm)] cursor-pointer hover:bg-accent/50 transition-colors"
                     onClick={() => handleGoalClick(goal.id)}
                   >
                     <CardContent className="p-4">
@@ -365,7 +368,7 @@ export default function SearchPage() {
                 filteredResults.plans.map((plan: any) => (
                   <Card
                     key={plan.id}
-                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    className="rounded-[10px] shadow-[var(--sh-sm)] cursor-pointer hover:bg-accent/50 transition-colors"
                     onClick={() => handlePlanClick(plan.id)}
                   >
                     <CardContent className="p-4">
@@ -405,9 +408,9 @@ export default function SearchPage() {
 
       {/* Empty State - No Search Query */}
       {!searchQuery && !loading && (
-        <div className="text-center py-16 text-muted-foreground">
-          <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Start typing to search across your tasks, goals, and plans</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center rounded-[14px] border border-border bg-accent">
+          <Search className="h-12 w-12 text-accent-foreground/60 mb-4" />
+          <p className="text-[13px] text-muted-foreground">Start typing to search across your tasks, goals, and plans</p>
         </div>
       )}
     </div>

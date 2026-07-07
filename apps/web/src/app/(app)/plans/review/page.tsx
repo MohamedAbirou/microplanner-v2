@@ -144,17 +144,17 @@ export default function PlanReviewPage() {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => router.back()}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Review Your Plan</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="text-2xl font-semibold tracking-tight">Review Your Plan</h1>
+              <p className="text-[13px] text-muted-foreground mt-1">
                 Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
               </p>
             </div>
@@ -162,11 +162,11 @@ export default function PlanReviewPage() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{reviewPlan.status}</Badge>
-          <Button variant="outline" onClick={handleRegenerate}>
+          <Button variant="outline" className="h-9" onClick={handleRegenerate}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Regenerate
           </Button>
-          <Button onClick={handleAcceptPlan} disabled={isAccepting || reviewPlan.status !== 'DRAFT'}>
+          <Button className="h-9" onClick={handleAcceptPlan} disabled={isAccepting || reviewPlan.status !== 'DRAFT'}>
             <Check className="mr-2 h-4 w-4" />
             {isAccepting ? 'Accepting...' : 'Accept Plan'}
           </Button>
@@ -188,10 +188,10 @@ export default function PlanReviewPage() {
 
         {/* Calendar View */}
         <TabsContent value="calendar" className="mt-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
-              <CardTitle>Weekly Schedule</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[15px]">Weekly Schedule</CardTitle>
+              <CardDescription className="text-[13px]">
                 {planTasks.length} tasks scheduled across{' '}
                 {new Set(planTasks.map((t: any) => t.scheduledDate)).size} days
               </CardDescription>
@@ -212,7 +212,7 @@ export default function PlanReviewPage() {
         <TabsContent value="list" className="mt-6">
           <div className="space-y-4">
             {planTasks.length === 0 ? (
-              <Card>
+              <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
                 <CardContent className="py-12 text-center text-muted-foreground">
                   No tasks in this plan yet.
                 </CardContent>
@@ -226,10 +226,10 @@ export default function PlanReviewPage() {
                   return acc;
                 }, {} as Record<string, any[]>) as Record<string, any[]>
               ).map(([day, dayTasks]) => (
-                <Card key={day}>
+                <Card key={day} className="rounded-[14px] shadow-[var(--sh-sm)]">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{day}</CardTitle>
+                      <CardTitle className="text-[15px]">{day}</CardTitle>
                       <Badge variant="secondary">
                         {dayTasks.length} task{dayTasks.length !== 1 ? 's' : ''}
                       </Badge>
@@ -242,7 +242,7 @@ export default function PlanReviewPage() {
                         .map((task: any) => (
                           <div
                             key={task.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                            className="flex items-center gap-3 p-3 rounded-[10px] border border-border hover:bg-accent/50 transition-colors"
                           >
                             <div
                               className="w-1 h-12 rounded-full flex-shrink-0"

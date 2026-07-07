@@ -38,8 +38,8 @@ export function CalendarTaskBlock({
   return (
     <Card
       className={cn(
-        'h-full overflow-hidden border-l-4 transition-shadow flex flex-col',
-        'hover:shadow-md cursor-pointer',
+        'h-full overflow-hidden rounded-[10px] border-l-4 shadow-[var(--sh-sm)] transition-shadow flex flex-col',
+        'hover:shadow-[var(--sh-md)] cursor-pointer',
         task.isCompleted && 'opacity-60',
         isDragging && 'shadow-xl ring-2 ring-primary/40 cursor-grabbing',
         isCompact ? 'p-1.5' : 'p-2',

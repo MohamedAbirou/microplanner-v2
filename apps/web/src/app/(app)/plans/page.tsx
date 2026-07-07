@@ -63,14 +63,14 @@ export default function PlansPage() {
 
   if (!activePlan && !draftPlan) {
     return (
-      <div className="space-y-6 p-6 max-w-7xl mx-auto">
+      <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Weekly Plans</h1>
-            <p className="text-muted-foreground mt-1">AI-generated weekly schedules</p>
+            <h1 className="text-2xl font-semibold tracking-tight">Weekly Plans</h1>
+            <p className="text-[13px] text-muted-foreground mt-1">AI-generated weekly schedules</p>
           </div>
         </div>
-        <Card>
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardContent className="pt-6 text-center py-12">
             <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h3 className="text-lg font-semibold mb-2">No Active Plan</h3>
@@ -78,7 +78,7 @@ export default function PlansPage() {
               Generate your first AI-powered weekly plan
             </p>
             <Link href="/plans/generate">
-              <Button>
+              <Button className="h-9">
                 <Sparkles className="mr-2 h-4 w-4" />
                 Generate New Plan
               </Button>
@@ -90,15 +90,15 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Weekly Plans</h1>
-          <p className="text-muted-foreground mt-1">AI-generated weekly schedules</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Weekly Plans</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">AI-generated weekly schedules</p>
         </div>
         <Link href="/plans/generate">
-          <Button>
+          <Button className="h-9">
             <Sparkles className="mr-2 h-4 w-4" />
             Generate New Plan
           </Button>
@@ -106,16 +106,16 @@ export default function PlansPage() {
       </div>
 
       {draftPlan && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
+        <Card className="rounded-[14px] shadow-[var(--sh-sm)] border-amber-500/30 bg-amber-500/5">
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
               <div>
-                <CardTitle>Draft Plan Ready for Review</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-[15px]">Draft Plan Ready for Review</CardTitle>
+                <CardDescription className="text-[13px]">
                   {draftPlan.title} — accept it to add tasks to your calendar
                 </CardDescription>
               </div>
-              <Button onClick={() => router.push(`/plans/review?id=${draftPlan.id}`)}>
+              <Button className="h-9" onClick={() => router.push(`/plans/review?id=${draftPlan.id}`)}>
                 <Eye className="mr-2 h-4 w-4" />
                 Review Plan
               </Button>
@@ -125,15 +125,15 @@ export default function PlansPage() {
       )}
 
       {activePlan && (
-      <Card className="border-primary/20 bg-primary/5">
+      <Card className="rounded-[14px] shadow-[var(--sh-sm)] border-primary/20 bg-primary/5">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <CardTitle>Active Plan</CardTitle>
+                <CardTitle className="text-[15px]">Active Plan</CardTitle>
                 <Badge variant="default">{activePlan.status}</Badge>
               </div>
-              <CardDescription>
+              <CardDescription className="text-[13px]">
                 {format(new Date(activePlan.weekStartDate), 'MMM d')} -{' '}
                 {format(new Date(activePlan.weekEndDate), 'MMM d, yyyy')}
               </CardDescription>
@@ -142,6 +142,7 @@ export default function PlansPage() {
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9"
                 onClick={() => router.push(`/plans/review?id=${activePlan.id}`)}
               >
                 <Eye className="mr-2 h-4 w-4" />
@@ -150,6 +151,7 @@ export default function PlansPage() {
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9"
                 onClick={() => router.push('/plans/generate')}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
@@ -221,7 +223,7 @@ export default function PlansPage() {
               {(activePlan.goals ?? []).map((goal: any) => (
                 <div
                   key={goal.id}
-                  className="flex items-center justify-between p-3 rounded-lg border"
+                  className="flex items-center justify-between p-3 rounded-[10px] border border-border"
                   style={{ borderLeftWidth: '4px', borderLeftColor: goal.color }}
                 >
                   <div className="flex items-center gap-2">
@@ -252,10 +254,10 @@ export default function PlansPage() {
 
         {/* History Tab */}
         <TabsContent value="history" className="mt-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
-              <CardTitle>Past Plans</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[15px]">Past Plans</CardTitle>
+              <CardDescription className="text-[13px]">
                 Review your previous weekly plans and performance
               </CardDescription>
             </CardHeader>
@@ -264,7 +266,7 @@ export default function PlansPage() {
                 {planHistory.map((plan: any) => (
                   <div
                     key={plan.id}
-                    className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-4 rounded-[10px] border border-border hover:bg-accent/50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/plans/${plan.id}`)}
                   >
                     <div className="flex items-start gap-4 flex-1">
@@ -308,7 +310,7 @@ export default function PlansPage() {
         {/* Stats Tab */}
         <TabsContent value="stats" className="mt-6">
           <div className="grid gap-4 md:grid-cols-3">
-            <Card>
+            <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">Average Completion</CardTitle>
               </CardHeader>
@@ -320,7 +322,7 @@ export default function PlansPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">Average Quality</CardTitle>
               </CardHeader>
@@ -330,7 +332,7 @@ export default function PlansPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">Total Plans</CardTitle>
               </CardHeader>

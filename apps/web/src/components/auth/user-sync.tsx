@@ -1,13 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 
-/**
- * Mutation to sync/create user in database
- */
 const SYNC_USER = gql`
   mutation SyncUser($input: SyncUserInput!) {
     syncUser(input: $input) {
@@ -20,23 +17,33 @@ const SYNC_USER = gql`
   }
 `;
 
+const SYNC_SESSION_PREFIX = 'mp_user_synced:';
+
 /**
- * UserSync Component - GraphQL Version
- *
- * Syncs authenticated Clerk user to database via GraphQL
- * This ensures the user exists in our DB with proper metadata
+ * Ensures the Clerk user exists in our database once per browser session.
+ * Intentionally does NOT retry on failure — JWT auth + webhooks create users
+ * on the first successful API call anyway; hammering syncUser caused 429s.
  */
 export function UserSync() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
   const [syncUser] = useMutation(SYNC_USER);
+  const attemptedRef = useRef(false);
 
   useEffect(() => {
-    async function syncUserToDatabase() {
-      if (!isSignedIn || !user) {
-        return;
-      }
+    if (!isLoaded || !isSignedIn || !user?.id || attemptedRef.current) {
+      return;
+    }
 
+    const sessionKey = `${SYNC_SESSION_PREFIX}${user.id}`;
+    if (typeof window !== 'undefined' && sessionStorage.getItem(sessionKey)) {
+      attemptedRef.current = true;
+      return;
+    }
+
+    attemptedRef.current = true;
+
+    void (async () => {
       try {
         await syncUser({
           variables: {
@@ -48,15 +55,13 @@ export function UserSync() {
             },
           },
         });
-
-        console.log('[UserSync] User synced to database via GraphQL');
+        sessionStorage.setItem(sessionKey, '1');
       } catch (error) {
-        console.error('[UserSync] Failed to sync user:', error);
+        // One attempt per session — avoid retry storms when DB is out of sync.
+        console.warn('[UserSync] Could not sync user (will retry next session):', error);
       }
-    }
-
-    syncUserToDatabase();
-  }, [isSignedIn, user, syncUser]);
+    })();
+  }, [isLoaded, isSignedIn, user?.id, syncUser]);
 
   return null;
 }

@@ -18,6 +18,7 @@ import {
   Laptop,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -276,12 +277,25 @@ export default function SettingsPage() {
     }
   };
 
+  if (settingsLoading) {
+    return (
+      <div className="space-y-6 p-6 max-w-5xl mx-auto">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-32 rounded-[6px]" />
+          <Skeleton className="h-4 w-64 rounded-[6px]" />
+        </div>
+        <Skeleton className="h-10 w-full rounded-[10px]" />
+        <Skeleton className="h-64 rounded-[14px]" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 p-6 max-w-5xl mx-auto">
+    <div className="space-y-6 p-6 max-w-5xl mx-auto mp-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <p className="text-[13px] text-muted-foreground mt-1">Manage your account and preferences</p>
       </div>
 
       {/* Settings Tabs */}
@@ -315,7 +329,7 @@ export default function SettingsPage() {
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="mt-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
               <CardDescription>
@@ -404,7 +418,7 @@ export default function SettingsPage() {
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="mt-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
               <CardDescription>
@@ -495,7 +509,7 @@ export default function SettingsPage() {
 
         {/* Integrations Tab */}
         <TabsContent value="integrations" className="mt-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Calendar Integrations</CardTitle>
               <CardDescription>
@@ -503,7 +517,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center justify-between p-4 border border-border rounded-[10px]">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
                     G
@@ -527,7 +541,7 @@ export default function SettingsPage() {
 
         {/* Appearance Tab */}
         <TabsContent value="appearance" className="mt-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Appearance</CardTitle>
               <CardDescription>
@@ -570,7 +584,7 @@ export default function SettingsPage() {
 
         {/* Billing Tab */}
         <TabsContent value="billing" className="mt-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Billing & Subscription</CardTitle>
               <CardDescription>
@@ -626,7 +640,7 @@ export default function SettingsPage() {
 
         {/* Privacy Tab */}
         <TabsContent value="privacy" className="mt-6">
-          <Card>
+          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Privacy & Data</CardTitle>
               <CardDescription>
@@ -642,7 +656,7 @@ export default function SettingsPage() {
 
                 <div className="space-y-4">
                   {/* Export All Data */}
-                  <div className="border rounded-lg p-4">
+                  <div className="border border-border rounded-[10px] p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <h5 className="font-medium">Complete Backup</h5>
@@ -671,7 +685,7 @@ export default function SettingsPage() {
 
                   {/* Export Individual Data Types */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="border rounded-lg p-3">
+                    <div className="border border-border rounded-[10px] p-3">
                       <h6 className="font-medium text-sm mb-2">Tasks</h6>
                       <div className="flex gap-1">
                         <Button
@@ -693,7 +707,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="border rounded-lg p-3">
+                    <div className="border border-border rounded-[10px] p-3">
                       <h6 className="font-medium text-sm mb-2">Goals</h6>
                       <div className="flex gap-1">
                         <Button
@@ -715,7 +729,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="border rounded-lg p-3">
+                    <div className="border border-border rounded-[10px] p-3">
                       <h6 className="font-medium text-sm mb-2">Plans</h6>
                       <div className="flex gap-1">
                         <Button

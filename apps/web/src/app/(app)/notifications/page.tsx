@@ -52,27 +52,27 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="container max-w-4xl py-8">
+    <div className="container max-w-4xl py-8 mp-fade-in">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h1 className="text-3xl font-bold">Notifications</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
             {unreadCount > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-[13px] text-muted-foreground mt-1">
                 {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
               </p>
             )}
           </div>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <Button variant="outline" size="sm" onClick={markAllAsRead}>
+              <Button variant="outline" size="sm" className="h-9" onClick={markAllAsRead}>
                 <CheckCheck className="h-4 w-4 mr-2" />
                 Mark all read
               </Button>
             )}
             {notifications.length > 0 && (
-              <Button variant="outline" size="sm" onClick={clearAll}>
+              <Button variant="outline" size="sm" className="h-9" onClick={clearAll}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Clear all
               </Button>
@@ -103,12 +103,12 @@ export default function NotificationsPage() {
 
       {/* Notifications List */}
       {filteredNotifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center border rounded-lg">
-          <Bell className="h-16 w-16 text-muted-foreground/50 mb-4" />
-          <h3 className="text-lg font-medium mb-2">
+        <div className="flex flex-col items-center justify-center py-16 text-center rounded-[14px] border border-border bg-accent">
+          <Bell className="h-12 w-12 text-accent-foreground/60 mb-4" />
+          <h3 className="text-[15px] font-semibold mb-1.5 text-accent-foreground">
             {filter === 'unread' ? 'No unread notifications' : 'No notifications'}
           </h3>
-          <p className="text-sm text-muted-foreground max-w-md">
+          <p className="text-[13px] text-muted-foreground max-w-md">
             {filter === 'unread'
               ? "You're all caught up! Check back later for new updates."
               : "You don't have any notifications yet. We'll notify you when something important happens."}
@@ -120,7 +120,7 @@ export default function NotificationsPage() {
             <React.Fragment key={notification.id}>
               <div
                 className={cn(
-                  'relative group rounded-lg p-4 border hover:bg-accent/50 transition-colors',
+                  'relative group rounded-[10px] p-4 border border-border hover:bg-accent/50 transition-colors',
                   !notification.read && 'bg-primary/5 border-primary/20'
                 )}
               >

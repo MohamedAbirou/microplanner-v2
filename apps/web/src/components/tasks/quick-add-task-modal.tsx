@@ -243,10 +243,10 @@ export function QuickAddTaskModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] rounded-[14px]">
         <DialogHeader>
-          <DialogTitle>Quick Add Task</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl">Quick Add Task</DialogTitle>
+          <DialogDescription className="text-[13px]">
             Create a new task and schedule it on your calendar
           </DialogDescription>
         </DialogHeader>
@@ -456,10 +456,10 @@ export function QuickAddTaskModal({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!formData.title.trim() || isSubmitting}>
+            <Button type="submit" className="h-9" disabled={!formData.title.trim() || isSubmitting}>
               {isSubmitting ? 'Creating...' : 'Create Task'}
             </Button>
           </DialogFooter>

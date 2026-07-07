@@ -5,6 +5,7 @@ import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import { useTasks, useGoals } from '@/hooks/use-graphql';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
+import { Skeleton } from '@/components/ui/skeleton';
 import { endOfMonth, startOfMonth } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
@@ -49,14 +50,15 @@ export default function MonthPage() {
 
   if (loading) {
     return (
-      <div className="h-[calc(100vh-3.5rem)] p-6 flex items-center justify-center">
-        <p className="text-muted-foreground">Loading month view...</p>
+      <div className="h-[calc(100vh-3.5rem)] p-6 space-y-3">
+        <Skeleton className="h-8 w-48 rounded-[10px]" />
+        <Skeleton className="h-[calc(100%-2.75rem)] w-full rounded-[14px]" />
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] p-6">
+    <div className="h-[calc(100vh-3.5rem)] p-6 mp-fade-in">
       <MonthCalendar
         tasks={tasks}
         onDateClick={handleDateClick}

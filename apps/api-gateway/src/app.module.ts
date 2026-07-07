@@ -114,7 +114,7 @@ function getGraphQLErrorCode(statusCode: number): string {
       useFactory: (_config: ConfigService) => [
         {
           ttl: 60000, // 1 minute
-          limit: 100, // requests per ttl
+          limit: 600, // generous for SPA navigation bursts (guard not global yet)
         },
       ],
     }),

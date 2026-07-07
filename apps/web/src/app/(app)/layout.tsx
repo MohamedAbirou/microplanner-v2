@@ -12,8 +12,11 @@ import { useCreateTask, useGoals } from '@/hooks/use-graphql';
 import { useKeyboardShortcuts, useGlobalKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useQuery } from '@apollo/client';
 import { useUser } from '@clerk/nextjs';
+import { Geist } from 'next/font/google';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
+const geist = Geist({ subsets: ['latin'], variable: '--font-app-sans' });
 
 export default function AppLayout({
   children,
@@ -59,6 +62,8 @@ export default function AppLayout({
     {
       skip: !isLoaded || !user,
       errorPolicy: 'all',
+      fetchPolicy: 'cache-first',
+      nextFetchPolicy: 'cache-first',
     },
   );
 
@@ -107,7 +112,7 @@ export default function AppLayout({
   return (
     <TierProvider>
       <ErrorBoundaryWrapper>
-        <div className="min-h-screen bg-background">
+        <div className={`mp-app ${geist.variable} min-h-screen bg-background`}>
           {/* Command Palette */}
           <CommandPalette
             open={commandPaletteOpen}
@@ -160,9 +165,9 @@ export default function AppLayout({
 
           {/* Main Content */}
           <main
-            className="pt-16 transition-all duration-300"
+            className="pt-14 transition-all duration-300"
             style={{
-              marginLeft: isMobile ? '0px' : sidebarCollapsed ? '70px' : '260px',
+              marginLeft: isMobile ? '0px' : sidebarCollapsed ? '72px' : '236px',
             }}
           >
             {children}

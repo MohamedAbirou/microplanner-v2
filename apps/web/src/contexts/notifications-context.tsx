@@ -53,9 +53,10 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   // errorPolicy 'all' keeps the app working when unauthenticated or offline.
   const { data } = useQuery(GET_NOTIFICATIONS, {
     variables: { unreadOnly: false },
-    pollInterval: 60_000,
+    pollInterval: 5 * 60_000,
     errorPolicy: 'all',
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
     skip: !isLoaded || !isSignedIn,
   });
 

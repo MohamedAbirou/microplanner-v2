@@ -34,7 +34,8 @@ function mutationToastHandlers(
 export function useTasks(filter?: any, sort?: any) {
   const { data, loading, error, refetch } = useQuery(operations.GET_TASKS, {
     variables: { filter, sort },
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
   return {
@@ -296,7 +297,10 @@ export function useLogTime() {
 // ============================================================================
 
 export function useGoals() {
-  const { data, loading, error, refetch } = useQuery(operations.GET_GOALS);
+  const { data, loading, error, refetch } = useQuery(operations.GET_GOALS, {
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
 
   return {
     goals: data?.goals || [],

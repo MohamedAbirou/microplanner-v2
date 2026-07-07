@@ -56,15 +56,11 @@ export default function TasksPage() {
   }, [allTasks, filters, sort]);
 
   // Set available task IDs for selection
-  const taskSelection = useTaskSelection({
-    onSelectionChange: (ids) => {
-      console.log('Selected tasks:', ids);
-    },
-  });
+  const taskSelection = useTaskSelection();
 
   React.useEffect(() => {
     taskSelection.setAvailableTaskIds(filteredAndSortedTasks.map((t) => t.id));
-  }, [filteredAndSortedTasks, taskSelection]);
+  }, [filteredAndSortedTasks, taskSelection.setAvailableTaskIds]);
 
   // Calculate statistics
   const stats = React.useMemo(() => {
@@ -141,28 +137,28 @@ export default function TasksPage() {
   );
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">All Tasks</h1>
-          <p className="text-muted-foreground mt-1">
-            {format(new Date(), 'EEEE, MMMM d, yyyy')}
-          </p>
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {format(new Date(), 'EEEE · MMM d')}
+          </div>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">All Tasks</h1>
         </div>
-        <Button>
+        <Button className="h-9">
           <Plus className="mr-2 h-4 w-4" />
           Add Task
         </Button>
       </div>
 
       {/* Progress Overview */}
-      <Card>
+      <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Overall Progress</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[15px]">Overall Progress</CardTitle>
+              <CardDescription className="text-[13px]">
                 {stats.completed} of {stats.total} tasks completed
               </CardDescription>
             </div>
@@ -185,10 +181,11 @@ export default function TasksPage() {
           <TaskSortMenu sort={sort} onSortChange={setSort} />
 
           {!isMobile && (
-            <div className="flex items-center border rounded-lg">
+            <div className="flex items-center border border-border rounded-lg h-9 overflow-hidden">
               <Button
                 variant={view === 'grid' ? 'default' : 'ghost'}
                 size="sm"
+                className="h-9 rounded-none"
                 onClick={() => setView('grid')}
               >
                 <Grid className="h-4 w-4" />
@@ -196,6 +193,7 @@ export default function TasksPage() {
               <Button
                 variant={view === 'list' ? 'default' : 'ghost'}
                 size="sm"
+                className="h-9 rounded-none"
                 onClick={() => setView('list')}
               >
                 <List className="h-4 w-4" />
@@ -206,12 +204,12 @@ export default function TasksPage() {
       </div>
 
       {/* Tasks Grid/List */}
-      <Card>
+      <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Your Tasks</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[15px]">Your Tasks</CardTitle>
+              <CardDescription className="text-[13px]">
                 {filteredAndSortedTasks.length === allTasks.length
                   ? 'All tasks'
                   : `${filteredAndSortedTasks.length} of ${allTasks.length} tasks`}

@@ -143,29 +143,29 @@ export function WeekCalendarDnd({
   return (
     <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className={cn('flex flex-col h-full', isDragging && 'select-none')}>
-        <div className="flex items-center justify-between mb-4 pb-4 border-b">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold">
+        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold tracking-tight">
               {format(weekStart, 'MMM d')} - {format(addDays(weekStart, 6), 'MMM d, yyyy')}
             </h2>
-            <Button variant="outline" size="sm" onClick={handleToday}>
+            <Button variant="outline" size="sm" className="h-9" onClick={handleToday}>
               Today
             </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={handlePreviousWeek}>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handlePreviousWeek}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleNextWeek}>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleNextWeek}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto border rounded-lg">
+        <div className="mp-scroll flex-1 overflow-auto rounded-[14px] border border-border shadow-[var(--sh-sm)]">
           <div className="min-w-[800px] overflow-visible">
-            <div className="grid grid-cols-8 border-b bg-muted/50 sticky top-0 z-20">
-              <div className="p-2 border-r" />
+            <div className="grid grid-cols-8 border-b border-border bg-muted/50 sticky top-0 z-20">
+              <div className="p-2 border-r border-border" />
               {weekDays.map((day) => {
                 const isToday = isSameDay(day, new Date());
                 const dayTasks = tasksByDay[format(day, 'yyyy-MM-dd')] || [];
@@ -174,9 +174,9 @@ export function WeekCalendarDnd({
                 return (
                   <div
                     key={day.toISOString()}
-                    className={cn('p-2 text-center border-r', isToday && 'bg-primary/10')}
+                    className={cn('p-2 text-center border-r border-border', isToday && 'bg-primary/10')}
                   >
-                    <div className="text-xs text-muted-foreground">{format(day, 'EEE')}</div>
+                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{format(day, 'EEE')}</div>
                     <div className={cn('text-lg font-semibold', isToday && 'text-primary')}>
                       {format(day, 'd')}
                     </div>
@@ -191,11 +191,11 @@ export function WeekCalendarDnd({
             </div>
 
             <div className="grid grid-cols-8 overflow-visible">
-              <div className="border-r">
+              <div className="border-r border-border">
                 {CALENDAR_HOURS.map((hour) => (
                   <div
                     key={hour}
-                    className="px-2 py-1 text-xs text-muted-foreground border-b text-right"
+                    className="px-2 py-1 font-mono text-xs text-muted-foreground border-b border-border text-right"
                     style={{ height: CALENDAR_SLOT_HEIGHT_PX }}
                   >
                     {formatHourLabel(hour)}
@@ -211,7 +211,7 @@ export function WeekCalendarDnd({
                 return (
                   <div
                     key={day.toISOString()}
-                    className={cn('border-r overflow-visible', isToday && 'bg-primary/5')}
+                    className={cn('border-r border-border overflow-visible', isToday && 'bg-primary/5')}
                   >
                     {CALENDAR_HOURS.map((hour) => {
                       const slotId = `slot-${dayKey}-${hour}`;
@@ -226,7 +226,7 @@ export function WeekCalendarDnd({
                               ref={provided.innerRef}
                               {...provided.droppableProps}
                               className={cn(
-                                'border-b transition-colors relative overflow-visible',
+                                'border-b border-border transition-colors relative overflow-visible',
                                 snapshot.isDraggingOver && 'bg-primary/10 ring-2 ring-primary ring-inset',
                                 !snapshot.isDraggingOver && 'hover:bg-accent/30'
                               )}

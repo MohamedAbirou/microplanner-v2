@@ -22,19 +22,19 @@ export default function BillingPage() {
   const { createPortalSession, loading: portalLoading } = useCreateBillingPortalSession();
 
   return (
-    <div className="space-y-6 p-6 max-w-2xl mx-auto">
+    <div className="space-y-6 p-6 max-w-2xl mx-auto mp-fade-in">
       <div>
-        <h1 className="text-3xl font-bold">Billing</h1>
-        <p className="text-muted-foreground mt-1">Manage your subscription and upgrades</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Billing</h1>
+        <p className="text-[13px] text-muted-foreground mt-1">Manage your subscription and upgrades</p>
       </div>
 
-      <Card>
+      <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="text-[15px] flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
             Current plan
           </CardTitle>
-          <CardDescription>Your active MicroPlanner subscription</CardDescription>
+          <CardDescription className="text-[13px]">Your active MicroPlanner subscription</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">

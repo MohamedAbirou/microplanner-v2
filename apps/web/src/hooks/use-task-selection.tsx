@@ -19,9 +19,12 @@ export function useTaskSelection(options: UseTaskSelectionOptions = {}) {
   const selectedCount = selectedTaskIds.size;
   const isAnySelected = selectedCount > 0;
 
+  const onSelectionChangeRef = React.useRef(options.onSelectionChange);
+  onSelectionChangeRef.current = options.onSelectionChange;
+
   React.useEffect(() => {
-    options.onSelectionChange?.(Array.from(selectedTaskIds));
-  }, [selectedTaskIds, options]);
+    onSelectionChangeRef.current?.(Array.from(selectedTaskIds));
+  }, [selectedTaskIds]);
 
   const setAvailableTaskIds = React.useCallback((taskIds: string[]) => {
     setAllTaskIds(taskIds);

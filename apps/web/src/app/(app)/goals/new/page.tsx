@@ -50,10 +50,10 @@ export default function NewGoalPage() {
 
   return (
     <>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-6 max-w-7xl mx-auto space-y-6 mp-fade-in">
         {/* Back Button */}
         <Link href="/goals">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="h-9">
             <ChevronLeft className="mr-2 h-4 w-4" />
             Back to Goals
           </Button>
@@ -61,8 +61,8 @@ export default function NewGoalPage() {
 
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">Create New Goal</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Create New Goal</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
             Define what you want to achieve and how often you want to work on it
           </p>
         </div>

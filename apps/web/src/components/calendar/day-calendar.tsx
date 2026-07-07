@@ -75,23 +75,23 @@ export function DayCalendar({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="mb-4 pb-4 border-b space-y-4">
+      <div className="mb-4 pb-4 border-b border-border space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold tracking-tight">
               {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </h2>
             {!isToday && (
-              <Button variant="outline" size="sm" onClick={handleToday}>
+              <Button variant="outline" size="sm" className="h-9" onClick={handleToday}>
                 Today
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={handlePreviousDay}>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handlePreviousDay}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleNextDay}>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleNextDay}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -101,14 +101,14 @@ export function DayCalendar({
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-[13px] text-muted-foreground">
                   {completedTasks} of {totalTasks} tasks completed
                 </span>
-                <span className="text-sm font-medium">{completionPercentage}%</span>
+                <span className="text-[13px] font-medium">{completionPercentage}%</span>
               </div>
               <Progress value={completionPercentage} className="h-2" />
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span>{totalMinutes}m total</span>
             </div>
@@ -116,13 +116,13 @@ export function DayCalendar({
         )}
       </div>
 
-      <div className="flex-1 overflow-auto border rounded-lg">
+      <div className="flex-1 overflow-auto rounded-[14px] border border-border shadow-[var(--sh-sm)]">
         <div className="flex">
-          <div className="w-20 border-r bg-muted/50 sticky left-0 z-10">
+          <div className="w-20 border-r border-border bg-muted/50 sticky left-0 z-10">
             {CALENDAR_HOURS.map((hour) => (
               <div
                 key={hour}
-                className="px-2 py-2 text-sm text-muted-foreground border-b text-right"
+                className="px-2 py-2 font-mono text-xs text-muted-foreground border-b border-border text-right"
                 style={{ height: CALENDAR_SLOT_HEIGHT_PX }}
               >
                 {formatHourLabel(hour)}
@@ -137,7 +137,7 @@ export function DayCalendar({
             {CALENDAR_HOURS.map((hour) => (
               <div
                 key={hour}
-                className="border-b absolute w-full"
+                className="border-b border-border absolute w-full"
                 style={{
                   top: (hour - CALENDAR_HOUR_START) * CALENDAR_SLOT_HEIGHT_PX,
                   height: CALENDAR_SLOT_HEIGHT_PX,

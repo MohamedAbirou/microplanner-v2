@@ -42,14 +42,14 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 border-b bg-background/80">
-      <div className="flex h-full items-center justify-between px-6">
+    <header className="fixed top-0 left-0 right-0 h-14 border-b border-border bg-card/80 backdrop-blur-sm">
+      <div className="flex h-full items-center justify-between px-5">
         {/* Left: Menu (mobile) */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden hover:bg-accent/50"
+            className="md:hidden hover:bg-accent"
             onClick={onMenuClick}
           >
             <Menu className="h-5 w-5" />
@@ -57,16 +57,16 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-2.5 ml-auto">
           {/* Quick Add Task */}
           <Button
             variant="default"
             size="sm"
             onClick={onQuickAddClick}
-            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-sm"
+            className="h-9 shadow-sm"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Add Task</span>
+            <Plus className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Add task</span>
           </Button>
 
           {/* Command Palette Trigger */}
@@ -74,10 +74,10 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
             variant="outline"
             size="sm"
             onClick={onCommandClick}
-            className="hidden md:flex border-muted-foreground/20 hover:border-primary/50 hover:bg-accent/50"
+            className="hidden md:flex h-9 border-border hover:bg-accent"
           >
-            <Command className="h-4 w-4 mr-2" />
-            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+            <Command className="h-4 w-4 mr-1.5" />
+            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium">
               <span className="text-xs">⌘</span>K
             </kbd>
           </Button>
@@ -88,10 +88,10 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
           {/* User Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:ring-2 hover:ring-primary/20 transition-all">
-                <Avatar className="h-10 w-10 border-2 border-primary/20">
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:bg-accent">
+                <Avatar className="h-9 w-9 border border-border">
                   <AvatarImage src={user?.imageUrl} alt={user?.fullName || ''} />
-                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10">
+                  <AvatarFallback className="bg-accent text-accent-foreground text-xs font-semibold">
                     {getInitials(user?.fullName || 'U')}
                   </AvatarFallback>
                 </Avatar>

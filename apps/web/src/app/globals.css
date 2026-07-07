@@ -16,86 +16,65 @@
   }
 }
 
+/* App shell font — scoped to .mp-app via next/font in app/(app)/layout.tsx, falls back to the marketing system stack outside it */
+.mp-app {
+  font-family: var(--font-app-sans, var(--font-sans));
+}
+
 @layer base {
   :root {
-    /* Base Colors */
-    --background: 204 20% 98%;
-    --foreground: 204 19% 29%;
-
-    /* Card */
+    --background: 60 9% 98%;      /* #FBFBFA */
+    --foreground: 160 6% 11%;     /* #1C1F1E */
     --card: 0 0% 100%;
-    --card-foreground: 204 19% 29%;
-
-    /* Popover */
+    --card-foreground: 160 6% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 204 19% 29%;
-
-    /* Primary — teal #0b6e63 */
-    --primary: 174 82% 24%;
+    --popover-foreground: 160 6% 11%;
+    --muted: 90 8% 95%;           /* #F2F3F1 */
+    --muted-foreground: 160 5% 37%;
+    --border: 100 7% 91%;
+    --input: 100 7% 91%;
+    --primary: 174 82% 24%;       /* deep teal #0B6E63 */
     --primary-foreground: 0 0% 100%;
-
-    /* Secondary — sage #3c7a5e */
-    --secondary: 152 34% 36%;
-    --secondary-foreground: 0 0% 100%;
-
-    /* Muted */
-    --muted: 204 16% 95%;
-    --muted-foreground: 204 12% 45%;
-
-    /* Accent */
-    --accent: 174 30% 95%;
-    --accent-foreground: 204 19% 29%;
-
-    /* Destructive */
-    --destructive: 0 84% 60%;
+    --secondary: 90 8% 95%;
+    --secondary-foreground: 160 6% 11%;
+    --accent: 168 34% 92%;        /* teal tint #E4F1EE */
+    --accent-foreground: 174 78% 20%;
+    --success: 147 46% 33%;
+    --warning: 33 89% 37%;
+    --destructive: 4 55% 51%;
     --destructive-foreground: 0 0% 100%;
-
-    /* Border */
-    --border: 204 14% 88%;
-    --input: 204 14% 88%;
     --ring: 174 82% 24%;
-
-    /* Radius */
-    --radius: 0.5rem;
+    --radius: 0.625rem;           /* 10px */
+    --sh-sm: 0 1px 2px rgba(16, 24, 20, 0.06);
+    --sh-md: 0 6px 24px -8px rgba(16, 24, 20, 0.14);
+    --sh-lg: 0 18px 48px -16px rgba(16, 24, 20, 0.22);
   }
-
+  
   .dark {
-    /* Base Colors — slate-tinted dark (#3b4c57 family) */
-    --background: 204 22% 6%;
-    --foreground: 204 10% 96%;
-
-    /* Card — slate surface */
-    --card: 204 19% 12%;
-    --card-foreground: 204 10% 96%;
-
-    /* Popover */
-    --popover: 204 19% 10%;
-    --popover-foreground: 204 10% 96%;
-
-    /* Primary — teal, slightly lifted for dark mode */
-    --primary: 174 70% 38%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Secondary — sage */
-    --secondary: 152 34% 36%;
-    --secondary-foreground: 0 0% 100%;
-
-    /* Muted */
-    --muted: 204 15% 18%;
-    --muted-foreground: 204 10% 62%;
-
-    /* Accent */
-    --accent: 204 15% 18%;
-    --accent-foreground: 204 10% 96%;
-
-    /* Destructive */
-    --destructive: 0 84% 60%;
+    --background: 165 12% 7%;     /* #0F1413 */
+    --foreground: 150 4% 91%;
+    --card: 160 10% 10%;
+    --card-foreground: 150 4% 91%;
+    --popover: 160 10% 10%;
+    --popover-foreground: 150 4% 91%;
+    --muted: 156 8% 15%;
+    --muted-foreground: 156 5% 62%;
+    --border: 156 8% 18%;
+    --input: 156 8% 18%;
+    --primary: 174 62% 40%;       /* #26A699 */
+    --primary-foreground: 174 82% 8%;
+    --secondary: 156 8% 15%;
+    --secondary-foreground: 150 4% 91%;
+    --accent: 168 20% 14%;
+    --accent-foreground: 170 52% 68%;
+    --success: 150 38% 49%;
+    --warning: 41 66% 51%;
+    --destructive: 5 68% 63%;
     --destructive-foreground: 0 0% 100%;
-
-    /* Border */
-    --border: 204 15% 20%;
-    --input: 204 15% 20%;
-    --ring: 174 70% 38%;
+    --ring: 174 62% 40%;
+    --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --sh-md: 0 8px 28px -10px rgba(0, 0, 0, 0.6);
+    --sh-lg: 0 20px 54px -18px rgba(0, 0, 0, 0.7);
   }
 }
 
@@ -200,6 +179,47 @@
   /* Focus Visible */
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}
+
+/* App shell (authenticated app only — see mp-app wrapper in app/(app)/layout.tsx) */
+.mp-app :focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+.mp-scroll::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.mp-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9px;
+}
+
+.mp-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes mp-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.mp-fade-in {
+  animation: mp-fade 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mp-fade-in {
+    animation: none;
   }
 }
 
