@@ -256,6 +256,12 @@ model Task {
   updatedAt         DateTime     @updatedAt
 
   @@index([userId, scheduledDate])
+  // Completion analytics (weekly-completed counts, streaks) filter by
+  // userId + isCompleted and range over completedAt.
+  @@index([userId, isCompleted, completedAt])
+  // Goal task fetch (goal analytics, goal detail) filters by goalId and
+  // orders/ranges by scheduledDate.
+  @@index([goalId, scheduledDate])
   @@index([goalId])
   @@index([planId])
   @@index([syncStatus])
