@@ -75,8 +75,13 @@ export function useGlobalKeyboardShortcuts() {
       },
       {
         key: 'm',
-        description: 'Go to Month',
-        action: () => router.push('/month'),
+        description: 'Go to Month view',
+        action: () => router.push('/week?view=month'),
+      },
+      {
+        key: '2',
+        description: 'Go to Calendar',
+        action: () => router.push('/week'),
       },
       {
         key: 'g',

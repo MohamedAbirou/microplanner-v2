@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Clock,
   Crown,
   Search,
   Settings,
@@ -32,11 +31,11 @@ interface NavItem {
   hotkey?: string;
 }
 
+const calendarPaths = ['/week', '/day', '/month'];
+
 const primaryNav: NavItem[] = [
   { label: 'Today', href: '/dashboard', icon: CalendarDays, hotkey: '1' },
-  { label: 'Day', href: '/day', icon: Clock, hotkey: 'D' },
   { label: 'Week', href: '/week', icon: Calendar, hotkey: '2' },
-  { label: 'Month', href: '/month', icon: Calendar, hotkey: 'M' },
   { label: 'Goals', href: '/goals', icon: Target, hotkey: '3' },
   { label: 'Plans', href: '/plans', icon: Sparkles, hotkey: '4' },
 ];
@@ -108,7 +107,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       <nav className="flex flex-col gap-0.5 mt-1">
         {primaryNav.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isActive =
+            item.href === '/week'
+              ? calendarPaths.some(
+                  (path) => pathname === path || pathname.startsWith(path + '/')
+                )
+              : pathname === item.href || pathname.startsWith(item.href + '/');
 
           return (
             <Link key={item.href} href={item.href}>

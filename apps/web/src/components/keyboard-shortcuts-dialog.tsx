@@ -54,7 +54,7 @@ const shortcuts: KeyboardShortcut[] = [
   },
   {
     keys: ['M'],
-    description: 'Go to Month',
+    description: 'Go to Month view (calendar)',
     category: 'Navigation',
   },
   {

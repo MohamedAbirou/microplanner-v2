@@ -57,7 +57,9 @@ export function CommandPalette({ open, onOpenChange, onQuickAddClick }: CommandP
   // Navigation commands
   const navigationCommands = [
     { icon: Calendar, label: 'Go to Today', action: () => router.push('/today'), shortcut: 'G then T' },
-    { icon: Calendar, label: 'Go to Week View', action: () => router.push('/week'), shortcut: 'G then W' },
+    { icon: Calendar, label: 'Go to Calendar (Week)', action: () => router.push('/week'), shortcut: 'W' },
+    { icon: Calendar, label: 'Go to Day View', action: () => router.push('/week?view=day') },
+    { icon: Calendar, label: 'Go to Month View', action: () => router.push('/week?view=month'), shortcut: 'M' },
     { icon: Target, label: 'Go to Goals', action: () => router.push('/goals'), shortcut: 'G then G' },
     { icon: Sparkles, label: 'Go to Plans', action: () => router.push('/plans'), shortcut: 'G then P' },
     { icon: BarChart3, label: 'Go to Analytics', action: () => router.push('/analytics'), shortcut: 'G then A' },
