@@ -6,9 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAcceptPlan, usePlan, usePlans } from '@/hooks/use-graphql';
+import { useAcceptPlan, usePlan, usePlans, useRegeneratePlan } from '@/hooks/use-graphql';
+import { useWorkHours } from '@/hooks/use-graphql-extended';
+import { WorkloadWarning } from '@/components/plans/workload-warning';
 import { addDays, format, parseISO } from 'date-fns';
-import { Check, ChevronLeft, RefreshCw } from 'lucide-react';
+import { Check, ChevronLeft, RefreshCw, Sparkles, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import * as React from 'react';
 import { toast } from 'sonner';
@@ -20,17 +23,22 @@ export default function PlanReviewPage() {
   const [isAccepting, setIsAccepting] = React.useState(false);
 
   const { plan: planById, loading: planByIdLoading } = usePlan(planId);
-  const { plans: draftPlans, loading: draftsLoading } = usePlans({ status: 'DRAFT' });
+  const { plans: draftPlans, loading: draftsLoading } = usePlans(
+    { status: 'DRAFT' },
+    { skipQuery: !!planId }
+  );
   const { acceptPlan } = useAcceptPlan();
+  const { regeneratePlan, loading: isRegenerating } = useRegeneratePlan();
+  const { workHours } = useWorkHours();
 
-  // Prefer explicit id from generate flow; fall back to latest DRAFT plan.
+  // Prefer explicit id from history/generate flow; fall back to latest DRAFT plan.
   const reviewPlan =
     planById ??
-    draftPlans.find((p: any) => p.status === 'DRAFT') ??
-    draftPlans[0] ??
-    null;
+    (!planId
+      ? draftPlans.find((p: any) => p.status === 'DRAFT') ?? draftPlans[0] ?? null
+      : null);
 
-  const loading = (planId ? planByIdLoading : false) || draftsLoading;
+  const loading = planId ? planByIdLoading : draftsLoading;
 
   const weekStart = reviewPlan?.weekStartDate
     ? parseISO(reviewPlan.weekStartDate)
@@ -115,11 +123,25 @@ export default function PlanReviewPage() {
     }
   };
 
-  const handleRegenerate = () => {
+  const handleRegenerate = async () => {
+    if (!reviewPlan) {
+      toast.error('No plan to regenerate');
+      return;
+    }
+
     toast.info('Regenerating your plan', {
       description: 'Creating a new optimized schedule based on your preferences',
     });
-    router.push('/plans/generate');
+
+    try {
+      const { data } = await regeneratePlan({ variables: { id: reviewPlan.id } });
+      const newId = data?.regeneratePlan?.id;
+      if (newId) {
+        router.push(`/plans/review?id=${newId}`);
+      }
+    } catch (error) {
+      console.error('Failed to regenerate plan:', error);
+    }
   };
 
   if (loading) {
@@ -136,12 +158,18 @@ export default function PlanReviewPage() {
     return (
       <div className="space-y-6 p-6 max-w-7xl mx-auto">
         <div className="text-center py-12 space-y-4">
-          <p className="text-muted-foreground">No draft plan found to review.</p>
-          <Button onClick={() => router.push('/plans/generate')}>Generate a Plan</Button>
+          <p className="text-muted-foreground">
+            {planId ? 'Plan not found or you do not have access to it.' : 'No draft plan found to review.'}
+          </p>
+          <Button onClick={() => router.push(planId ? '/plans' : '/plans/generate')}>
+            {planId ? 'Back to Plans' : 'Generate a Plan'}
+          </Button>
         </div>
       </div>
     );
   }
+
+  const isDraft = reviewPlan.status === 'DRAFT';
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
@@ -153,7 +181,9 @@ export default function PlanReviewPage() {
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Review Your Plan</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {isDraft ? 'Review Your Plan' : 'Plan Details'}
+              </h1>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
               </p>
@@ -162,16 +192,23 @@ export default function PlanReviewPage() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{reviewPlan.status}</Badge>
-          <Button variant="outline" className="h-9" onClick={handleRegenerate}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Regenerate
+          <Button variant="outline" className="h-9" onClick={handleRegenerate} disabled={!isDraft || isRegenerating}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+            {isRegenerating ? 'Regenerating…' : 'Regenerate'}
           </Button>
-          <Button className="h-9" onClick={handleAcceptPlan} disabled={isAccepting || reviewPlan.status !== 'DRAFT'}>
+          {isDraft && (
+          <Button className="h-9" onClick={handleAcceptPlan} disabled={isAccepting}>
             <Check className="mr-2 h-4 w-4" />
             {isAccepting ? 'Accepting...' : 'Accept Plan'}
           </Button>
+          )}
         </div>
       </div>
+
+      {/* Workload / capacity check (draft plans only) */}
+      {isDraft && planTasks.length > 0 && (
+        <WorkloadWarning tasks={planTasks} schedule={workHours?.schedule} />
+      )}
 
       {/* Quality Score */}
       <PlanQualityScore
@@ -179,7 +216,7 @@ export default function PlanReviewPage() {
         overallScore={scorePercentage}
       />
 
-      {/* Plan Preview Tabs */}
+      {/* Plan Preview Tabs — list view rows include a "Why this slot?" explainer */}
       <Tabs defaultValue="calendar" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
           <TabsTrigger value="calendar">Calendar View</TabsTrigger>
@@ -242,31 +279,34 @@ export default function PlanReviewPage() {
                         .map((task: any) => (
                           <div
                             key={task.id}
-                            className="flex items-center gap-3 p-3 rounded-[10px] border border-border hover:bg-accent/50 transition-colors"
+                            className="rounded-[10px] border border-border hover:bg-accent/50 transition-colors"
                           >
-                            <div
-                              className="w-1 h-12 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: task.goal?.color ?? '#94a3b8' }}
-                            />
-                            <span className="text-2xl">{task.goal?.emoji ?? '📌'}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium">{task.title}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {task.startTime} - {task.endTime} ({task.durationMinutes}m)
+                            <div className="flex items-center gap-3 p-3">
+                              <div
+                                className="w-1 h-12 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: task.goal?.color ?? '#94a3b8' }}
+                              />
+                              <span className="text-2xl">{task.goal?.emoji ?? '📌'}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">{task.title}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {task.startTime} - {task.endTime} ({task.durationMinutes}m)
+                                </div>
                               </div>
+                              <Badge
+                                variant="outline"
+                                style={{
+                                  borderColor: task.goal?.color ?? '#94a3b8',
+                                  color: task.goal?.color ?? '#94a3b8',
+                                }}
+                              >
+                                {task.goal?.title ?? 'No goal'}
+                              </Badge>
+                              {task.priority === 1 && (
+                                <Badge variant="destructive">High Priority</Badge>
+                              )}
                             </div>
-                            <Badge
-                              variant="outline"
-                              style={{
-                                borderColor: task.goal?.color ?? '#94a3b8',
-                                color: task.goal?.color ?? '#94a3b8',
-                              }}
-                            >
-                              {task.goal?.title ?? 'No goal'}
-                            </Badge>
-                            {task.priority === 1 && (
-                              <Badge variant="destructive">High Priority</Badge>
-                            )}
+                            <WhySlot task={task} />
                           </div>
                         ))}
                     </div>
@@ -277,6 +317,52 @@ export default function PlanReviewPage() {
           </div>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+/**
+ * Derive a human-readable "why this slot" explanation for a scheduled task.
+ * Prefers the planner's own `aiReasoning`; otherwise builds a deterministic
+ * explanation from the task's real attributes (time of day, priority, block).
+ */
+function slotReason(task: any): string {
+  if (task.aiReasoning && String(task.aiReasoning).trim()) {
+    return String(task.aiReasoning).trim();
+  }
+
+  const parts: string[] = [];
+  const hour = parseInt(String(task.startTime || '').split(':')[0], 10);
+  if (!Number.isNaN(hour)) {
+    if (hour < 12) parts.push('scheduled in the morning, a common high-focus window');
+    else if (hour < 17) parts.push('placed in the afternoon around your working hours');
+    else parts.push('scheduled later in the day');
+  }
+  if (task.priority === 1) parts.push('prioritised early as a high-priority task');
+  if (task.goal?.title) parts.push(`allocated toward your “${task.goal.title}” goal`);
+  if (task.durationMinutes) parts.push(`in a ${task.durationMinutes}-minute focus block`);
+
+  return parts.length > 0
+    ? `This task was ${parts.join(', ')}.`
+    : 'Scheduled to balance your goals across the week.';
+}
+
+function WhySlot({ task }: { task: any }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div className="border-t border-border/60 px-3 py-2">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Sparkles className="h-3.5 w-3.5" />
+        Why this slot?
+        <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', open && 'rotate-180')} />
+      </button>
+      {open && (
+        <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{slotReason(task)}</p>
+      )}
     </div>
   );
 }

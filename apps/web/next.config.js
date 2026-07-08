@@ -66,10 +66,34 @@ const nextConfig = {
 
   // Headers for security
   async headers() {
+    // Content-Security-Policy tuned for the app's third parties: Clerk (auth),
+    // Stripe (billing), and the app's own GraphQL/API over https + wss. Scripts
+    // allow 'unsafe-inline'/'unsafe-eval' because Clerk and the Next.js runtime
+    // inject inline/eval'd code; everything else is locked to https origins.
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.dev https://challenges.cloudflare.com https://js.stripe.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https: wss:",
+      "frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com",
+      "worker-src 'self' blob:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      'upgrade-insecure-requests',
+    ].join('; ');
+
     return [
       {
         source: '/(.*)',
         headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: csp,
+          },
           {
             key: 'X-Frame-Options',
             value: 'DENY',
@@ -81,6 +105,21 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
+          },
+          {
+            // Force HTTPS for 2 years incl. subdomains. Vercel already serves
+            // over TLS; this prevents SSL-strip downgrade on the apex domain.
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
+            // Deny access to powerful browser features the app doesn't use.
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
           },
         ],
       },

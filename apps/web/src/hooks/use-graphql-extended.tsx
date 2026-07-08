@@ -18,6 +18,81 @@ import * as ops from '@/graphql/operations-extended';
  */
 
 // ============================================================================
+// PLAN TEMPLATES
+// ============================================================================
+
+export function usePlanTemplates(variables?: {
+  category?: string;
+  featured?: boolean;
+  limit?: number;
+  offset?: number;
+}) {
+  const { data, loading, error, refetch } = useQuery(ops.GET_PLAN_TEMPLATES, {
+    variables,
+    fetchPolicy: 'cache-and-network',
+  });
+
+  return {
+    templates: data?.planTemplates || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useSaveAsPlanTemplate() {
+  const [saveAsTemplate, { loading, error }] = useMutation(ops.SAVE_AS_PLAN_TEMPLATE, {
+    refetchQueries: [{ query: ops.GET_PLAN_TEMPLATES }],
+    onCompleted: () => {
+      toast.success('Saved as template');
+    },
+    onError: (error) => {
+      toast.error('Failed to save template', { description: error.message });
+    },
+  });
+
+  return { saveAsTemplate, loading, error };
+}
+
+export function useGeneratePlanFromTemplate() {
+  const [generateFromTemplate, { loading, error }] = useMutation(ops.GENERATE_PLAN_FROM_TEMPLATE, {
+    onError: (error) => {
+      toast.error('Failed to generate plan from template', { description: error.message });
+    },
+  });
+
+  return { generateFromTemplate, loading, error };
+}
+
+export function useSetDefaultPlanTemplate() {
+  const [setDefaultTemplate, { loading, error }] = useMutation(ops.SET_DEFAULT_PLAN_TEMPLATE, {
+    refetchQueries: [{ query: ops.GET_PLAN_TEMPLATES }],
+    onCompleted: () => {
+      toast.success('Default template updated');
+    },
+    onError: (error) => {
+      toast.error('Failed to set default template', { description: error.message });
+    },
+  });
+
+  return { setDefaultTemplate, loading, error };
+}
+
+export function useDeletePlanTemplate() {
+  const [deleteTemplate, { loading, error }] = useMutation(ops.DELETE_PLAN_TEMPLATE, {
+    refetchQueries: [{ query: ops.GET_PLAN_TEMPLATES }],
+    onCompleted: () => {
+      toast.success('Template deleted');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete template', { description: error.message });
+    },
+  });
+
+  return { deleteTemplate, loading, error };
+}
+
+// ============================================================================
 // ANALYTICS & INSIGHTS
 // ============================================================================
 
@@ -67,6 +142,19 @@ export function useInsights(type?: string, limit?: number) {
 
   return {
     insights: data?.insights || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useWeeklyReview() {
+  const { data, loading, error, refetch } = useQuery(ops.GET_WEEKLY_REVIEW, {
+    fetchPolicy: 'cache-and-network',
+  });
+
+  return {
+    review: data?.weeklyReview || null,
     loading,
     error,
     refetch,
@@ -183,6 +271,79 @@ export function useDeleteFocusBlock() {
   });
 
   return { deleteFocusBlock, loading, error };
+}
+
+// ============================================================================
+// PRODUCTIVITY FEATURES - NO MEETING DAYS
+// ============================================================================
+
+export function useNoMeetingDays(isActive?: boolean) {
+  const { data, loading, error, refetch } = useQuery(ops.GET_NO_MEETING_DAYS, {
+    variables: { isActive },
+  });
+
+  return {
+    noMeetingDays: data?.noMeetingDays || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useCreateNoMeetingDay() {
+  const [createNoMeetingDay, { loading, error }] = useMutation(ops.CREATE_NO_MEETING_DAY, {
+    refetchQueries: [{ query: ops.GET_NO_MEETING_DAYS, variables: { isActive: undefined } }],
+    onCompleted: () => {
+      toast.success('No-meeting day added');
+    },
+    onError: (error) => {
+      toast.error('Failed to add no-meeting day', { description: error.message });
+    },
+  });
+
+  return { createNoMeetingDay, loading, error };
+}
+
+export function useDeleteNoMeetingDay() {
+  const [deleteNoMeetingDay, { loading, error }] = useMutation(ops.DELETE_NO_MEETING_DAY, {
+    refetchQueries: [{ query: ops.GET_NO_MEETING_DAYS, variables: { isActive: undefined } }],
+    onCompleted: () => {
+      toast.success('No-meeting day removed');
+    },
+    onError: (error) => {
+      toast.error('Failed to remove no-meeting day', { description: error.message });
+    },
+  });
+
+  return { deleteNoMeetingDay, loading, error };
+}
+
+// ============================================================================
+// PRODUCTIVITY FEATURES - CALENDAR DEFENSE
+// ============================================================================
+
+export function useCalendarDefense() {
+  const { data, loading, error, refetch } = useQuery(ops.GET_CALENDAR_DEFENSE);
+
+  return {
+    calendarDefense: data?.calendarDefense,
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useUpdateCalendarDefense() {
+  const [updateCalendarDefense, { loading, error }] = useMutation(ops.UPDATE_CALENDAR_DEFENSE, {
+    onCompleted: () => {
+      toast.success('Calendar defense updated');
+    },
+    onError: (error) => {
+      toast.error('Failed to update calendar defense', { description: error.message });
+    },
+  });
+
+  return { updateCalendarDefense, loading, error };
 }
 
 // ============================================================================
@@ -417,9 +578,15 @@ export function useSyncCalendarConnection() {
   return { syncCalendar, loading, error };
 }
 
-export function useCalendarEvents(startDate: string, endDate: string, calendarIds?: string[]) {
+export function useCalendarEvents(
+  startDate: string,
+  endDate: string,
+  calendarIds?: string[],
+  options?: { skip?: boolean }
+) {
   const { data, loading, error, refetch } = useQuery(ops.GET_CALENDAR_EVENTS, {
     variables: { startDate, endDate, calendarIds },
+    skip: options?.skip,
   });
 
   return {
@@ -433,6 +600,125 @@ export function useCalendarEvents(startDate: string, endDate: string, calendarId
 // ============================================================================
 // TEAMS & API KEYS
 // ============================================================================
+
+// ============================================================================
+// REFERRALS
+// ============================================================================
+
+export function useReferralStats() {
+  const { data, loading, error, refetch } = useQuery(ops.GET_MY_REFERRAL_STATS);
+  return {
+    stats: data?.myReferralStats || null,
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useRedeemReferral() {
+  const [redeemReferral, { loading, error }] = useMutation(ops.REDEEM_REFERRAL);
+  return { redeemReferral, loading, error };
+}
+
+// ============================================================================
+// AI MEMORY (scheduling overrides)
+// ============================================================================
+
+export function useAiMemories() {
+  const { data, loading, error, refetch } = useQuery(ops.GET_AI_MEMORIES);
+  return {
+    memories: data?.aiMemories || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useCreateAiMemory() {
+  const [createAiMemory, { loading, error }] = useMutation(ops.CREATE_AI_MEMORY, {
+    refetchQueries: [{ query: ops.GET_AI_MEMORIES }],
+    onCompleted: () => {
+      toast.success('Preference saved — the planner will honour it');
+    },
+    onError: (error) => {
+      toast.error('Failed to save preference', { description: error.message });
+    },
+  });
+  return { createAiMemory, loading, error };
+}
+
+export function useDeleteAiMemory() {
+  const [deleteAiMemory, { loading, error }] = useMutation(ops.DELETE_AI_MEMORY, {
+    refetchQueries: [{ query: ops.GET_AI_MEMORIES }],
+    onCompleted: () => {
+      toast.success('Preference removed');
+    },
+    onError: (error) => {
+      toast.error('Failed to remove preference', { description: error.message });
+    },
+  });
+  return { deleteAiMemory, loading, error };
+}
+
+// ============================================================================
+// PROJECTS & KANBAN
+// ============================================================================
+
+export function useProjects(includeArchived = false) {
+  const { data, loading, error, refetch } = useQuery(ops.GET_PROJECTS, {
+    variables: { includeArchived, orderBy: 'CREATED_DESC' },
+  });
+
+  return {
+    projects: data?.projects || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useProjectBoard(id?: string) {
+  const { data, loading, error, refetch } = useQuery(ops.GET_PROJECT_BOARD, {
+    variables: { id },
+    skip: !id,
+    fetchPolicy: 'cache-and-network',
+  });
+
+  return {
+    project: data?.project || null,
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useCreateProject() {
+  const [createProject, { loading, error }] = useMutation(ops.CREATE_PROJECT, {
+    refetchQueries: [{ query: ops.GET_PROJECTS, variables: { includeArchived: false, orderBy: 'CREATED_DESC' } }],
+    onCompleted: () => {
+      toast.success('Project created');
+    },
+    onError: (error) => {
+      toast.error('Failed to create project', { description: error.message });
+    },
+  });
+
+  return { createProject, loading, error };
+}
+
+export function useDeleteProject() {
+  const [deleteProject, { loading, error }] = useMutation(ops.DELETE_PROJECT, {
+    refetchQueries: [{ query: ops.GET_PROJECTS, variables: { includeArchived: false, orderBy: 'CREATED_DESC' } }],
+    onCompleted: () => {
+      toast.success('Project deleted');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete project', { description: error.message });
+    },
+  });
+
+  return { deleteProject, loading, error };
+}
 
 export function useTeams() {
   const { data, loading, error, refetch } = useQuery(ops.GET_TEAMS);
@@ -488,6 +774,46 @@ export function useInviteTeamMember() {
   });
 
   return { inviteMember, loading, error };
+}
+
+export function useDeleteTeam() {
+  const [deleteTeam, { loading, error }] = useMutation(ops.DELETE_TEAM, {
+    refetchQueries: [{ query: ops.GET_TEAMS }],
+    onCompleted: () => {
+      toast.success('Team deleted');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete team', { description: error.message });
+    },
+  });
+
+  return { deleteTeam, loading, error };
+}
+
+export function useRemoveTeamMember() {
+  const [removeTeamMember, { loading, error }] = useMutation(ops.REMOVE_TEAM_MEMBER, {
+    onCompleted: () => {
+      toast.success('Member removed');
+    },
+    onError: (error) => {
+      toast.error('Failed to remove member', { description: error.message });
+    },
+  });
+
+  return { removeTeamMember, loading, error };
+}
+
+export function useUpdateTeamMemberRole() {
+  const [updateTeamMemberRole, { loading, error }] = useMutation(ops.UPDATE_TEAM_MEMBER_ROLE, {
+    onCompleted: () => {
+      toast.success('Role updated');
+    },
+    onError: (error) => {
+      toast.error('Failed to update role', { description: error.message });
+    },
+  });
+
+  return { updateTeamMemberRole, loading, error };
 }
 
 export function useApiKeys() {
@@ -564,6 +890,30 @@ export function useCreateSchedulingLink() {
   });
 
   return { createLink, loading, error };
+}
+
+export function useDeleteSchedulingLink() {
+  const [deleteLink, { loading, error }] = useMutation(ops.DELETE_SCHEDULING_LINK, {
+    refetchQueries: [{ query: ops.GET_SCHEDULING_LINKS }],
+    onCompleted: () => {
+      toast.success('Scheduling link deleted');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete link', { description: error.message });
+    },
+  });
+
+  return { deleteLink, loading, error };
+}
+
+export function useToggleSchedulingLink() {
+  const [toggleLink, { loading, error }] = useMutation(ops.TOGGLE_SCHEDULING_LINK, {
+    onError: (error) => {
+      toast.error('Failed to update link', { description: error.message });
+    },
+  });
+
+  return { toggleLink, loading, error };
 }
 
 export function useBookings(linkId?: string, status?: string) {
@@ -644,6 +994,33 @@ export function useConnectIntegration() {
   return { connectIntegration, loading, error };
 }
 
+export function useDisconnectIntegration() {
+  const [disconnectIntegration, { loading, error }] = useMutation(ops.DISCONNECT_INTEGRATION, {
+    refetchQueries: [{ query: ops.GET_INTEGRATIONS }],
+    onCompleted: () => {
+      toast.success('Integration disconnected');
+    },
+    onError: (error) => {
+      toast.error('Failed to disconnect', { description: error.message });
+    },
+  });
+
+  return { disconnectIntegration, loading, error };
+}
+
+export function useSyncIntegration() {
+  const [syncIntegration, { loading, error }] = useMutation(ops.SYNC_INTEGRATION, {
+    onCompleted: () => {
+      toast.success('Sync started');
+    },
+    onError: (error) => {
+      toast.error('Failed to sync', { description: error.message });
+    },
+  });
+
+  return { syncIntegration, loading, error };
+}
+
 export function useWebhooks() {
   const { data, loading, error, refetch } = useQuery(ops.GET_WEBHOOKS);
 
@@ -671,6 +1048,58 @@ export function useCreateWebhook() {
   return { createWebhook, loading, error };
 }
 
+export function useDeleteWebhook() {
+  const [deleteWebhook, { loading, error }] = useMutation(ops.DELETE_WEBHOOK, {
+    refetchQueries: [{ query: ops.GET_WEBHOOKS }],
+    onCompleted: () => {
+      toast.success('Webhook deleted');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete webhook', { description: error.message });
+    },
+  });
+
+  return { deleteWebhook, loading, error };
+}
+
+export function useToggleWebhook() {
+  const [toggleWebhook, { loading, error }] = useMutation(ops.TOGGLE_WEBHOOK, {
+    onError: (error) => {
+      toast.error('Failed to update webhook', { description: error.message });
+    },
+  });
+
+  return { toggleWebhook, loading, error };
+}
+
+export function useWebhookDeliveries(webhookId?: string, limit = 20) {
+  const { data, loading, error, refetch } = useQuery(ops.GET_WEBHOOK_DELIVERIES, {
+    variables: { webhookId, limit },
+    skip: !webhookId,
+    fetchPolicy: 'cache-and-network',
+  });
+
+  return {
+    deliveries: data?.webhookDeliveries || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useRetryWebhookDelivery() {
+  const [retryDelivery, { loading, error }] = useMutation(ops.RETRY_WEBHOOK_DELIVERY, {
+    onCompleted: () => {
+      toast.success('Delivery retried');
+    },
+    onError: (error) => {
+      toast.error('Failed to retry delivery', { description: error.message });
+    },
+  });
+
+  return { retryDelivery, loading, error };
+}
+
 // ============================================================================
 // BILLING & SUBSCRIPTIONS
 // ============================================================================
@@ -691,6 +1120,17 @@ export function useUsageStats() {
 
   return {
     usage: data?.usageStats,
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useBillingInfo() {
+  const { data, loading, error, refetch } = useQuery(ops.GET_BILLING_INFO);
+
+  return {
+    billingInfo: data?.billingInfo,
     loading,
     error,
     refetch,
@@ -729,6 +1169,22 @@ export function useCancelSubscription() {
   });
 
   return { cancelSubscription, loading, error };
+}
+
+export function useResumeSubscription() {
+  const [resumeSubscription, { loading, error }] = useMutation(ops.RESUME_SUBSCRIPTION, {
+    refetchQueries: [{ query: ops.GET_SUBSCRIPTION }],
+    onCompleted: () => {
+      toast.success('Subscription resumed');
+    },
+    onError: (error) => {
+      toast.error('Failed to resume subscription', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { resumeSubscription, loading, error };
 }
 
 export function useCreateBillingPortalSession() {

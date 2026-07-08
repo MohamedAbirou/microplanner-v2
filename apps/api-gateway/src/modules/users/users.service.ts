@@ -153,6 +153,51 @@ export class UsersService {
   }
 
   /**
+   * Register a Web Push subscription for the user. Subscriptions are stored as
+   * JSON strings in `pushTokens`, de-duplicated by endpoint.
+   */
+  async addPushToken(userId: string, subscription: Record<string, any>): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const endpoint = subscription?.endpoint as string | undefined;
+    const existing = (user.pushTokens || []).filter((t) => {
+      if (!endpoint) return true;
+      try {
+        return (JSON.parse(t)?.endpoint as string) !== endpoint;
+      } catch {
+        return true;
+      }
+    });
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { pushTokens: [...existing, JSON.stringify(subscription)] },
+    });
+  }
+
+  /**
+   * Remove a Web Push subscription (by endpoint).
+   */
+  async removePushToken(userId: string, endpoint: string): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const tokens = (user.pushTokens || []).filter((t) => {
+      try {
+        return (JSON.parse(t)?.endpoint as string) !== endpoint;
+      } catch {
+        return true;
+      }
+    });
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { pushTokens: tokens },
+    });
+  }
+
+  /**
    * Delete user account (GDPR compliance)
    */
   async deleteAccount(userId: string): Promise<void> {

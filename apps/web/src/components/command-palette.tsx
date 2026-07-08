@@ -22,6 +22,7 @@ import {
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { useGoals, useTasks } from '@/hooks/use-graphql';
+import { subDays, endOfDay } from 'date-fns';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -33,7 +34,18 @@ export function CommandPalette({ open, onOpenChange, onQuickAddClick }: CommandP
   const router = useRouter();
   const [search, setSearch] = React.useState('');
   const { goals } = useGoals();
-  const { tasks } = useTasks();
+  const { tasks } = useTasks(
+    open
+      ? {
+          dateRange: {
+            start: subDays(new Date(), 30),
+            end: endOfDay(new Date()),
+          },
+        }
+      : undefined,
+    undefined,
+    { take: 15, skipQuery: !open }
+  );
 
   // Handle command selection
   const runCommand = React.useCallback((command: () => void) => {

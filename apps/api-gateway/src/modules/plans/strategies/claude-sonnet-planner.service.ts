@@ -240,6 +240,24 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
       learnedPatternsSection += '\n\n**IMPORTANT:** Use these learned patterns to make MORE INTELLIGENT scheduling decisions. This data reflects the user\'s actual historical behavior and should HEAVILY influence your task placement.';
     }
 
+    // Explicit user overrides + learned memories (from AIMemory), attached to
+    // the user object by PlansService. These are the user's own declared
+    // preferences and should be honoured strongly.
+    let userOverridesSection = '';
+    const memories: { memoryType: string; content: unknown; confidence: number }[] =
+      (user as any).aiMemories || [];
+    if (memories.length > 0) {
+      const lines = memories
+        .slice(0, 15)
+        .map((m) => {
+          const desc =
+            typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+          return `- [${m.memoryType}] ${desc} (confidence ${Math.round(m.confidence * 100)}%)`;
+        })
+        .join('\n');
+      userOverridesSection = `\n\n**User Overrides & Learned Preferences (honour these strongly):**\n${lines}`;
+    }
+
     return `You are an expert productivity planner creating a personalized weekly schedule.
 
 **User Profile:**
@@ -256,7 +274,7 @@ export class ClaudeSonnetPlannerService implements IPlanningStrategy {
 ${goalsText}
 
 **Existing Calendar Commitments:**
-${eventsText}${learnedPatternsSection}
+${eventsText}${learnedPatternsSection}${userOverridesSection}
 
 **Your Task:**
 Create an optimal weekly plan that:

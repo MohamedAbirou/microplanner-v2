@@ -6,20 +6,26 @@ import { cn } from '@/lib/utils';
 import {
   BarChart3,
   Calendar,
+  CalendarClock,
   CalendarDays,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Crown,
+  Focus,
+  FolderKanban,
   Search,
   Settings,
   Sparkles,
+  Sunrise,
   Target,
   TrendingUp,
+  Users,
   Zap,
 } from 'lucide-react';
 import { UpgradeButton } from '@/components/upgrade-button';
-import { useTier, type UserTier } from '@/contexts/tier-context';
+import { useTier } from '@/contexts/tier-context';
+import { formatTierLabel, getNextTier, getTierPrice, getUpgradePitch } from '@/lib/upgrade';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -41,7 +47,10 @@ const primaryNav: NavItem[] = [
 ];
 
 const secondaryNav: NavItem[] = [
+  { label: 'Plan Day', href: '/plan-day', icon: Sunrise },
+  { label: 'Projects', href: '/projects', icon: FolderKanban },
   { label: 'Search', href: '/search', icon: Search, hotkey: '/' },
+  { label: 'Productivity', href: '/productivity', icon: Focus },
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
@@ -63,6 +72,17 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const pathname = usePathname();
   const tierInfo = tierConfig[userTier];
   const TierIcon = tierInfo.icon;
+  const nextTier = getNextTier(userTier);
+  const upgradePitch = getUpgradePitch(userTier);
+
+  // Premium/Pro-only workspace features surface in the sidebar for eligible tiers.
+  const secondaryNavItems: NavItem[] = [...secondaryNav];
+  if (userTier === 'PRO' || userTier === 'PREMIUM') {
+    secondaryNavItems.push({ label: 'Scheduling', href: '/scheduling', icon: CalendarClock });
+  }
+  if (userTier === 'PREMIUM') {
+    secondaryNavItems.push({ label: 'Teams', href: '/teams', icon: Users });
+  }
 
   return (
     <aside
@@ -148,7 +168,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 
         <div className="my-2 border-t border-border/60" />
 
-        {secondaryNav
+        {secondaryNavItems
           .filter((item) => item.label !== 'Settings')
           .map((item) => {
             const Icon = item.icon;
@@ -190,21 +210,21 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         </Link>
 
         {/* Tier / Upgrade card */}
-        {!collapsed && (userTier === 'FREE' || userTier === 'STARTER') && (
+        {!collapsed && nextTier && upgradePitch && (
           <div className="mt-2.5 rounded-xl border border-border bg-accent p-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-accent-foreground">
               <TierIcon className="h-3.5 w-3.5" />
               {tierInfo.label} plan
             </div>
             <p className="mt-0.5 mb-2.5 text-[11px] text-muted-foreground leading-relaxed">
-              Unlock {userTier === 'FREE' ? 'more goals & plans' : 'AI Sonnet 3.5 & unlimited plans'}
+              {upgradePitch}
             </p>
             <UpgradeButton
               className="w-full h-[30px] text-xs font-semibold"
               size="sm"
-              targetTier={userTier === 'FREE' ? 'STARTER' : 'PRO'}
+              targetTier={nextTier}
             >
-              Upgrade
+              Upgrade to {formatTierLabel(nextTier)}
             </UpgradeButton>
           </div>
         )}

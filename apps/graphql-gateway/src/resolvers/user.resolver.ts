@@ -19,6 +19,21 @@ export const userResolvers = {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.userAPI.getOnboardingStatus(user.userId);
     },
+
+    exportMyData: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.userAPI.exportData(user.userId);
+    },
+
+    aiMemories: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.aiMemoryAPI.getMemories(user.userId);
+    },
+
+    myReferralStats: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.referralsAPI.getStats(user.userId);
+    },
   },
 
   User: {
@@ -83,6 +98,36 @@ export const userResolvers = {
     updateUserSettings: async (_: any, { input }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.userAPI.updateUserSettings(user.userId, input);
+    },
+
+    registerPushToken: async (_: any, { subscription }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.userAPI.registerPushToken(user.userId, subscription);
+    },
+
+    unregisterPushToken: async (_: any, { endpoint }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.userAPI.unregisterPushToken(user.userId, endpoint);
+    },
+
+    deleteMyAccount: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.userAPI.deleteAccount(user.userId);
+    },
+
+    createAiMemory: async (_: any, { input }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.aiMemoryAPI.createMemory(user.userId, input);
+    },
+
+    deleteAiMemory: async (_: any, { id }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.aiMemoryAPI.deleteMemory(user.userId, id);
+    },
+
+    redeemReferral: async (_: any, { code }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.referralsAPI.redeem(user.userId, code);
     },
 
     completeOnboarding: async (_: any, { input }: any, { dataSources, user }: any) => {

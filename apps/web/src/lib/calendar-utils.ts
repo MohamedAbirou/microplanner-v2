@@ -38,6 +38,42 @@ export interface CalendarTaskLike {
   } | null;
 }
 
+/** External (read-only) calendar event synced from Google/Outlook. */
+export interface CalendarEventLike {
+  id: string;
+  title: string;
+  start: string; // ISO datetime
+  end: string; // ISO datetime
+  location?: string | null;
+  isAllDay?: boolean | null;
+}
+
+/** Top/height in px for an external event within the day time-grid. */
+export function getEventLayoutPx(startISO: string, endISO: string): {
+  topPx: number;
+  heightPx: number;
+} {
+  const start = new Date(startISO);
+  const end = new Date(endISO);
+  const gridStartMin = CALENDAR_HOUR_START * 60;
+  const gridEndMin = (CALENDAR_HOUR_END + 1) * 60;
+
+  const startMin = start.getHours() * 60 + start.getMinutes();
+  let endMin = end.getHours() * 60 + end.getMinutes();
+  // Events ending past midnight (or with a non-positive span) clamp to grid end.
+  if (endMin <= startMin) endMin = gridEndMin;
+
+  const clampedStart = Math.max(startMin, gridStartMin);
+  const clampedEnd = Math.min(endMin, gridEndMin);
+
+  const topPx = ((clampedStart - gridStartMin) / 60) * CALENDAR_SLOT_HEIGHT_PX;
+  const heightPx = Math.max(
+    CALENDAR_SLOT_HEIGHT_PX * 0.4,
+    ((clampedEnd - clampedStart) / 60) * CALENDAR_SLOT_HEIGHT_PX
+  );
+  return { topPx, heightPx };
+}
+
 export function timeToMinutes(time: string): number {
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + (minutes || 0);

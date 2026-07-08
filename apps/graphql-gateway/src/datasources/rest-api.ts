@@ -100,6 +100,64 @@ function createApiClient(baseURL: string, token?: string): AxiosInstance {
 
 export { OnboardingAPI } from './onboarding-api';
 
+// ==================== AI MEMORY API ====================
+export class AiMemoryAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/ai-memory`, token);
+  }
+
+  async getMemories(userId: string) {
+    const { data } = await this.client.get('/', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async createMemory(
+    userId: string,
+    input: { memoryType: string; content: unknown; confidence?: number }
+  ) {
+    const { data } = await this.client.post('/', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async deleteMemory(userId: string, id: string) {
+    await this.client.delete(`/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+    return true;
+  }
+}
+
+// ==================== REFERRALS API ====================
+export class ReferralsAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/referrals`, token);
+  }
+
+  async getStats(userId: string) {
+    const { data } = await this.client.get('/me', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async redeem(userId: string, code: string) {
+    const { data } = await this.client.post(
+      '/redeem',
+      { code },
+      { headers: { 'x-user-id': userId } }
+    );
+    return data?.redeemed ?? false;
+  }
+}
+
 // ==================== USER API ====================
 export class UserAPI {
   private client: AxiosInstance;
@@ -129,6 +187,41 @@ export class UserAPI {
       headers: { 'x-user-id': userId },
     });
     return data;
+  }
+
+  // GDPR: permanently delete the user's account + all data (backend cascade).
+  async deleteAccount(userId: string) {
+    await this.client.delete('/me', {
+      headers: { 'x-user-id': userId },
+    });
+    return true;
+  }
+
+  // GDPR: export the user's full data set as JSON.
+  async exportData(userId: string) {
+    const { data } = await this.client.get('/me/export', {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  // Register a Web Push subscription
+  async registerPushToken(userId: string, subscription: Record<string, unknown>) {
+    await this.client.post(
+      '/me/push-token',
+      { subscription },
+      { headers: { 'x-user-id': userId } }
+    );
+    return true;
+  }
+
+  // Remove a Web Push subscription (by endpoint)
+  async unregisterPushToken(userId: string, endpoint: string) {
+    await this.client.delete('/me/push-token', {
+      headers: { 'x-user-id': userId },
+      data: { endpoint },
+    });
+    return true;
   }
 
   // Get user settings (preferences)
@@ -328,6 +421,13 @@ export class TasksAPI {
     return data.task || data;
   }
 
+  async getRescheduleSuggestion(id: string, userId: string) {
+    const { data } = await this.client.get(`/${id}/reschedule-suggestion`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.suggestion ?? null;
+  }
+
   async getTasks(userId: string, args: QueryTasksArgs = {}) {
     // Check if args contains GraphQL-style nested filter/sort or direct params
     const hasNestedFilter = args.filter !== undefined;
@@ -370,11 +470,15 @@ export class TasksAPI {
     if (filterSource?.isCompleted !== undefined) params.isCompleted = filterSource.isCompleted;
     if (filterSource?.aiGenerated !== undefined) params.aiGenerated = filterSource.aiGenerated;
 
+    if (args.take != null) params.limit = args.take;
+    if (args.skip != null) {
+      const pageSize = typeof params.limit === 'number' ? params.limit : 50;
+      params.page = Math.floor(args.skip / pageSize) + 1;
+    }
+
     // For dashboard resolver compatibility: copy any remaining direct params
     if (!hasNestedFilter) {
       if (args.orderBy) params.orderBy = args.orderBy;
-      if (args.take) params.take = args.take;
-      if (args.skip) params.skip = args.skip;
     }
 
     // Sort: the backend returns tasks ordered by scheduledDate + startTime,
@@ -390,15 +494,20 @@ export class TasksAPI {
   }
 
   async getTasksByGoalIds(goalIds: string[]) {
-    // No /batch endpoint — fetch per goal and unwrap the { tasks } envelope
-    const tasks: Task[] = [];
-    for (const goalId of goalIds) {
-      const { data } = await this.client.get('/', {
-        params: { goalId },
-      });
-      tasks.push(...(data.tasks || data.data || []));
-    }
-    return tasks;
+    // No REST /batch endpoint, so we still issue one request per goal — but
+    // concurrently (Promise.all) instead of sequentially, so latency is
+    // O(1) round-trips rather than O(goals), and we cap each response with a
+    // limit so a heavy goal can't return its entire task history. Ownership is
+    // enforced server-side from the JWT; the userId is not client-supplied.
+    const results = await Promise.all(
+      goalIds.map((goalId) =>
+        this.client
+          .get('/', { params: { goalId, limit: 500 } })
+          .then(({ data }) => (data.tasks || data.data || []) as Task[])
+          .catch(() => [] as Task[]),
+      ),
+    );
+    return results.flat();
   }
 
   async createTask(userId: string, input: CreateTaskInput) {
@@ -616,6 +725,50 @@ export class TasksAPI {
   }
 }
 
+// The GraphQL NotificationPreferences type uses `enable*` field names, while the
+// REST/Prisma layer uses shorter column names. Map between them so toggles read
+// and persist correctly (the email reminder scheduler reads the Prisma columns).
+const NOTIF_PREF_GQL_TO_REST: Record<string, string> = {
+  enableTaskReminders: 'taskDueAlerts',
+  enableWeeklyPlan: 'weeklySummary',
+  enableOverbookedAlerts: 'overbookedAlerts',
+  enableBreakReminders: 'breakReminders',
+  enableFocusTimeAlerts: 'focusTimeAlerts',
+  enableUpcomingMeetings: 'upcomingMeetingAlerts',
+};
+
+function mapNotificationPrefsToRest(input: UpdateNotificationPreferencesInput) {
+  const payload: Record<string, unknown> = {};
+  for (const [gqlKey, restKey] of Object.entries(NOTIF_PREF_GQL_TO_REST)) {
+    const value = (input as Record<string, unknown>)[gqlKey];
+    if (value !== undefined) payload[restKey] = value;
+  }
+  if (input.quietHoursStart !== undefined) payload.quietHoursStart = input.quietHoursStart;
+  if (input.quietHoursEnd !== undefined) payload.quietHoursEnd = input.quietHoursEnd;
+  return payload;
+}
+
+function mapNotificationPrefsToGraphQL(data: any) {
+  if (!data) return data;
+  return {
+    id: data.id,
+    userId: data.userId,
+    enableTaskReminders: data.taskDueAlerts ?? true,
+    enableGoalMilestones: true, // no dedicated column; surfaced for API completeness
+    enableWeeklyPlan: data.weeklySummary ?? true,
+    enableDailyReminders: data.taskDueAlerts ?? true,
+    enableOverbookedAlerts: data.overbookedAlerts ?? true,
+    enableBreakReminders: data.breakReminders ?? true,
+    enableFocusTimeAlerts: data.focusTimeAlerts ?? true,
+    enableUpcomingMeetings: data.upcomingMeetingAlerts ?? true,
+    reminderMinutesBefore: data.reminderMinutesBefore ?? 30,
+    quietHoursStart: data.quietHoursStart ?? null,
+    quietHoursEnd: data.quietHoursEnd ?? null,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  };
+}
+
 export class ProductivityAPI {
   private client: AxiosInstance;
 
@@ -831,14 +984,16 @@ export class ProductivityAPI {
     const { data } = await this.client.get('/notifications/preferences', {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    return mapNotificationPrefsToGraphQL(data);
   }
 
   async updateNotificationPreferences(userId: string, input: UpdateNotificationPreferencesInput) {
-    const { data } = await this.client.put('/notifications/preferences', input, {
-      headers: { 'x-user-id': userId },
-    });
-    return data;
+    const { data } = await this.client.put(
+      '/notifications/preferences',
+      mapNotificationPrefsToRest(input),
+      { headers: { 'x-user-id': userId } },
+    );
+    return mapNotificationPrefsToGraphQL(data);
   }
 }
 
@@ -986,6 +1141,14 @@ export class PlansAPI {
     return data.plan;
   }
 
+  // Regenerate plan for the same week (creates a new draft)
+  async regeneratePlan(id: string, userId: string) {
+    const { data } = await this.client.post(`/${id}/regenerate`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.plan;
+  }
+
   // Delete plan
   async deletePlan(id: string, userId: string) {
     await this.client.delete(`/${id}`, {
@@ -1013,6 +1176,37 @@ export class PlansAPI {
       headers: { 'x-user-id': userId },
     });
     return data.template;
+  }
+
+  // Save an existing plan as a template
+  async saveAsPlanTemplate(planId: string, userId: string, name: string, description?: string) {
+    const { data } = await this.client.post(`/${planId}/save-as-template`, { name, description }, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.template;
+  }
+
+  // Generate a plan from a template
+  async generatePlanFromTemplate(userId: string, input: { templateId: string; weekStartDate: string }) {
+    const { data } = await this.client.post('/generate-from-template', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.plan;
+  }
+
+  // Set a template as default
+  async setDefaultPlanTemplate(id: string, userId: string) {
+    const { data } = await this.client.put(`/templates/${id}/set-default`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data.template;
+  }
+
+  // Delete a template
+  async deletePlanTemplate(id: string, userId: string) {
+    await this.client.delete(`/templates/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
   }
 }
 
@@ -1103,12 +1297,31 @@ export class AnalyticsAPI {
   //   return data;
   // }
 
-  async getInsights(userId: string, type?: string, limit?: number) {
+  /**
+   * AI-learned recommendation strings from pattern recognition (PRO/PREMIUM).
+   * `/patterns/refresh` recomputes and returns { insights, recommendations, ... }.
+   * The GraphQL `insights`/`generateInsights` fields are typed [String!]!, so we
+   * surface only the recommendation strings here.
+   */
+  async getInsights(userId: string, _type?: string, _limit?: number): Promise<string[]> {
+    const { data } = await this.client.post(
+      '/patterns/refresh',
+      {},
+      { headers: { 'x-user-id': userId } }
+    );
+    return data?.recommendations ?? [];
+  }
+
+  /**
+   * Structured weekly review (all tiers): completion rate, top goals,
+   * productivity level, and a single recommendation. Backed by the
+   * non-gated /analytics/insights endpoint.
+   */
+  async getWeeklyReview(userId: string) {
     const { data } = await this.client.get('/insights', {
       headers: { 'x-user-id': userId },
-      params: { type, limit },
     });
-    return data;
+    return data.insights;
   }
 
   // async getStreakHistory(userId: string, limit?: number) {

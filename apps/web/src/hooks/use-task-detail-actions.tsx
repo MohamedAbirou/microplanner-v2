@@ -9,6 +9,8 @@ import {
   useCreateSubtask,
   useCreateTaskDependency,
   useDeleteTaskDependency,
+  useStartTimer,
+  useStopTimer,
 } from '@/hooks/use-graphql';
 import type { DependencyType } from '@/lib/dependencies';
 
@@ -35,6 +37,9 @@ export function useTaskDetailActions(tasks: any[] = [], refetch?: () => any) {
   const { createSubtask } = useCreateSubtask(silent);
   const { createTaskDependency } = useCreateTaskDependency(silent);
   const { deleteTaskDependency } = useDeleteTaskDependency(silent);
+  // Timer mutations own their own toasts (start/stop), so no silent flag.
+  const { startTimer } = useStartTimer();
+  const { stopTimer } = useStopTimer();
 
   // Build a flat id→task index (top-level tasks + their subtasks) so we can
   // look up completion state by id for the subtask toggle.
@@ -142,6 +147,22 @@ export function useTaskDetailActions(tasks: any[] = [], refetch?: () => any) {
     [deleteTaskDependency, afterMutation]
   );
 
+  const onStartTimer = React.useCallback(
+    async (taskId: string) => {
+      await startTimer({ variables: { taskId } });
+      await afterMutation();
+    },
+    [startTimer, afterMutation]
+  );
+
+  const onStopTimer = React.useCallback(
+    async (taskId: string) => {
+      await stopTimer({ variables: { taskId } });
+      await afterMutation();
+    },
+    [stopTimer, afterMutation]
+  );
+
   return {
     onUpdate,
     onDelete,
@@ -151,5 +172,7 @@ export function useTaskDetailActions(tasks: any[] = [], refetch?: () => any) {
     onDeleteSubtask,
     onAddDependency,
     onRemoveDependency,
+    onStartTimer,
+    onStopTimer,
   };
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { format, parseISO } from 'date-fns';
-import { Clock, Calendar, CheckCircle2 } from 'lucide-react';
+import { Clock, Calendar, CheckCircle2, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -14,6 +14,8 @@ interface TaskCardProps {
     scheduledDate: string;
     durationMinutes: number;
     isCompleted: boolean;
+    timeSpentMinutes?: number;
+    isTimerRunning?: boolean;
     goal?: {
       emoji: string;
       title: string;
@@ -66,6 +68,18 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
         </div>
         <span>•</span>
         <span>{task.durationMinutes}min</span>
+        {task.isTimerRunning && (
+          <span className="flex items-center gap-1 text-green-600 font-medium">
+            <Timer className="h-3 w-3" />
+            Running
+          </span>
+        )}
+        {!task.isTimerRunning && (task.timeSpentMinutes ?? 0) > 0 && (
+          <span className="flex items-center gap-1 text-green-600">
+            <Timer className="h-3 w-3" />
+            {task.timeSpentMinutes}min
+          </span>
+        )}
       </div>
     </div>
   );

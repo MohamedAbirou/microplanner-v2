@@ -8,6 +8,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { CalendarService } from '../calendar/calendar.service';
 import { EmailService } from '../email/email.service';
 import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
+import { AiMemoryService } from '../ai-memory/ai-memory.service';
 import { GeneratePlanDto } from './dto/generate-plan.dto';
 import { QueryPlansDto } from './dto/query-plans.dto';
 import { ClaudeSonnetPlannerService } from './strategies/claude-sonnet-planner.service';
@@ -38,6 +39,7 @@ export class PlansService {
     private emailService: EmailService,
     private calendarService: CalendarService,
     private usageLimitService: UsageLimitService,
+    private aiMemoryService: AiMemoryService,
   ) {
     this.planningServiceUrl =
       this.configService.get('PLANNING_SERVICE_URL') || 'http://localhost:8000';
@@ -85,6 +87,18 @@ export class PlansService {
     );
 
     this.logger.debug(`Fetched ${calendarEvents.length} calendar events for conflict detection`);
+
+    // 5b. Load AI memories / user overrides and attach to the user context so
+    // the AI planners can honour learned + explicitly-declared preferences.
+    // Non-breaking: attached as an extra field the planners read if present.
+    try {
+      const memories = await this.aiMemoryService.getForPlanning(userId);
+      (user as any).aiMemories = memories;
+    } catch (err) {
+      this.logger.warn(
+        `Failed to load AI memories for user ${userId}: ${err instanceof Error ? err.message : err}`
+      );
+    }
 
     // 6. Select planning strategy based on tier
     let planJson: any;

@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { format, startOfDay, endOfDay } from 'date-fns';
-import { CheckCircle2, Plus, Calendar as CalendarIcon } from 'lucide-react';
+import Link from 'next/link';
+import { CheckCircle2, Plus, Calendar as CalendarIcon, AlertTriangle, Loader2, Sunrise, Target } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TaskList } from '@/components/tasks/task-list';
@@ -30,15 +31,21 @@ import {
   useStartTimer,
   useStopTimer,
   useSkipTask,
+  useSmartReschedule,
 } from '@/hooks/use-graphql';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
+import { getDailyIntention } from '@/lib/daily-ritual';
 
 export default function TodayPage() {
   const [filters, setFilters] = React.useState<TaskFilters>(clearAllFilters());
   const [sort, setSort] = React.useState<TaskSort>(SORT_PRESETS.DATE_ASC);
   const [deleteTaskId, setDeleteTaskId] = React.useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
+  const [intention, setIntention] = React.useState('');
+  React.useEffect(() => {
+    setIntention(getDailyIntention());
+  }, []);
 
   // Fetch today's tasks from GraphQL
   // Note: We filter by single date (not dateRange) in GraphQL, then do client-side filtering
@@ -50,7 +57,8 @@ export default function TodayPage() {
     {
       field: 'SCHEDULED_DATE',
       direction: 'ASC',
-    }
+    },
+    { take: 80 }
   );
 
   // Fetch goals for filters
@@ -62,6 +70,7 @@ export default function TodayPage() {
   const { startTimer } = useStartTimer();
   const { stopTimer } = useStopTimer();
   const { skipTask } = useSkipTask();
+  const { reschedule, reschedulingId } = useSmartReschedule();
 
   // Fully-wired modal actions + dependency data.
   const taskActions = useTaskDetailActions(allTasks, refetch);
@@ -78,6 +87,22 @@ export default function TodayPage() {
   }, [filteredAndSortedTasks]);
 
   const completionPercentage = stats.completionRate;
+
+  // Tasks whose scheduled start time has already passed today and aren't done.
+  const overdueTasks = React.useMemo(() => {
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    return allTasks.filter((t: any) => {
+      if (t.isCompleted || !t.startTime) return false;
+      const [h, m] = String(t.startTime).split(':').map(Number);
+      return h * 60 + (m || 0) < nowMinutes;
+    });
+  }, [allTasks]);
+
+  const handleReschedule = async (taskId: string) => {
+    const ok = await reschedule(taskId);
+    if (ok) refetch();
+  };
 
   const handleComplete = async (taskId: string) => {
     await completeTask({ variables: { id: taskId } });
@@ -125,11 +150,32 @@ export default function TodayPage() {
           </div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Today</h1>
         </div>
-        <Button className="h-9">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Task
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/plan-day">
+            <Button variant="outline" className="h-9">
+              <Sunrise className="mr-2 h-4 w-4" />
+              Plan day
+            </Button>
+          </Link>
+          <Button className="h-9">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Task
+          </Button>
+        </div>
       </div>
+
+      {/* Daily intention */}
+      {intention && (
+        <div className="flex items-start gap-2.5 rounded-[10px] border border-border bg-accent px-4 py-3">
+          <Target className="h-4 w-4 mt-0.5 flex-none text-muted-foreground" />
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Today&apos;s intention
+            </div>
+            <p className="text-sm mt-0.5">{intention}</p>
+          </div>
+        </div>
+      )}
 
       {/* Progress Overview */}
       <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
@@ -158,6 +204,47 @@ export default function TodayPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Overdue / past-time tasks — offer smart reschedule */}
+      {overdueTasks.length > 0 && (
+        <Card className="rounded-[14px] border-amber-300 bg-amber-50 shadow-[var(--sh-sm)] dark:border-amber-900/50 dark:bg-amber-950/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-[15px] text-amber-900 dark:text-amber-200">
+              <AlertTriangle className="h-5 w-5" />
+              {overdueTasks.length} task{overdueTasks.length === 1 ? '' : 's'} past their scheduled time
+            </CardTitle>
+            <CardDescription className="text-[13px] text-amber-800/80 dark:text-amber-300/70">
+              Reschedule to the next open slot that fits your working hours and focus time.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {overdueTasks.map((task: any) => (
+              <div
+                key={task.id}
+                className="flex items-center justify-between gap-3 rounded-[10px] border border-amber-200 bg-background/60 p-3 dark:border-amber-900/40"
+              >
+                <div className="min-w-0">
+                  <div className="truncate font-medium">{task.title}</div>
+                  <div className="text-[13px] text-muted-foreground">Was scheduled for {task.startTime}</div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={reschedulingId === task.id}
+                  onClick={() => handleReschedule(task.id)}
+                >
+                  {reschedulingId === task.id ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  Reschedule
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters and Sorting */}
       <div className="space-y-4">

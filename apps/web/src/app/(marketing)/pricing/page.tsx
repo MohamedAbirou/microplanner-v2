@@ -4,13 +4,18 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2, HelpCircle, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useAuth } from '@clerk/nextjs';
 
 export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const { isSignedIn } = useAuth();
 
-  const plans = [
+  // Prices are the single source of truth from billing.constants.ts
+  // (STARTER $7, PRO $15, PREMIUM $29).
+  const basePlans = [
     {
       name: 'Free',
+      tier: 'FREE' as const,
       price: 0,
       description: 'Perfect for trying out MicroPlanner',
       features: [
@@ -23,13 +28,12 @@ export default function PricingPage() {
         { text: 'Advanced analytics', included: false },
         { text: 'Team workspaces', included: false },
       ],
-      cta: 'Get Started Free',
-      ctaLink: '/sign-up',
       popular: false,
     },
     {
       name: 'Starter',
-      price: 8,
+      tier: 'STARTER' as const,
+      price: 7,
       description: 'For individuals getting serious about goals',
       features: [
         { text: '5 active goals', included: true },
@@ -41,13 +45,12 @@ export default function PricingPage() {
         { text: 'Advanced analytics', included: false },
         { text: 'Team workspaces', included: false },
       ],
-      cta: 'Get Started Free',
-      ctaLink: '/sign-up',
       popular: false,
     },
     {
       name: 'Pro',
-      price: 12,
+      tier: 'PRO' as const,
+      price: 15,
       description: 'Our most popular plan for power users',
       features: [
         { text: 'Unlimited goals', included: true },
@@ -59,13 +62,12 @@ export default function PricingPage() {
         { text: 'Priority email support', included: true },
         { text: 'Team workspaces', included: false },
       ],
-      cta: 'Get Started Free',
-      ctaLink: '/sign-up',
       popular: true,
     },
     {
       name: 'Premium',
-      price: 18,
+      tier: 'PREMIUM' as const,
+      price: 29,
       description: 'For teams and organizations',
       features: [
         { text: 'Everything in Pro', included: true },
@@ -77,11 +79,26 @@ export default function PricingPage() {
         { text: '24/7 priority support', included: true },
         { text: 'Custom integrations', included: true },
       ],
-      cta: 'Get Started Free',
-      ctaLink: '/sign-up',
       popular: false,
     },
   ];
+
+  // Authenticated visitors go straight to the in-app upgrade/checkout surface;
+  // anonymous visitors sign up first.
+  const plans = basePlans.map((plan) => {
+    if (plan.tier === 'FREE') {
+      return {
+        ...plan,
+        cta: isSignedIn ? 'Go to Dashboard' : 'Get Started Free',
+        ctaLink: isSignedIn ? '/dashboard' : '/sign-up',
+      };
+    }
+    return {
+      ...plan,
+      cta: isSignedIn ? `Upgrade to ${plan.name}` : `Start with ${plan.name}`,
+      ctaLink: isSignedIn ? `/billing?upgrade=${plan.tier}` : `/sign-up?plan=${plan.tier.toLowerCase()}`,
+    };
+  });
 
   const faqs = [
     {

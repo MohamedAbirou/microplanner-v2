@@ -10,10 +10,11 @@ import { ClaudeSonnetPlannerService } from './strategies/claude-sonnet-planner.s
 import { EmailModule } from '../email/email.module';
 import { CalendarModule } from '../calendar/calendar.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
+import { AiMemoryModule } from '../ai-memory/ai-memory.module';
 import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
 
 @Module({
-  imports: [HttpModule, EmailModule, CalendarModule, AnalyticsModule],
+  imports: [HttpModule, EmailModule, CalendarModule, AnalyticsModule, AiMemoryModule],
   controllers: [PlansController],
   providers: [
     PlansService,

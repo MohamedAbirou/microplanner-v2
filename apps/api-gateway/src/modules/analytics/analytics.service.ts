@@ -358,75 +358,99 @@ export class AnalyticsService {
   async aggregateMetrics(): Promise<{ processed: number }> {
     this.logger.log('Running analytics aggregation job');
 
-    // Get all users
-    const users = await this.prisma.user.findMany({
-      select: { id: true },
-    });
-
+    const USER_PAGE_SIZE = 500;
     let processed = 0;
+    let cursor: string | undefined;
 
-    for (const user of users) {
-      try {
-        // Update goal analytics
-        const goals = await this.prisma.goal.findMany({
-          where: { userId: user.id },
-          select: { id: true },
-        });
+    // Cursor-paginate users so we never load the entire user table into
+    // memory. At 1M users the previous findMany({}) was an OOM waiting to
+    // happen.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const users = await this.prisma.user.findMany({
+        select: { id: true },
+        take: USER_PAGE_SIZE,
+        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+        orderBy: { id: 'asc' },
+      });
 
-        for (const goal of goals) {
-          // Calculate and update goal analytics
-          const tasks = await this.prisma.task.findMany({
-            where: { goalId: goal.id },
-          });
+      if (users.length === 0) break;
 
-          const totalScheduled = tasks.length;
-          const totalCompletions = tasks.filter(t => t.isCompleted).length;
-          const completionRate = totalScheduled > 0 ? (totalCompletions / totalScheduled) * 100 : 0;
-
-          await this.prisma.goal.update({
-            where: { id: goal.id },
-            data: {
-              totalScheduled,
-              totalCompletions,
-              completionRate,
-            },
-          });
+      for (const user of users) {
+        try {
+          await this.aggregateUserMetrics(user.id);
+          processed++;
+        } catch (error) {
+          this.logger.error(`Failed to aggregate metrics for user ${user.id}`, error);
         }
-
-        // Update plan completion rates
-        const plans = await this.prisma.weeklyPlan.findMany({
-          where: { userId: user.id },
-          select: { id: true },
-        });
-
-        for (const plan of plans) {
-          const tasks = await this.prisma.task.findMany({
-            where: { planId: plan.id },
-          });
-
-          const totalTasks = tasks.length;
-          const completedTasks = tasks.filter(t => t.isCompleted).length;
-          const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-
-          await this.prisma.weeklyPlan.update({
-            where: { id: plan.id },
-            data: {
-              totalTasks,
-              completedTasks,
-              completionRate,
-            },
-          });
-        }
-
-        processed++;
-      } catch (error) {
-        this.logger.error(`Failed to aggregate metrics for user ${user.id}`, error);
       }
+
+      cursor = users[users.length - 1].id;
+      if (users.length < USER_PAGE_SIZE) break;
     }
 
     this.logger.log(`Analytics aggregation complete: ${processed} users processed`);
 
     return { processed };
+  }
+
+  /**
+   * Recompute goal + plan rollups for a single user using groupBy aggregations
+   * instead of loading every task row. Two grouped counts (by goalId, by
+   * planId) replace what was previously N+M full task findMany() calls.
+   */
+  private async aggregateUserMetrics(userId: string): Promise<void> {
+    const [goals, plans, byGoal, byGoalCompleted, byPlan, byPlanCompleted] =
+      await Promise.all([
+        this.prisma.goal.findMany({ where: { userId }, select: { id: true } }),
+        this.prisma.weeklyPlan.findMany({ where: { userId }, select: { id: true } }),
+        this.prisma.task.groupBy({
+          by: ['goalId'],
+          where: { userId, goalId: { not: null } },
+          _count: { _all: true },
+        }),
+        this.prisma.task.groupBy({
+          by: ['goalId'],
+          where: { userId, goalId: { not: null }, isCompleted: true },
+          _count: { _all: true },
+        }),
+        this.prisma.task.groupBy({
+          by: ['planId'],
+          where: { userId, planId: { not: null } },
+          _count: { _all: true },
+        }),
+        this.prisma.task.groupBy({
+          by: ['planId'],
+          where: { userId, planId: { not: null }, isCompleted: true },
+          _count: { _all: true },
+        }),
+      ]);
+
+    const totalByGoal = new Map(byGoal.map((r) => [r.goalId, r._count._all]));
+    const doneByGoal = new Map(byGoalCompleted.map((r) => [r.goalId, r._count._all]));
+    const totalByPlan = new Map(byPlan.map((r) => [r.planId, r._count._all]));
+    const doneByPlan = new Map(byPlanCompleted.map((r) => [r.planId, r._count._all]));
+
+    await this.prisma.$transaction([
+      ...goals.map((goal) => {
+        const totalScheduled = totalByGoal.get(goal.id) ?? 0;
+        const totalCompletions = doneByGoal.get(goal.id) ?? 0;
+        const completionRate = totalScheduled > 0 ? (totalCompletions / totalScheduled) * 100 : 0;
+        return this.prisma.goal.update({
+          where: { id: goal.id },
+          data: { totalScheduled, totalCompletions, completionRate },
+        });
+      }),
+      ...plans.map((plan) => {
+        const totalTasks = totalByPlan.get(plan.id) ?? 0;
+        const completedTasks = doneByPlan.get(plan.id) ?? 0;
+        const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+        return this.prisma.weeklyPlan.update({
+          where: { id: plan.id },
+          data: { totalTasks, completedTasks, completionRate },
+        });
+      }),
+    ]);
   }
 
   private calculateCurrentWeekBoundaries(weekStart?: string): {

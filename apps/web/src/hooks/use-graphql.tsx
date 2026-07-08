@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery, useMutation, useSubscription, ApolloError } from '@apollo/client';
+import { useQuery, useMutation, useSubscription, useApolloClient, ApolloError } from '@apollo/client';
+import * as React from 'react';
 import { toast } from 'sonner';
 import * as operations from '@/graphql/operations';
 
@@ -31,9 +32,17 @@ function mutationToastHandlers(
 // TASKS
 // ============================================================================
 
-export function useTasks(filter?: any, sort?: any) {
+export type UseTasksOptions = {
+  take?: number;
+  skip?: number;
+  /** When true, the query is not executed (e.g. defer until a panel opens). */
+  skipQuery?: boolean;
+};
+
+export function useTasks(filter?: any, sort?: any, options?: UseTasksOptions) {
   const { data, loading, error, refetch } = useQuery(operations.GET_TASKS, {
-    variables: { filter, sort },
+    variables: { filter, sort, take: options?.take, skip: options?.skip },
+    skip: options?.skipQuery,
     fetchPolicy: 'cache-first',
     nextFetchPolicy: 'cache-first',
   });
@@ -79,13 +88,69 @@ export function useCreateTask() {
 
 export function useUpdateTask(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
+  // No refetch: UPDATE_TASK returns the task's id + changed fields, so Apollo
+  // updates the normalized Task entity in place across every mounted list.
+  // Refetching GetTasks by name would re-run every active view (day/week/
+  // month/tasks/today/dashboard) on a single edit — the production refetch
+  // storm we're eliminating. (A scheduledDate change that moves a task out of
+  // a view's window self-corrects on the next natural refetch/navigation.)
   const [updateTask, { loading, error }] = useMutation(operations.UPDATE_TASK, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
-    awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Task updated successfully', 'Failed to update task'),
   });
 
   return { updateTask, loading, error };
+}
+
+/**
+ * Fetch the next available slot for a task and apply it in one action.
+ * Respects work hours, focus blocks, and other scheduled tasks (server-side).
+ */
+export function useSmartReschedule() {
+  const client = useApolloClient();
+  const [updateTask] = useMutation(operations.UPDATE_TASK);
+  const [reschedulingId, setReschedulingId] = React.useState<string | null>(null);
+
+  const reschedule = React.useCallback(
+    async (taskId: string): Promise<boolean> => {
+      setReschedulingId(taskId);
+      try {
+        const { data } = await client.query({
+          query: operations.GET_RESCHEDULE_SUGGESTION,
+          variables: { taskId },
+          fetchPolicy: 'network-only',
+        });
+        const suggestion = data?.rescheduleSuggestion;
+        if (!suggestion) {
+          toast.error('No open slot found in the next two weeks', {
+            description: 'Try freeing up working hours or a focus block.',
+          });
+          return false;
+        }
+        await updateTask({
+          variables: {
+            id: taskId,
+            input: {
+              scheduledDate: suggestion.scheduledDate,
+              startTime: suggestion.startTime,
+              endTime: suggestion.endTime,
+            },
+          },
+        });
+        toast.success('Task rescheduled', { description: suggestion.reason });
+        return true;
+      } catch (error) {
+        toast.error('Failed to reschedule task', {
+          description: error instanceof Error ? error.message : undefined,
+        });
+        return false;
+      } finally {
+        setReschedulingId(null);
+      }
+    },
+    [client, updateTask]
+  );
+
+  return { reschedule, reschedulingId };
 }
 
 export function useDeleteTask(options?: MutationNotifyOptions) {
@@ -101,9 +166,11 @@ export function useDeleteTask(options?: MutationNotifyOptions) {
 
 export function useCompleteTask(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
+  // No refetch: COMPLETE_TASK returns id + isCompleted/completedAt (+ goal
+  // streak fields), so Apollo patches the Task (and Goal) entity in the
+  // normalized cache. This is the hottest task mutation — refetching every
+  // active GetTasks here was the main source of the refetch storm.
   const [completeTask, { loading, error }] = useMutation(operations.COMPLETE_TASK, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
-    awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Task completed!', 'Failed to complete task'),
   });
 
@@ -145,9 +212,9 @@ export function useBulkDeleteTasks() {
 }
 
 export function useSkipTask() {
+  // No refetch: SKIP_TASK returns id + isSkipped/skippedReason/skippedAt →
+  // Apollo patches the Task entity in place across mounted views.
   const [skipTask, { loading, error }] = useMutation(operations.SKIP_TASK, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
-    awaitRefetchQueries: true,
     onCompleted: () => {
       toast.success('Task skipped');
     },
@@ -163,9 +230,9 @@ export function useSkipTask() {
 
 export function useUncompleteTask(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
+  // No refetch: UNCOMPLETE_TASK returns id + isCompleted/completedAt → Apollo
+  // patches the Task entity in place.
   const [uncompleteTask, { loading, error }] = useMutation(operations.UNCOMPLETE_TASK, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
-    awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Task marked as incomplete', 'Failed to uncomplete task'),
   });
 
@@ -376,9 +443,10 @@ export function useDeleteGoal() {
 // PLANS
 // ============================================================================
 
-export function usePlans(filter?: any) {
+export function usePlans(filter?: any, options?: { skipQuery?: boolean }) {
   const { data, loading, error, refetch } = useQuery(operations.GET_PLANS, {
     variables: filter ? { filter } : undefined,
+    skip: options?.skipQuery,
   });
 
   return {
@@ -450,6 +518,19 @@ export function useAcceptPlan() {
   });
 
   return { acceptPlan, loading, error };
+}
+
+export function useRegeneratePlan() {
+  const [regeneratePlan, { loading, error }] = useMutation(operations.REGENERATE_PLAN, {
+    refetchQueries: [{ query: operations.GET_PLANS }],
+    onError: (error) => {
+      toast.error('Failed to regenerate plan', {
+        description: error.message,
+      });
+    },
+  });
+
+  return { regeneratePlan, loading, error };
 }
 
 // ============================================================================

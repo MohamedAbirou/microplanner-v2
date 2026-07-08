@@ -15,6 +15,11 @@ export const taskResolvers = {
       return dataSources.tasksAPI.getTasks(user.userId, args);
     },
 
+    rescheduleSuggestion: async (_: any, { taskId }: { taskId: string }, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.tasksAPI.getRescheduleSuggestion(taskId, user.userId);
+    },
+
     tasksByProject: async (_: any, { projectId }: { projectId: string }, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.tasksAPI.getTasksByProject(projectId, user.userId);

@@ -1,9 +1,10 @@
 import type { User } from '@microplanner/database';
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { RegisterPushTokenDto, RemovePushTokenDto } from './dto/push-token.dto';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
@@ -69,6 +70,22 @@ export class UsersController {
         language: updatedUser.language,
       },
     };
+  }
+
+  @Post('me/push-token')
+  @ApiOperation({ summary: 'Register a Web Push subscription' })
+  @ApiResponse({ status: 201, description: 'Push subscription registered' })
+  async addPushToken(@CurrentUser() user: User, @Body() dto: RegisterPushTokenDto) {
+    const updated = await this.usersService.addPushToken(user.id, dto.subscription);
+    return { message: 'Push subscription registered', pushTokenCount: updated.pushTokens.length };
+  }
+
+  @Delete('me/push-token')
+  @ApiOperation({ summary: 'Remove a Web Push subscription' })
+  @ApiResponse({ status: 200, description: 'Push subscription removed' })
+  async removePushToken(@CurrentUser() user: User, @Body() dto: RemovePushTokenDto) {
+    const updated = await this.usersService.removePushToken(user.id, dto.endpoint);
+    return { message: 'Push subscription removed', pushTokenCount: updated.pushTokens.length };
   }
 
   @Put('me/preferences')

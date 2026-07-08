@@ -56,6 +56,23 @@ type WeeklyGoalProgress {
   completionRate: Float!
 }
 
+type WeeklyReviewGoal {
+  title: String!
+  completions: Int!
+}
+
+type WeeklyReview {
+  weekStartDate: DateTime!
+  weekEndDate: DateTime!
+  goalsCreated: Int!
+  plansGenerated: Int!
+  tasksCompleted: Int!
+  completionRate: Float!
+  topGoals: [WeeklyReviewGoal!]!
+  productivity: String!
+  recommendation: String!
+}
+
 type DashboardStats {
   # Today
   todayTasks: Int!
@@ -90,6 +107,9 @@ extend type Query {
 
   # insights
   insights(type: String, limit: Int): [String!]!
+
+  # Structured weekly review (completion rate, top goals, recommendation)
+  weeklyReview: WeeklyReview!
 
   # Goal-specific analytics
   goalAnalyticsReport(goalId: ID!): GoalAnalyticsReport!

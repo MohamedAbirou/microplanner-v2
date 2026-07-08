@@ -14,6 +14,239 @@ import { gql } from '@apollo/client';
  */
 
 // ============================================================================
+// REFERRALS
+// ============================================================================
+
+export const GET_MY_REFERRAL_STATS = gql`
+  query MyReferralStats {
+    myReferralStats {
+      code
+      totalReferrals
+      activeReferrals
+      pendingReferrals
+      referrals {
+        id
+        status
+        referredName
+        createdAt
+      }
+    }
+  }
+`;
+
+export const REDEEM_REFERRAL = gql`
+  mutation RedeemReferral($code: String!) {
+    redeemReferral(code: $code)
+  }
+`;
+
+// ============================================================================
+// AI MEMORY (scheduling overrides)
+// ============================================================================
+
+export const GET_AI_MEMORIES = gql`
+  query GetAiMemories {
+    aiMemories {
+      id
+      memoryType
+      content
+      confidence
+      source
+      lastUsedAt
+      createdAt
+    }
+  }
+`;
+
+export const CREATE_AI_MEMORY = gql`
+  mutation CreateAiMemory($input: CreateAiMemoryInput!) {
+    createAiMemory(input: $input) {
+      id
+      memoryType
+      content
+      confidence
+    }
+  }
+`;
+
+export const DELETE_AI_MEMORY = gql`
+  mutation DeleteAiMemory($id: ID!) {
+    deleteAiMemory(id: $id)
+  }
+`;
+
+// ============================================================================
+// GDPR (account deletion + data export)
+// ============================================================================
+
+export const EXPORT_MY_DATA = gql`
+  query ExportMyData {
+    exportMyData
+  }
+`;
+
+export const DELETE_MY_ACCOUNT = gql`
+  mutation DeleteMyAccount {
+    deleteMyAccount
+  }
+`;
+
+// ============================================================================
+// PUSH NOTIFICATIONS
+// ============================================================================
+
+export const REGISTER_PUSH_TOKEN = gql`
+  mutation RegisterPushToken($subscription: JSON!) {
+    registerPushToken(subscription: $subscription)
+  }
+`;
+
+export const UNREGISTER_PUSH_TOKEN = gql`
+  mutation UnregisterPushToken($endpoint: String!) {
+    unregisterPushToken(endpoint: $endpoint)
+  }
+`;
+
+// ============================================================================
+// PROJECTS & KANBAN
+// ============================================================================
+
+export const GET_PROJECTS = gql`
+  query GetProjects($includeArchived: Boolean, $orderBy: ProjectOrderBy) {
+    projects(includeArchived: $includeArchived, orderBy: $orderBy) {
+      id
+      name
+      description
+      color
+      icon
+      isArchived
+      taskCount
+      completedTaskCount
+      progressPercentage
+      createdAt
+    }
+  }
+`;
+
+export const GET_PROJECT_BOARD = gql`
+  query GetProjectBoard($id: ID!) {
+    project(id: $id) {
+      id
+      name
+      description
+      color
+      icon
+      taskCount
+      completedTaskCount
+      progressPercentage
+      tasks {
+        id
+        title
+        isCompleted
+        isTimerRunning
+        timeSpentMinutes
+        durationMinutes
+        priority
+        scheduledDate
+        startTime
+        endTime
+        goal {
+          id
+          emoji
+          title
+          color
+        }
+      }
+    }
+  }
+`;
+
+export const CREATE_PROJECT = gql`
+  mutation CreateProject($input: CreateProjectInput!) {
+    createProject(input: $input) {
+      id
+      name
+      color
+      icon
+    }
+  }
+`;
+
+export const UPDATE_PROJECT = gql`
+  mutation UpdateProject($id: ID!, $input: UpdateProjectInput!) {
+    updateProject(id: $id, input: $input) {
+      id
+      name
+      description
+      color
+      icon
+    }
+  }
+`;
+
+export const DELETE_PROJECT = gql`
+  mutation DeleteProject($id: ID!) {
+    deleteProject(id: $id)
+  }
+`;
+
+// ============================================================================
+// PLAN TEMPLATES
+// ============================================================================
+
+export const GET_PLAN_TEMPLATES = gql`
+  query GetPlanTemplates($category: String, $featured: Boolean, $limit: Int, $offset: Int) {
+    planTemplates(category: $category, featured: $featured, limit: $limit, offset: $offset) {
+      id
+      name
+      description
+      emoji
+      category
+      tags
+      isPublic
+      isFeatured
+      usageCount
+      rating
+      structure
+      createdAt
+    }
+  }
+`;
+
+export const SAVE_AS_PLAN_TEMPLATE = gql`
+  mutation SaveAsPlanTemplate($planId: ID!, $name: String!, $description: String) {
+    saveAsPlanTemplate(planId: $planId, name: $name, description: $description) {
+      id
+      name
+    }
+  }
+`;
+
+export const GENERATE_PLAN_FROM_TEMPLATE = gql`
+  mutation GeneratePlanFromTemplate($input: GenerateFromTemplateInput!) {
+    generatePlanFromTemplate(input: $input) {
+      id
+      status
+      weekStartDate
+    }
+  }
+`;
+
+export const SET_DEFAULT_PLAN_TEMPLATE = gql`
+  mutation SetDefaultPlanTemplate($id: ID!) {
+    setDefaultPlanTemplate(id: $id) {
+      id
+    }
+  }
+`;
+
+export const DELETE_PLAN_TEMPLATE = gql`
+  mutation DeletePlanTemplate($id: ID!) {
+    deletePlanTemplate(id: $id)
+  }
+`;
+
+// ============================================================================
 // ANALYTICS & INSIGHTS
 // ============================================================================
 
@@ -67,6 +300,25 @@ export const GET_PRODUCTIVITY_SCORES = gql`
 export const GET_INSIGHTS = gql`
   query GetInsights($type: String, $limit: Int) {
     insights(type: $type, limit: $limit)
+  }
+`;
+
+export const GET_WEEKLY_REVIEW = gql`
+  query GetWeeklyReview {
+    weeklyReview {
+      weekStartDate
+      weekEndDate
+      goalsCreated
+      plansGenerated
+      tasksCompleted
+      completionRate
+      productivity
+      recommendation
+      topGoals {
+        title
+        completions
+      }
+    }
   }
 `;
 
@@ -157,6 +409,78 @@ export const UPDATE_FOCUS_BLOCK = gql`
 export const DELETE_FOCUS_BLOCK = gql`
   mutation DeleteFocusBlock($id: ID!) {
     deleteFocusTimeBlock(id: $id)
+  }
+`;
+
+// ============================================================================
+// PRODUCTIVITY FEATURES - NO MEETING DAYS
+// ============================================================================
+
+export const GET_NO_MEETING_DAYS = gql`
+  query GetNoMeetingDays($isActive: Boolean) {
+    noMeetingDays(isActive: $isActive) {
+      id
+      dayOfWeek
+      isActive
+      allowExceptions
+    }
+  }
+`;
+
+export const CREATE_NO_MEETING_DAY = gql`
+  mutation CreateNoMeetingDay($input: CreateNoMeetingDayInput!) {
+    createNoMeetingDay(input: $input) {
+      id
+      dayOfWeek
+      isActive
+      allowExceptions
+    }
+  }
+`;
+
+export const DELETE_NO_MEETING_DAY = gql`
+  mutation DeleteNoMeetingDay($id: ID!) {
+    deleteNoMeetingDay(id: $id)
+  }
+`;
+
+// ============================================================================
+// PRODUCTIVITY FEATURES - CALENDAR DEFENSE
+// ============================================================================
+
+export const GET_CALENDAR_DEFENSE = gql`
+  query GetCalendarDefense {
+    calendarDefense {
+      id
+      autoAcceptDuringOpenHours
+      autoDeclineDuringFocusTime
+      autoDeclineOutsideWorkHours
+      autoDeclineDoubleBookings
+      requireMinimumNotice
+      minimumNoticeHours
+      requireBufferBetweenMeetings
+      bufferMinutes
+      suggestShorterMeetings
+      defaultMeetingDuration
+    }
+  }
+`;
+
+export const UPDATE_CALENDAR_DEFENSE = gql`
+  mutation UpdateCalendarDefense($input: UpdateCalendarDefenseInput!) {
+    updateCalendarDefense(input: $input) {
+      id
+      autoAcceptDuringOpenHours
+      autoDeclineDuringFocusTime
+      autoDeclineOutsideWorkHours
+      autoDeclineDoubleBookings
+      requireMinimumNotice
+      minimumNoticeHours
+      requireBufferBetweenMeetings
+      bufferMinutes
+      suggestShorterMeetings
+      defaultMeetingDuration
+    }
   }
 `;
 
@@ -422,6 +746,27 @@ export const INVITE_TEAM_MEMBER = gql`
   }
 `;
 
+export const DELETE_TEAM = gql`
+  mutation DeleteTeam($id: ID!) {
+    deleteTeam(id: $id)
+  }
+`;
+
+export const REMOVE_TEAM_MEMBER = gql`
+  mutation RemoveTeamMember($teamId: ID!, $userId: ID!) {
+    removeTeamMember(teamId: $teamId, userId: $userId)
+  }
+`;
+
+export const UPDATE_TEAM_MEMBER_ROLE = gql`
+  mutation UpdateTeamMemberRole($teamId: ID!, $userId: ID!, $role: TeamRole!) {
+    updateTeamMemberRole(teamId: $teamId, userId: $userId, role: $role) {
+      id
+      role
+    }
+  }
+`;
+
 export const GET_API_KEYS = gql`
   query GetApiKeys {
     apiKeys {
@@ -479,6 +824,63 @@ export const CREATE_SCHEDULING_LINK = gql`
       slug
       title: name
       duration
+    }
+  }
+`;
+
+export const DELETE_SCHEDULING_LINK = gql`
+  mutation DeleteSchedulingLink($id: ID!) {
+    deleteSchedulingLink(id: $id)
+  }
+`;
+
+export const TOGGLE_SCHEDULING_LINK = gql`
+  mutation ToggleSchedulingLink($id: ID!) {
+    toggleSchedulingLink(id: $id) {
+      id
+      isActive
+    }
+  }
+`;
+
+// Public (no auth) — used by the booking page
+export const GET_SCHEDULING_LINK_BY_SLUG = gql`
+  query GetSchedulingLinkBySlug($slug: String!) {
+    schedulingLinkBySlug(slug: $slug) {
+      id
+      name
+      slug
+      description
+      duration
+      location
+      meetingType
+      color
+      isActive
+      requiresConfirmation
+      user {
+        name
+      }
+    }
+  }
+`;
+
+export const GET_AVAILABLE_SLOTS = gql`
+  query GetAvailableSlots($linkId: ID!, $date: DateTime!) {
+    availableSlots(linkId: $linkId, date: $date) {
+      start
+      end
+    }
+  }
+`;
+
+export const CREATE_BOOKING = gql`
+  mutation CreateBooking($input: CreateBookingInput!) {
+    createBooking(input: $input) {
+      id
+      status
+      startTime
+      endTime
+      attendeeName
     }
   }
 `;
@@ -543,6 +945,22 @@ export const CONNECT_INTEGRATION = gql`
   }
 `;
 
+export const DISCONNECT_INTEGRATION = gql`
+  mutation DisconnectIntegration($id: ID!) {
+    disconnectIntegration(id: $id)
+  }
+`;
+
+export const SYNC_INTEGRATION = gql`
+  mutation SyncIntegration($id: ID!) {
+    syncIntegration(id: $id) {
+      id
+      lastSyncedAt: lastSyncAt
+      isActive
+    }
+  }
+`;
+
 export const GET_WEBHOOKS = gql`
   query GetWebhooks {
     webhooks {
@@ -563,6 +981,46 @@ export const CREATE_WEBHOOK = gql`
       url
       events
       secret
+    }
+  }
+`;
+
+export const DELETE_WEBHOOK = gql`
+  mutation DeleteWebhook($id: ID!) {
+    deleteWebhook(id: $id)
+  }
+`;
+
+export const TOGGLE_WEBHOOK = gql`
+  mutation ToggleWebhook($id: ID!) {
+    toggleWebhook(id: $id) {
+      id
+      isActive
+    }
+  }
+`;
+
+export const GET_WEBHOOK_DELIVERIES = gql`
+  query GetWebhookDeliveries($webhookId: ID!, $limit: Int) {
+    webhookDeliveries(webhookId: $webhookId, limit: $limit) {
+      id
+      event
+      status
+      statusCode
+      attempts
+      error
+      lastAttemptAt
+      createdAt
+    }
+  }
+`;
+
+export const RETRY_WEBHOOK_DELIVERY = gql`
+  mutation RetryWebhookDelivery($deliveryId: ID!) {
+    retryWebhookDelivery(deliveryId: $deliveryId) {
+      id
+      status
+      attempts
     }
   }
 `;
@@ -594,10 +1052,50 @@ export const GET_SUBSCRIPTION = gql`
 export const GET_USAGE_STATS = gql`
   query GetUsageStats {
     usageStats {
-      goalsUsed: goalsCreated
-      tasksUsed: tasksCreated
-      aiPlansUsed: aiGenerationsUsed
-      resetDate: resetsAt
+      goalsCreated
+      plansGenerated
+      tasksCreated
+      aiGenerationsUsed
+      goalLimit
+      planLimit
+      taskLimit
+      aiGenerationLimit
+      goalUsagePercent
+      planUsagePercent
+      taskUsagePercent
+      aiUsagePercent
+      resetsAt
+    }
+  }
+`;
+
+export const GET_BILLING_INFO = gql`
+  query GetBillingInfo {
+    billingInfo {
+      stripeCustomerId
+      paymentMethod {
+        brand
+        last4
+        expMonth
+        expYear
+      }
+      upcomingInvoice {
+        amountDue
+        currency
+        periodStart
+        periodEnd
+        total
+      }
+      invoices {
+        id
+        amountPaid
+        amountDue
+        currency
+        status
+        invoicePdf
+        hostedInvoiceUrl
+        created
+      }
     }
   }
 `;
@@ -611,9 +1109,27 @@ export const CREATE_CHECKOUT_SESSION = gql`
   }
 `;
 
+export const UPGRADE_SUBSCRIPTION = gql`
+  mutation UpgradeSubscription($tier: SubscriptionTier!) {
+    upgradeSubscription(tier: $tier) {
+      sessionId
+      url
+    }
+  }
+`;
+
 export const CANCEL_SUBSCRIPTION = gql`
   mutation CancelSubscription {
     cancelSubscription {
+      id
+      cancelAtPeriodEnd
+    }
+  }
+`;
+
+export const RESUME_SUBSCRIPTION = gql`
+  mutation ResumeSubscription {
+    resumeSubscription {
       id
       cancelAtPeriodEnd
     }

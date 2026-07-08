@@ -11,6 +11,7 @@ import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { createClient } from 'graphql-ws';
 import { config } from '@microplanner/config';
+import { enqueueMutation } from '@/lib/offline-queue';
 
 /**
  * Create Apollo Client with:
@@ -80,6 +81,27 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
 
   if (networkError) {
     console.error(`[Network error]: ${networkError}`);
+
+    // Offline mutation capture: if the device is offline and this is a
+    // mutation, queue it for replay on reconnect instead of losing the action.
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (isOffline) {
+      try {
+        const def = getMainDefinition(operation.query);
+        const isMutation =
+          def.kind === 'OperationDefinition' && def.operation === 'mutation';
+        const body = operation.query.loc?.source.body;
+        if (isMutation && body) {
+          void enqueueMutation({
+            operationName: operation.operationName,
+            query: body,
+            variables: operation.variables || {},
+          });
+        }
+      } catch {
+        /* best-effort; never throw from the error link */
+      }
+    }
   }
 });
 

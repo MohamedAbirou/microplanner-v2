@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { useTasks, useGoals, useUpdateTask, useBulkUpdateTasks, useBulkDeleteTasks } from '@/hooks/use-graphql';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
+import { getDefaultTaskListQuery } from '@/lib/task-query';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 
 export default function TasksPage() {
@@ -36,8 +37,28 @@ export default function TasksPage() {
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
   const isMobile = useIsMobile();
 
-  // Fetch data from GraphQL
-  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasks();
+  const listQuery = React.useMemo(() => {
+    const base = getDefaultTaskListQuery(90);
+    const filter: Record<string, unknown> = { ...base.filter };
+    if (filters.dateRange) {
+      filter.dateRange = filters.dateRange;
+    }
+    if (filters.search?.trim()) {
+      filter.search = filters.search.trim();
+    }
+    if (filters.goalIds?.length === 1) {
+      filter.goalId = filters.goalIds[0];
+    }
+    if (filters.completed === true) filter.isCompleted = true;
+    if (filters.completed === false) filter.isCompleted = false;
+    return { filter, take: filters.dateRange ? 400 : base.take };
+  }, [filters]);
+
+  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasks(
+    listQuery.filter,
+    undefined,
+    { take: listQuery.take }
+  );
   const { goals, loading: goalsLoading } = useGoals();
   const { updateTask } = useUpdateTask();
   const { bulkUpdateTasks } = useBulkUpdateTasks();

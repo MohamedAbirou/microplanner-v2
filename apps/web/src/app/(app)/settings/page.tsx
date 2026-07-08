@@ -16,7 +16,15 @@ import {
   Moon,
   Sun,
   Laptop,
+  Key,
 } from 'lucide-react';
+import { TierGate } from '@/components/tier-gate';
+import { ApiKeysManager } from '@/components/settings/api-keys-manager';
+import { PushNotificationsToggle } from '@/components/settings/push-notifications-toggle';
+import { AiMemoryManager } from '@/components/settings/ai-memory-manager';
+import { ReferralPanel } from '@/components/settings/referral-panel';
+import { useMutation, useApolloClient } from '@apollo/client';
+import { DELETE_MY_ACCOUNT, EXPORT_MY_DATA } from '@/graphql/operations-extended';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,8 +36,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
+import { CalendarSyncCard } from '@/components/calendar/calendar-sync-card';
 import { UpgradeButton } from '@/components/upgrade-button';
 import { useTier } from '@/contexts/tier-context';
+import {
+  useCreateBillingPortalSession,
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+} from '@/hooks/use-graphql-extended';
+import { formatTierLabel, getNextTier, getTierPrice, getUpgradePitch } from '@/lib/upgrade';
+import Link from 'next/link';
 import {
   exportTasksToCSV,
   exportGoalsToCSV,
@@ -68,6 +84,10 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('profile');
+  const [deletingAccount, setDeletingAccount] = React.useState(false);
+  const [gdprExporting, setGdprExporting] = React.useState(false);
+  const apolloClient = useApolloClient();
+  const [deleteMyAccount] = useMutation(DELETE_MY_ACCOUNT);
 
   React.useEffect(() => {
     const tab = new URLSearchParams(window.location.search).get('tab');
@@ -80,10 +100,12 @@ export default function SettingsPage() {
   const { user: dbUser, settings, loading: settingsLoading } = useUserSettings();
   const { updateSettings } = useUpdateUserSettings();
   const { updateProfile } = useUpdateUserProfile();
+  const { preferences: notificationPreferences } = useNotificationPreferences();
+  const { updatePreferences } = useUpdateNotificationPreferences();
   const { setTheme } = useTheme();
 
-  // Fetch data for export
-  const { tasks } = useTasks();
+  // Tasks are fetched on-demand during export to avoid loading full history on mount.
+  const { refetch: refetchTasks } = useTasks(undefined, undefined, { skipQuery: true });
   const { goals } = useGoals();
   const { plans } = usePlans();
 
@@ -96,11 +118,12 @@ export default function SettingsPage() {
   });
 
   const [notificationSettings, setNotificationSettings] = React.useState({
-    email: true,
-    planReminders: true,
-    taskReminders: true,
-    goalMilestones: true,
-    productivityInsights: true,
+    enableTaskReminders: true,
+    enableWeeklyPlan: true,
+    enableOverbookedAlerts: true,
+    enableBreakReminders: true,
+    enableFocusTimeAlerts: true,
+    enableUpcomingMeetings: true,
   });
 
   const [appearanceSettings, setAppearanceSettings] = React.useState({
@@ -117,20 +140,31 @@ export default function SettingsPage() {
         chronotype: (energy && ENERGY_TO_CHRONOTYPE[energy]) || 'bear',
         timezone: dbUser?.timezone || 'America/New_York',
       });
-      setNotificationSettings({
-        email: settings?.notifications?.email ?? true,
-        planReminders: settings?.notifications?.planReminders ?? true,
-        taskReminders: settings?.notifications?.taskReminders ?? true,
-        goalMilestones: settings?.notifications?.goalMilestones ?? true,
-        productivityInsights: settings?.notifications?.productivityInsights ?? true,
-      });
       setAppearanceSettings({
         theme: settings?.theme ? settings.theme.toLowerCase() : 'system',
       });
     }
   }, [settings, dbUser, user]);
 
+  // Notification toggles are backed by productivity notification preferences,
+  // not user settings (which only persists theme/energyPattern).
+  React.useEffect(() => {
+    if (notificationPreferences) {
+      setNotificationSettings({
+        enableTaskReminders: notificationPreferences.enableTaskReminders ?? true,
+        enableWeeklyPlan: notificationPreferences.enableWeeklyPlan ?? true,
+        enableOverbookedAlerts: notificationPreferences.enableOverbookedAlerts ?? true,
+        enableBreakReminders: notificationPreferences.enableBreakReminders ?? true,
+        enableFocusTimeAlerts: notificationPreferences.enableFocusTimeAlerts ?? true,
+        enableUpcomingMeetings: notificationPreferences.enableUpcomingMeetings ?? true,
+      });
+    }
+  }, [notificationPreferences]);
+
   const { tier: userTier } = useTier();
+  const nextTier = getNextTier(userTier);
+  const upgradePitch = getUpgradePitch(userTier);
+  const { createPortalSession, loading: portalLoading } = useCreateBillingPortalSession();
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
@@ -167,15 +201,15 @@ export default function SettingsPage() {
     setNotificationSettings(next);
 
     try {
-      await updateSettings({
+      await updatePreferences({
         variables: {
           input: {
-            notifications: next,
+            [key]: value,
           },
         },
       });
     } catch (error) {
-      console.error('Failed to update notification settings:', error);
+      console.error('Failed to update notification preferences:', error);
       // Revert on error
       setNotificationSettings({ ...notificationSettings, [key]: !value });
     }
@@ -208,6 +242,20 @@ export default function SettingsPage() {
       toast.info('Preparing your data export...', {
         description: 'Your download will begin shortly',
       });
+
+      let tasks: any[] = [];
+      if (dataType === 'tasks' || dataType === 'all') {
+        const { data } = await refetchTasks({
+          filter: {
+            dateRange: {
+              start: new Date('2024-01-01T00:00:00.000Z'),
+              end: new Date(),
+            },
+          },
+          take: 500,
+        });
+        tasks = data?.tasks ?? [];
+      }
 
       if (format === 'csv') {
         if (dataType === 'tasks') {
@@ -254,13 +302,44 @@ export default function SettingsPage() {
     }
   };
 
+  const handleGdprExport = async () => {
+    setGdprExporting(true);
+    try {
+      toast.info('Preparing your full data export…');
+      const { data } = await apolloClient.query({
+        query: EXPORT_MY_DATA,
+        fetchPolicy: 'network-only',
+      });
+      const payload = data?.exportMyData ?? {};
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `microplanner-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Full export downloaded');
+    } catch (error: any) {
+      console.error('GDPR export failed:', error);
+      toast.error('Failed to export your data', { description: error?.message });
+    } finally {
+      setGdprExporting(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
     try {
       toast.info('Deleting your account...', {
         description: 'This may take a few moments',
       });
 
-      // Delete account using Clerk
+      // GDPR: delete all backend data FIRST (cascades goals/plans/tasks/etc.),
+      // then remove the Clerk identity. If the backend delete fails we stop and
+      // keep the Clerk account so the user can retry, avoiding an orphaned login.
+      await deleteMyAccount();
+
+      // Remove the Clerk identity
       await user?.delete();
 
       toast.success('Account deleted successfully', {
@@ -274,6 +353,8 @@ export default function SettingsPage() {
       toast.error('Failed to delete account', {
         description: 'Please try again or contact support if the problem persists',
       });
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -300,7 +381,7 @@ export default function SettingsPage() {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="profile">
             <User className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Profile</span>
@@ -324,6 +405,10 @@ export default function SettingsPage() {
           <TabsTrigger value="privacy">
             <Shield className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Privacy</span>
+          </TabsTrigger>
+          <TabsTrigger value="api">
+            <Key className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">API</span>
           </TabsTrigger>
         </TabsList>
 
@@ -426,17 +511,22 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Web push opt-in (device-level) */}
+              <PushNotificationsToggle />
+
+              <Separator />
+
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="email-notifications">Email Notifications</Label>
+                  <Label htmlFor="task-reminders">Task Reminders</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive email updates about your tasks and goals
+                    Remind me before scheduled tasks are due
                   </p>
                 </div>
                 <Switch
-                  id="email-notifications"
-                  checked={notificationSettings.email}
-                  onCheckedChange={(checked) => handleNotificationChange('email', checked)}
+                  id="task-reminders"
+                  checked={notificationSettings.enableTaskReminders}
+                  onCheckedChange={(checked) => handleNotificationChange('enableTaskReminders', checked)}
                 />
               </div>
 
@@ -444,15 +534,31 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="weekly-plan">Weekly Plan Reminder</Label>
+                  <Label htmlFor="break-reminders">Break Reminders</Label>
                   <p className="text-sm text-muted-foreground">
-                    Remind me to generate my weekly plan every Sunday
+                    Nudge me to take breaks between long focus sessions
+                  </p>
+                </div>
+                <Switch
+                  id="break-reminders"
+                  checked={notificationSettings.enableBreakReminders}
+                  onCheckedChange={(checked) => handleNotificationChange('enableBreakReminders', checked)}
+                />
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="weekly-plan">Weekly Summary</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Email me a recap of my week every Sunday evening
                   </p>
                 </div>
                 <Switch
                   id="weekly-plan"
-                  checked={notificationSettings.planReminders}
-                  onCheckedChange={(checked) => handleNotificationChange('planReminders', checked)}
+                  checked={notificationSettings.enableWeeklyPlan}
+                  onCheckedChange={(checked) => handleNotificationChange('enableWeeklyPlan', checked)}
                 />
               </div>
 
@@ -460,15 +566,15 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="daily-task">Daily Task Reminder</Label>
+                  <Label htmlFor="upcoming-meetings">Upcoming Meetings</Label>
                   <p className="text-sm text-muted-foreground">
-                    Daily summary of upcoming tasks at 8am
+                    Notify me before meetings on my connected calendar
                   </p>
                 </div>
                 <Switch
-                  id="daily-task"
-                  checked={notificationSettings.taskReminders}
-                  onCheckedChange={(checked) => handleNotificationChange('taskReminders', checked)}
+                  id="upcoming-meetings"
+                  checked={notificationSettings.enableUpcomingMeetings}
+                  onCheckedChange={(checked) => handleNotificationChange('enableUpcomingMeetings', checked)}
                 />
               </div>
 
@@ -476,15 +582,15 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="goal-milestones">Goal Milestones</Label>
+                  <Label htmlFor="overbooked-alerts">Overcommit Alerts</Label>
                   <p className="text-sm text-muted-foreground">
-                    Celebrate when you reach goal milestones
+                    Warn me when a day is scheduled beyond my capacity
                   </p>
                 </div>
                 <Switch
-                  id="goal-milestones"
-                  checked={notificationSettings.goalMilestones}
-                  onCheckedChange={(checked) => handleNotificationChange('goalMilestones', checked)}
+                  id="overbooked-alerts"
+                  checked={notificationSettings.enableOverbookedAlerts}
+                  onCheckedChange={(checked) => handleNotificationChange('enableOverbookedAlerts', checked)}
                 />
               </div>
 
@@ -492,15 +598,15 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="productivity-insights">Productivity Insights</Label>
+                  <Label htmlFor="focus-alerts">Focus Time Alerts</Label>
                   <p className="text-sm text-muted-foreground">
-                    Weekly summaries of your productivity trends
+                    Notify me when a focus block is starting
                   </p>
                 </div>
                 <Switch
-                  id="productivity-insights"
-                  checked={notificationSettings.productivityInsights}
-                  onCheckedChange={(checked) => handleNotificationChange('productivityInsights', checked)}
+                  id="focus-alerts"
+                  checked={notificationSettings.enableFocusTimeAlerts}
+                  onCheckedChange={(checked) => handleNotificationChange('enableFocusTimeAlerts', checked)}
                 />
               </div>
             </CardContent>
@@ -508,35 +614,12 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Integrations Tab */}
-        <TabsContent value="integrations" className="mt-6">
-          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
-            <CardHeader>
-              <CardTitle>Calendar Integrations</CardTitle>
-              <CardDescription>
-                Sync your tasks with your calendar
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 border border-border rounded-[10px]">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-                    G
-                  </div>
-                  <div>
-                    <div className="font-medium">Google Calendar</div>
-                    <div className="text-sm text-muted-foreground">
-                      Two-way sync between MicroPlanner and Google Calendar
-                    </div>
-                  </div>
-                </div>
-                <Badge variant="secondary">Coming soon</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Calendar sync is on the way. Manage integrations from the{' '}
-                <a href="/integrations" className="underline">Integrations</a> page.
-              </p>
-            </CardContent>
-          </Card>
+        <TabsContent value="integrations" className="mt-6 space-y-4">
+          <CalendarSyncCard />
+          <p className="text-sm text-muted-foreground">
+            Manage all your integrations from the{' '}
+            <a href="/integrations" className="underline">Integrations</a> page.
+          </p>
         </TabsContent>
 
         {/* Appearance Tab */}
@@ -596,21 +679,40 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <div className="text-sm text-muted-foreground">Current Plan</div>
-                    <div className="text-2xl font-bold">{userTier}</div>
+                    <div className="text-2xl font-bold">{formatTierLabel(userTier)}</div>
+                    <div className="text-sm text-muted-foreground">{getTierPrice(userTier)}</div>
                   </div>
                   <Badge variant={userTier === 'FREE' ? 'secondary' : 'default'}>
                     {userTier}
                   </Badge>
                 </div>
 
-                {userTier === 'FREE' && (
+                {nextTier && upgradePitch && (
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
-                    <h4 className="font-semibold mb-2">Upgrade to PRO</h4>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Unlock unlimited goals, calendar sync, AI-powered insights, and more!
-                    </p>
-                    <UpgradeButton targetTier="STARTER">View Plans</UpgradeButton>
+                    <h4 className="font-semibold mb-2">
+                      Upgrade to {formatTierLabel(nextTier)} — {getTierPrice(nextTier)}
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-3">{upgradePitch}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <UpgradeButton targetTier={nextTier}>
+                        Upgrade now
+                      </UpgradeButton>
+                      <Button variant="outline" asChild>
+                        <Link href="/billing">View billing details</Link>
+                      </Button>
+                    </div>
                   </div>
+                )}
+
+                {userTier !== 'FREE' && (
+                  <Button
+                    variant="outline"
+                    className="mb-4"
+                    disabled={portalLoading}
+                    onClick={() => createPortalSession()}
+                  >
+                    {portalLoading ? 'Opening portal…' : 'Manage subscription in Stripe'}
+                  </Button>
                 )}
 
                 <div className="space-y-2 text-sm">
@@ -639,7 +741,13 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Privacy Tab */}
-        <TabsContent value="privacy" className="mt-6">
+        <TabsContent value="privacy" className="mt-6 space-y-6">
+          {/* Referral program */}
+          <ReferralPanel />
+
+          {/* AI scheduling memory / overrides */}
+          <AiMemoryManager />
+
           <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Privacy & Data</CardTitle>
@@ -665,7 +773,7 @@ export default function SettingsPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -680,7 +788,19 @@ export default function SettingsPage() {
                       >
                         Export as JSON
                       </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleGdprExport}
+                        disabled={gdprExporting}
+                      >
+                        {gdprExporting ? 'Exporting…' : 'Full export (GDPR)'}
+                      </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Full export includes your complete account record, goals, plans, tasks, and
+                      linked data straight from our servers.
+                    </p>
                   </div>
 
                   {/* Export Individual Data Types */}
@@ -767,6 +887,13 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* API Tab */}
+        <TabsContent value="api" className="mt-6">
+          <TierGate requiredTier="PREMIUM" feature="API access">
+            <ApiKeysManager />
+          </TierGate>
         </TabsContent>
       </Tabs>
 

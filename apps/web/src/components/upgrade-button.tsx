@@ -40,7 +40,7 @@ export function UpgradeButton({
       }}
     >
       {showIcon && <Sparkles className="h-3.5 w-3.5 mr-2" />}
-      {loading ? 'Redirecting…' : label}
+      {loading ? 'Upgrading…' : label}
     </Button>
   );
 }

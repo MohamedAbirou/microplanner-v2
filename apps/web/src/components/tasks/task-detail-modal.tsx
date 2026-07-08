@@ -13,6 +13,9 @@ import {
   CheckCircle2,
   Circle,
   X,
+  Timer,
+  Play,
+  StopCircle,
 } from 'lucide-react';
 import { getBlockingTasks, getBlockedTasks } from '@/lib/dependencies';
 import {
@@ -67,6 +70,8 @@ interface Task {
   isCompleted: boolean;
   priority: number;
   subtasks?: Subtask[];
+  timeSpentMinutes?: number;
+  isTimerRunning?: boolean;
 }
 
 interface TaskDetailModalProps {
@@ -84,6 +89,8 @@ interface TaskDetailModalProps {
   onAddSubtask?: (taskId: string, title: string) => Promise<void>;
   onToggleSubtask?: (subtaskId: string) => Promise<void>;
   onDeleteSubtask?: (subtaskId: string) => Promise<void>;
+  onStartTimer?: (taskId: string) => void | Promise<void>;
+  onStopTimer?: (taskId: string) => void | Promise<void>;
 }
 
 const DURATION_OPTIONS = [
@@ -118,9 +125,12 @@ export function TaskDetailModal({
   onAddSubtask,
   onToggleSubtask,
   onDeleteSubtask,
+  onStartTimer,
+  onStopTimer,
 }: TaskDetailModalProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isTimerBusy, setIsTimerBusy] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [editedTask, setEditedTask] = React.useState<Partial<Task>>({});
 
@@ -196,6 +206,20 @@ export function TaskDetailModal({
       toast.error('Failed to update task status', {
         description: 'Please try again or contact support if the problem persists',
       });
+    }
+  };
+
+  const handleToggleTimer = async () => {
+    if (!task.id) return;
+    setIsTimerBusy(true);
+    try {
+      if (task.isTimerRunning) {
+        await onStopTimer?.(task.id);
+      } else {
+        await onStartTimer?.(task.id);
+      }
+    } finally {
+      setIsTimerBusy(false);
     }
   };
 
@@ -418,6 +442,47 @@ export function TaskDetailModal({
                       {option.label}
                     </Button>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Time Tracking */}
+            {!isEditing && (
+              <div className="space-y-2">
+                <Label>
+                  <Timer className="inline h-3.5 w-3.5 mr-1" />
+                  Time Tracking
+                </Label>
+                <div className="flex items-center justify-between p-3 rounded-[10px] bg-muted">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">
+                      {task.timeSpentMinutes ?? 0} min tracked
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {task.isTimerRunning
+                        ? 'Timer is running…'
+                        : `Estimated ${task.durationMinutes} min`}
+                    </span>
+                  </div>
+                  <Button
+                    variant={task.isTimerRunning ? 'destructive' : 'default'}
+                    size="sm"
+                    className="h-9"
+                    onClick={handleToggleTimer}
+                    disabled={isTimerBusy}
+                  >
+                    {task.isTimerRunning ? (
+                      <>
+                        <StopCircle className="mr-2 h-4 w-4" />
+                        Stop Timer
+                      </>
+                    ) : (
+                      <>
+                        <Play className="mr-2 h-4 w-4" />
+                        Start Timer
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
             )}

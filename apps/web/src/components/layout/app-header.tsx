@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useTier } from '@/contexts/tier-context';
 import { useUpgradeCheckout } from '@/hooks/use-upgrade-checkout';
-import { formatTierLabel } from '@/lib/upgrade';
+import { formatTierLabel, getNextTier } from '@/lib/upgrade';
 import { getInitials } from '@/lib/utils';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { Command, HelpCircle, LogOut, Menu, Plus, Settings as SettingsIcon, Sparkles, User } from 'lucide-react';
@@ -32,7 +32,8 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
   const { signOut } = useClerk();
   const router = useRouter();
   const { tier } = useTier();
-  const { upgrade, loading: upgradeLoading } = useUpgradeCheckout();
+  const nextTier = getNextTier(tier);
+  const { upgrade, loading: upgradeLoading } = useUpgradeCheckout(nextTier ?? undefined);
 
   const tierColors = {
     FREE: 'bg-slate-500/10 text-slate-700 dark:text-slate-300',
@@ -135,7 +136,7 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
                   Help & Support
                 </DropdownMenuItem>
               </Link>
-              {(tier === 'FREE' || tier === 'STARTER') && (
+              {nextTier && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -148,8 +149,8 @@ export function AppHeader({ onMenuClick, onCommandClick, onQuickAddClick }: AppH
                   >
                     <Sparkles className="mr-2 h-4 w-4" />
                     {upgradeLoading
-                      ? 'Redirecting…'
-                      : `Upgrade to ${formatTierLabel(tier === 'FREE' ? 'STARTER' : 'PRO')}`}
+                      ? 'Upgrading…'
+                      : `Upgrade to ${formatTierLabel(nextTier)}`}
                   </DropdownMenuItem>
                 </>
               )}

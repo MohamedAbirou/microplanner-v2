@@ -35,6 +35,11 @@ export const analyticsResolvers = {
       return dataSources.analyticsAPI.getInsights(user.userId, type, limit);
     },
 
+    weeklyReview: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.analyticsAPI.getWeeklyReview(user.userId);
+    },
+
     // commented out until implemented!    
     // streakHistory: async (_: any, { limit }: any, { dataSources, user }: any) => {
     //   if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });

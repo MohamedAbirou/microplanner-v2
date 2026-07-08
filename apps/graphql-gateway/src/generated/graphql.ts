@@ -37,6 +37,19 @@ export type ActivityType =
   | 'STREAK_ACHIEVED'
   | 'TASK_COMPLETED';
 
+export type AiMemory = {
+  __typename?: 'AiMemory';
+  confidence: Scalars['Float']['output'];
+  content: Scalars['JSON']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
+  memoryType: MemoryType;
+  source?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  useCount: Scalars['Int']['output'];
+};
+
 export type ApiKey = {
   __typename?: 'ApiKey';
   createdAt: Scalars['DateTime']['output'];
@@ -287,6 +300,12 @@ export type ConnectIntegrationInput = {
   config?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
   type: IntegrationType;
+};
+
+export type CreateAiMemoryInput = {
+  confidence?: InputMaybe<Scalars['Float']['input']>;
+  content: Scalars['JSON']['input'];
+  memoryType: MemoryType;
 };
 
 export type CreateApiKeyInput = {
@@ -581,6 +600,12 @@ export type FocusTimeBlock = {
   userId: Scalars['ID']['output'];
 };
 
+/** Input for generating a plan from a template */
+export type GenerateFromTemplateInput = {
+  templateId: Scalars['ID']['input'];
+  weekStartDate: Scalars['String']['input'];
+};
+
 /** Input for generating a new plan */
 export type GeneratePlanInput = {
   aiModel?: InputMaybe<Scalars['String']['input']>;
@@ -741,6 +766,13 @@ export type MemberStatus =
   | 'INVITED'
   | 'SUSPENDED';
 
+export type MemoryType =
+  | 'AVOIDANCE_PATTERN'
+  | 'COMPLETION_PATTERN'
+  | 'CONTEXT_PREFERENCE'
+  | 'ENERGY_INSIGHT'
+  | 'TIME_PREFERENCE';
+
 export type MoveTaskInKanbanInput = {
   fromColumnId?: InputMaybe<Scalars['ID']['input']>;
   position?: InputMaybe<Scalars['Int']['input']>;
@@ -766,6 +798,7 @@ export type Mutation = {
   confirmBooking: Booking;
   connectCalendar: CalendarConnection;
   connectIntegration: Integration;
+  createAiMemory: AiMemory;
   createApiKey: ApiKeyWithSecret;
   createBillingPortalSession: BillingPortalSession;
   createBooking: Booking;
@@ -787,14 +820,18 @@ export type Mutation = {
   createTaskDependency: TaskDependency;
   createTeam: Team;
   createWebhook: Webhook;
+  deleteAiMemory: Scalars['Boolean']['output'];
   deleteApiKey: Scalars['Boolean']['output'];
   deleteCalendarEvent: Scalars['Boolean']['output'];
   deleteFocusTimeBlock: Scalars['Boolean']['output'];
   deleteGoal: Scalars['Boolean']['output'];
   deleteKanbanBoard: Scalars['Boolean']['output'];
+  deleteMyAccount: Scalars['Boolean']['output'];
   deleteNoMeetingDay: Scalars['Boolean']['output'];
   /** Delete a plan */
   deletePlan: Plan;
+  /** Delete a plan template */
+  deletePlanTemplate: Scalars['Boolean']['output'];
   deleteProject: Scalars['Boolean']['output'];
   deleteSchedulingLink: Scalars['Boolean']['output'];
   deleteSmart1on1: Scalars['Boolean']['output'];
@@ -807,16 +844,26 @@ export type Mutation = {
   generateInsights: Array<Scalars['String']['output']>;
   /** Generate a new plan using AI */
   generatePlan: Plan;
+  /** Generate a new plan from a template */
+  generatePlanFromTemplate: Plan;
   initiateCalendarAuth: CalendarAuthPayload;
   inviteTeamMember: TeamInvitation;
   logTime: TimeEntry;
   markNotificationAsRead: Scalars['Boolean']['output'];
   moveTaskInKanban: Scalars['Boolean']['output'];
   pauseGoal: Goal;
+  redeemReferral: Scalars['Boolean']['output'];
+  /** Regenerate a plan for the same week (creates a new draft) */
+  regeneratePlan: Plan;
+  registerPushToken: Scalars['Boolean']['output'];
   removeTeamMember: Scalars['Boolean']['output'];
   resumeGoal: Goal;
   resumeSubscription: UserSubscription;
   retryWebhookDelivery: WebhookDelivery;
+  /** Save an existing plan as a reusable template */
+  saveAsPlanTemplate: PlanTemplate;
+  /** Mark a template as the user's default */
+  setDefaultPlanTemplate: PlanTemplate;
   skipTask: Task;
   startTimer: TimeEntry;
   stopTimer: TimeEntry;
@@ -829,6 +876,7 @@ export type Mutation = {
   toggleWebhook: Webhook;
   unarchiveProject: Project;
   uncompleteTask: Task;
+  unregisterPushToken: Scalars['Boolean']['output'];
   updateCalendarDefense: CalendarDefense;
   updateCalendarEvent: CalendarEvent;
   updateFocusTimeBlock: FocusTimeBlock;
@@ -923,6 +971,11 @@ export type MutationConnectIntegrationArgs = {
 };
 
 
+export type MutationCreateAiMemoryArgs = {
+  input: CreateAiMemoryInput;
+};
+
+
 export type MutationCreateApiKeyArgs = {
   input: CreateApiKeyInput;
 };
@@ -1014,6 +1067,11 @@ export type MutationCreateWebhookArgs = {
 };
 
 
+export type MutationDeleteAiMemoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteApiKeyArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1045,6 +1103,11 @@ export type MutationDeleteNoMeetingDayArgs = {
 
 
 export type MutationDeletePlanArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeletePlanTemplateArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -1099,6 +1162,11 @@ export type MutationGeneratePlanArgs = {
 };
 
 
+export type MutationGeneratePlanFromTemplateArgs = {
+  input: GenerateFromTemplateInput;
+};
+
+
 export type MutationInitiateCalendarAuthArgs = {
   provider: CalendarProvider;
 };
@@ -1132,6 +1200,21 @@ export type MutationPauseGoalArgs = {
 };
 
 
+export type MutationRedeemReferralArgs = {
+  code: Scalars['String']['input'];
+};
+
+
+export type MutationRegeneratePlanArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRegisterPushTokenArgs = {
+  subscription: Scalars['JSON']['input'];
+};
+
+
 export type MutationRemoveTeamMemberArgs = {
   teamId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
@@ -1145,6 +1228,18 @@ export type MutationResumeGoalArgs = {
 
 export type MutationRetryWebhookDeliveryArgs = {
   deliveryId: Scalars['ID']['input'];
+};
+
+
+export type MutationSaveAsPlanTemplateArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  planId: Scalars['ID']['input'];
+};
+
+
+export type MutationSetDefaultPlanTemplateArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -1201,6 +1296,11 @@ export type MutationUnarchiveProjectArgs = {
 
 export type MutationUncompleteTaskArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationUnregisterPushTokenArgs = {
+  endpoint: Scalars['String']['input'];
 };
 
 
@@ -1591,6 +1691,7 @@ export type ProjectWithStats = {
 export type Query = {
   __typename?: 'Query';
   _empty?: Maybe<Scalars['String']['output']>;
+  aiMemories: Array<AiMemory>;
   apiKey?: Maybe<ApiKey>;
   apiKeys: Array<ApiKey>;
   availableSlots: Array<TimeSlot>;
@@ -1608,6 +1709,7 @@ export type Query = {
   /** Get current week's plan */
   currentPlan?: Maybe<Plan>;
   dashboardStats: DashboardStats;
+  exportMyData: Scalars['JSON']['output'];
   focusTimeBlock?: Maybe<FocusTimeBlock>;
   focusTimeBlocks: Array<FocusTimeBlock>;
   /** Get AI-powered goal suggestions based on user context */
@@ -1622,6 +1724,7 @@ export type Query = {
   kanbanBoard?: Maybe<KanbanBoard>;
   kanbanBoards: Array<KanbanBoard>;
   me?: Maybe<User>;
+  myReferralStats: ReferralStats;
   noMeetingDays: Array<NoMeetingDay>;
   notificationPreferences?: Maybe<NotificationPreferences>;
   notifications: Array<Notification>;
@@ -1642,6 +1745,7 @@ export type Query = {
   projects: Array<Project>;
   quickActions: Array<QuickAction>;
   recentActivity: Array<RecentActivity>;
+  rescheduleSuggestion?: Maybe<RescheduleSuggestion>;
   schedulingLink?: Maybe<SchedulingLink>;
   schedulingLinkBySlug?: Maybe<SchedulingLink>;
   schedulingLinks: Array<SchedulingLink>;
@@ -1668,6 +1772,7 @@ export type Query = {
   webhookDeliveries: Array<WebhookDelivery>;
   webhooks: Array<Webhook>;
   weekOverview: Array<WeekOverview>;
+  weeklyReview: WeeklyReview;
   weeklyStats: WeeklyStats;
   workHours?: Maybe<WorkHours>;
 };
@@ -1853,6 +1958,11 @@ export type QueryRecentActivityArgs = {
 };
 
 
+export type QueryRescheduleSuggestionArgs = {
+  taskId: Scalars['ID']['input'];
+};
+
+
 export type QuerySchedulingLinkArgs = {
   id: Scalars['ID']['input'];
 };
@@ -2021,6 +2131,33 @@ export type RecurrenceRuleInput = {
   interval: Scalars['Int']['input'];
   monthOfYear?: InputMaybe<Scalars['Int']['input']>;
   occurrences?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type ReferralEntry = {
+  __typename?: 'ReferralEntry';
+  completedAt?: Maybe<Scalars['DateTime']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  referredName: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+export type ReferralStats = {
+  __typename?: 'ReferralStats';
+  activeReferrals: Scalars['Int']['output'];
+  code: Scalars['String']['output'];
+  pendingReferrals: Scalars['Int']['output'];
+  referrals: Array<ReferralEntry>;
+  totalReferrals: Scalars['Int']['output'];
+};
+
+export type RescheduleSuggestion = {
+  __typename?: 'RescheduleSuggestion';
+  endTime: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  scheduledDate: Scalars['DateTime']['output'];
+  startTime: Scalars['String']['output'];
+  taskId: Scalars['ID']['output'];
 };
 
 export type SchedulingLink = {
@@ -2835,6 +2972,25 @@ export type WeeklyProgress = {
   week: Scalars['String']['output'];
 };
 
+export type WeeklyReview = {
+  __typename?: 'WeeklyReview';
+  completionRate: Scalars['Float']['output'];
+  goalsCreated: Scalars['Int']['output'];
+  plansGenerated: Scalars['Int']['output'];
+  productivity: Scalars['String']['output'];
+  recommendation: Scalars['String']['output'];
+  tasksCompleted: Scalars['Int']['output'];
+  topGoals: Array<WeeklyReviewGoal>;
+  weekEndDate: Scalars['DateTime']['output'];
+  weekStartDate: Scalars['DateTime']['output'];
+};
+
+export type WeeklyReviewGoal = {
+  __typename?: 'WeeklyReviewGoal';
+  completions: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+};
+
 export type WeeklyStats = {
   __typename?: 'WeeklyStats';
   activeGoals: Scalars['Int']['output'];
@@ -2978,6 +3134,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = ResolversObject<{
   ActivityMetadata: ResolverTypeWrapper<ActivityMetadata>;
   ActivityType: ActivityType;
+  AiMemory: ResolverTypeWrapper<AiMemory>;
   ApiKey: ResolverTypeWrapper<ApiKey>;
   ApiKeyWithSecret: ResolverTypeWrapper<ApiKeyWithSecret>;
   ApiScope: ApiScope;
@@ -3007,6 +3164,7 @@ export type ResolversTypes = ResolversObject<{
   CompleteOnboardingInput: CompleteOnboardingInput;
   ConnectCalendarInput: ConnectCalendarInput;
   ConnectIntegrationInput: ConnectIntegrationInput;
+  CreateAiMemoryInput: CreateAiMemoryInput;
   CreateApiKeyInput: CreateApiKeyInput;
   CreateBookingInput: CreateBookingInput;
   CreateCalendarEventInput: CreateCalendarEventInput;
@@ -3040,6 +3198,7 @@ export type ResolversTypes = ResolversObject<{
   FocusArea: FocusArea;
   FocusFrequency: FocusFrequency;
   FocusTimeBlock: ResolverTypeWrapper<FocusTimeBlock>;
+  GenerateFromTemplateInput: GenerateFromTemplateInput;
   GeneratePlanInput: GeneratePlanInput;
   GetGoalSuggestionsInput: GetGoalSuggestionsInput;
   Goal: ResolverTypeWrapper<Goal>;
@@ -3057,6 +3216,7 @@ export type ResolversTypes = ResolversObject<{
   KanbanBoard: ResolverTypeWrapper<KanbanBoard>;
   KanbanColumn: ResolverTypeWrapper<KanbanColumn>;
   MemberStatus: MemberStatus;
+  MemoryType: MemoryType;
   MoveTaskInKanbanInput: MoveTaskInKanbanInput;
   Mutation: ResolverTypeWrapper<{}>;
   NoMeetingDay: ResolverTypeWrapper<NoMeetingDay>;
@@ -3089,6 +3249,9 @@ export type ResolversTypes = ResolversObject<{
   RecurrenceFrequency: RecurrenceFrequency;
   RecurrenceRule: ResolverTypeWrapper<RecurrenceRule>;
   RecurrenceRuleInput: RecurrenceRuleInput;
+  ReferralEntry: ResolverTypeWrapper<ReferralEntry>;
+  ReferralStats: ResolverTypeWrapper<ReferralStats>;
+  RescheduleSuggestion: ResolverTypeWrapper<RescheduleSuggestion>;
   SchedulingLink: ResolverTypeWrapper<SchedulingLink>;
   SleepRecommendation: ResolverTypeWrapper<SleepRecommendation>;
   Smart1on1: ResolverTypeWrapper<Smart1on1>;
@@ -3156,6 +3319,8 @@ export type ResolversTypes = ResolversObject<{
   WeekOverview: ResolverTypeWrapper<WeekOverview>;
   WeeklyGoalProgress: ResolverTypeWrapper<WeeklyGoalProgress>;
   WeeklyProgress: ResolverTypeWrapper<WeeklyProgress>;
+  WeeklyReview: ResolverTypeWrapper<WeeklyReview>;
+  WeeklyReviewGoal: ResolverTypeWrapper<WeeklyReviewGoal>;
   WeeklyStats: ResolverTypeWrapper<WeeklyStats>;
   WorkHours: ResolverTypeWrapper<WorkHours>;
   WorkHoursInput: WorkHoursInput;
@@ -3167,6 +3332,7 @@ export type ResolversTypes = ResolversObject<{
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
   ActivityMetadata: ActivityMetadata;
+  AiMemory: AiMemory;
   ApiKey: ApiKey;
   ApiKeyWithSecret: ApiKeyWithSecret;
   AvailabilitySchedule: AvailabilitySchedule;
@@ -3192,6 +3358,7 @@ export type ResolversParentTypes = ResolversObject<{
   CompleteOnboardingInput: CompleteOnboardingInput;
   ConnectCalendarInput: ConnectCalendarInput;
   ConnectIntegrationInput: ConnectIntegrationInput;
+  CreateAiMemoryInput: CreateAiMemoryInput;
   CreateApiKeyInput: CreateApiKeyInput;
   CreateBookingInput: CreateBookingInput;
   CreateCalendarEventInput: CreateCalendarEventInput;
@@ -3220,6 +3387,7 @@ export type ResolversParentTypes = ResolversObject<{
   FeatureLimits: FeatureLimits;
   Float: Scalars['Float']['output'];
   FocusTimeBlock: FocusTimeBlock;
+  GenerateFromTemplateInput: GenerateFromTemplateInput;
   GeneratePlanInput: GeneratePlanInput;
   GetGoalSuggestionsInput: GetGoalSuggestionsInput;
   Goal: Goal;
@@ -3260,6 +3428,9 @@ export type ResolversParentTypes = ResolversObject<{
   RecentActivity: RecentActivity;
   RecurrenceRule: RecurrenceRule;
   RecurrenceRuleInput: RecurrenceRuleInput;
+  ReferralEntry: ReferralEntry;
+  ReferralStats: ReferralStats;
+  RescheduleSuggestion: RescheduleSuggestion;
   SchedulingLink: SchedulingLink;
   SleepRecommendation: SleepRecommendation;
   Smart1on1: Smart1on1;
@@ -3314,6 +3485,8 @@ export type ResolversParentTypes = ResolversObject<{
   WeekOverview: WeekOverview;
   WeeklyGoalProgress: WeeklyGoalProgress;
   WeeklyProgress: WeeklyProgress;
+  WeeklyReview: WeeklyReview;
+  WeeklyReviewGoal: WeeklyReviewGoal;
   WeeklyStats: WeeklyStats;
   WorkHours: WorkHours;
   WorkHoursInput: WorkHoursInput;
@@ -3329,6 +3502,19 @@ export type ActivityMetadataResolvers<ContextType = GraphQLContext, ParentType e
   goalTitle?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   taskId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   taskTitle?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type AiMemoryResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['AiMemory'] = ResolversParentTypes['AiMemory']> = ResolversObject<{
+  confidence?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  content?: Resolver<ResolversTypes['JSON'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  lastUsedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  memoryType?: Resolver<ResolversTypes['MemoryType'], ParentType, ContextType>;
+  source?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  useCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -3719,6 +3905,7 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   confirmBooking?: Resolver<ResolversTypes['Booking'], ParentType, ContextType, RequireFields<MutationConfirmBookingArgs, 'id'>>;
   connectCalendar?: Resolver<ResolversTypes['CalendarConnection'], ParentType, ContextType, RequireFields<MutationConnectCalendarArgs, 'input'>>;
   connectIntegration?: Resolver<ResolversTypes['Integration'], ParentType, ContextType, RequireFields<MutationConnectIntegrationArgs, 'input'>>;
+  createAiMemory?: Resolver<ResolversTypes['AiMemory'], ParentType, ContextType, RequireFields<MutationCreateAiMemoryArgs, 'input'>>;
   createApiKey?: Resolver<ResolversTypes['ApiKeyWithSecret'], ParentType, ContextType, RequireFields<MutationCreateApiKeyArgs, 'input'>>;
   createBillingPortalSession?: Resolver<ResolversTypes['BillingPortalSession'], ParentType, ContextType>;
   createBooking?: Resolver<ResolversTypes['Booking'], ParentType, ContextType, RequireFields<MutationCreateBookingArgs, 'input'>>;
@@ -3738,13 +3925,16 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   createTaskDependency?: Resolver<ResolversTypes['TaskDependency'], ParentType, ContextType, RequireFields<MutationCreateTaskDependencyArgs, 'input'>>;
   createTeam?: Resolver<ResolversTypes['Team'], ParentType, ContextType, RequireFields<MutationCreateTeamArgs, 'input'>>;
   createWebhook?: Resolver<ResolversTypes['Webhook'], ParentType, ContextType, RequireFields<MutationCreateWebhookArgs, 'input'>>;
+  deleteAiMemory?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteAiMemoryArgs, 'id'>>;
   deleteApiKey?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteApiKeyArgs, 'id'>>;
   deleteCalendarEvent?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteCalendarEventArgs, 'id'>>;
   deleteFocusTimeBlock?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteFocusTimeBlockArgs, 'id'>>;
   deleteGoal?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteGoalArgs, 'id'>>;
   deleteKanbanBoard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteKanbanBoardArgs, 'id'>>;
+  deleteMyAccount?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   deleteNoMeetingDay?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteNoMeetingDayArgs, 'id'>>;
   deletePlan?: Resolver<ResolversTypes['Plan'], ParentType, ContextType, RequireFields<MutationDeletePlanArgs, 'id'>>;
+  deletePlanTemplate?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeletePlanTemplateArgs, 'id'>>;
   deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'id'>>;
   deleteSchedulingLink?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteSchedulingLinkArgs, 'id'>>;
   deleteSmart1on1?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteSmart1on1Args, 'id'>>;
@@ -3756,16 +3946,22 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   disconnectIntegration?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDisconnectIntegrationArgs, 'id'>>;
   generateInsights?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   generatePlan?: Resolver<ResolversTypes['Plan'], ParentType, ContextType, RequireFields<MutationGeneratePlanArgs, 'input'>>;
+  generatePlanFromTemplate?: Resolver<ResolversTypes['Plan'], ParentType, ContextType, RequireFields<MutationGeneratePlanFromTemplateArgs, 'input'>>;
   initiateCalendarAuth?: Resolver<ResolversTypes['CalendarAuthPayload'], ParentType, ContextType, RequireFields<MutationInitiateCalendarAuthArgs, 'provider'>>;
   inviteTeamMember?: Resolver<ResolversTypes['TeamInvitation'], ParentType, ContextType, RequireFields<MutationInviteTeamMemberArgs, 'input'>>;
   logTime?: Resolver<ResolversTypes['TimeEntry'], ParentType, ContextType, RequireFields<MutationLogTimeArgs, 'minutes' | 'taskId'>>;
   markNotificationAsRead?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationMarkNotificationAsReadArgs, 'id'>>;
   moveTaskInKanban?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationMoveTaskInKanbanArgs, 'input'>>;
   pauseGoal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<MutationPauseGoalArgs, 'id'>>;
+  redeemReferral?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationRedeemReferralArgs, 'code'>>;
+  regeneratePlan?: Resolver<ResolversTypes['Plan'], ParentType, ContextType, RequireFields<MutationRegeneratePlanArgs, 'id'>>;
+  registerPushToken?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationRegisterPushTokenArgs, 'subscription'>>;
   removeTeamMember?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationRemoveTeamMemberArgs, 'teamId' | 'userId'>>;
   resumeGoal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<MutationResumeGoalArgs, 'id'>>;
   resumeSubscription?: Resolver<ResolversTypes['UserSubscription'], ParentType, ContextType>;
   retryWebhookDelivery?: Resolver<ResolversTypes['WebhookDelivery'], ParentType, ContextType, RequireFields<MutationRetryWebhookDeliveryArgs, 'deliveryId'>>;
+  saveAsPlanTemplate?: Resolver<ResolversTypes['PlanTemplate'], ParentType, ContextType, RequireFields<MutationSaveAsPlanTemplateArgs, 'name' | 'planId'>>;
+  setDefaultPlanTemplate?: Resolver<ResolversTypes['PlanTemplate'], ParentType, ContextType, RequireFields<MutationSetDefaultPlanTemplateArgs, 'id'>>;
   skipTask?: Resolver<ResolversTypes['Task'], ParentType, ContextType, RequireFields<MutationSkipTaskArgs, 'id'>>;
   startTimer?: Resolver<ResolversTypes['TimeEntry'], ParentType, ContextType, RequireFields<MutationStartTimerArgs, 'taskId'>>;
   stopTimer?: Resolver<ResolversTypes['TimeEntry'], ParentType, ContextType, RequireFields<MutationStopTimerArgs, 'taskId'>>;
@@ -3778,6 +3974,7 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   toggleWebhook?: Resolver<ResolversTypes['Webhook'], ParentType, ContextType, RequireFields<MutationToggleWebhookArgs, 'id'>>;
   unarchiveProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationUnarchiveProjectArgs, 'id'>>;
   uncompleteTask?: Resolver<ResolversTypes['Task'], ParentType, ContextType, RequireFields<MutationUncompleteTaskArgs, 'id'>>;
+  unregisterPushToken?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationUnregisterPushTokenArgs, 'endpoint'>>;
   updateCalendarDefense?: Resolver<ResolversTypes['CalendarDefense'], ParentType, ContextType, RequireFields<MutationUpdateCalendarDefenseArgs, 'input'>>;
   updateCalendarEvent?: Resolver<ResolversTypes['CalendarEvent'], ParentType, ContextType, RequireFields<MutationUpdateCalendarEventArgs, 'id' | 'input'>>;
   updateFocusTimeBlock?: Resolver<ResolversTypes['FocusTimeBlock'], ParentType, ContextType, RequireFields<MutationUpdateFocusTimeBlockArgs, 'id' | 'input'>>;
@@ -4006,6 +4203,7 @@ export type ProjectWithStatsResolvers<ContextType = GraphQLContext, ParentType e
 
 export type QueryResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   _empty?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  aiMemories?: Resolver<Array<ResolversTypes['AiMemory']>, ParentType, ContextType>;
   apiKey?: Resolver<Maybe<ResolversTypes['ApiKey']>, ParentType, ContextType, RequireFields<QueryApiKeyArgs, 'id'>>;
   apiKeys?: Resolver<Array<ResolversTypes['ApiKey']>, ParentType, ContextType>;
   availableSlots?: Resolver<Array<ResolversTypes['TimeSlot']>, ParentType, ContextType, RequireFields<QueryAvailableSlotsArgs, 'date' | 'linkId'>>;
@@ -4021,6 +4219,7 @@ export type QueryResolvers<ContextType = GraphQLContext, ParentType extends Reso
   canUseFeature?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<QueryCanUseFeatureArgs, 'feature'>>;
   currentPlan?: Resolver<Maybe<ResolversTypes['Plan']>, ParentType, ContextType>;
   dashboardStats?: Resolver<ResolversTypes['DashboardStats'], ParentType, ContextType>;
+  exportMyData?: Resolver<ResolversTypes['JSON'], ParentType, ContextType>;
   focusTimeBlock?: Resolver<Maybe<ResolversTypes['FocusTimeBlock']>, ParentType, ContextType, RequireFields<QueryFocusTimeBlockArgs, 'id'>>;
   focusTimeBlocks?: Resolver<Array<ResolversTypes['FocusTimeBlock']>, ParentType, ContextType, Partial<QueryFocusTimeBlocksArgs>>;
   getGoalSuggestions?: Resolver<Array<ResolversTypes['GoalSuggestion']>, ParentType, ContextType, RequireFields<QueryGetGoalSuggestionsArgs, 'input'>>;
@@ -4034,6 +4233,7 @@ export type QueryResolvers<ContextType = GraphQLContext, ParentType extends Reso
   kanbanBoard?: Resolver<Maybe<ResolversTypes['KanbanBoard']>, ParentType, ContextType, RequireFields<QueryKanbanBoardArgs, 'id'>>;
   kanbanBoards?: Resolver<Array<ResolversTypes['KanbanBoard']>, ParentType, ContextType, Partial<QueryKanbanBoardsArgs>>;
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  myReferralStats?: Resolver<ResolversTypes['ReferralStats'], ParentType, ContextType>;
   noMeetingDays?: Resolver<Array<ResolversTypes['NoMeetingDay']>, ParentType, ContextType, Partial<QueryNoMeetingDaysArgs>>;
   notificationPreferences?: Resolver<Maybe<ResolversTypes['NotificationPreferences']>, ParentType, ContextType>;
   notifications?: Resolver<Array<ResolversTypes['Notification']>, ParentType, ContextType, Partial<QueryNotificationsArgs>>;
@@ -4050,6 +4250,7 @@ export type QueryResolvers<ContextType = GraphQLContext, ParentType extends Reso
   projects?: Resolver<Array<ResolversTypes['Project']>, ParentType, ContextType, Partial<QueryProjectsArgs>>;
   quickActions?: Resolver<Array<ResolversTypes['QuickAction']>, ParentType, ContextType>;
   recentActivity?: Resolver<Array<ResolversTypes['RecentActivity']>, ParentType, ContextType, Partial<QueryRecentActivityArgs>>;
+  rescheduleSuggestion?: Resolver<Maybe<ResolversTypes['RescheduleSuggestion']>, ParentType, ContextType, RequireFields<QueryRescheduleSuggestionArgs, 'taskId'>>;
   schedulingLink?: Resolver<Maybe<ResolversTypes['SchedulingLink']>, ParentType, ContextType, RequireFields<QuerySchedulingLinkArgs, 'id'>>;
   schedulingLinkBySlug?: Resolver<Maybe<ResolversTypes['SchedulingLink']>, ParentType, ContextType, RequireFields<QuerySchedulingLinkBySlugArgs, 'slug'>>;
   schedulingLinks?: Resolver<Array<ResolversTypes['SchedulingLink']>, ParentType, ContextType>;
@@ -4076,6 +4277,7 @@ export type QueryResolvers<ContextType = GraphQLContext, ParentType extends Reso
   webhookDeliveries?: Resolver<Array<ResolversTypes['WebhookDelivery']>, ParentType, ContextType, RequireFields<QueryWebhookDeliveriesArgs, 'webhookId'>>;
   webhooks?: Resolver<Array<ResolversTypes['Webhook']>, ParentType, ContextType>;
   weekOverview?: Resolver<Array<ResolversTypes['WeekOverview']>, ParentType, ContextType, Partial<QueryWeekOverviewArgs>>;
+  weeklyReview?: Resolver<ResolversTypes['WeeklyReview'], ParentType, ContextType>;
   weeklyStats?: Resolver<ResolversTypes['WeeklyStats'], ParentType, ContextType, Partial<QueryWeeklyStatsArgs>>;
   workHours?: Resolver<Maybe<ResolversTypes['WorkHours']>, ParentType, ContextType>;
 }>;
@@ -4108,6 +4310,33 @@ export type RecurrenceRuleResolvers<ContextType = GraphQLContext, ParentType ext
   interval?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   monthOfYear?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   occurrences?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ReferralEntryResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['ReferralEntry'] = ResolversParentTypes['ReferralEntry']> = ResolversObject<{
+  completedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  referredName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ReferralStatsResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['ReferralStats'] = ResolversParentTypes['ReferralStats']> = ResolversObject<{
+  activeReferrals?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  pendingReferrals?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  referrals?: Resolver<Array<ResolversTypes['ReferralEntry']>, ParentType, ContextType>;
+  totalReferrals?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type RescheduleSuggestionResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['RescheduleSuggestion'] = ResolversParentTypes['RescheduleSuggestion']> = ResolversObject<{
+  endTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  reason?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  scheduledDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  startTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  taskId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -4555,6 +4784,25 @@ export type WeeklyProgressResolvers<ContextType = GraphQLContext, ParentType ext
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type WeeklyReviewResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['WeeklyReview'] = ResolversParentTypes['WeeklyReview']> = ResolversObject<{
+  completionRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  goalsCreated?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  plansGenerated?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  productivity?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  recommendation?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tasksCompleted?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  topGoals?: Resolver<Array<ResolversTypes['WeeklyReviewGoal']>, ParentType, ContextType>;
+  weekEndDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  weekStartDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type WeeklyReviewGoalResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['WeeklyReviewGoal'] = ResolversParentTypes['WeeklyReviewGoal']> = ResolversObject<{
+  completions?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type WeeklyStatsResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['WeeklyStats'] = ResolversParentTypes['WeeklyStats']> = ResolversObject<{
   activeGoals?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   averageProductivityScore?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
@@ -4607,6 +4855,7 @@ export type WorkingHoursResolvers<ContextType = GraphQLContext, ParentType exten
 
 export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
   ActivityMetadata?: ActivityMetadataResolvers<ContextType>;
+  AiMemory?: AiMemoryResolvers<ContextType>;
   ApiKey?: ApiKeyResolvers<ContextType>;
   ApiKeyWithSecret?: ApiKeyWithSecretResolvers<ContextType>;
   AvailabilitySchedule?: AvailabilityScheduleResolvers<ContextType>;
@@ -4659,6 +4908,9 @@ export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
   QuickAction?: QuickActionResolvers<ContextType>;
   RecentActivity?: RecentActivityResolvers<ContextType>;
   RecurrenceRule?: RecurrenceRuleResolvers<ContextType>;
+  ReferralEntry?: ReferralEntryResolvers<ContextType>;
+  ReferralStats?: ReferralStatsResolvers<ContextType>;
+  RescheduleSuggestion?: RescheduleSuggestionResolvers<ContextType>;
   SchedulingLink?: SchedulingLinkResolvers<ContextType>;
   SleepRecommendation?: SleepRecommendationResolvers<ContextType>;
   Smart1on1?: Smart1on1Resolvers<ContextType>;
@@ -4689,6 +4941,8 @@ export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
   WeekOverview?: WeekOverviewResolvers<ContextType>;
   WeeklyGoalProgress?: WeeklyGoalProgressResolvers<ContextType>;
   WeeklyProgress?: WeeklyProgressResolvers<ContextType>;
+  WeeklyReview?: WeeklyReviewResolvers<ContextType>;
+  WeeklyReviewGoal?: WeeklyReviewGoalResolvers<ContextType>;
   WeeklyStats?: WeeklyStatsResolvers<ContextType>;
   WorkHours?: WorkHoursResolvers<ContextType>;
   WorkWeekSchedule?: WorkWeekScheduleResolvers<ContextType>;

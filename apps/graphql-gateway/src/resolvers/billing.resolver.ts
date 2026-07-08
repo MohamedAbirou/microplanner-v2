@@ -49,7 +49,12 @@ export const billingResolvers = {
      */
     upgradeSubscription: async (_: any, { tier }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
-      return dataSources.billingAPI.upgradeSubscription(user.userId, tier);
+      const result = await dataSources.billingAPI.upgradeSubscription(user.userId, tier);
+      // In-place Stripe upgrade returns { message, tier }; checkout fallback returns { sessionId, url }.
+      if (result?.url) {
+        return { sessionId: result.sessionId, url: result.url };
+      }
+      return { sessionId: 'upgraded', url: '' };
     },
 
     /**

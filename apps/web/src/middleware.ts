@@ -21,6 +21,8 @@ const isPublicRoute = createRouteMatcher([
   '/story(.*)',
   '/changelog(.*)',
   '/glossary(.*)',
+  // Public booking pages for scheduling links (no auth required)
+  '/book(.*)',
 ]);
 
 /**
@@ -45,7 +47,7 @@ const isProtectedRoute = createRouteMatcher([
   '/integrations(.*)',
   '/settings(.*)',
   '/billing(.*)',
-  '/book(.*)',
+  '/teams(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

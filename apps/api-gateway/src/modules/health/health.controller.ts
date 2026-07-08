@@ -7,11 +7,14 @@ import {
   MemoryHealthIndicator,
   DiskHealthIndicator,
 } from '@nestjs/terminus';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaService } from '../../database/prisma.service';
 import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('health')
 @Controller('health')
+// Probes are hit continuously by the platform (Render/k8s) — never rate-limit them.
+@SkipThrottle()
 export class HealthController {
   constructor(
     private health: HealthCheckService,

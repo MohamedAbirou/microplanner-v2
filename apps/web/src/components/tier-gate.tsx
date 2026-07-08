@@ -234,7 +234,7 @@ function getTierPrice(tier: UserTier): string {
     FREE: 'Free',
     STARTER: '$7/month',
     PRO: '$15/month',
-    PREMIUM: '$40/month',
+    PREMIUM: '$29/month',
   };
 
   return prices[tier] || '';

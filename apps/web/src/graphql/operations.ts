@@ -59,8 +59,8 @@ export const GET_ME = gql`
 // ============================================================================
 
 export const GET_TASKS = gql`
-  query GetTasks($filter: TaskFilterInput, $sort: TaskSortInput) {
-    tasks(filter: $filter, sort: $sort) {
+  query GetTasks($filter: TaskFilterInput, $sort: TaskSortInput, $take: Int, $skip: Int) {
+    tasks(filter: $filter, sort: $sort, take: $take, skip: $skip) {
       id
       userId
       goalId
@@ -149,6 +149,18 @@ export const GET_TASKS = gql`
       # Timestamps
       createdAt
       updatedAt
+    }
+  }
+`;
+
+export const GET_RESCHEDULE_SUGGESTION = gql`
+  query RescheduleSuggestion($taskId: ID!) {
+    rescheduleSuggestion(taskId: $taskId) {
+      taskId
+      scheduledDate
+      startTime
+      endTime
+      reason
     }
   }
 `;
@@ -739,12 +751,14 @@ export const GET_PLAN = gql`
       tasks {
         id
         title
+        notes
         scheduledDate
         startTime
         endTime
         durationMinutes
         isCompleted
         priority
+        aiReasoning
         goal {
           id
           emoji
@@ -838,6 +852,18 @@ export const ACCEPT_PLAN = gql`
       id
       status
       updatedAt
+    }
+  }
+`;
+
+export const REGENERATE_PLAN = gql`
+  mutation RegeneratePlan($id: ID!) {
+    regeneratePlan(id: $id) {
+      id
+      status
+      weekStartDate
+      weekEndDate
+      qualityScore
     }
   }
 `;

@@ -50,6 +50,11 @@ export const planResolvers = {
       return dataSources.plansAPI.acceptPlan(id, user.userId);
     },
 
+    regeneratePlan: async (_: any, { id }: { id: string }, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.plansAPI.regeneratePlan(id, user.userId);
+    },
+
     deletePlan: async (_: any, { id }: { id: string }, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       await dataSources.plansAPI.deletePlan(id, user.userId);
@@ -59,6 +64,27 @@ export const planResolvers = {
     createPlanTemplate: async (_: any, { input }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.plansAPI.createPlanTemplate(user.userId, input);
+    },
+
+    saveAsPlanTemplate: async (_: any, { planId, name, description }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.plansAPI.saveAsPlanTemplate(planId, user.userId, name, description);
+    },
+
+    generatePlanFromTemplate: async (_: any, { input }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.plansAPI.generatePlanFromTemplate(user.userId, input);
+    },
+
+    setDefaultPlanTemplate: async (_: any, { id }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.plansAPI.setDefaultPlanTemplate(id, user.userId);
+    },
+
+    deletePlanTemplate: async (_: any, { id }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      await dataSources.plansAPI.deletePlanTemplate(id, user.userId);
+      return true;
     },
   },
 

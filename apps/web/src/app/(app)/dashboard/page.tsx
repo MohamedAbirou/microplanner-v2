@@ -24,9 +24,13 @@ export default function DashboardPage() {
   const today = new Date();
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
 
-  const { tasks: rawTasks, loading: tasksLoading, refetch } = useTasks({
-    dateRange: { start: startOfDay(today), end: endOfDay(today) },
-  });
+  const { tasks: rawTasks, loading: tasksLoading, refetch } = useTasks(
+    {
+      dateRange: { start: startOfDay(today), end: endOfDay(today) },
+    },
+    undefined,
+    { take: 80 }
+  );
   const { goals, loading: goalsLoading } = useGoals();
   const { completeTask } = useCompleteTask();
   const { uncompleteTask } = useUncompleteTask();

@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, Logger } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PlansService } from './plans.service';
 import { PlanAutomationService } from './plan-automation.service';
@@ -31,10 +32,15 @@ export class PlansController {
   ) {}
 
   @Post('generate')
+  // AI plan generation is the most expensive route (LLM cost + latency).
+  // Cap it hard per user, independent of the tier weekly-plan quota which is
+  // enforced separately in the service — this is abuse/burst protection.
+  @Throttle({ strict: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Generate weekly AI plan' })
   @ApiResponse({ status: 201, description: 'Plan generated successfully' })
   @ApiResponse({ status: 400, description: 'No active goals found or planning service unavailable' })
   @ApiResponse({ status: 403, description: 'Weekly plan limit exceeded' })
+  @ApiResponse({ status: 429, description: 'Too many plan generation requests' })
   async generate(@CurrentUser() user: User, @Body() generatePlanDto: GeneratePlanDto) {
     const plan = await this.plansService.generate(user.id, generatePlanDto, user);
 

@@ -122,10 +122,66 @@ enum EnergyPattern {
   NIGHT_OWL
 }
 
+# ============================================
+# AI MEMORY (learned + declared scheduling preferences)
+# ============================================
+
+enum MemoryType {
+  TIME_PREFERENCE
+  COMPLETION_PATTERN
+  ENERGY_INSIGHT
+  AVOIDANCE_PATTERN
+  CONTEXT_PREFERENCE
+}
+
+type AiMemory {
+  id: ID!
+  memoryType: MemoryType!
+  content: JSON!
+  confidence: Float!
+  useCount: Int!
+  source: String
+  lastUsedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateAiMemoryInput {
+  memoryType: MemoryType!
+  content: JSON!
+  confidence: Float
+}
+
+# ============================================
+# REFERRALS
+# ============================================
+
+type ReferralEntry {
+  id: ID!
+  status: String!
+  referredName: String!
+  createdAt: DateTime!
+  completedAt: DateTime
+}
+
+type ReferralStats {
+  code: String!
+  totalReferrals: Int!
+  activeReferrals: Int!
+  pendingReferrals: Int!
+  referrals: [ReferralEntry!]!
+}
+
 # Queries
 extend type Query {
   # Get current user
   me: User
+
+  # AI memories / scheduling overrides for the current user
+  aiMemories: [AiMemory!]!
+
+  # Referral program stats for the current user
+  myReferralStats: ReferralStats!
 
   # Get user by ID (admin only)
   user(id: ID!): User
@@ -135,6 +191,9 @@ extend type Query {
 
   # Check onboarding status
   onboardingStatus: OnboardingStatus!
+
+  # GDPR: full export of the current user's data
+  exportMyData: JSON!
 }
 
 type OnboardingStatus {
@@ -156,6 +215,20 @@ extend type Mutation {
 
   # Complete onboarding
   completeOnboarding(input: CompleteOnboardingInput!): OnboardingResult!
+
+  # Web Push subscriptions
+  registerPushToken(subscription: JSON!): Boolean!
+  unregisterPushToken(endpoint: String!): Boolean!
+
+  # GDPR: permanently delete the account and all associated data
+  deleteMyAccount: Boolean!
+
+  # AI memory / scheduling overrides
+  createAiMemory(input: CreateAiMemoryInput!): AiMemory!
+  deleteAiMemory(id: ID!): Boolean!
+
+  # Referrals
+  redeemReferral(code: String!): Boolean!
 }
 
 # Complete onboarding with all data at once

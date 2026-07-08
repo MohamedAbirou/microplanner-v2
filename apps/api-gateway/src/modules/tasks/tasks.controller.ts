@@ -62,6 +62,15 @@ export class TasksController {
     };
   }
 
+  @Get(':id/reschedule-suggestion')
+  @ApiOperation({ summary: 'Suggest the next available slot to reschedule a task' })
+  @ApiResponse({ status: 200, description: 'Suggestion returned (may be null)' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  async rescheduleSuggestion(@CurrentUser() user: User, @Param('id') id: string) {
+    const suggestion = await this.tasksService.suggestReschedule(id, user.id);
+    return { suggestion };
+  }
+
   @Put(':id')
   @ApiOperation({ summary: 'Update a task' })
   @ApiResponse({ status: 200, description: 'Task updated successfully' })

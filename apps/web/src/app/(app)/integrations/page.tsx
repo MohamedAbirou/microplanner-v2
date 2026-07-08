@@ -1,17 +1,19 @@
 'use client';
 
 import * as React from 'react';
-import { Calendar, Zap, Database } from 'lucide-react';
+import { Calendar, Zap, Database, LayoutGrid, Webhook } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { CalendarSyncCard } from '@/components/calendar/calendar-sync-card';
+import { IntegrationsHub } from '@/components/integrations/integrations-hub';
+import { WebhooksManager } from '@/components/integrations/webhooks-manager';
+import { TierGate } from '@/components/tier-gate';
 
 /**
- * Integrations Page
- *
- * Calendar sync is not yet available to end users, so we present it honestly
- * as "Coming soon" rather than shipping mock connect flows. When real Google
- * OAuth is wired end-to-end (backend service exists), restore the connect UI.
+ * Integrations Page — calendar sync, third-party app connections, and webhooks.
  */
 
 export default function IntegrationsPage() {
@@ -30,11 +32,15 @@ export default function IntegrationsPage() {
         <TabsList>
           <TabsTrigger value="calendar">
             <Calendar className="h-4 w-4 mr-2" />
-            Calendar Sync
+            Calendar
           </TabsTrigger>
-          <TabsTrigger value="api">
-            <Zap className="h-4 w-4 mr-2" />
-            API &amp; Webhooks
+          <TabsTrigger value="apps">
+            <LayoutGrid className="h-4 w-4 mr-2" />
+            Apps
+          </TabsTrigger>
+          <TabsTrigger value="webhooks">
+            <Webhook className="h-4 w-4 mr-2" />
+            Webhooks
           </TabsTrigger>
           <TabsTrigger value="data">
             <Database className="h-4 w-4 mr-2" />
@@ -44,46 +50,48 @@ export default function IntegrationsPage() {
 
         {/* Calendar Sync Tab */}
         <TabsContent value="calendar" className="space-y-6">
-          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
-            <CardHeader>
-              <CardTitle>Calendar Sync</CardTitle>
-              <CardDescription>
-                Two-way sync between MicroPlanner and Google Calendar
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Alert>
-                <Calendar className="h-4 w-4" />
-                <AlertTitle>Coming Soon</AlertTitle>
-                <AlertDescription>
-                  Google Calendar sync is in the works — scheduled tasks will appear as
-                  calendar events and your busy time will be respected during planning.
-                  We&apos;ll let you know the moment it&apos;s ready.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
+          <CalendarSyncCard />
         </TabsContent>
 
-        {/* API & Webhooks Tab */}
-        <TabsContent value="api" className="space-y-6">
-          <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
-            <CardHeader>
-              <CardTitle>API Access</CardTitle>
-              <CardDescription>
-                Use the MicroPlanner API to build custom integrations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Alert>
-                <Zap className="h-4 w-4" />
-                <AlertTitle>Coming Soon</AlertTitle>
-                <AlertDescription>
-                  API access and webhooks will be available in a future update.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
+        {/* Apps Tab */}
+        <TabsContent value="apps" className="space-y-6">
+          <IntegrationsHub />
+        </TabsContent>
+
+        {/* Webhooks Tab */}
+        <TabsContent value="webhooks" className="space-y-6">
+          <TierGate
+            requiredTier="PREMIUM"
+            feature="Webhooks"
+            fallback={
+              <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
+                <CardHeader>
+                  <CardTitle>Webhooks are a Premium feature</CardTitle>
+                  <CardDescription>
+                    Upgrade to Premium to receive real-time event callbacks and manage API keys.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild>
+                    <Link href="/settings?tab=billing">Upgrade to Premium</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            }
+          >
+            <WebhooksManager />
+            <Alert>
+              <Zap className="h-4 w-4" />
+              <AlertTitle>Looking for API keys?</AlertTitle>
+              <AlertDescription>
+                Create and manage API keys in{' '}
+                <Link href="/settings" className="underline">
+                  Settings → API
+                </Link>
+                .
+              </AlertDescription>
+            </Alert>
+          </TierGate>
         </TabsContent>
 
         {/* Import/Export Tab */}
@@ -91,9 +99,7 @@ export default function IntegrationsPage() {
           <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Data Import/Export</CardTitle>
-              <CardDescription>
-                Import or export your data in various formats
-              </CardDescription>
+              <CardDescription>Import or export your data in various formats</CardDescription>
             </CardHeader>
             <CardContent>
               <Alert>

@@ -24,6 +24,7 @@ interface TierLimits {
 
 interface TierContextValue {
   tier: UserTier;
+  subscriptionStatus: string | null;
   limits: TierLimits;
   isLoading: boolean;
   refetchTier: () => void;
@@ -102,6 +103,7 @@ function TierProviderInner({ children }: { children: React.ReactNode }) {
   });
 
   const tier = (data?.me?.tier as UserTier) || 'FREE';
+  const subscriptionStatus = data?.me?.subscriptionStatus ?? null;
   const limits = tierLimits[tier] ?? tierLimits.FREE;
 
   // After Stripe checkout redirect, force-refresh tier from DB and clean URL
@@ -134,6 +136,7 @@ function TierProviderInner({ children }: { children: React.ReactNode }) {
 
   const value: TierContextValue = {
     tier,
+    subscriptionStatus,
     limits,
     isLoading: loading,
     refetchTier: () => {

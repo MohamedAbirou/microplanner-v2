@@ -14,7 +14,10 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ClerkAuthGuard } from './modules/auth/guards/clerk-auth.guard';
 import { SubscriptionGuard } from './modules/auth/guards/subscription.guard';
+import { UserThrottlerGuard } from './common/guards/user-throttler.guard';
 import { UsersModule } from './modules/users/users.module';
+import { AiMemoryModule } from './modules/ai-memory/ai-memory.module';
+import { ReferralsModule } from './modules/referrals/referrals.module';
 import { GoalsModule } from './modules/goals/goals.module';
 import { PlansModule } from './modules/plans/plans.module';
 import { TasksModule } from './modules/tasks/tasks.module';
@@ -74,8 +77,9 @@ function getGraphQLErrorCode(statusCode: number): string {
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
-      playground: true,
-      introspection: true,
+      // Disable schema exposure in production — no playground, no introspection.
+      playground: process.env.NODE_ENV !== 'production',
+      introspection: process.env.NODE_ENV !== 'production',
       context: ({ req }) => ({ req }),
       formatError: (error: GraphQLError): GraphQLFormattedError => {
         // Extract the original error from NestJS
@@ -107,16 +111,28 @@ function getGraphQLErrorCode(statusCode: number): string {
       },
     }),
 
-    // Rate limiting
+    // Rate limiting — enforced globally via UserThrottlerGuard (keyed by
+    // authenticated user id, falling back to IP). Two named throttlers:
+    //  - default: generous per-user budget for SPA navigation bursts
+    //  - strict:  expensive operations (LLM plan generation) opt in via
+    //             @Throttle({ strict: {...} })
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (_config: ConfigService) => [
-        {
-          ttl: 60000, // 1 minute
-          limit: 600, // generous for SPA navigation bursts (guard not global yet)
-        },
-      ],
+      useFactory: (_config: ConfigService) => ({
+        throttlers: [
+          {
+            name: 'default',
+            ttl: 60000, // 1 minute
+            limit: 300, // per user/IP per minute — covers SPA bursts, blocks floods
+          },
+          {
+            name: 'strict',
+            ttl: 60000, // 1 minute
+            limit: 10, // expensive ops (plan generation) — opt-in per route
+          },
+        ],
+      }),
     }),
 
     // Bull Queue (Redis) - Optional, gracefully degrades if Redis unavailable
@@ -174,6 +190,8 @@ function getGraphQLErrorCode(statusCode: number): string {
     // Feature Modules
     AuthModule,
     UsersModule,
+    AiMemoryModule,
+    ReferralsModule,
     GoalsModule,
     PlansModule,
     TasksModule,
@@ -192,9 +210,17 @@ function getGraphQLErrorCode(statusCode: number): string {
   providers: [
     AppService,
     // Global authentication guard - all routes require auth unless marked with @Public()
+    // MUST be registered before UserThrottlerGuard so req.user is populated
+    // and the throttler can bucket by user id rather than IP.
     {
       provide: APP_GUARD,
       useClass: ClerkAuthGuard,
+    },
+    // Global rate-limit guard - keyed by authenticated user id (fallback IP).
+    // Returns 429 + Retry-After. @SkipThrottle() on health probes.
+    {
+      provide: APP_GUARD,
+      useClass: UserThrottlerGuard,
     },
     // Global subscription tier guard - enforces @RequireSubscription() decorator
     {

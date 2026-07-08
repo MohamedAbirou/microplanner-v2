@@ -12,6 +12,7 @@ import Redis from 'ioredis';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { typeDefs } from './schema/schema';
 import { resolvers as allResolvers } from './resolvers';
+import { depthLimit } from './validation/depth-limit';
 // Import all datasources
 import {
   UserAPI,
@@ -27,6 +28,8 @@ import {
   SchedulingAPI,
   IntegrationsAPI,
   BillingAPI,
+  AiMemoryAPI,
+  ReferralsAPI,
 } from './datasources/rest-api';
 
 // Import dataloaders for batching
@@ -229,6 +232,12 @@ async function startServer() {
   const server = new ApolloServer({
     schema,
 
+    // Reject pathologically deep queries before execution. The deepest
+    // legitimate operation (GetTask → dependencies → dependentTask → subtasks)
+    // is ~depth 6; 8 leaves headroom while blocking crafted fan-out queries
+    // that would amplify into unbounded downstream REST calls.
+    validationRules: [depthLimit(8)],
+
     // Performance optimizations
     cache: 'bounded',
     persistedQueries: {
@@ -324,6 +333,8 @@ async function startServer() {
         const schedulingAPI = new SchedulingAPI(token);
         const integrationsAPI = new IntegrationsAPI(token);
         const billingAPI = new BillingAPI(token);
+        const aiMemoryAPI = new AiMemoryAPI(token);
+        const referralsAPI = new ReferralsAPI(token);
 
         // Create DataLoaders for batching (reduces N+1 queries)
         const taskLoader = createTaskLoader(tasksAPI, userId);
@@ -352,6 +363,8 @@ async function startServer() {
             schedulingAPI,
             integrationsAPI,
             billingAPI,
+            aiMemoryAPI,
+            referralsAPI,
           },
           // DataLoaders for field resolvers
           taskLoader,

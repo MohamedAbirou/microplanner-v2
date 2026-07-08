@@ -102,7 +102,7 @@ export class QueryTasksDto {
   @Min(1)
   page?: number = 1;
 
-  @ApiProperty({ required: false, default: 50, minimum: 1, maximum: 100 })
+  @ApiProperty({ required: false, default: 50, minimum: 1, maximum: 500 })
   @IsOptional()
   @Transform(({ value }) => {
     if (value === undefined || value === null || value === '') return 50;
@@ -111,6 +111,6 @@ export class QueryTasksDto {
   })
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(500)
   limit?: number = 50;
 }

@@ -152,6 +152,17 @@ extend type Query {
 
   # Get subtasks
   subtasks(parentTaskId: ID!): [Task!]!
+
+  # Suggest the next available slot to reschedule a task
+  rescheduleSuggestion(taskId: ID!): RescheduleSuggestion
+}
+
+type RescheduleSuggestion {
+  taskId: ID!
+  scheduledDate: DateTime!
+  startTime: String!
+  endTime: String!
+  reason: String!
 }
 
 # Mutations

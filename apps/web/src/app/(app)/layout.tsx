@@ -6,6 +6,7 @@ import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog'
 import { AppHeader } from '@/components/layout/app-header';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { QuickAddTaskModal, type TaskFormData } from '@/components/tasks/quick-add-task-modal';
+import { PWAProvider } from '@/components/pwa/pwa-provider';
 import { TierProvider } from '@/contexts/tier-context';
 import { ONBOARDING_STATUS } from '@/graphql/operations';
 import { useCreateTask, useGoals } from '@/hooks/use-graphql';
@@ -130,6 +131,9 @@ export default function AppLayout({
 
           {/* Keyboard Shortcuts Dialog */}
           <KeyboardShortcutsDialog />
+
+          {/* PWA: service worker registration + offline indicator + sync */}
+          <PWAProvider />
 
           {/* Mobile backdrop — tap to close the overlay sidebar */}
           {isMobile && !sidebarCollapsed && (

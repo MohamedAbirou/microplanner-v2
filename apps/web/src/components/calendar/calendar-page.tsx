@@ -3,13 +3,11 @@
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  endOfMonth,
+  endOfDay,
   endOfWeek,
   format,
   isValid,
   parseISO,
-  startOfDay,
-  startOfMonth,
   startOfWeek,
 } from 'date-fns';
 import { DayCalendar } from '@/components/calendar/day-calendar';
@@ -26,9 +24,12 @@ import {
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTasks, useGoals, useUpdateTask, useCreateTask } from '@/hooks/use-graphql';
+import { useCalendarConnections, useCalendarEvents } from '@/hooks/use-graphql-extended';
+import { useTier } from '@/contexts/tier-context';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
 import { organizeCalendarTasks } from '@/lib/calendar-utils';
+import { getCalendarTaskQuery } from '@/lib/task-query';
 
 function parseViewParam(value: string | null): CalendarView {
   if (value === 'day' || value === 'week' || value === 'month') return value;
@@ -55,17 +56,41 @@ export function CalendarPage() {
     null
   );
 
-  const weekStart = startOfWeek(focusDate, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(focusDate, { weekStartsOn: 1 });
-  const monthStart = startOfMonth(focusDate);
-  const monthEnd = endOfMonth(focusDate);
+  const taskQuery = React.useMemo(
+    () => getCalendarTaskQuery(view, focusDate),
+    [view, focusDate]
+  );
 
   const { tasks: allTasks, loading, refetch } = useTasks(
-    view === 'day' ? { scheduledDate: startOfDay(focusDate) } : undefined
+    taskQuery.filter,
+    undefined,
+    { take: taskQuery.take }
   );
   const { goals } = useGoals();
   const { updateTask } = useUpdateTask();
   const { createTask } = useCreateTask();
+
+  // External calendar sync — gated by tier + an active connection.
+  const { limits } = useTier();
+  const { connections } = useCalendarConnections();
+  const calendarConnected =
+    limits.hasCalendarIntegration &&
+    connections.some((c: { isActive?: boolean | null }) => c.isActive);
+
+  const eventRange = React.useMemo(
+    () => ({
+      start: startOfWeek(focusDate, { weekStartsOn: 1 }).toISOString(),
+      end: endOfDay(endOfWeek(focusDate, { weekStartsOn: 1 })).toISOString(),
+    }),
+    [focusDate]
+  );
+
+  const { events: calendarEvents } = useCalendarEvents(
+    eventRange.start,
+    eventRange.end,
+    undefined,
+    { skip: !calendarConnected || view !== 'week' }
+  );
 
   const taskActions = useTaskDetailActions(allTasks, refetch);
   const taskDependencies = React.useMemo(() => mapTaskDependencies(allTasks), [allTasks]);
@@ -75,21 +100,10 @@ export function CalendarPage() {
   );
 
   const weekTasks = React.useMemo(() => {
-    const filtered = allTasks.filter((task: { scheduledDate?: string }) => {
-      if (!task.scheduledDate) return false;
-      const taskDate = new Date(task.scheduledDate);
-      return taskDate >= weekStart && taskDate <= weekEnd;
-    });
-    return organizeCalendarTasks(filtered);
-  }, [allTasks, weekStart, weekEnd]);
+    return organizeCalendarTasks(allTasks);
+  }, [allTasks]);
 
-  const monthTasks = React.useMemo(() => {
-    return allTasks.filter((task: { scheduledDate?: string }) => {
-      if (!task.scheduledDate) return false;
-      const taskDate = new Date(task.scheduledDate);
-      return taskDate >= monthStart && taskDate <= monthEnd;
-    });
-  }, [allTasks, monthStart, monthEnd]);
+  const monthTasks = React.useMemo(() => allTasks, [allTasks]);
 
   const dayTasks = React.useMemo(() => organizeCalendarTasks(allTasks), [allTasks]);
 
@@ -175,6 +189,8 @@ export function CalendarPage() {
         {view === 'week' && (
           <WeekCalendarDnd
             tasks={weekTasks}
+            events={calendarEvents}
+            calendarConnected={calendarConnected}
             currentDate={focusDate}
             onTaskClick={handleTaskClick}
             onTaskReschedule={handleTaskReschedule}

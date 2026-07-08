@@ -5,7 +5,7 @@ import { PatternRecognitionService } from '../analytics/pattern-recognition.serv
 import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
 import { RecurringTaskService, TaskInstance } from './recurring-task.service';
 import type { Task, SubscriptionTierType } from '@microplanner/database';
-import { SyncStatus } from '@microplanner/database';
+import { Prisma, SyncStatus } from '@microplanner/database';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { QueryTasksDto } from './dto/query-tasks.dto';
@@ -98,6 +98,13 @@ export class TasksService {
     const { page = 1, limit = 50, date, weekStart, startDate, endDate, goalId, planId, projectId, priority, tags, search, isCompleted, aiGenerated } = query;
     const skip = (page - 1) * limit;
 
+    // Hard cap on how wide a client-supplied date range may be. Without this a
+    // single request with startDate=2000 & endDate=2100 would materialize a
+    // user's entire task history (5k–20k rows) into memory before pagination.
+    // 400 days comfortably covers a full year + calendar month overflow.
+    const MAX_RANGE_DAYS = 400;
+    const MAX_RANGE_MS = MAX_RANGE_DAYS * 24 * 60 * 60 * 1000;
+
     const where: any = { userId };
 
     // Determine date range for recurring task expansion
@@ -106,9 +113,16 @@ export class TasksService {
 
     // Date filters (priority: startDate/endDate > date > weekStart)
     if (startDate && endDate) {
-      // Date range filter
+      // Date range filter — clamp the span so the window can never exceed
+      // MAX_RANGE_DAYS. We keep the caller's start and pull end inward.
       rangeStart = new Date(startDate);
       rangeEnd = new Date(endDate);
+      if (rangeEnd.getTime() - rangeStart.getTime() > MAX_RANGE_MS) {
+        this.logger.warn(
+          `Clamping task query range for user ${userId}: requested ${startDate}..${endDate} exceeds ${MAX_RANGE_DAYS} days`,
+        );
+        rangeEnd = new Date(rangeStart.getTime() + MAX_RANGE_MS);
+      }
       where.scheduledDate = { gte: rangeStart, lte: rangeEnd };
     } else if (date) {
       // Single date filter (start and end of day)
@@ -147,25 +161,30 @@ export class TasksService {
     if (isCompleted !== undefined) commonWhere.isCompleted = isCompleted;
     if (aiGenerated !== undefined) commonWhere.aiGenerated = aiGenerated;
 
-    // Fetch all tasks matching filters (we'll separate regular vs recurring in memory to avoid JSON null filter issues)
-    const allTasksFromDB = await this.prisma.task.findMany({
-      where: commonWhere,
+    // Fetch regular tasks in range at the DB layer (avoids loading entire history).
+    const regularTasksFromDB = await this.prisma.task.findMany({
+      where: {
+        ...commonWhere,
+        recurrenceRule: { equals: Prisma.DbNull },
+        scheduledDate: { gte: rangeStart, lte: rangeEnd },
+      },
       orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
     });
 
-    // 1. Filter regular (non-recurring) tasks in date range
-    const regularTasks = allTasksFromDB.filter(
-      task => !task.recurrenceRule &&
-        new Date(task.scheduledDate) >= rangeStart &&
-        new Date(task.scheduledDate) <= rangeEnd
-    );
+    // Recurring templates are expanded in-memory for the requested window.
+    const recurringTasksFromDB = await this.prisma.task.findMany({
+      where: {
+        ...commonWhere,
+        NOT: { recurrenceRule: { equals: Prisma.DbNull } },
+      },
+      orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
+    });
 
-    // 2. Filter recurring tasks (have recurrenceRule set)
-    const recurringTasks = allTasksFromDB.filter(task => task.recurrenceRule);
+    const regularTasks = regularTasksFromDB;
 
-    // 3. Expand recurring tasks to instances in date range
+    // Expand recurring tasks to instances in date range
     const recurringInstances: TaskInstance[] = [];
-    for (const recurringTask of recurringTasks) {
+    for (const recurringTask of recurringTasksFromDB) {
       const instances = this.recurringTaskService.expandRecurringTask(
         recurringTask as Task,
         rangeStart,
@@ -423,6 +442,131 @@ export class TasksService {
     }
 
     return { success, failed, results };
+  }
+
+  /**
+   * Suggest the next available time slot to reschedule a task.
+   *
+   * Respects the user's working hours and avoids collisions with their other
+   * incomplete scheduled tasks and active/protected focus-time blocks. Scans
+   * forward from now for up to 14 days. Returns null if nothing fits.
+   */
+  async suggestReschedule(
+    taskId: string,
+    userId: string,
+  ): Promise<{
+    taskId: string;
+    scheduledDate: string;
+    startTime: string;
+    endTime: string;
+    reason: string;
+  } | null> {
+    const task = await this.prisma.task.findFirst({ where: { id: taskId, userId } });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    const duration = task.durationMinutes && task.durationMinutes > 0 ? task.durationMinutes : 30;
+    const STEP = 15;
+    const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+    const workHours = await this.prisma.workHours.findUnique({ where: { userId } });
+    const schedule = (workHours?.schedule as Record<string, any>) || null;
+
+    const focusBlocks = await this.prisma.focusTimeBlock.findMany({
+      where: { userId, isActive: true, protected: true },
+    });
+
+    const toMinutes = (t: string): number => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + (m || 0);
+    };
+    const fromMinutes = (mins: number): string =>
+      `${Math.floor(mins / 60).toString().padStart(2, '0')}:${(mins % 60).toString().padStart(2, '0')}`;
+
+    // Working window (minutes from midnight) for a given day, or null if off.
+    const workWindow = (date: Date): { start: number; end: number } | null => {
+      const dayName = DAY_NAMES[date.getDay()];
+      if (schedule && schedule[dayName]) {
+        const day = schedule[dayName];
+        if (!day.isWorkDay) return null;
+        return { start: toMinutes(day.startTime || '09:00'), end: toMinutes(day.endTime || '17:00') };
+      }
+      // Default: Mon–Fri 9–17
+      const dow = date.getDay();
+      if (dow === 0 || dow === 6) return null;
+      return { start: 9 * 60, end: 17 * 60 };
+    };
+
+    const now = new Date();
+    let scannedDays = 0;
+    const cursor = new Date(now);
+    cursor.setHours(0, 0, 0, 0);
+
+    while (scannedDays < 14) {
+      const window = workWindow(cursor);
+      if (window) {
+        const dow = cursor.getDay();
+        const dayStart = new Date(cursor);
+        const dayEnd = new Date(cursor);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        // Busy intervals for this day.
+        const busy: Array<{ start: number; end: number }> = [];
+
+        const dayTasks = await this.prisma.task.findMany({
+          where: {
+            userId,
+            isCompleted: false,
+            id: { not: taskId },
+            scheduledDate: { gte: dayStart, lte: dayEnd },
+          },
+        });
+        for (const t of dayTasks) {
+          if (!t.startTime) continue;
+          const s = toMinutes(t.startTime);
+          const e = t.endTime ? toMinutes(t.endTime) : s + (t.durationMinutes || 30);
+          busy.push({ start: s, end: e });
+        }
+        for (const fb of focusBlocks) {
+          if (fb.startTime && fb.daysOfWeek.includes(dow)) {
+            const s = toMinutes(fb.startTime);
+            busy.push({ start: s, end: s + fb.durationMinutes });
+          }
+        }
+
+        // Earliest candidate: not in the past for today.
+        let earliest = window.start;
+        if (cursor.toDateString() === now.toDateString()) {
+          const nowMins = now.getHours() * 60 + now.getMinutes();
+          earliest = Math.max(window.start, Math.ceil(nowMins / STEP) * STEP);
+        }
+
+        for (let start = earliest; start + duration <= window.end; start += STEP) {
+          const end = start + duration;
+          const collides = busy.some((b) => start < b.end && end > b.start);
+          if (!collides) {
+            const scheduledDate = new Date(cursor);
+            const conflictsAvoided = busy.length;
+            const dayLabel = scheduledDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+            return {
+              taskId,
+              scheduledDate: scheduledDate.toISOString(),
+              startTime: fromMinutes(start),
+              endTime: fromMinutes(end),
+              reason: conflictsAvoided > 0
+                ? `Next open slot on ${dayLabel}, clear of ${conflictsAvoided} scheduled item${conflictsAvoided === 1 ? '' : 's'} and within your working hours.`
+                : `Next open slot on ${dayLabel}, within your working hours.`,
+            };
+          }
+        }
+      }
+
+      cursor.setDate(cursor.getDate() + 1);
+      scannedDays++;
+    }
+
+    return null;
   }
 
   /**

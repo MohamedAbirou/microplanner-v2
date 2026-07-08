@@ -178,6 +178,11 @@ extend type Mutation {
   acceptPlan(id: ID!): Plan!
 
   """
+  Regenerate a plan for the same week (creates a new draft)
+  """
+  regeneratePlan(id: ID!): Plan!
+
+  """
   Delete a plan
   """
   deletePlan(id: ID!): Plan!
@@ -186,6 +191,34 @@ extend type Mutation {
   Create a plan template
   """
   createPlanTemplate(input: CreatePlanTemplateInput!): PlanTemplate!
+
+  """
+  Save an existing plan as a reusable template
+  """
+  saveAsPlanTemplate(planId: ID!, name: String!, description: String): PlanTemplate!
+
+  """
+  Generate a new plan from a template
+  """
+  generatePlanFromTemplate(input: GenerateFromTemplateInput!): Plan!
+
+  """
+  Mark a template as the user's default
+  """
+  setDefaultPlanTemplate(id: ID!): PlanTemplate!
+
+  """
+  Delete a plan template
+  """
+  deletePlanTemplate(id: ID!): Boolean!
+}
+
+"""
+Input for generating a plan from a template
+"""
+input GenerateFromTemplateInput {
+  templateId: ID!
+  weekStartDate: String!
 }
 
 """

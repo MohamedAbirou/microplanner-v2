@@ -97,12 +97,19 @@ export default function PlansPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Weekly Plans</h1>
           <p className="text-[13px] text-muted-foreground mt-1">AI-generated weekly schedules</p>
         </div>
-        <Link href="/plans/generate">
-          <Button className="h-9">
-            <Sparkles className="mr-2 h-4 w-4" />
-            Generate New Plan
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/plans/templates">
+            <Button variant="outline" className="h-9">
+              Templates
+            </Button>
+          </Link>
+          <Link href="/plans/generate">
+            <Button className="h-9">
+              <Sparkles className="mr-2 h-4 w-4" />
+              Generate New Plan
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {draftPlan && (
@@ -267,7 +274,7 @@ export default function PlansPage() {
                   <div
                     key={plan.id}
                     className="flex items-center justify-between p-4 rounded-[10px] border border-border hover:bg-accent/50 transition-colors cursor-pointer"
-                    onClick={() => router.push(`/plans/${plan.id}`)}
+                    onClick={() => router.push(`/plans/review?id=${plan.id}`)}
                   >
                     <div className="flex items-start gap-4 flex-1">
                       <div className="p-2 rounded-lg bg-muted">

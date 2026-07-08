@@ -19,8 +19,12 @@ export default function SearchPage() {
   const [activeTab, setActiveTab] = React.useState('all');
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  // Fetch data from GraphQL
-  const { tasks, loading: tasksLoading } = useTasks();
+  // Fetch data from GraphQL — only query tasks when the user is searching
+  const { tasks, loading: tasksLoading } = useTasks(
+    searchQuery.trim() ? { search: searchQuery.trim() } : undefined,
+    undefined,
+    { take: 50, skipQuery: !searchQuery.trim() }
+  );
   const { goals, loading: goalsLoading } = useGoals();
   const { plans, loading: plansLoading } = usePlans();
 
