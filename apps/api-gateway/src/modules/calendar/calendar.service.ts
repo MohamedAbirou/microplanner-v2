@@ -1,10 +1,19 @@
 import type { SyncLog, Task } from '@microplanner/database';
 import { SyncStatus } from '@microplanner/database';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { google } from 'googleapis';
 import { PrismaService } from '../../database/prisma.service';
 import { ConflictResolution, SyncTasksDto } from './dto/sync-tasks.dto';
 import { GoogleOAuthService } from './services/google-oauth.service';
+import { OutlookOAuthService } from './services/outlook-oauth.service';
+import { GoogleCalendarProvider } from './services/google-calendar.provider';
+import { OutlookCalendarProvider } from './services/outlook-calendar.provider';
+import {
+  CalendarProvider,
+  CalendarProviderId,
+  CreateEventInput,
+  NormalizedCalendarEvent,
+  UpdateEventInput,
+} from './services/calendar-provider.interface';
 
 export interface ConflictInfo {
   task: Task;
@@ -32,93 +41,90 @@ export class CalendarService {
   constructor(
     private prisma: PrismaService,
     private googleOAuthService: GoogleOAuthService,
+    private outlookOAuthService: OutlookOAuthService,
+    private googleProvider: GoogleCalendarProvider,
+    private outlookProvider: OutlookCalendarProvider,
   ) {}
 
+  // ============================================================
+  // PROVIDER ROUTING
+  // ============================================================
+
+  private providerClient(id: CalendarProviderId): CalendarProvider {
+    return id === 'outlook' ? this.outlookProvider : this.googleProvider;
+  }
+
+  /** Provider ids the user has connected with sync enabled. */
+  private async getConnectedProviderIds(userId: string): Promise<CalendarProviderId[]> {
+    const tokens = await this.prisma.calendarToken.findMany({
+      where: { userId, syncEnabled: true },
+      select: { provider: true },
+    });
+    return tokens
+      .map((t) => t.provider as CalendarProviderId)
+      .filter((p) => p === 'google' || p === 'outlook');
+  }
+
   /**
-   * Get calendar events for a date range
+   * The provider MicroPlanner writes new events to. Google is preferred when
+   * both are connected; a task's own calendarProvider overrides this.
+   */
+  private async getWriteProviderId(userId: string): Promise<CalendarProviderId | null> {
+    const ids = await this.getConnectedProviderIds(userId);
+    if (ids.includes('google')) return 'google';
+    if (ids.includes('outlook')) return 'outlook';
+    return null;
+  }
+
+  /**
+   * Get calendar events for a date range (raw-ish shape retained for the
+   * conflict engine and controller), aggregated across all connected providers.
    */
   async getEvents(userId: string, startDate: Date, endDate: Date) {
-    const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
-    const calendar = google.calendar({ version: 'v3', auth: authClient });
-
-    try {
-      const response = await calendar.events.list({
-        calendarId: 'primary',
-        timeMin: startDate.toISOString(),
-        timeMax: endDate.toISOString(),
-        singleEvents: true,
-        orderBy: 'startTime',
-      });
-
-      const events = response.data.items || [];
-
-      this.logger.log(`Fetched ${events.length} events for user ${userId}`);
-
-      return {
-        events: events.map(event => ({
-          id: event.id,
-          summary: event.summary,
-          description: event.description,
-          start: event.start,
-          end: event.end,
-          status: event.status,
-          extendedProperties: event.extendedProperties,
-        })),
-        total: events.length,
-      };
-    } catch (error) {
-      this.logger.error('Failed to fetch calendar events', error);
-      throw new BadRequestException('Failed to fetch calendar events');
-    }
+    const events = await this.getEventsForPlanning(userId, startDate, endDate);
+    return {
+      events: events.map((e) => ({
+        id: e.id,
+        summary: e.title,
+        description: e.description,
+        start: { dateTime: e.start.toISOString() },
+        end: { dateTime: e.end.toISOString() },
+        status: 'confirmed',
+        provider: e.provider,
+      })),
+      total: events.length,
+    };
   }
 
   /**
    * Get calendar events for planning (conflict detection)
    * Returns events in a simplified format for AI planners
    */
-  async getEventsForPlanning(userId: string, startDate: Date, endDate: Date): Promise<Array<{
-    id: string;
-    title: string;
-    start: Date;
-    end: Date;
-    isAllDay: boolean;
-  }>> {
-    try {
-      const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
-      const calendar = google.calendar({ version: 'v3', auth: authClient });
+  async getEventsForPlanning(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<NormalizedCalendarEvent[]> {
+    const providerIds = await this.getConnectedProviderIds(userId);
+    if (providerIds.length === 0) return [];
 
-      const response = await calendar.events.list({
-        calendarId: 'primary',
-        timeMin: startDate.toISOString(),
-        timeMax: endDate.toISOString(),
-        singleEvents: true,
-        orderBy: 'startTime',
-      });
-
-      const events = response.data.items || [];
-
-      this.logger.debug(`Fetched ${events.length} calendar events for planning (user ${userId})`);
-
-      return events
-        .filter(event => event.start && event.end) // Only events with valid times
-        .map(event => {
-          const isAllDay = !!event.start?.date; // All-day events use 'date' instead of 'dateTime'
-
-          return {
-            id: event.id || '',
-            title: event.summary || 'Untitled Event',
-            start: new Date(event.start?.dateTime || event.start?.date || ''),
-            end: new Date(event.end?.dateTime || event.end?.date || ''),
-            isAllDay,
-          };
-        });
-    } catch (error) {
-      // If calendar not connected or error, return empty array
-      // This allows planning to work even without calendar integration
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.debug(`No calendar events available for planning: ${errorMessage}`);
-      return [];
-    }
+    // Fetch from every connected provider; a failure in one must not blank out
+    // the others (planning should degrade gracefully, never hard-fail).
+    const results = await Promise.all(
+      providerIds.map(async (id) => {
+        try {
+          return await this.providerClient(id).listEvents(userId, startDate, endDate);
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : 'Unknown error';
+          this.logger.debug(`No ${id} events for planning (user ${userId}): ${msg}`);
+          return [] as NormalizedCalendarEvent[];
+        }
+      }),
+    );
+    const events = results.flat();
+    events.sort((a, b) => a.start.getTime() - b.start.getTime());
+    this.logger.debug(`Fetched ${events.length} calendar events for planning (user ${userId})`);
+    return events;
   }
 
   /**
@@ -126,8 +132,12 @@ export class CalendarService {
    */
   async syncTasks(userId: string, syncTasksDto: SyncTasksDto): Promise<SyncResult> {
     const startTime = Date.now();
-    const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
-    const calendar = google.calendar({ version: 'v3', auth: authClient });
+
+    const writeProviderId = await this.getWriteProviderId(userId);
+    if (!writeProviderId) {
+      throw new BadRequestException('No calendar connected. Please connect a calendar first.');
+    }
+    const writeProvider = this.providerClient(writeProviderId);
 
     // Get tasks to sync
     const tasks = await this.getTasksToSync(userId, syncTasksDto);
@@ -144,14 +154,14 @@ export class CalendarService {
       details: [],
     };
 
-    // Get existing calendar events to check for conflicts
+    // Get existing calendar events (all providers) to check for conflicts
     const dateRange = this.getDateRange(tasks);
-    const existingEvents = await this.getEvents(userId, dateRange.start, dateRange.end);
+    const existingEvents = await this.getEventsForPlanning(userId, dateRange.start, dateRange.end);
 
     for (const task of tasks) {
       try {
         // Check for conflicts
-        const conflict = await this.detectConflict(task, existingEvents.events, tasks);
+        const conflict = await this.detectConflict(task, existingEvents, tasks);
 
         if (conflict) {
           // Handle conflict based on resolution strategy
@@ -159,7 +169,6 @@ export class CalendarService {
             task,
             conflict,
             syncTasksDto.conflictResolution || ConflictResolution.SKIP,
-            calendar,
           );
 
           if (!handled) {
@@ -174,15 +183,15 @@ export class CalendarService {
           }
         }
 
-        // Idempotent event creation/update
-        const eventId = await this.upsertCalendarEvent(task, calendar);
+        // Idempotent event creation/update via the chosen provider
+        const eventId = await writeProvider.upsertTaskEvent(userId, task);
 
         // Update task with sync info
         await this.prisma.task.update({
           where: { id: task.id },
           data: {
             calendarEventId: eventId,
-            calendarProvider: 'google',
+            calendarProvider: writeProviderId,
             syncedAt: new Date(),
             syncStatus: SyncStatus.SYNCED,
             syncError: null,
@@ -225,7 +234,7 @@ export class CalendarService {
 
     // Update calendar token sync timestamp
     await this.prisma.calendarToken.updateMany({
-      where: { userId, provider: 'google' },
+      where: { userId, provider: writeProviderId },
       data: { lastSyncAt: new Date() },
     });
 
@@ -233,88 +242,11 @@ export class CalendarService {
   }
 
   /**
-   * Idempotent event creation/update
-   * Searches for existing event by taskId metadata, updates if exists, creates if not
-   */
-  private async upsertCalendarEvent(task: Task, calendar: any): Promise<string> {
-    try {
-      // Search for existing event with this taskId
-      const searchResponse = await calendar.events.list({
-        calendarId: 'primary',
-        privateExtendedProperty: `taskId=${task.id}`,
-        timeMin: new Date(task.scheduledDate.setHours(0, 0, 0, 0)).toISOString(),
-        timeMax: new Date(task.scheduledDate.setHours(23, 59, 59, 999)).toISOString(),
-      });
-
-      const existingEvent = searchResponse.data.items?.[0];
-
-      const eventBody = this.buildEventBody(task);
-
-      if (existingEvent?.id) {
-        // Update existing event
-        this.logger.log(`Updating existing calendar event ${existingEvent.id} for task ${task.id}`);
-        const response = await calendar.events.update({
-          calendarId: 'primary',
-          eventId: existingEvent.id,
-          requestBody: eventBody,
-        });
-        return response.data.id;
-      } else {
-        // Create new event
-        this.logger.log(`Creating new calendar event for task ${task.id}`);
-        const response = await calendar.events.insert({
-          calendarId: 'primary',
-          requestBody: eventBody,
-        });
-        return response.data.id;
-      }
-    } catch (error) {
-      this.logger.error(`Failed to upsert calendar event for task ${task.id}`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Build Google Calendar event body from task
-   */
-  private buildEventBody(task: Task) {
-    const startDateTime = new Date(task.scheduledDate);
-    const [startHour, startMinute] = task.startTime.split(':').map(Number);
-    startDateTime.setHours(startHour, startMinute, 0, 0);
-
-    const endDateTime = new Date(task.scheduledDate);
-    const [endHour, endMinute] = task.endTime.split(':').map(Number);
-    endDateTime.setHours(endHour, endMinute, 0, 0);
-
-    return {
-      summary: task.title,
-      description: task.notes || 'Created by MicroPlanner',
-      start: {
-        dateTime: startDateTime.toISOString(),
-        timeZone: 'UTC',
-      },
-      end: {
-        dateTime: endDateTime.toISOString(),
-        timeZone: 'UTC',
-      },
-      extendedProperties: {
-        private: {
-          taskId: task.id,
-          goalId: task.goalId || '',
-          planId: task.planId || '',
-          aiGenerated: task.aiGenerated.toString(),
-        },
-      },
-      colorId: task.goalId ? '9' : '1', // Blue for goal tasks, default for others
-    };
-  }
-
-  /**
    * Detect conflicts with existing calendar events or other tasks
    */
   private async detectConflict(
     task: Task,
-    existingEvents: any[],
+    existingEvents: NormalizedCalendarEvent[],
     allTasks: Task[],
   ): Promise<ConflictInfo | null> {
     const taskStart = this.parseTaskTime(task, task.startTime);
@@ -322,18 +254,14 @@ export class CalendarService {
 
     // Check for overlaps with existing calendar events
     for (const event of existingEvents) {
-      // Skip if this event is for this task (already synced)
-      if (event.extendedProperties?.private?.taskId === task.id) {
-        continue;
-      }
+      // Skip this task's own event (already synced) and all-day events.
+      if (event.id && event.id === task.calendarEventId) continue;
+      if (event.isAllDay) continue;
 
-      const eventStart = new Date(event.start.dateTime || event.start.date);
-      const eventEnd = new Date(event.end.dateTime || event.end.date);
-
-      if (this.hasTimeOverlap(taskStart, taskEnd, eventStart, eventEnd)) {
+      if (this.hasTimeOverlap(taskStart, taskEnd, event.start, event.end)) {
         return {
           task,
-          reason: `Overlaps with existing event: ${event.summary}`,
+          reason: `Overlaps with existing event: ${event.title}`,
           suggestedTime: this.suggestAlternativeTime(task, existingEvents, allTasks),
         };
       }
@@ -364,7 +292,6 @@ export class CalendarService {
     task: Task,
     conflict: ConflictInfo,
     resolution: ConflictResolution,
-    _calendar: any,
   ): Promise<boolean> {
     switch (resolution) {
       case ConflictResolution.SKIP:
@@ -398,7 +325,7 @@ export class CalendarService {
    */
   private suggestAlternativeTime(
     task: Task,
-    existingEvents: any[],
+    existingEvents: NormalizedCalendarEvent[],
     _allTasks: Task[],
   ): { startTime: string; endTime: string } | undefined {
     // Simple strategy: try next hour slots
@@ -414,10 +341,8 @@ export class CalendarService {
       let isFree = true;
 
       for (const event of existingEvents) {
-        const eventStart = new Date(event.start.dateTime || event.start.date);
-        const eventEnd = new Date(event.end.dateTime || event.end.date);
-
-        if (this.hasTimeOverlap(testStart, testEnd, eventStart, eventEnd)) {
+        if (event.isAllDay) continue;
+        if (this.hasTimeOverlap(testStart, testEnd, event.start, event.end)) {
           isFree = false;
           break;
         }
@@ -633,22 +558,29 @@ export class CalendarService {
 
   initiateAuth(userId: string, provider: string) {
     const normalized = (provider || '').toLowerCase();
-    if (normalized !== 'google') {
-      throw new BadRequestException(
-        `${provider} calendar is not supported yet. Google Calendar is currently the only supported provider.`
-      );
+    if (normalized === 'google') {
+      return { url: this.googleOAuthService.generateAuthUrl(userId), provider: 'GOOGLE' };
     }
-    return { url: this.googleOAuthService.generateAuthUrl(userId), provider: 'GOOGLE' };
+    if (normalized === 'outlook') {
+      return { url: this.outlookOAuthService.generateAuthUrl(userId), provider: 'OUTLOOK' };
+    }
+    throw new BadRequestException(
+      `${provider} calendar is not supported. Connect Google or Outlook.`,
+    );
   }
 
   async connectFromInput(userId: string, input: { provider: string; code: string; state?: string }) {
     const normalized = (input.provider || '').toLowerCase();
-    if (normalized !== 'google') {
+    let token;
+    if (normalized === 'google') {
+      token = await this.googleOAuthService.handleCallback(input.code, input.state || '', userId);
+    } else if (normalized === 'outlook') {
+      token = await this.outlookOAuthService.handleCallback(input.code, input.state || '', userId);
+    } else {
       throw new BadRequestException(
-        `${input.provider} calendar is not supported yet. Google Calendar is currently the only supported provider.`
+        `${input.provider} calendar is not supported. Connect Google or Outlook.`,
       );
     }
-    const token = await this.googleOAuthService.handleCallback(input.code, input.state || '', userId);
     return this.mapTokenToConnection(token as any);
   }
 
@@ -705,103 +637,158 @@ export class CalendarService {
   async getConnectionEvents(connectionId: string, userId: string, startDate: Date, endDate: Date) {
     const connection = await this.getConnection(connectionId, userId);
     const events = await this.getEventsForPlanning(userId, startDate, endDate);
-    return events.map(e => ({
+    // A connection filter narrows to that provider's events; connectionless
+    // callers see the aggregate.
+    const wanted = connection.provider.toLowerCase();
+    return events
+      .filter((e) => e.provider === wanted)
+      .map((e) => ({
+        id: e.id,
+        title: e.title,
+        description: e.description ?? null,
+        start: e.start,
+        end: e.end,
+        allDay: e.isAllDay,
+        source: e.provider.toUpperCase(),
+        attendees: e.attendees ?? [],
+        location: e.location ?? null,
+      }));
+  }
+
+  private toGraphqlEvent(e: NormalizedCalendarEvent) {
+    return {
       id: e.id,
       title: e.title,
-      description: null,
+      description: e.description ?? null,
       start: e.start,
       end: e.end,
       allDay: e.isAllDay,
-      source: connection.provider,
-      attendees: [],
-      location: null,
-    }));
-  }
-
-  /**
-   * Create a calendar event directly (not tied to a task)
-   */
-  async createCalendarEvent(
-    userId: string,
-    input: { title: string; description?: string; start: string; end: string; allDay?: boolean; location?: string }
-  ) {
-    const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
-    const calendar = google.calendar({ version: 'v3', auth: authClient });
-
-    const response = await calendar.events.insert({
-      calendarId: 'primary',
-      requestBody: {
-        summary: input.title,
-        description: input.description || undefined,
-        location: input.location || undefined,
-        start: input.allDay
-          ? { date: input.start.split('T')[0] }
-          : { dateTime: new Date(input.start).toISOString() },
-        end: input.allDay
-          ? { date: input.end.split('T')[0] }
-          : { dateTime: new Date(input.end).toISOString() },
-      },
-    });
-
-    const event = response.data;
-    return {
-      id: event.id,
-      title: event.summary || input.title,
-      description: event.description || null,
-      start: event.start?.dateTime || event.start?.date,
-      end: event.end?.dateTime || event.end?.date,
-      allDay: !!event.start?.date,
-      source: 'GOOGLE',
-      attendees: (event.attendees || []).map(a => a.email || '').filter(Boolean),
-      location: event.location || null,
+      source: e.provider.toUpperCase(),
+      attendees: e.attendees ?? [],
+      location: e.location ?? null,
     };
   }
 
   /**
-   * Update a calendar event
+   * Create a calendar event directly (not tied to a task). Writes to the user's
+   * primary connected provider, or an explicitly requested one.
+   */
+  async createCalendarEvent(
+    userId: string,
+    input: { title: string; description?: string; start: string; end: string; allDay?: boolean; location?: string; provider?: string }
+  ) {
+    const providerId = await this.resolveWriteProvider(userId, input.provider);
+    const created = await this.providerClient(providerId).createEvent(userId, {
+      title: input.title,
+      description: input.description,
+      start: input.start,
+      end: input.end,
+      allDay: input.allDay,
+      location: input.location,
+    });
+    return this.toGraphqlEvent(created);
+  }
+
+  /**
+   * Update a calendar event. Routes to the provider that owns the event when the
+   * user has more than one calendar connected.
    */
   async updateCalendarEvent(
     eventId: string,
     userId: string,
-    input: { title?: string; description?: string; start?: string; end?: string; location?: string }
+    input: { title?: string; description?: string; start?: string; end?: string; location?: string; provider?: string }
   ) {
-    const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
-    const calendar = google.calendar({ version: 'v3', auth: authClient });
-
-    const patch: Record<string, unknown> = {};
-    if (input.title !== undefined) patch.summary = input.title;
-    if (input.description !== undefined) patch.description = input.description;
-    if (input.location !== undefined) patch.location = input.location;
-    if (input.start) patch.start = { dateTime: new Date(input.start).toISOString() };
-    if (input.end) patch.end = { dateTime: new Date(input.end).toISOString() };
-
-    const response = await calendar.events.patch({
-      calendarId: 'primary',
-      eventId,
-      requestBody: patch,
+    const providerId = await this.resolveOwningProvider(userId, input.provider);
+    const updated = await this.providerClient(providerId).updateEvent(userId, eventId, {
+      title: input.title,
+      description: input.description,
+      start: input.start,
+      end: input.end,
+      location: input.location,
     });
+    return this.toGraphqlEvent(updated);
+  }
 
-    const event = response.data;
-    return {
-      id: event.id,
-      title: event.summary || '',
-      description: event.description || null,
-      start: event.start?.dateTime || event.start?.date,
-      end: event.end?.dateTime || event.end?.date,
-      allDay: !!event.start?.date,
-      source: 'GOOGLE',
-      attendees: (event.attendees || []).map(a => a.email || '').filter(Boolean),
-      location: event.location || null,
-    };
+  private async resolveWriteProvider(
+    userId: string,
+    requested?: string,
+  ): Promise<CalendarProviderId> {
+    if (requested) {
+      const norm = requested.toLowerCase();
+      if (norm === 'google' || norm === 'outlook') return norm;
+    }
+    const id = await this.getWriteProviderId(userId);
+    if (!id) throw new BadRequestException('No calendar connected');
+    return id;
+  }
+
+  private async resolveOwningProvider(
+    userId: string,
+    requested?: string,
+  ): Promise<CalendarProviderId> {
+    return this.resolveWriteProvider(userId, requested);
   }
 
   /**
    * Delete a calendar event
    */
-  async deleteCalendarEvent(eventId: string, userId: string) {
-    const authClient = await this.googleOAuthService.getAuthenticatedClient(userId);
-    const calendar = google.calendar({ version: 'v3', auth: authClient });
-    await calendar.events.delete({ calendarId: 'primary', eventId });
+  async deleteCalendarEvent(eventId: string, userId: string, provider?: string) {
+    // Try every connected provider so we don't need the caller to know which
+    // calendar owns the event; a 404 on the wrong provider is ignored.
+    const ids = provider
+      ? [provider.toLowerCase() as CalendarProviderId]
+      : await this.getConnectedProviderIds(userId);
+    for (const id of ids) {
+      try {
+        await this.providerClient(id).deleteEvent(userId, eventId);
+      } catch (err) {
+        this.logger.debug(`Delete on ${id} failed for event ${eventId}: ${err instanceof Error ? err.message : err}`);
+      }
+    }
     this.logger.log(`Calendar event ${eventId} deleted for user ${userId}`);
+  }
+
+  // ============================================================
+  // FOCUS BLOCK / DIRECT PROVIDER WRITES (used by productivity + defense)
+  // ============================================================
+
+  /** Create an event on a specific provider and return the normalized result. */
+  async createEventOnProvider(
+    userId: string,
+    providerId: CalendarProviderId,
+    input: CreateEventInput,
+  ): Promise<NormalizedCalendarEvent> {
+    return this.providerClient(providerId).createEvent(userId, input);
+  }
+
+  async updateEventOnProvider(
+    userId: string,
+    providerId: CalendarProviderId,
+    eventId: string,
+    input: UpdateEventInput,
+  ): Promise<NormalizedCalendarEvent> {
+    return this.providerClient(providerId).updateEvent(userId, eventId, input);
+  }
+
+  async deleteEventOnProvider(
+    userId: string,
+    providerId: CalendarProviderId,
+    eventId: string,
+  ): Promise<void> {
+    return this.providerClient(providerId).deleteEvent(userId, eventId);
+  }
+
+  async respondToEventOnProvider(
+    userId: string,
+    providerId: CalendarProviderId,
+    eventId: string,
+    response: 'declined' | 'accepted' | 'tentative',
+  ): Promise<void> {
+    return this.providerClient(providerId).respondToEvent(userId, eventId, response);
+  }
+
+  /** Primary connected provider id, or null when no calendar is connected. */
+  async getPrimaryProvider(userId: string): Promise<CalendarProviderId | null> {
+    return this.getWriteProviderId(userId);
   }
 }

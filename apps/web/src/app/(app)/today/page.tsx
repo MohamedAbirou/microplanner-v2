@@ -35,17 +35,22 @@ import {
 } from '@/hooks/use-graphql';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
-import { getDailyIntention } from '@/lib/daily-ritual';
+import { getDailyIntention, dateKey } from '@/lib/daily-ritual';
+import { AutopilotPanel } from '@/components/autopilot/autopilot-panel';
+import { useDailyRitual } from '@/hooks/use-graphql-extended';
 
 export default function TodayPage() {
   const [filters, setFilters] = React.useState<TaskFilters>(clearAllFilters());
   const [sort, setSort] = React.useState<TaskSort>(SORT_PRESETS.DATE_ASC);
   const [deleteTaskId, setDeleteTaskId] = React.useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
-  const [intention, setIntention] = React.useState('');
-  React.useEffect(() => {
-    setIntention(getDailyIntention());
-  }, []);
+  const todayKey = React.useMemo(() => dateKey(new Date()), []);
+  const { ritual } = useDailyRitual(todayKey);
+  // Backend intention is authoritative; fall back to any local draft.
+  const intention = ritual?.intention || getDailyIntention();
+  // Morning nudge: after 9am and the ritual isn't done yet.
+  const showRitualBanner =
+    new Date().getHours() >= 9 && ritual !== undefined && !ritual?.planCompleted;
 
   // Fetch today's tasks from GraphQL
   // Note: We filter by single date (not dateRange) in GraphQL, then do client-side filtering
@@ -163,6 +168,25 @@ export default function TodayPage() {
           </Button>
         </div>
       </div>
+
+      {/* Morning ritual nudge */}
+      {showRitualBanner && (
+        <div className="flex items-center justify-between gap-3 rounded-[10px] border border-primary/30 bg-primary/[0.04] px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <Sunrise className="h-4 w-4 text-primary flex-none" />
+            <div className="text-[13px]">
+              <span className="font-medium">Start your daily ritual?</span>{' '}
+              <span className="text-muted-foreground">Set today&apos;s intention and plan your tasks.</span>
+            </div>
+          </div>
+          <Link href="/plan-day">
+            <Button size="sm" className="h-8">Plan day</Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Autopilot suggestions / log */}
+      <AutopilotPanel />
 
       {/* Daily intention */}
       {intention && (

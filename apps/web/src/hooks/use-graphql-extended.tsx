@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useSubscription } from '@apollo/client';
+import { useQuery, useLazyQuery, useMutation, useSubscription } from '@apollo/client';
 import { toast } from 'sonner';
 import * as ops from '@/graphql/operations-extended';
 
@@ -346,6 +346,57 @@ export function useUpdateCalendarDefense() {
   return { updateCalendarDefense, loading, error };
 }
 
+export function useHabits() {
+  const { data, loading, refetch } = useQuery(ops.GET_HABITS, { fetchPolicy: 'cache-and-network' });
+  return { habits: data?.habits || [], loading, refetch };
+}
+
+export function useCreateHabit() {
+  const [createHabit, { loading }] = useMutation(ops.CREATE_HABIT, {
+    refetchQueries: [{ query: ops.GET_HABITS }],
+    onCompleted: () => toast.success('Habit added'),
+    onError: (error) => toast.error('Failed to add habit', { description: error.message }),
+  });
+  return { createHabit, loading };
+}
+
+export function useUpdateHabit() {
+  const [updateHabit, { loading }] = useMutation(ops.UPDATE_HABIT, {
+    refetchQueries: [{ query: ops.GET_HABITS }],
+    onError: (error) => toast.error('Failed to update habit', { description: error.message }),
+  });
+  return { updateHabit, loading };
+}
+
+export function useDeleteHabit() {
+  const [deleteHabit, { loading }] = useMutation(ops.DELETE_HABIT, {
+    refetchQueries: [{ query: ops.GET_HABITS }],
+    onCompleted: () => toast.success('Habit removed'),
+    onError: (error) => toast.error('Failed to remove habit', { description: error.message }),
+  });
+  return { deleteHabit, loading };
+}
+
+export function useCalendarDefenseLog(limit = 20) {
+  const { data, loading, refetch } = useQuery(ops.GET_CALENDAR_DEFENSE_LOG, {
+    variables: { limit },
+    fetchPolicy: 'cache-and-network',
+  });
+  return { log: data?.calendarDefenseLog || [], loading, refetch };
+}
+
+export function useRunCalendarDefense() {
+  const [runDefense, { loading }] = useMutation(ops.RUN_CALENDAR_DEFENSE, {
+    refetchQueries: [{ query: ops.GET_CALENDAR_DEFENSE_LOG, variables: { limit: 20 } }],
+    onCompleted: (data) => {
+      const n = data?.runCalendarDefense?.actions ?? 0;
+      toast.success(n > 0 ? `Defended ${n} meeting${n === 1 ? '' : 's'}` : 'No meetings needed defending');
+    },
+    onError: (error) => toast.error('Defense run failed', { description: error.message }),
+  });
+  return { runDefense, loading };
+}
+
 // ============================================================================
 // PRODUCTIVITY FEATURES - KANBAN BOARDS
 // ============================================================================
@@ -455,6 +506,22 @@ export function useDeleteSmart1on1() {
   });
 
   return { deleteSmart1on1, loading, error };
+}
+
+export function useScheduleSmart1on1() {
+  const [scheduleSmart1on1, { loading }] = useMutation(ops.SCHEDULE_SMART_1ON1, {
+    refetchQueries: [{ query: ops.GET_SMART_1ON1S }],
+    onCompleted: (data) => {
+      const when = data?.scheduleSmart1on1?.nextMeetingDate;
+      toast.success(
+        when
+          ? `Scheduled for ${new Date(when).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
+          : 'Next 1:1 scheduled',
+      );
+    },
+    onError: (error) => toast.error('Could not schedule 1:1', { description: error.message }),
+  });
+  return { scheduleSmart1on1, loading };
 }
 
 // ============================================================================
@@ -776,6 +843,20 @@ export function useInviteTeamMember() {
   return { inviteMember, loading, error };
 }
 
+export function useAcceptTeamInvitation() {
+  const [acceptInvitation, { loading, error }] = useMutation(ops.ACCEPT_TEAM_INVITATION);
+  return { acceptInvitation, loading, error };
+}
+
+export function useTeamDashboard(teamId: string) {
+  const { data, loading, error, refetch } = useQuery(ops.GET_TEAM_DASHBOARD, {
+    variables: { teamId },
+    skip: !teamId,
+    fetchPolicy: 'cache-and-network',
+  });
+  return { dashboard: data?.teamDashboard || null, loading, error, refetch };
+}
+
 export function useDeleteTeam() {
   const [deleteTeam, { loading, error }] = useMutation(ops.DELETE_TEAM, {
     refetchQueries: [{ query: ops.GET_TEAMS }],
@@ -978,6 +1059,49 @@ export function useIntegrations(type?: string) {
   };
 }
 
+/**
+ * Kicks off a real OAuth handshake. Returns the provider authorize URL; the
+ * caller is responsible for redirecting the browser to it. Nothing is marked
+ * connected until the provider calls back and a token is stored.
+ */
+export function useDailyRitual(date: string) {
+  const { data, loading, refetch } = useQuery(ops.GET_DAILY_RITUAL, {
+    variables: { date },
+    skip: !date,
+    fetchPolicy: 'cache-and-network',
+  });
+  return { ritual: data?.dailyRitual || null, loading, refetch };
+}
+
+export function useUpdateDailyRitual() {
+  const [updateDailyRitual, { loading }] = useMutation(ops.UPDATE_DAILY_RITUAL, {
+    onError: (error) => toast.error('Failed to save', { description: error.message }),
+  });
+  return { updateDailyRitual, loading };
+}
+
+export function usePmInboxTasks() {
+  const { data, loading, refetch } = useQuery(ops.PM_INBOX_TASKS, { fetchPolicy: 'cache-and-network' });
+  return { inbox: (data?.pmInboxTasks || []) as any[], loading, refetch };
+}
+
+export function useImportPmTasks() {
+  const [importPmTasks, { loading }] = useMutation(ops.IMPORT_PM_TASKS, {
+    onError: (error) => toast.error('Import failed', { description: error.message }),
+  });
+  return { importPmTasks, loading };
+}
+
+export function useInitiateIntegrationOAuth() {
+  const [initiateOAuth, { loading, error }] = useMutation(ops.INITIATE_INTEGRATION_OAUTH, {
+    onError: (error) => {
+      toast.error('Could not start connection', { description: error.message });
+    },
+  });
+
+  return { initiateOAuth, loading, error };
+}
+
 export function useConnectIntegration() {
   const [connectIntegration, { loading, error }] = useMutation(ops.CONNECT_INTEGRATION, {
     refetchQueries: [{ query: ops.GET_INTEGRATIONS }],
@@ -1010,15 +1134,108 @@ export function useDisconnectIntegration() {
 
 export function useSyncIntegration() {
   const [syncIntegration, { loading, error }] = useMutation(ops.SYNC_INTEGRATION, {
-    onCompleted: () => {
-      toast.success('Sync started');
+    onCompleted: (data) => {
+      const stats = data?.syncIntegration?.config?.lastSyncStats;
+      if (stats && (stats.imported || stats.updated || stats.completed)) {
+        toast.success(
+          `Synced — ${stats.imported} imported, ${stats.updated} updated, ${stats.completed} completed`,
+        );
+      } else {
+        toast.success('Sync complete — nothing new');
+      }
     },
     onError: (error) => {
-      toast.error('Failed to sync', { description: error.message });
+      toast.error('Sync failed', { description: error.message });
     },
   });
 
   return { syncIntegration, loading, error };
+}
+
+export function useUpdateIntegration() {
+  const [updateIntegration, { loading, error }] = useMutation(ops.UPDATE_INTEGRATION, {
+    refetchQueries: [{ query: ops.GET_INTEGRATIONS }],
+    onCompleted: () => {
+      toast.success('Integration settings saved');
+    },
+    onError: (error) => {
+      toast.error('Failed to save settings', { description: error.message });
+    },
+  });
+
+  return { updateIntegration, loading, error };
+}
+
+// ============================================================================
+// AUTOPILOT
+// ============================================================================
+
+export function useAutopilotStatus() {
+  const { data, loading, error, refetch } = useQuery(ops.AUTOPILOT_STATUS, {
+    fetchPolicy: 'cache-and-network',
+  });
+  return {
+    status: data?.autopilotStatus || null,
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useUpdateAutopilotSettings() {
+  const [updateSettings, { loading }] = useMutation(ops.UPDATE_AUTOPILOT_SETTINGS, {
+    refetchQueries: [{ query: ops.AUTOPILOT_STATUS }],
+    onError: (error) => toast.error('Failed to update autopilot', { description: error.message }),
+  });
+  return { updateSettings, loading };
+}
+
+export function useRunAutopilot() {
+  const [runAutopilot, { loading }] = useMutation(ops.RUN_AUTOPILOT, {
+    refetchQueries: [{ query: ops.AUTOPILOT_STATUS }],
+    onCompleted: (data) => {
+      const p = data?.runAutopilot;
+      if (!p) {
+        toast.success('Autopilot ran — nothing to move');
+      } else if (p.status === 'AUTO_APPLIED') {
+        toast.success(p.summary);
+      } else {
+        toast.success('Autopilot has a suggestion for you');
+      }
+    },
+    onError: (error) => toast.error('Autopilot failed', { description: error.message }),
+  });
+  return { runAutopilot, loading };
+}
+
+export function useApplyAutopilotProposal() {
+  const [applyProposal, { loading }] = useMutation(ops.APPLY_AUTOPILOT_PROPOSAL, {
+    refetchQueries: [{ query: ops.AUTOPILOT_STATUS }],
+    onCompleted: () => toast.success('Schedule updated'),
+    onError: (error) => toast.error('Could not apply', { description: error.message }),
+  });
+  return { applyProposal, loading };
+}
+
+export function useDismissAutopilotProposal() {
+  const [dismissProposal, { loading }] = useMutation(ops.DISMISS_AUTOPILOT_PROPOSAL, {
+    refetchQueries: [{ query: ops.AUTOPILOT_STATUS }],
+    onError: (error) => toast.error('Could not dismiss', { description: error.message }),
+  });
+  return { dismissProposal, loading };
+}
+
+export function useIntegrationResources() {
+  const [fetchResources, { data, loading, error }] = useLazyQuery(ops.INTEGRATION_RESOURCES, {
+    fetchPolicy: 'network-only',
+  });
+
+  return {
+    fetchResources,
+    resources: (data?.integrationResources || []) as { id: string; name: string }[],
+    loading,
+    error,
+  };
 }
 
 export function useWebhooks() {

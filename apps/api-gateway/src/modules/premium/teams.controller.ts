@@ -118,6 +118,34 @@ export class TeamsController {
     return this.premiumService.getTeamInvitations(id, user.id);
   }
 
+  @Get(':id/dashboard')
+  @ApiOperation({ summary: 'Team dashboard: member stats + shared goals' })
+  async getDashboard(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.premiumService.getTeamDashboard(id, user.id);
+  }
+
+  @Get(':id/goals')
+  @ApiOperation({ summary: 'Goals shared with the team' })
+  async getTeamGoals(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.premiumService.getTeamGoals(id, user.id);
+  }
+
+  @Post(':id/goals/:goalId/share')
+  @ApiOperation({ summary: 'Share a goal with the team' })
+  async shareGoal(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Param('goalId') goalId: string,
+  ) {
+    return this.premiumService.shareGoalWithTeam(goalId, user.id, id);
+  }
+
+  @Delete('goals/:goalId/share')
+  @ApiOperation({ summary: 'Unshare a goal from any team' })
+  async unshareGoal(@CurrentUser() user: User, @Param('goalId') goalId: string) {
+    return this.premiumService.shareGoalWithTeam(goalId, user.id, null);
+  }
+
   @Post(':id/invitations')
   @ApiOperation({ summary: 'Invite a member' })
   async invite(

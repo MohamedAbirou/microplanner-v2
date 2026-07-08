@@ -8,9 +8,11 @@ import {
   Param,
   Query,
   Request,
+  Res,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { IntegrationsService } from './integrations.service';
 import { Public } from '../auth/decorators/public.decorator';
 import {
@@ -83,22 +85,19 @@ export class IntegrationsController {
    * Get OAuth authorization URL
    */
   @Get('oauth/:type/authorize')
-  async getOAuthUrl(
-    @Request() req: any,
-    @Param('type') type: IntegrationType,
-    @Query('redirect_uri') redirectUri: string,
-  ) {
-    const authUrl = this.integrationsService.getOAuthUrl(
-      type,
-      req.user.id,
-      redirectUri || `${process.env.APP_URL}/integrations/callback`,
-    );
-
+  async getOAuthUrl(@Request() req: any, @Param('type') type: IntegrationType) {
+    // The redirect URI is derived server-side from a fixed origin so a caller
+    // cannot inject an arbitrary redirect target (open-redirect protection).
+    const authUrl = this.integrationsService.getOAuthUrl(type, req.user.id);
     return { url: authUrl };
   }
 
   /**
    * Handle OAuth callback
+   *
+   * The provider redirects the user's browser here. After exchanging the code
+   * we 302 the browser back to the web app's integrations page with an honest
+   * success/error status rather than dumping raw JSON on the user.
    */
   @Get('oauth/:type/callback')
   @Public()
@@ -106,15 +105,19 @@ export class IntegrationsController {
     @Param('type') type: IntegrationType,
     @Query('code') code: string,
     @Query('state') state: string,
+    @Query('error') providerError: string,
+    @Res() res: Response,
   ) {
-    const result = await this.integrationsService.handleOAuthCallback(type, { code, state });
-
-    // Redirect to frontend with success
-    return {
-      success: true,
-      integrationId: result.integrationId,
-      message: `${type} integration connected successfully`,
-    };
+    try {
+      if (providerError) {
+        throw new Error(providerError);
+      }
+      await this.integrationsService.handleOAuthCallback(type, { code, state });
+      return res.redirect(this.integrationsService.postOAuthRedirectUrl(type));
+    } catch (err: any) {
+      const message = err?.message || 'OAuth connection failed';
+      return res.redirect(this.integrationsService.postOAuthRedirectUrl(type, message));
+    }
   }
 
   // ==================== WEBHOOKS ====================
@@ -210,6 +213,47 @@ export class IntegrationsController {
     return this.integrationsService.retryWebhookDelivery(deliveryId, req.user.id);
   }
 
+  /**
+   * Inbound provider webhook (Linear/Todoist create/update/delete).
+   *
+   * Public: authenticated by the owning integration id in the query string plus
+   * provider-specific signature verification inside the provider. The webhook
+   * URL registered with the provider must be:
+   *   {API_PUBLIC_URL}/api/v1/integrations/webhooks/inbound/:type?integration=<id>
+   */
+  @Post('webhooks/inbound/:type')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async handleInboundWebhook(
+    @Param('type') _type: string,
+    @Query('integration') integrationId: string,
+    @Body() payload: any,
+    @Request() req: any,
+  ) {
+    if (!integrationId) {
+      return { applied: false };
+    }
+    return this.integrationsService.handleInboundWebhook(integrationId, payload, req.headers || {});
+  }
+
+  // ==================== PM INBOX (plan-day ritual) ====================
+
+  /**
+   * Open tasks across all connected PM integrations (preview, not imported).
+   */
+  @Get('pm-inbox')
+  async getPmInbox(@Request() req: any) {
+    return this.integrationsService.previewExternalTasks(req.user.id);
+  }
+
+  /**
+   * Import a selected set of external tasks into MicroPlanner.
+   */
+  @Post('pm-import')
+  async importPm(@Request() req: any, @Body() body: { items: any[] }) {
+    return this.integrationsService.importExternalTasks(req.user.id, body?.items || []);
+  }
+
   // ==================== PARAMETERIZED ROUTES (keep last) ====================
 
   /**
@@ -226,5 +270,13 @@ export class IntegrationsController {
   @Post(':id/sync')
   async syncIntegration(@Request() req: any, @Param('id') integrationId: string) {
     return this.integrationsService.syncIntegration(integrationId, req.user.id);
+  }
+
+  /**
+   * List selectable projects/boards/databases for a PM integration.
+   */
+  @Get(':id/resources')
+  async getIntegrationResources(@Request() req: any, @Param('id') integrationId: string) {
+    return this.integrationsService.listIntegrationResources(integrationId, req.user.id);
   }
 }

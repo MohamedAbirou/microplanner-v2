@@ -161,9 +161,35 @@ export class ReferralsAPI {
 // ==================== USER API ====================
 export class UserAPI {
   private client: AxiosInstance;
+  private notificationsClient: AxiosInstance;
+  private ritualClient: AxiosInstance;
 
   constructor(token?: string) {
     this.client = createApiClient(`${API_BASE_URL}/api/v1/users`, token);
+    this.notificationsClient = createApiClient(`${API_BASE_URL}/api/v1/notifications`, token);
+    this.ritualClient = createApiClient(`${API_BASE_URL}/api/v1/daily-ritual`, token);
+  }
+
+  async sendTestPush(userId: string) {
+    const { data } = await this.notificationsClient.post('/push/test', {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getDailyRitual(userId: string, date: string) {
+    const { data } = await this.ritualClient.get('/', {
+      headers: { 'x-user-id': userId },
+      params: { date },
+    });
+    return data || null;
+  }
+
+  async updateDailyRitual(userId: string, input: any) {
+    const { data } = await this.ritualClient.put('/', input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
   }
 
   // Sync/create user from Clerk (no REST endpoint - handled by JWT auth)
@@ -870,6 +896,42 @@ export class ProductivityAPI {
     return data;
   }
 
+  async getCalendarDefenseLog(userId: string, limit?: number) {
+    const { data } = await this.client.get('/calendar-defense/log', {
+      headers: { 'x-user-id': userId },
+      params: { limit },
+    });
+    return data;
+  }
+
+  // ==================== HABITS ====================
+  async getHabits(userId: string) {
+    const { data } = await this.client.get('/habits', { headers: { 'x-user-id': userId } });
+    return data;
+  }
+
+  async createHabit(userId: string, input: any) {
+    const { data } = await this.client.post('/habits', input, { headers: { 'x-user-id': userId } });
+    return data;
+  }
+
+  async updateHabit(id: string, userId: string, input: any) {
+    const { data } = await this.client.put(`/habits/${id}`, input, { headers: { 'x-user-id': userId } });
+    return data;
+  }
+
+  async deleteHabit(id: string, userId: string) {
+    await this.client.delete(`/habits/${id}`, { headers: { 'x-user-id': userId } });
+    return true;
+  }
+
+  async runCalendarDefense(userId: string) {
+    const { data } = await this.client.post('/calendar-defense/run', {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
   // ==================== SMART 1:1 ====================
   async getSmart1on1s(userId: string) {
     const { data } = await this.client.get('/smart-1on1', {
@@ -879,23 +941,43 @@ export class ProductivityAPI {
   }
 
   async createSmart1on1(userId: string, input: CreateSmart1on1Input) {
-    const { data } = await this.client.post('/smart-1on1', input, {
+    const { data } = await this.client.post('/smart-1on1', this.mapSmart1on1Input(input), {
       headers: { 'x-user-id': userId },
     });
     return data;
   }
 
   async updateSmart1on1(id: string, userId: string, input: UpdateSmart1on1Input) {
-    const { data } = await this.client.put(`/smart-1on1/${id}`, input, {
+    const { data } = await this.client.put(`/smart-1on1/${id}`, this.mapSmart1on1Input(input), {
       headers: { 'x-user-id': userId },
     });
     return data;
+  }
+
+  /** GraphQL Smart1on1 input field names → REST DTO (personName/…) shape. */
+  private mapSmart1on1Input(input: any) {
+    const out: Record<string, any> = {};
+    if (input.title !== undefined) out.personName = input.title;
+    if (input.participantEmail !== undefined) out.personEmail = input.participantEmail;
+    if (input.frequency !== undefined) out.frequency = String(input.frequency).toLowerCase();
+    if (input.duration !== undefined) out.durationMinutes = input.duration;
+    if (input.preferredDays !== undefined) out.preferredDays = input.preferredDays;
+    if (input.preferredTimes !== undefined) out.preferredTimes = input.preferredTimes;
+    if (input.isActive !== undefined) out.isActive = input.isActive;
+    return out;
   }
 
   async deleteSmart1on1(id: string, userId: string) {
     await this.client.delete(`/smart-1on1/${id}`, {
       headers: { 'x-user-id': userId },
     });
+  }
+
+  async scheduleSmart1on1(id: string, userId: string) {
+    const { data } = await this.client.post(`/smart-1on1/${id}/schedule`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
   }
 
   // ==================== TRAVEL TIME ====================
@@ -1511,6 +1593,34 @@ export class TeamsAPI {
     });
   }
 
+  async getTeamDashboard(teamId: string, userId: string) {
+    const { data } = await this.client.get(`/${teamId}/dashboard`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getTeamGoals(teamId: string, userId: string) {
+    const { data } = await this.client.get(`/${teamId}/goals`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async shareGoalWithTeam(teamId: string, goalId: string, userId: string) {
+    await this.client.post(`/${teamId}/goals/${goalId}/share`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return true;
+  }
+
+  async unshareGoalFromTeam(goalId: string, userId: string) {
+    await this.client.delete(`/goals/${goalId}/share`, {
+      headers: { 'x-user-id': userId },
+    });
+    return true;
+  }
+
   async getTeamMembers(teamId: string, userId?: string) {
     const { data } = await this.client.get(`/${teamId}/members`, {
       headers: userId ? { 'x-user-id': userId } : {},
@@ -1722,6 +1832,35 @@ export class IntegrationsAPI {
     return data;
   }
 
+  async initiateOAuth(userId: string, type: string) {
+    // GraphQL enum values are UPPER_SNAKE; the REST authorize route keys off the
+    // provider slug (lower-kebab), matching the api-gateway IntegrationType enum.
+    const slug = String(type).toLowerCase().replace(/_/g, '-');
+    const { data } = await this.client.get(`/oauth/${slug}/authorize`, {
+      headers: { 'x-user-id': userId },
+    });
+    return { url: data.url };
+  }
+
+  async getIntegrationResources(id: string, userId: string) {
+    const { data } = await this.client.get(`/${id}/resources`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getPmInbox(userId: string) {
+    const { data } = await this.client.get('/pm-inbox', { headers: { 'x-user-id': userId } });
+    return data;
+  }
+
+  async importPmTasks(userId: string, items: any[]) {
+    const { data } = await this.client.post('/pm-import', { items }, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
   async connectIntegration(userId: string, input: ConnectIntegrationInput) {
     const { data } = await this.client.post('/', input, {
       headers: { 'x-user-id': userId },
@@ -1800,6 +1939,46 @@ export class IntegrationsAPI {
 
   async retryWebhookDelivery(deliveryId: string, userId: string) {
     const { data } = await this.client.post(`/webhooks/deliveries/${deliveryId}/retry`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+}
+
+// ==================== AUTOPILOT API ====================
+export class AutopilotAPI {
+  private client: AxiosInstance;
+
+  constructor(token?: string) {
+    this.client = createApiClient(`${API_BASE_URL}/api/v1/autopilot`, token);
+  }
+
+  async getStatus(userId: string) {
+    const { data } = await this.client.get('/status', { headers: { 'x-user-id': userId } });
+    return data;
+  }
+
+  async updateSettings(userId: string, input: { enabled?: boolean; mode?: string }) {
+    await this.client.put('/settings', input, { headers: { 'x-user-id': userId } });
+    // Return the full status so the mutation can resolve AutopilotStatus.
+    return this.getStatus(userId);
+  }
+
+  async run(userId: string, date?: string) {
+    const { data } = await this.client.post('/run', { date }, { headers: { 'x-user-id': userId } });
+    // The controller returns { moved: 0 } when there's nothing to reschedule.
+    return data && data.id ? data : null;
+  }
+
+  async applyProposal(userId: string, id: string) {
+    const { data } = await this.client.post(`/proposals/${id}/apply`, {}, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async dismissProposal(userId: string, id: string) {
+    const { data } = await this.client.post(`/proposals/${id}/dismiss`, {}, {
       headers: { 'x-user-id': userId },
     });
     return data;

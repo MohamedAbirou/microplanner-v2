@@ -7,7 +7,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
+import { EmailService } from '../email/email.service';
 import {
   ApiKey,
   ApiKeyResponse,
@@ -31,7 +33,11 @@ import {
 export class PremiumService {
   private readonly logger = new Logger(PremiumService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+    private config: ConfigService,
+  ) {}
 
   // ==================== TEAM WORKSPACE ====================
 
@@ -166,6 +172,22 @@ export class PremiumService {
       },
     });
 
+    // Send the invitation email with an accept link (best-effort).
+    const [team, inviter] = await Promise.all([
+      this.prisma.team.findUnique({ where: { id: teamId }, select: { name: true } }),
+      this.prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } }),
+    ]);
+    const webBase =
+      this.config.get<string>('WEB_APP_URL') ||
+      this.config.get<string>('APP_URL') ||
+      'http://localhost:3000';
+    await this.emailService.sendTeamInvitation({
+      to: inviteDto.email,
+      teamName: team?.name || 'a team',
+      inviterName: inviter?.name || inviter?.email || 'A teammate',
+      acceptUrl: `${webBase}/teams/accept/${token}`,
+    });
+
     this.logger.log(`Team invitation sent to ${inviteDto.email} for team ${teamId}`);
 
     return invitation as unknown as TeamInvitation;
@@ -218,6 +240,98 @@ export class PremiumService {
     this.logger.log(`User ${userId} accepted invitation to team ${invitation.teamId}`);
 
     return member as unknown as TeamMember;
+  }
+
+  /**
+   * Team dashboard: per-member task completion stats for the current week plus
+   * shared team goals. Any member can view.
+   */
+  async getTeamDashboard(teamId: string, userId: string) {
+    const membership = await this.prisma.teamMember.findFirst({ where: { teamId, userId } });
+    if (!membership) {
+      throw new ForbiddenException('You are not a member of this team');
+    }
+
+    const members = await this.prisma.teamMember.findMany({
+      where: { teamId },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - 6);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date();
+    weekEnd.setHours(23, 59, 59, 999);
+
+    const memberStats = await Promise.all(
+      members.map(async (m) => {
+        const [completed, total] = await Promise.all([
+          this.prisma.task.count({
+            where: { userId: m.userId, isCompleted: true, completedAt: { gte: weekStart, lte: weekEnd } },
+          }),
+          this.prisma.task.count({
+            where: { userId: m.userId, scheduledDate: { gte: weekStart, lte: weekEnd } },
+          }),
+        ]);
+        return {
+          userId: m.userId,
+          name: m.user?.name || m.user?.email || 'Member',
+          email: m.user?.email || '',
+          role: m.role,
+          tasksCompleted: completed,
+          tasksTotal: total,
+          completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+        };
+      }),
+    );
+
+    const goals = await this.getTeamGoals(teamId, userId);
+
+    const totalCompleted = memberStats.reduce((s, m) => s + m.tasksCompleted, 0);
+    const totalTasks = memberStats.reduce((s, m) => s + m.tasksTotal, 0);
+
+    return {
+      teamId,
+      memberCount: members.length,
+      totalTasksCompleted: totalCompleted,
+      totalTasks,
+      completionRate: totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0,
+      members: memberStats,
+      goals,
+    };
+  }
+
+  /** Goals shared with a team (visible to all members). */
+  async getTeamGoals(teamId: string, userId: string) {
+    const membership = await this.prisma.teamMember.findFirst({ where: { teamId, userId } });
+    if (!membership) {
+      throw new ForbiddenException('You are not a member of this team');
+    }
+    const goals = await this.prisma.goal.findMany({
+      where: { teamId },
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { name: true, email: true } } },
+    });
+    return goals.map((g) => ({
+      id: g.id,
+      title: g.title,
+      emoji: g.emoji,
+      color: g.color,
+      completionRate: g.completionRate,
+      ownerName: g.user?.name || g.user?.email || 'Member',
+      isActive: g.isActive,
+    }));
+  }
+
+  /** Share (or unshare) one of the caller's goals with a team. */
+  async shareGoalWithTeam(goalId: string, userId: string, teamId: string | null) {
+    const goal = await this.prisma.goal.findFirst({ where: { id: goalId, userId } });
+    if (!goal) throw new NotFoundException('Goal not found');
+    if (teamId) {
+      const membership = await this.prisma.teamMember.findFirst({ where: { teamId, userId } });
+      if (!membership) throw new ForbiddenException('You are not a member of this team');
+    }
+    return this.prisma.goal.update({ where: { id: goalId }, data: { teamId } });
   }
 
   /**

@@ -28,6 +28,7 @@ export interface CalendarTaskLike {
   durationMinutes?: number;
   isCompleted: boolean;
   priority: number;
+  aiReasoning?: string | null;
   parentTaskId?: string | null;
   subtasks?: CalendarSubtask[];
   goal?: {

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Delete, Param, Query, Body, BadRequestExcep
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CalendarService } from './calendar.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
+import { OutlookOAuthService } from './services/outlook-oauth.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { User } from '@microplanner/database';
 import { SyncTasksDto } from './dto/sync-tasks.dto';
@@ -13,7 +14,39 @@ export class CalendarController {
   constructor(
     private readonly calendarService: CalendarService,
     private readonly googleOAuthService: GoogleOAuthService,
+    private readonly outlookOAuthService: OutlookOAuthService,
   ) {}
+
+  @Get('oauth/outlook')
+  @ApiOperation({ summary: 'Initiate Outlook Calendar OAuth flow' })
+  async initiateOutlookOAuth(@CurrentUser() user: User) {
+    return {
+      message: 'Please visit the auth URL to connect your Outlook Calendar',
+      authUrl: this.outlookOAuthService.generateAuthUrl(user.id),
+    };
+  }
+
+  @Get('oauth/outlook/callback')
+  @ApiOperation({ summary: 'Handle Outlook OAuth callback' })
+  async outlookOAuthCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @CurrentUser() user: User,
+  ) {
+    if (!code || !state) {
+      throw new BadRequestException('Missing code or state parameter');
+    }
+    const token = await this.outlookOAuthService.handleCallback(code, state, user.id);
+    return {
+      message: 'Outlook Calendar connected successfully',
+      calendar: {
+        email: token.email,
+        calendarName: token.calendarName,
+        provider: token.provider,
+        connectedAt: token.createdAt,
+      },
+    };
+  }
 
   @Get('oauth/google')
   @ApiOperation({ summary: 'Initiate Google Calendar OAuth flow' })

@@ -11,10 +11,11 @@ import { EmailModule } from '../email/email.module';
 import { CalendarModule } from '../calendar/calendar.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { AiMemoryModule } from '../ai-memory/ai-memory.module';
+import { PushNotificationModule } from '../notifications/push-notification.module';
 import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
 
 @Module({
-  imports: [HttpModule, EmailModule, CalendarModule, AnalyticsModule, AiMemoryModule],
+  imports: [HttpModule, EmailModule, CalendarModule, AnalyticsModule, AiMemoryModule, PushNotificationModule],
   controllers: [PlansController],
   providers: [
     PlansService,

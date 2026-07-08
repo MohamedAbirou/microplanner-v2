@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import IoRedis from 'ioredis';
+import { RedisThrottlerStorage } from './common/redis-throttler.storage';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -22,6 +24,9 @@ import { GoalsModule } from './modules/goals/goals.module';
 import { PlansModule } from './modules/plans/plans.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
+import { AutopilotModule } from './modules/autopilot/autopilot.module';
+import { PushNotificationModule } from './modules/notifications/push-notification.module';
+import { DailyRitualModule } from './modules/daily-ritual/daily-ritual.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { HealthModule } from './modules/health/health.module';
@@ -119,8 +124,8 @@ function getGraphQLErrorCode(statusCode: number): string {
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (_config: ConfigService) => ({
-        throttlers: [
+      useFactory: (config: ConfigService) => {
+        const throttlers = [
           {
             name: 'default',
             ttl: 60000, // 1 minute
@@ -131,8 +136,29 @@ function getGraphQLErrorCode(statusCode: number): string {
             ttl: 60000, // 1 minute
             limit: 10, // expensive ops (plan generation) — opt-in per route
           },
-        ],
-      }),
+        ];
+
+        // Multi-instance: back the limiter with Redis so limits are shared
+        // across processes. Falls back to in-memory when REDIS_URL is unset.
+        const redisUrl = config.get<string>('REDIS_URL');
+        if (redisUrl) {
+          try {
+            const client = new IoRedis(redisUrl, {
+              maxRetriesPerRequest: 2,
+              enableOfflineQueue: false,
+              lazyConnect: false,
+              retryStrategy: (times: number) => (times > 3 ? null : Math.min(times * 50, 200)),
+            });
+            client.on('error', () => {
+              /* handled by fail-open in the storage */
+            });
+            return { throttlers, storage: new RedisThrottlerStorage(client) };
+          } catch {
+            // Fall through to in-memory storage.
+          }
+        }
+        return { throttlers };
+      },
     }),
 
     // Bull Queue (Redis) - Optional, gracefully degrades if Redis unavailable
@@ -196,6 +222,9 @@ function getGraphQLErrorCode(statusCode: number): string {
     PlansModule,
     TasksModule,
     CalendarModule,
+    AutopilotModule,
+    PushNotificationModule,
+    DailyRitualModule,
     BillingModule,
     AnalyticsModule,
     PremiumModule,

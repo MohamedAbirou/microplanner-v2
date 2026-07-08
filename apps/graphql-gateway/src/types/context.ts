@@ -13,6 +13,7 @@ import type {
   SchedulingAPI,
   IntegrationsAPI,
   BillingAPI,
+  AutopilotAPI,
 } from '../datasources/rest-api';
 import type { OnboardingAPI as OnboardingApiClass } from '../datasources/onboarding-api';
 
@@ -40,6 +41,7 @@ export interface GraphQLContext {
     schedulingAPI: SchedulingAPI;
     integrationsAPI: IntegrationsAPI;
     billingAPI: BillingAPI;
+    autopilotAPI: AutopilotAPI;
   };
   loaders: {
     taskLoader: DataLoader<string, unknown>;

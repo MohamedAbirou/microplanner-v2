@@ -6,10 +6,12 @@ import { AdvancedTasksService } from './advanced-tasks.service';
 import { RecurringTaskService } from './recurring-task.service';
 import { GoalsModule } from '../goals/goals.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
+import { IntegrationsModule } from '../integrations/integrations.module';
+import { CalendarModule } from '../calendar/calendar.module';
 import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
 
 @Module({
-  imports: [GoalsModule, AnalyticsModule],
+  imports: [GoalsModule, AnalyticsModule, IntegrationsModule, CalendarModule],
   controllers: [TasksController, AdvancedTasksController],
   providers: [TasksService, AdvancedTasksService, RecurringTaskService, UsageLimitService],
   exports: [TasksService, AdvancedTasksService, RecurringTaskService],

@@ -1,17 +1,19 @@
 'use client';
 
 import * as React from 'react';
-import { MessageSquare, Video, FileText, Layers, Github, Zap, Check, Loader2, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { MessageSquare, Video, FileText, Layers, Github, CheckSquare, SquareKanban, ListChecks, Check, Loader2, RefreshCw, AlertTriangle, Settings2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import {
   useIntegrations,
-  useConnectIntegration,
+  useInitiateIntegrationOAuth,
   useDisconnectIntegration,
   useSyncIntegration,
 } from '@/hooks/use-graphql-extended';
+import { IntegrationSettingsDialog } from './integration-settings-dialog';
 
 interface AppDef {
   type: string;
@@ -21,21 +23,50 @@ interface AppDef {
   color: string;
 }
 
+// Only providers with a real OAuth backend are listed. Zapier has no backend
+// support, so it is intentionally omitted rather than showing a fake connect.
 const APPS: AppDef[] = [
+  { type: 'TODOIST', name: 'Todoist', description: 'Import Todoist tasks and complete them in sync', icon: CheckSquare, color: '#E44332' },
+  { type: 'LINEAR', name: 'Linear', description: 'Turn Linear issues into scheduled tasks', icon: Layers, color: '#5E6AD2' },
+  { type: 'NOTION', name: 'Notion', description: 'Sync tasks from a Notion database', icon: FileText, color: '#000000' },
+  { type: 'JIRA', name: 'Jira', description: 'Import assigned Jira issues; complete syncs back', icon: SquareKanban, color: '#0052CC' },
+  { type: 'ASANA', name: 'Asana', description: 'Import Asana tasks assigned to you', icon: ListChecks, color: '#F06A6A' },
   { type: 'SLACK', name: 'Slack', description: 'Get plan reminders and task nudges in Slack', icon: MessageSquare, color: '#611f69' },
   { type: 'ZOOM', name: 'Zoom', description: 'Auto-create Zoom links for scheduled meetings', icon: Video, color: '#2D8CFF' },
-  { type: 'NOTION', name: 'Notion', description: 'Sync goals and tasks with a Notion database', icon: FileText, color: '#000000' },
-  { type: 'LINEAR', name: 'Linear', description: 'Turn Linear issues into scheduled tasks', icon: Layers, color: '#5E6AD2' },
   { type: 'GITHUB', name: 'GitHub', description: 'Track PRs and issues alongside your plan', icon: Github, color: '#24292e' },
-  { type: 'ZAPIER', name: 'Zapier', description: 'Connect MicroPlanner to 6,000+ apps', icon: Zap, color: '#FF4A00' },
 ];
 
+// Providers that support two-way task sync (import + complete-back + settings).
+const PM_SYNC_TYPES = new Set(['TODOIST', 'LINEAR', 'NOTION', 'JIRA', 'ASANA']);
+
+const APP_NAME_BY_TYPE = new Map(APPS.map((a) => [a.type, a.name]));
+
 export function IntegrationsHub() {
-  const { integrations, loading } = useIntegrations();
-  const { connectIntegration } = useConnectIntegration();
+  const { integrations, loading, refetch } = useIntegrations();
+  const { initiateOAuth } = useInitiateIntegrationOAuth();
   const { disconnectIntegration } = useDisconnectIntegration();
   const { syncIntegration } = useSyncIntegration();
   const [busy, setBusy] = React.useState<string | null>(null);
+  const [settingsFor, setSettingsFor] = React.useState<any | null>(null);
+
+  // Surface the OAuth callback outcome once the provider redirects the browser
+  // back to /integrations, then strip the query params so refreshes are clean.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get('connected');
+    const oauthError = params.get('integration_error');
+    if (!connected && !oauthError) return;
+
+    if (connected) {
+      const name = APP_NAME_BY_TYPE.get(connected.toUpperCase()) || connected;
+      toast.success(`${name} connected`);
+      refetch?.();
+    } else if (oauthError) {
+      toast.error('Connection failed', { description: oauthError });
+    }
+    window.history.replaceState({}, '', '/integrations');
+  }, [refetch]);
 
   const connectedByType = React.useMemo(() => {
     const map = new Map<string, any>();
@@ -46,9 +77,17 @@ export function IntegrationsHub() {
   const handleConnect = async (app: AppDef) => {
     setBusy(app.type);
     try {
-      // Registers the integration; a full OAuth handshake would pass authCode here.
-      await connectIntegration({ variables: { input: { type: app.type, name: app.name } } });
-    } finally {
+      const res = await initiateOAuth({ variables: { type: app.type } });
+      const url = res.data?.initiateIntegrationOAuth?.url;
+      if (url) {
+        // Full-page redirect into the provider's consent screen. On return the
+        // callback effect above reports the honest result.
+        window.location.href = url;
+      } else {
+        setBusy(null);
+      }
+    } catch {
+      // Error toast is raised by the hook; just clear the busy state.
       setBusy(null);
     }
   };
@@ -77,6 +116,11 @@ export function IntegrationsHub() {
         const Icon = app.icon;
         const connected = connectedByType.get(app.type);
         const isBusy = busy === app.type;
+        const isConnected = Boolean(connected?.isActive);
+        const syncError: string | undefined = connected?.config?.syncError;
+        const stats = connected?.config?.lastSyncStats;
+        const isPmSync = PM_SYNC_TYPES.has(app.type);
+
         return (
           <Card key={app.type} className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardContent className="p-4 flex flex-col h-full">
@@ -90,9 +134,19 @@ export function IntegrationsHub() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold">{app.name}</h3>
-                    {connected?.isActive && (
+                    {isConnected && !syncError && (
                       <Badge variant="default" className="text-[10px] bg-green-600">
                         <Check className="h-2.5 w-2.5 mr-0.5" /> Connected
+                      </Badge>
+                    )}
+                    {isConnected && syncError && (
+                      <Badge variant="destructive" className="text-[10px]">
+                        <AlertTriangle className="h-2.5 w-2.5 mr-0.5" /> Sync error
+                      </Badge>
+                    )}
+                    {isBusy && !isConnected && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Connecting…
                       </Badge>
                     )}
                   </div>
@@ -102,9 +156,16 @@ export function IntegrationsHub() {
                 </div>
               </div>
 
+              {syncError && (
+                <p className="text-[11px] text-destructive mt-3 line-clamp-2">{syncError}</p>
+              )}
+
               {connected?.lastSyncedAt && (
                 <p className="text-[11px] text-muted-foreground mt-3">
                   Last synced {format(new Date(connected.lastSyncedAt), 'MMM d, h:mm a')}
+                  {isPmSync && stats && typeof stats.total === 'number' && (
+                    <> · {stats.total} item{stats.total === 1 ? '' : 's'} tracked</>
+                  )}
                 </p>
               )}
 
@@ -113,7 +174,7 @@ export function IntegrationsHub() {
                   <Button variant="outline" size="sm" className="w-full h-8" disabled>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   </Button>
-                ) : connected ? (
+                ) : isConnected ? (
                   <>
                     <Button
                       variant="outline"
@@ -130,6 +191,18 @@ export function IntegrationsHub() {
                         </>
                       )}
                     </Button>
+                    {isPmSync && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2"
+                        disabled={isBusy}
+                        aria-label="Sync settings"
+                        onClick={() => setSettingsFor(connected)}
+                      >
+                        <Settings2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -155,6 +228,14 @@ export function IntegrationsHub() {
           </Card>
         );
       })}
+
+      <IntegrationSettingsDialog
+        integration={settingsFor}
+        open={Boolean(settingsFor)}
+        onOpenChange={(open) => {
+          if (!open) setSettingsFor(null);
+        }}
+      />
     </div>
   );
 }

@@ -3,11 +3,13 @@
 import * as React from 'react';
 import { useMutation } from '@apollo/client';
 import { toast } from 'sonner';
-import { Bell, Loader2 } from 'lucide-react';
+import { Bell, Loader2, Send } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import {
   REGISTER_PUSH_TOKEN,
   UNREGISTER_PUSH_TOKEN,
+  SEND_TEST_PUSH,
 } from '@/graphql/operations-extended';
 import {
   isPushSupported,
@@ -23,6 +25,23 @@ export function PushNotificationsToggle() {
   const [ready, setReady] = React.useState(false);
   const [registerPushToken] = useMutation(REGISTER_PUSH_TOKEN);
   const [unregisterPushToken] = useMutation(UNREGISTER_PUSH_TOKEN);
+  const [sendTestPush, { loading: testing }] = useMutation(SEND_TEST_PUSH);
+
+  const handleTest = async () => {
+    try {
+      const { data } = await sendTestPush();
+      const res = data?.sendTestPush;
+      if (!res?.configured) {
+        toast.error('Push is not configured on the server');
+      } else if (res.sent > 0) {
+        toast.success('Test notification sent');
+      } else {
+        toast.info(res.message || 'No devices received it — re-enable push and try again');
+      }
+    } catch (err: any) {
+      toast.error('Failed to send test', { description: err?.message });
+    }
+  };
 
   const supported = isPushSupported();
   const configured = isPushConfigured();
@@ -82,15 +101,23 @@ export function PushNotificationsToggle() {
           </p>
         </div>
       </div>
-      {busy ? (
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-      ) : (
-        <Switch
-          checked={enabled}
-          disabled={!configured || !ready}
-          onCheckedChange={handleToggle}
-        />
-      )}
+      <div className="flex items-center gap-2">
+        {enabled && configured && (
+          <Button variant="outline" size="sm" className="h-8" disabled={testing} onClick={handleTest}>
+            {testing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+            <span className="ml-1.5 hidden sm:inline">Test</span>
+          </Button>
+        )}
+        {busy ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : (
+          <Switch
+            checked={enabled}
+            disabled={!configured || !ready}
+            onCheckedChange={handleToggle}
+          />
+        )}
+      </div>
     </div>
   );
 }

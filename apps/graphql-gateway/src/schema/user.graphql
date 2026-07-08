@@ -219,6 +219,8 @@ extend type Mutation {
   # Web Push subscriptions
   registerPushToken(subscription: JSON!): Boolean!
   unregisterPushToken(endpoint: String!): Boolean!
+  # Send a test push to the caller's devices to verify the pipeline.
+  sendTestPush: TestPushResult!
 
   # GDPR: permanently delete the account and all associated data
   deleteMyAccount: Boolean!
@@ -272,4 +274,12 @@ input NotificationSettingsInput {
   taskReminders: Boolean
   goalMilestones: Boolean
   productivityInsights: Boolean
+}
+
+# Result of sendTestPush — how many devices received it and whether push is
+# configured on the server (env VAPID keys present).
+type TestPushResult {
+  sent: Int!
+  configured: Boolean!
+  message: String
 }

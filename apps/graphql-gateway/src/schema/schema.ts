@@ -25,6 +25,8 @@ const teamsSchema = readFileSync(join(__dirname, 'teams.graphql'), 'utf-8');
 const schedulingSchema = readFileSync(join(__dirname, 'scheduling.graphql'), 'utf-8');
 const integrationsSchema = readFileSync(join(__dirname, 'integrations.graphql'), 'utf-8');
 const billingSchema = readFileSync(join(__dirname, 'billing.graphql'), 'utf-8');
+const autopilotSchema = readFileSync(join(__dirname, 'autopilot.graphql'), 'utf-8');
+const dailyRitualSchema = readFileSync(join(__dirname, 'daily-ritual.graphql'), 'utf-8');
 
 // Combine all schemas
 export const typeDefs = gql`
@@ -44,4 +46,6 @@ export const typeDefs = gql`
   ${schedulingSchema}
   ${integrationsSchema}
   ${billingSchema}
+  ${autopilotSchema}
+  ${dailyRitualSchema}
 `;

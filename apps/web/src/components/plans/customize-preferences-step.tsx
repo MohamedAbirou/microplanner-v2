@@ -11,6 +11,9 @@ import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useTier } from '@/contexts/tier-context';
+import { WorkloadWarning } from '@/components/plans/workload-warning';
+import { useTasks } from '@/hooks/use-graphql';
+import { useWorkHours } from '@/hooks/use-graphql-extended';
 
 interface CustomizePreferencesStepProps {
   preferences: {
@@ -33,6 +36,17 @@ export function CustomizePreferencesStep({
 }: CustomizePreferencesStepProps) {
   const [preferences, setPreferences] = useState(initialPreferences);
   const { tier, limits } = useTier();
+
+  // Preview how busy the target week already is, so the user knows if there's
+  // room before generating more tasks into it.
+  const weekStart = startOfWeek(preferences.weekStartDate);
+  const weekEnd = endOfWeek(preferences.weekStartDate);
+  const { tasks: weekTasks } = useTasks(
+    { dateRange: { start: weekStart, end: weekEnd } },
+    undefined,
+    { take: 200 },
+  );
+  const { workHours } = useWorkHours();
 
   const isThisWeek = (date: Date) => {
     const now = new Date();
@@ -57,6 +71,11 @@ export function CustomizePreferencesStep({
           Fine-tune how your week should be scheduled.
         </p>
       </div>
+
+      {/* Existing workload for the target week */}
+      {weekTasks && weekTasks.length > 0 && (
+        <WorkloadWarning tasks={weekTasks as any} schedule={workHours?.schedule} />
+      )}
 
       <div className="space-y-6">
         {/* Week Selection */}

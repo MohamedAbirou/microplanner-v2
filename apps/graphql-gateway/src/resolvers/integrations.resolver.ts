@@ -15,6 +15,16 @@ export const integrationsResolvers = {
       return dataSources.integrationsAPI.getIntegration(id, user.userId);
     },
 
+    integrationResources: async (_: any, { id }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.integrationsAPI.getIntegrationResources(id, user.userId);
+    },
+
+    pmInboxTasks: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.integrationsAPI.getPmInbox(user.userId);
+    },
+
     /**
      * Webhooks
      */
@@ -38,6 +48,21 @@ export const integrationsResolvers = {
     /**
      * Integration Management
      */
+    /**
+     * Begin an OAuth handshake — returns the provider authorize URL for the
+     * client to redirect to. Nothing is marked "connected" until the callback
+     * completes and a real token is stored.
+     */
+    initiateIntegrationOAuth: async (_: any, { type }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.integrationsAPI.initiateOAuth(user.userId, type);
+    },
+
+    importPmTasks: async (_: any, { items }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.integrationsAPI.importPmTasks(user.userId, items);
+    },
+
     connectIntegration: async (_: any, { input }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.integrationsAPI.connectIntegration(user.userId, input);

@@ -106,6 +106,8 @@ type FocusTimeBlock {
   autoSchedule: Boolean!
   preferredTimeSlots: [String!]!
   color: String!
+  calendarProvider: String
+  calendarSyncedAt: DateTime
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -202,6 +204,61 @@ input PriorityTimeSlotInput {
 # ============================================
 # CALENDAR DEFENSE
 # ============================================
+
+type Habit {
+  id: ID!
+  title: String!
+  daysOfWeek: [Int!]!
+  preferredWindowStart: String!
+  preferredWindowEnd: String!
+  durationMinutes: Int!
+  priority: Int!
+  flexible: Boolean!
+  isActive: Boolean!
+  color: String!
+  calendarProvider: String
+  calendarSyncedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateHabitInput {
+  title: String!
+  daysOfWeek: [Int!]
+  preferredWindowStart: String!
+  preferredWindowEnd: String!
+  durationMinutes: Int!
+  priority: Int
+  flexible: Boolean
+  color: String
+}
+
+input UpdateHabitInput {
+  title: String
+  daysOfWeek: [Int!]
+  preferredWindowStart: String
+  preferredWindowEnd: String
+  durationMinutes: Int
+  priority: Int
+  flexible: Boolean
+  isActive: Boolean
+  color: String
+}
+
+type CalendarDefenseLogEntry {
+  id: ID!
+  eventId: String!
+  provider: String!
+  action: String!
+  eventTitle: String!
+  eventStart: DateTime!
+  reason: String!
+  createdAt: DateTime!
+}
+
+type CalendarDefenseRunResult {
+  actions: Int!
+}
 
 type CalendarDefense {
   id: ID!
@@ -433,6 +490,10 @@ extend type Query {
 
   # Calendar Defense
   calendarDefense: CalendarDefense
+  calendarDefenseLog(limit: Int): [CalendarDefenseLogEntry!]!
+
+  # Flexible recurring habits
+  habits: [Habit!]!
 
   # Productivity scores
   productivityScore(date: DateTime!): ProductivityScore
@@ -473,6 +534,12 @@ extend type Mutation {
 
   # Calendar defense
   updateCalendarDefense(input: UpdateCalendarDefenseInput!): CalendarDefense!
+  runCalendarDefense: CalendarDefenseRunResult!
+
+  # Habits
+  createHabit(input: CreateHabitInput!): Habit!
+  updateHabit(id: ID!, input: UpdateHabitInput!): Habit!
+  deleteHabit(id: ID!): Boolean!
 
   # Productivity scores
   calculateProductivityScore(date: DateTime!): ProductivityScore!
@@ -487,6 +554,7 @@ extend type Mutation {
   createSmart1on1(input: CreateSmart1on1Input!): Smart1on1!
   updateSmart1on1(id: ID!, input: UpdateSmart1on1Input!): Smart1on1!
   deleteSmart1on1(id: ID!): Boolean!
+  scheduleSmart1on1(id: ID!): Smart1on1!
 
   # Travel Time
   calculateTravelTime(input: CalculateTravelTimeInput!): TravelTime!

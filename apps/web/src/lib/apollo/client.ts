@@ -10,6 +10,7 @@ import { getMainDefinition } from '@apollo/client/utilities';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { createClient } from 'graphql-ws';
+import { toast } from 'sonner';
 import { config } from '@microplanner/config';
 import { enqueueMutation } from '@/lib/offline-queue';
 
@@ -59,6 +60,8 @@ const authLink = setContext(async (_, { headers }) => {
 
 // Error link for global error handling
 const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
+  let serverErrored = false;
+
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path, extensions }) => {
       console.error(
@@ -76,11 +79,19 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
       if (extensions?.code === 'FORBIDDEN') {
         console.error('Authorization error:', message);
       }
+
+      // Surface true server errors (5xx) to the user.
+      const status = Number(extensions?.statusCode);
+      if (extensions?.code === 'INTERNAL_SERVER_ERROR' || (status >= 500 && status < 600)) {
+        serverErrored = true;
+      }
     });
   }
 
   if (networkError) {
     console.error(`[Network error]: ${networkError}`);
+    const status = Number((networkError as any)?.statusCode);
+    if (status >= 500 && status < 600) serverErrored = true;
 
     // Offline mutation capture: if the device is offline and this is a
     // mutation, queue it for replay on reconnect instead of losing the action.
@@ -102,6 +113,12 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
         /* best-effort; never throw from the error link */
       }
     }
+  }
+
+  // One toast per failed operation for genuine server errors (not offline/auth).
+  const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  if (serverErrored && !offline) {
+    toast.error('Something went wrong on our end. Please try again in a moment.');
   }
 });
 

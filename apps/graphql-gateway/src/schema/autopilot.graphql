@@ -1,0 +1,42 @@
+# Full-day autopilot (Motion-style live rescheduling)
+
+type AutopilotStatus {
+  enabled: Boolean!
+  mode: String!
+  pending: AutopilotProposal
+  recent: [AutopilotProposal!]!
+}
+
+type AutopilotProposal {
+  id: ID!
+  date: DateTime!
+  mode: String!
+  status: String!
+  trigger: String
+  summary: String!
+  moves: [AutopilotMove!]!
+  createdAt: DateTime!
+  appliedAt: DateTime
+}
+
+type AutopilotMove {
+  taskId: ID!
+  title: String!
+  fromDate: DateTime
+  fromStart: String
+  toDate: DateTime
+  toStart: String!
+  toEnd: String!
+  reason: String!
+}
+
+extend type Query {
+  autopilotStatus: AutopilotStatus!
+}
+
+extend type Mutation {
+  updateAutopilotSettings(enabled: Boolean, mode: String): AutopilotStatus!
+  runAutopilot(date: String): AutopilotProposal
+  applyAutopilotProposal(id: ID!): AutopilotProposal!
+  dismissAutopilotProposal(id: ID!): AutopilotProposal!
+}

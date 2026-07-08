@@ -30,6 +30,16 @@ export const productivityResolvers = {
       return dataSources.productivityAPI.getCalendarDefense(user.userId);
     },
 
+    calendarDefenseLog: async (_: any, { limit }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.productivityAPI.getCalendarDefenseLog(user.userId, limit);
+    },
+
+    habits: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.productivityAPI.getHabits(user.userId);
+    },
+
     /**
      * Kanban Boards
      */
@@ -133,6 +143,26 @@ export const productivityResolvers = {
       return dataSources.productivityAPI.updateCalendarDefense(user.userId, input);
     },
 
+    runCalendarDefense: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.productivityAPI.runCalendarDefense(user.userId);
+    },
+
+    createHabit: async (_: any, { input }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.productivityAPI.createHabit(user.userId, input);
+    },
+
+    updateHabit: async (_: any, { id, input }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.productivityAPI.updateHabit(id, user.userId, input);
+    },
+
+    deleteHabit: async (_: any, { id }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.productivityAPI.deleteHabit(id, user.userId);
+    },
+
     /**
      * Kanban Board Management
      */
@@ -186,6 +216,11 @@ export const productivityResolvers = {
       await dataSources.productivityAPI.deleteSmart1on1(id, user.userId);
       await pubsub.publish(`SMART_1ON1_DELETED_${user.userId}`, { smart1on1Deleted: id });
       return true;
+    },
+
+    scheduleSmart1on1: async (_: any, { id }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.productivityAPI.scheduleSmart1on1(id, user.userId);
     },
 
     /**
@@ -311,6 +346,18 @@ export const productivityResolvers = {
         return pubsub.asyncIterator(`NOTIFICATION_PREFS_UPDATED_${user.userId}`);
       },
     },
+  },
+
+  // The REST/Prisma shape uses personName/personEmail/durationMinutes/…; map
+  // them to the GraphQL field names so both CRUD and scheduling resolve.
+  Smart1on1: {
+    title: (p: any) => p.title ?? p.personName,
+    participantEmail: (p: any) => p.participantEmail ?? p.personEmail,
+    duration: (p: any) => p.duration ?? p.durationMinutes,
+    frequency: (p: any) => String(p.frequency || 'weekly').toUpperCase(),
+    agendaTemplate: (p: any) => p.agendaTemplate ?? null,
+    lastMeetingDate: (p: any) => p.lastMeetingDate ?? p.lastScheduledDate ?? null,
+    nextMeetingDate: (p: any) => p.nextMeetingDate ?? p.nextScheduledDate ?? null,
   },
 
   KanbanBoard: {

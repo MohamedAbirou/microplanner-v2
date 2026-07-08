@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronLeft, UserPlus, Loader2, Users, Trash2, Mail } from 'lucide-react';
+import { ChevronLeft, UserPlus, Loader2, Users, Trash2, Mail, BarChart3, Target } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,9 +33,83 @@ import {
   useInviteTeamMember,
   useRemoveTeamMember,
   useUpdateTeamMemberRole,
+  useTeamDashboard,
 } from '@/hooks/use-graphql-extended';
 
 const ROLES = ['ADMIN', 'MEMBER', 'VIEWER'] as const;
+
+function TeamDashboardCard({ teamId }: { teamId: string }) {
+  const { dashboard, loading } = useTeamDashboard(teamId);
+
+  return (
+    <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
+      <CardHeader>
+        <CardTitle className="text-[15px] flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" /> Team dashboard
+        </CardTitle>
+        <CardDescription className="text-[13px]">
+          This week&apos;s completion by member, plus goals shared with the team.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading && !dashboard ? (
+          <Skeleton className="h-32 w-full rounded-[10px]" />
+        ) : !dashboard ? null : (
+          <>
+            <div className="flex items-center gap-4 rounded-[10px] border border-border bg-accent/40 p-3">
+              <div>
+                <div className="text-2xl font-semibold">{dashboard.completionRate}%</div>
+                <div className="text-[12px] text-muted-foreground">Team completion (7d)</div>
+              </div>
+              <div className="text-[13px] text-muted-foreground">
+                {dashboard.totalTasksCompleted} of {dashboard.totalTasks} tasks completed across{' '}
+                {dashboard.memberCount} member{dashboard.memberCount === 1 ? '' : 's'}.
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {dashboard.members.map((m: any) => (
+                <div key={m.userId} className="flex items-center gap-3">
+                  <div className="w-40 min-w-0 truncate text-sm">{m.name}</div>
+                  <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary"
+                      style={{ width: `${m.completionRate}%` }}
+                    />
+                  </div>
+                  <div className="w-24 text-right text-[12px] text-muted-foreground">
+                    {m.tasksCompleted}/{m.tasksTotal} · {m.completionRate}%
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {dashboard.goals.length > 0 && (
+              <div className="space-y-2 pt-2">
+                <div className="text-[13px] font-medium flex items-center gap-1.5">
+                  <Target className="h-3.5 w-3.5" /> Shared goals
+                </div>
+                {dashboard.goals.map((g: any) => (
+                  <div
+                    key={g.id}
+                    className="flex items-center justify-between gap-3 rounded-[10px] border border-border p-2.5 text-[13px]"
+                  >
+                    <span className="truncate">
+                      {g.emoji} {g.title}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {Math.round(g.completionRate)}% · {g.ownerName}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function TeamDetailContent({ teamId }: { teamId: string }) {
   const { teams } = useTeams();
@@ -167,6 +241,8 @@ function TeamDetailContent({ teamId }: { teamId: string }) {
           )}
         </CardContent>
       </Card>
+
+      <TeamDashboardCard teamId={teamId} />
 
       {/* Invite dialog */}
       <Dialog open={open} onOpenChange={setOpen}>

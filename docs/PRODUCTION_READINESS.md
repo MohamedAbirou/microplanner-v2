@@ -124,3 +124,36 @@ Not implemented in this pass. Design for when needed:
 - Load test (k6/artillery) — 500 concurrent calendar-week requests. **Deferred (P1).**
 - Stress-user (`wtm0134@gmail.com`) manual calendar/tasks payload-size checks — requires running stack + prod-like data.
 - Index migration deploy — requires prod DB + maintenance window approval.
+
+---
+
+## Web Push (VAPID) setup
+
+The push send pipeline (`apps/api-gateway/src/modules/notifications/`) is gated on
+VAPID keys. Without them the service logs "Web Push not configured" and all sends
+no-op (the settings toggle shows "not configured on this deployment").
+
+1. Generate keys once: `npx web-push generate-vapid-keys`
+2. Set on the api-gateway service:
+   - `VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT=mailto:you@yourdomain` (optional; defaults to support@)
+3. Set on the web app: `NEXT_PUBLIC_VAPID_PUBLIC_KEY` = the **same** public key.
+4. Redeploy both. Verify: enable push in Settings → Notifications, then click
+   **Test** (calls the `sendTestPush` mutation → `POST /api/v1/notifications/push/test`).
+
+**Schedulers** (all UTC, no-op until VAPID is set):
+- Task due in ~15 min — every 5 min
+- Focus block starting in ~5 min — every 5 min
+- Morning ritual nudge — 08:00
+- Weekly plan ready — on generation (Sun 20:00 cron)
+- Autopilot reschedule summary — on AUTO apply
+
+Sends respect `NotificationPreferences.pushEnabled`, per-type flags, and quiet
+hours. Expired subscriptions (HTTP 404/410) are pruned automatically.
+
+## Pending migrations (deploy with `prisma migrate deploy`)
+- `20260708000000_task_pm_sync_fields` — PM integration sync columns on Task
+- `20260708010000_autopilot` — autopilot settings + proposal log
+- `20260708020000_focus_calendar_sync` — focus-block ↔ calendar bookkeeping
+- `20260708030000_calendar_defense_log` — defense action log

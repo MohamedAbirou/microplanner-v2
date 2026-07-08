@@ -1,0 +1,39 @@
+name: k6 smoke (staging)
+
+# Runs the k6 smoke load test against the staging deployment. Fails the job if
+# latency/error thresholds regress. Configure the STAGING_* repo secrets.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *' # daily 06:00 UTC
+  push:
+    branches: [main]
+    paths:
+      - 'load-tests/**'
+      - '.github/workflows/k6-smoke.yml'
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Run k6 smoke
+        env:
+          API_URL: ${{ secrets.STAGING_API_URL }}
+          GRAPHQL_URL: ${{ secrets.STAGING_GRAPHQL_URL }}
+          AUTH_TOKEN: ${{ secrets.STAGING_AUTH_TOKEN }}
+        run: |
+          if [ -z "$GRAPHQL_URL" ]; then
+            echo "STAGING_GRAPHQL_URL secret not set — skipping k6 smoke."
+            exit 0
+          fi
+          k6 run load-tests/k6-smoke.js

@@ -1,5 +1,6 @@
 // All active resolvers
 import { analyticsResolvers } from './analytics.resolver';
+import { autopilotResolvers } from './autopilot.resolver';
 import { billingResolvers } from './billing.resolver';
 import { calendarResolvers } from './calendar.resolver';
 import { dashboardResolvers } from './dashboard.resolver';
@@ -33,6 +34,7 @@ export const resolvers = {
     ...schedulingResolvers.Query,
     ...integrationsResolvers.Query,
     ...billingResolvers.Query,
+    ...autopilotResolvers.Query,
   },
 
   Mutation: {
@@ -50,6 +52,7 @@ export const resolvers = {
     ...schedulingResolvers.Mutation,
     ...integrationsResolvers.Mutation,
     ...billingResolvers.Mutation,
+    ...autopilotResolvers.Mutation,
   },
 
   Subscription: {
@@ -69,6 +72,7 @@ export const resolvers = {
   Project: projectResolvers.Project,
   KanbanBoard: productivityResolvers.KanbanBoard,
   KanbanColumn: productivityResolvers.KanbanColumn,
+  Smart1on1: productivityResolvers.Smart1on1,
   CalendarConnection: calendarResolvers.CalendarConnection,
   Team: teamsResolvers.Team,
   TeamMember: teamsResolvers.TeamMember,

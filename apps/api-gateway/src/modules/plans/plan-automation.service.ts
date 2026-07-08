@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../database/prisma.service';
 import { PlansService } from './plans.service';
+import { PushNotificationService } from '../notifications/push-notification.service';
 import { SubscriptionTier, PlanStatus } from '@microplanner/database';
 
 /**
@@ -31,6 +32,7 @@ export class PlanAutomationService {
   constructor(
     private prisma: PrismaService,
     private plansService: PlansService,
+    private pushService: PushNotificationService,
   ) {}
 
   /**
@@ -106,6 +108,21 @@ export class PlanAutomationService {
 
           successCount++;
           this.logger.log(`✓ Generated plan for user ${user.id}`);
+
+          // Push: your new weekly plan is ready.
+          void this.pushService
+            .sendToUser(
+              user.id,
+              {
+                title: 'Your weekly plan is ready',
+                body: 'MicroPlanner generated next week’s plan. Review and accept it.',
+                url: '/plans/review',
+                icon: '/logo-icon.svg',
+                tag: 'plan-ready',
+              },
+              { eventType: 'dailyPlan' },
+            )
+            .catch(() => undefined);
         } catch (error) {
           failCount++;
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';

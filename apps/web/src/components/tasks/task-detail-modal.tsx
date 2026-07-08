@@ -16,8 +16,10 @@ import {
   Timer,
   Play,
   StopCircle,
+  Loader2,
 } from 'lucide-react';
 import { getBlockingTasks, getBlockedTasks } from '@/lib/dependencies';
+import { useLogTime } from '@/hooks/use-graphql';
 import {
   Dialog,
   DialogContent,
@@ -133,6 +135,8 @@ export function TaskDetailModal({
   const [isTimerBusy, setIsTimerBusy] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [editedTask, setEditedTask] = React.useState<Partial<Task>>({});
+  const [manualMinutes, setManualMinutes] = React.useState('');
+  const { logTime, loading: isLoggingTime } = useLogTime();
 
   React.useEffect(() => {
     if (task && open) {
@@ -220,6 +224,18 @@ export function TaskDetailModal({
       }
     } finally {
       setIsTimerBusy(false);
+    }
+  };
+
+  const handleLogTime = async () => {
+    const minutes = parseInt(manualMinutes, 10);
+    if (!task.id || !minutes || minutes <= 0) return;
+    try {
+      await logTime({ variables: { taskId: task.id, minutes } });
+      await onUpdate?.(task.id, { timeSpentMinutes: (task.timeSpentMinutes ?? 0) + minutes });
+      setManualMinutes('');
+    } catch {
+      /* hook surfaces the error toast */
     }
   };
 
@@ -482,6 +498,27 @@ export function TaskDetailModal({
                         Start Timer
                       </>
                     )}
+                  </Button>
+                </div>
+
+                {/* Manual time entry */}
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    placeholder="Log minutes"
+                    value={manualMinutes}
+                    onChange={(e) => setManualMinutes(e.target.value)}
+                    className="h-9"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9"
+                    disabled={isLoggingTime || !manualMinutes || parseInt(manualMinutes, 10) <= 0}
+                    onClick={handleLogTime}
+                  >
+                    {isLoggingTime ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Log'}
                   </Button>
                 </div>
               </div>

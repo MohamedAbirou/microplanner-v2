@@ -69,12 +69,14 @@
     "svix": "^1.81.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.3.3",
+    "web-push": "^3.6.7",
     "webpack-node-externals": "^3.0.0",
     "winston": "^3.11.0"
   },
   "devDependencies": {
     "@nestjs/schematics": "^10.1.0",
     "@nestjs/testing": "^10.3.0",
+    "@types/web-push": "^3.6.4",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "cross-env": "^10.1.0",

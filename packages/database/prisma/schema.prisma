@@ -49,6 +49,11 @@ model User {
   // Device tokens for push notifications
   pushTokens        String[]           @default([])
 
+  // Full-day autopilot (Motion-style live rescheduling)
+  autopilotEnabled     Boolean         @default(false)
+  autopilotMode        String          @default("SUGGEST") // AUTO | SUGGEST
+  autopilotCalendarSig String?         // last-seen calendar signature (change detection)
+
   // Metadata
   onboardingCompleted Boolean          @default(false)
   onboardingStep    Int                @default(0)
@@ -94,6 +99,10 @@ model User {
   productivityScores     ProductivityScore[]
   smartNotifications     SmartNotification[]
   notificationPreferences NotificationPreferences?
+  autopilotProposals     AutopilotProposal[]
+  calendarDefenseLogs    CalendarDefenseLog[]
+  habits                 Habit[]
+  dailyRituals           DailyRitual[]
 
   // Timestamps
   createdAt         DateTime           @default(now())
@@ -145,6 +154,10 @@ model Goal {
   projectId        String?
   project          Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  // Team sharing (optional): when set, the goal is visible to team members.
+  teamId           String?
+  team             Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
   // Goal details
   title            String
   description      String?
@@ -181,6 +194,7 @@ model Goal {
   @@index([userId, isActive])
   @@index([userId, priority])
   @@index([projectId])
+  @@index([teamId])
 }
 
 // ============================================
@@ -246,6 +260,14 @@ model Task {
   syncStatus        SyncStatus   @default(PENDING)
   syncError         String?
 
+  // PM tool sync (Todoist, Linear, Notion, Jira, Asana)
+  externalId        String?      // ID of the item in the external system
+  externalSource    String?      // "todoist" | "linear" | "notion" | "jira" | "asana"
+  externalUrl       String?      // Deep link back to the external item
+  externalSyncedAt  DateTime?    // Last successful sync with the external source
+  integrationId     String?
+  integration       Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+
   // Offline support
   localId           String?      @unique // Client-generated UUID
   pendingSync       Boolean      @default(false)
@@ -270,6 +292,10 @@ model Task {
   @@index([parentTaskId])
   @@index([projectId])
   @@index([priority])
+  // PM import idempotency: one MicroPlanner task per external item per user.
+  // NULLs are distinct in Postgres, so native (non-imported) tasks are unaffected.
+  @@unique([userId, externalSource, externalId])
+  @@index([integrationId])
 }
 
 enum SyncStatus {
@@ -676,6 +702,7 @@ model Team {
   // Relations
   members     TeamMember[]
   invitations TeamInvitation[]
+  goals       Goal[]
 
   // Timestamps
   createdAt   DateTime       @default(now())
@@ -853,6 +880,28 @@ model Booking {
 // ==================== INTEGRATIONS ====================
 
 // Third-party integrations (Slack, Zoom, Notion, etc.)
+// Full-day autopilot proposals + log. One row per reschedule run: AUTO runs are
+// stored as AUTO_APPLIED (an audit log), SUGGEST runs as PENDING until the user
+// applies or dismisses them.
+model AutopilotProposal {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date       DateTime  // the day (start-of-day) that was rescheduled
+  mode       String    // AUTO | SUGGEST
+  status     String    @default("PENDING") // PENDING | APPLIED | DISMISSED | AUTO_APPLIED
+  trigger    String?   // calendar_change | manual | daily_cron
+  summary    String
+  moves      Json      // [{ taskId, title, fromDate, fromStart, toDate, toStart, toEnd, reason }]
+
+  createdAt  DateTime  @default(now())
+  appliedAt  DateTime?
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
 model Integration {
   id            String   @id @default(cuid())
   userId        String
@@ -870,6 +919,9 @@ model Integration {
 
   // Sync tracking
   lastSyncAt    DateTime?
+
+  // Tasks imported from this integration (PM tools)
+  importedTasks Task[]
 
   // Timestamps
   createdAt     DateTime @default(now())
@@ -977,8 +1029,62 @@ model FocusTimeBlock {
 
   color               String   @default("#3B82F6")
 
+  // Calendar sync (recurring "🎯 Focus Time" event)
+  calendarEventId     String?
+  calendarProvider    String?  // "google" | "outlook"
+  calendarSyncSig     String?  // hash of synced fields, to detect changes
+  calendarSyncedAt    DateTime?
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+// Guided daily planning ritual — cross-device intention/reflection + done flag.
+model DailyRitual {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date          DateTime // start-of-day
+  intention     String?
+  reflection    String?
+  planCompleted Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+// Flexible recurring habits (Reclaim-style). Placed into a free slot within a
+// preferred window each day and written to the calendar; move around meetings.
+model Habit {
+  id                   String    @id @default(cuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title                String
+  daysOfWeek           Int[]     @default([]) // 0=Sun..6=Sat
+  preferredWindowStart String    // "11:30"
+  preferredWindowEnd   String    // "13:30"
+  durationMinutes      Int
+  priority             Int       @default(5)
+  flexible             Boolean   @default(true) // false = fixed at window start
+  isActive             Boolean   @default(true)
+  color                String    @default("#8B5CF6")
+
+  // Calendar sync (current placement)
+  calendarEventId      String?
+  calendarProvider     String?
+  calendarSyncSig      String?
+  calendarSyncedAt     DateTime?
+
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   @@index([userId])
   @@index([isActive])
@@ -999,6 +1105,25 @@ model NoMeetingDay {
 
   @@unique([userId, dayOfWeek])
   @@index([userId])
+}
+
+// Calendar-defense action log (what the executor did and why)
+model CalendarDefenseLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  eventId    String
+  provider   String   // google | outlook
+  action     String   // auto_decline | notify_only | mark_busy
+  eventTitle String
+  eventStart DateTime
+  reason     String
+
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, eventId, action])
+  @@index([userId, createdAt])
 }
 
 // Priority hours

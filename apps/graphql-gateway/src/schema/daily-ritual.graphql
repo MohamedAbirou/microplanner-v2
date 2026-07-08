@@ -1,0 +1,24 @@
+# Guided daily planning ritual (cross-device)
+
+type DailyRitual {
+  id: ID!
+  date: DateTime!
+  intention: String
+  reflection: String
+  planCompleted: Boolean!
+}
+
+input UpdateDailyRitualInput {
+  date: String!
+  intention: String
+  reflection: String
+  planCompleted: Boolean
+}
+
+extend type Query {
+  dailyRitual(date: String!): DailyRitual
+}
+
+extend type Mutation {
+  updateDailyRitual(input: UpdateDailyRitualInput!): DailyRitual!
+}

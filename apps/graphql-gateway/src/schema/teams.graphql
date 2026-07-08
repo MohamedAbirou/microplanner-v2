@@ -105,12 +105,44 @@ enum ApiScope {
 # QUERIES
 # ============================================
 
+type TeamMemberStat {
+  userId: ID!
+  name: String!
+  email: String!
+  role: String!
+  tasksCompleted: Int!
+  tasksTotal: Int!
+  completionRate: Int!
+}
+
+type TeamGoal {
+  id: ID!
+  title: String!
+  emoji: String
+  color: String
+  completionRate: Float!
+  ownerName: String!
+  isActive: Boolean!
+}
+
+type TeamDashboard {
+  teamId: ID!
+  memberCount: Int!
+  totalTasksCompleted: Int!
+  totalTasks: Int!
+  completionRate: Int!
+  members: [TeamMemberStat!]!
+  goals: [TeamGoal!]!
+}
+
 extend type Query {
   # Teams
   teams: [Team!]!
   team(id: ID!): Team
   teamMembers(teamId: ID!): [TeamMember!]!
   teamInvitations(teamId: ID!): [TeamInvitation!]!
+  teamDashboard(teamId: ID!): TeamDashboard!
+  teamGoals(teamId: ID!): [TeamGoal!]!
 
   # API Keys
   apiKeys: [ApiKey!]!
@@ -132,6 +164,10 @@ extend type Mutation {
   acceptTeamInvitation(token: String!): TeamMember!
   removeTeamMember(teamId: ID!, userId: ID!): Boolean!
   updateTeamMemberRole(teamId: ID!, userId: ID!, role: TeamRole!): TeamMember!
+
+  # Shared goals
+  shareGoalWithTeam(goalId: ID!, teamId: ID!): Boolean!
+  unshareGoalFromTeam(goalId: ID!): Boolean!
 
   # API Keys
   createApiKey(input: CreateApiKeyInput!): ApiKeyWithSecret!

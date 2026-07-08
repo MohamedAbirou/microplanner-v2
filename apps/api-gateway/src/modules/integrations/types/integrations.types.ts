@@ -21,6 +21,9 @@ export enum IntegrationType {
   NOTION = 'notion',
   LINEAR = 'linear',
   GITHUB = 'github',
+  TODOIST = 'todoist',
+  JIRA = 'jira',
+  ASANA = 'asana',
   WEBHOOK = 'webhook',
 }
 

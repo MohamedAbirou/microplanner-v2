@@ -107,6 +107,39 @@ export const UNREGISTER_PUSH_TOKEN = gql`
   }
 `;
 
+export const SEND_TEST_PUSH = gql`
+  mutation SendTestPush {
+    sendTestPush {
+      sent
+      configured
+      message
+    }
+  }
+`;
+
+export const GET_DAILY_RITUAL = gql`
+  query DailyRitual($date: String!) {
+    dailyRitual(date: $date) {
+      id
+      date
+      intention
+      reflection
+      planCompleted
+    }
+  }
+`;
+
+export const UPDATE_DAILY_RITUAL = gql`
+  mutation UpdateDailyRitual($input: UpdateDailyRitualInput!) {
+    updateDailyRitual(input: $input) {
+      id
+      intention
+      reflection
+      planCompleted
+    }
+  }
+`;
+
 // ============================================================================
 // PROJECTS & KANBAN
 // ============================================================================
@@ -380,6 +413,8 @@ export const GET_FOCUS_TIME_BLOCKS = gql`
       isActive
       autoSchedule
       color
+      calendarProvider
+      calendarSyncedAt
     }
   }
 `;
@@ -484,6 +519,67 @@ export const UPDATE_CALENDAR_DEFENSE = gql`
   }
 `;
 
+export const GET_CALENDAR_DEFENSE_LOG = gql`
+  query GetCalendarDefenseLog($limit: Int) {
+    calendarDefenseLog(limit: $limit) {
+      id
+      action
+      provider
+      eventTitle
+      eventStart
+      reason
+      createdAt
+    }
+  }
+`;
+
+export const RUN_CALENDAR_DEFENSE = gql`
+  mutation RunCalendarDefense {
+    runCalendarDefense {
+      actions
+    }
+  }
+`;
+
+const HABIT_FIELDS = `
+  id
+  title
+  daysOfWeek
+  preferredWindowStart
+  preferredWindowEnd
+  durationMinutes
+  priority
+  flexible
+  isActive
+  color
+  calendarProvider
+  calendarSyncedAt
+`;
+
+export const GET_HABITS = gql`
+  query GetHabits {
+    habits { ${HABIT_FIELDS} }
+  }
+`;
+
+export const CREATE_HABIT = gql`
+  mutation CreateHabit($input: CreateHabitInput!) {
+    createHabit(input: $input) { ${HABIT_FIELDS} }
+  }
+`;
+
+export const UPDATE_HABIT = gql`
+  mutation UpdateHabit($id: ID!, $input: UpdateHabitInput!) {
+    updateHabit(id: $id, input: $input) { ${HABIT_FIELDS} }
+  }
+`;
+
+export const DELETE_HABIT = gql`
+  mutation DeleteHabit($id: ID!) {
+    deleteHabit(id: $id)
+  }
+`;
+
 // ============================================================================
 // PRODUCTIVITY FEATURES - KANBAN BOARDS
 // ============================================================================
@@ -567,6 +663,16 @@ export const UPDATE_SMART_1ON1 = gql`
 export const DELETE_SMART_1ON1 = gql`
   mutation DeleteSmart1on1($id: ID!) {
     deleteSmart1on1(id: $id)
+  }
+`;
+
+export const SCHEDULE_SMART_1ON1 = gql`
+  mutation ScheduleSmart1on1($id: ID!) {
+    scheduleSmart1on1(id: $id) {
+      id
+      nextMeetingDate
+      lastMeetingDate
+    }
   }
 `;
 
@@ -749,6 +855,46 @@ export const INVITE_TEAM_MEMBER = gql`
 export const DELETE_TEAM = gql`
   mutation DeleteTeam($id: ID!) {
     deleteTeam(id: $id)
+  }
+`;
+
+export const ACCEPT_TEAM_INVITATION = gql`
+  mutation AcceptTeamInvitation($token: String!) {
+    acceptTeamInvitation(token: $token) {
+      id
+      teamId
+      role
+    }
+  }
+`;
+
+export const GET_TEAM_DASHBOARD = gql`
+  query GetTeamDashboard($teamId: ID!) {
+    teamDashboard(teamId: $teamId) {
+      teamId
+      memberCount
+      totalTasksCompleted
+      totalTasks
+      completionRate
+      members {
+        userId
+        name
+        email
+        role
+        tasksCompleted
+        tasksTotal
+        completionRate
+      }
+      goals {
+        id
+        title
+        emoji
+        color
+        completionRate
+        ownerName
+        isActive
+      }
+    }
   }
 `;
 
@@ -935,11 +1081,51 @@ export const GET_INTEGRATIONS = gql`
   }
 `;
 
+export const INITIATE_INTEGRATION_OAUTH = gql`
+  mutation InitiateIntegrationOAuth($type: IntegrationType!) {
+    initiateIntegrationOAuth(type: $type) {
+      url
+    }
+  }
+`;
+
+export const PM_INBOX_TASKS = gql`
+  query PmInboxTasks {
+    pmInboxTasks {
+      integrationId
+      source
+      externalId
+      title
+      dueDate
+      url
+      alreadyImported
+    }
+  }
+`;
+
+export const IMPORT_PM_TASKS = gql`
+  mutation ImportPmTasks($items: [ImportPmTaskInput!]!) {
+    importPmTasks(items: $items) {
+      imported
+    }
+  }
+`;
+
 export const CONNECT_INTEGRATION = gql`
   mutation ConnectIntegration($input: ConnectIntegrationInput!) {
     connectIntegration(input: $input) {
       id
       type
+      isActive
+    }
+  }
+`;
+
+export const UPDATE_INTEGRATION = gql`
+  mutation UpdateIntegration($id: ID!, $input: UpdateIntegrationInput!) {
+    updateIntegration(id: $id, input: $input) {
+      id
+      config
       isActive
     }
   }
@@ -951,12 +1137,22 @@ export const DISCONNECT_INTEGRATION = gql`
   }
 `;
 
+export const INTEGRATION_RESOURCES = gql`
+  query IntegrationResources($id: ID!) {
+    integrationResources(id: $id) {
+      id
+      name
+    }
+  }
+`;
+
 export const SYNC_INTEGRATION = gql`
   mutation SyncIntegration($id: ID!) {
     syncIntegration(id: $id) {
       id
       lastSyncedAt: lastSyncAt
       isActive
+      config
     }
   }
 `;
@@ -1183,5 +1379,66 @@ export const FOCUS_TIME_CREATED = gql`
       startTime
       durationMinutes
     }
+  }
+`;
+
+// ============================================================================
+// AUTOPILOT
+// ============================================================================
+
+const AUTOPILOT_PROPOSAL_FIELDS = `
+  id
+  date
+  mode
+  status
+  trigger
+  summary
+  createdAt
+  appliedAt
+  moves {
+    taskId
+    title
+    fromStart
+    toStart
+    toEnd
+    reason
+  }
+`;
+
+export const AUTOPILOT_STATUS = gql`
+  query AutopilotStatus {
+    autopilotStatus {
+      enabled
+      mode
+      pending { ${AUTOPILOT_PROPOSAL_FIELDS} }
+      recent { ${AUTOPILOT_PROPOSAL_FIELDS} }
+    }
+  }
+`;
+
+export const UPDATE_AUTOPILOT_SETTINGS = gql`
+  mutation UpdateAutopilotSettings($enabled: Boolean, $mode: String) {
+    updateAutopilotSettings(enabled: $enabled, mode: $mode) {
+      enabled
+      mode
+    }
+  }
+`;
+
+export const RUN_AUTOPILOT = gql`
+  mutation RunAutopilot($date: String) {
+    runAutopilot(date: $date) { ${AUTOPILOT_PROPOSAL_FIELDS} }
+  }
+`;
+
+export const APPLY_AUTOPILOT_PROPOSAL = gql`
+  mutation ApplyAutopilotProposal($id: ID!) {
+    applyAutopilotProposal(id: $id) { ${AUTOPILOT_PROPOSAL_FIELDS} }
+  }
+`;
+
+export const DISMISS_AUTOPILOT_PROPOSAL = gql`
+  mutation DismissAutopilotProposal($id: ID!) {
+    dismissAutopilotProposal(id: $id) { ${AUTOPILOT_PROPOSAL_FIELDS} }
   }
 `;

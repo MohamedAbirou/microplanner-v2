@@ -18,6 +18,7 @@ import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { requestLogger } from './common/request-logger.middleware';
 
 async function bootstrap() {
   // Initialize Sentry (before any other code)
@@ -60,6 +61,9 @@ async function bootstrap() {
   });
 
   const configService = app.get(ConfigService);
+
+  // Correlation id + structured request logging (before other middleware).
+  app.use(requestLogger);
 
   // Security middleware
   app.use(helmet());

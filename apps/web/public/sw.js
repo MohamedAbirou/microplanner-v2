@@ -117,6 +117,8 @@ self.addEventListener('push', (event) => {
     badge: '/logo-icon.svg',
     data: { url: data.url || '/dashboard' },
     tag: data.tag,
+    requireInteraction: Boolean(data.requireInteraction),
+    actions: Array.isArray(data.actions) ? data.actions : undefined,
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });

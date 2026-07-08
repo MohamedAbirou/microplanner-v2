@@ -10,6 +10,11 @@ export const userResolvers = {
       return dataSources.userAPI.getUser(user.userId);
     },
 
+    dailyRitual: async (_: any, { date }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.userAPI.getDailyRitual(user.userId, date);
+    },
+
     userSettings: async (_: any, __: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.userAPI.getUserSettings(user.userId);
@@ -108,6 +113,16 @@ export const userResolvers = {
     unregisterPushToken: async (_: any, { endpoint }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.userAPI.unregisterPushToken(user.userId, endpoint);
+    },
+
+    sendTestPush: async (_: any, __: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.userAPI.sendTestPush(user.userId);
+    },
+
+    updateDailyRitual: async (_: any, { input }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.userAPI.updateDailyRitual(user.userId, input);
     },
 
     deleteMyAccount: async (_: any, __: any, { dataSources, user }: any) => {

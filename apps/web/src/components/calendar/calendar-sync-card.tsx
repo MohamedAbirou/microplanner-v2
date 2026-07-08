@@ -46,19 +46,25 @@ function formatSyncedAt(value?: string | null): string {
   })}`;
 }
 
+const PROVIDER_META: Record<string, { label: string; initial: string; color: string }> = {
+  GOOGLE: { label: 'Google Calendar', initial: 'G', color: 'bg-blue-500' },
+  OUTLOOK: { label: 'Outlook Calendar', initial: 'O', color: 'bg-sky-700' },
+};
+
 function ConnectionRow({ connection }: { connection: CalendarConnection }) {
   const { syncCalendar, loading: syncing } = useSyncCalendarConnection();
   const { disconnectCalendar, loading: disconnecting } = useDisconnectCalendarConnection();
+  const meta = PROVIDER_META[(connection.provider || 'GOOGLE').toUpperCase()] || PROVIDER_META.GOOGLE;
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-[10px] border border-border p-4">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 font-semibold text-white">
-          G
+        <div className={`flex h-10 w-10 items-center justify-center rounded-full font-semibold text-white ${meta.color}`}>
+          {meta.initial}
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 font-medium">
-            {connection.email || 'Google Calendar'}
+            {connection.email || meta.label}
             <Badge variant={connection.isActive ? 'default' : 'secondary'}>
               {connection.isActive ? 'Connected' : 'Paused'}
             </Badge>
@@ -113,18 +119,27 @@ function ConnectionRow({ connection }: { connection: CalendarConnection }) {
 export function CalendarSyncCard() {
   const { connections, loading } = useCalendarConnections();
   const { initiateAuth, loading: initiating } = useInitiateCalendarAuth();
+  const [pending, setPending] = React.useState<string | null>(null);
 
-  const handleConnect = async () => {
+  const connectedProviders = new Set(
+    (connections || []).map((c: CalendarConnection) => (c.provider || '').toUpperCase()),
+  );
+
+  const handleConnect = async (provider: 'GOOGLE' | 'OUTLOOK') => {
+    const label = PROVIDER_META[provider]?.label || provider;
+    setPending(provider);
     try {
-      const { data } = await initiateAuth({ variables: { provider: 'GOOGLE' } });
+      const { data } = await initiateAuth({ variables: { provider } });
       const authUrl = data?.initiateCalendarAuth?.authUrl;
       if (authUrl) {
         window.location.href = authUrl;
       } else {
-        toast.error('Could not start Google authorization');
+        toast.error(`Could not start ${label} authorization`);
+        setPending(null);
       }
     } catch (error: any) {
-      toast.error('Could not start Google authorization', { description: error?.message });
+      toast.error(`Could not start ${label} authorization`, { description: error?.message });
+      setPending(null);
     }
   };
 
@@ -133,40 +148,45 @@ export function CalendarSyncCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-[15px]">
           <Calendar className="h-5 w-5" />
-          Google Calendar
+          Calendars
         </CardTitle>
         <CardDescription className="text-[13px]">
-          Two-way sync — scheduled tasks appear as events, and your busy time is respected during planning.
+          Two-way sync — scheduled tasks appear as events, and your busy time (Google & Outlook) is
+          respected during planning.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {loading ? (
           <Skeleton className="h-[74px] w-full rounded-[10px]" />
-        ) : connections.length > 0 ? (
-          connections.map((connection: CalendarConnection) => (
-            <ConnectionRow key={connection.id} connection={connection} />
-          ))
         ) : (
-          <div className="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-border p-6 text-center">
-            <p className="text-[13px] text-muted-foreground">
-              No calendar connected yet. Connect Google Calendar to sync your schedule.
-            </p>
-            <Button onClick={handleConnect} disabled={initiating}>
-              {initiating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Calendar className="mr-2 h-4 w-4" />
-              )}
-              Connect Google Calendar
-            </Button>
-          </div>
-        )}
+          <>
+            {connections.map((connection: CalendarConnection) => (
+              <ConnectionRow key={connection.id} connection={connection} />
+            ))}
 
-        {connections.length > 0 && (
-          <Button variant="outline" className="w-full" onClick={handleConnect} disabled={initiating}>
-            {initiating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Connect another calendar
-          </Button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(['GOOGLE', 'OUTLOOK'] as const).map((provider) => {
+                const meta = PROVIDER_META[provider];
+                const already = connectedProviders.has(provider);
+                return (
+                  <Button
+                    key={provider}
+                    variant="outline"
+                    className="w-full"
+                    disabled={initiating && pending === provider}
+                    onClick={() => handleConnect(provider)}
+                  >
+                    {initiating && pending === provider ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Calendar className="mr-2 h-4 w-4" />
+                    )}
+                    {already ? `Reconnect ${meta.label}` : `Connect ${meta.label}`}
+                  </Button>
+                );
+              })}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

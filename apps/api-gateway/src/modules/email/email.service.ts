@@ -501,6 +501,52 @@ export class EmailService {
   }
 
   /**
+   * Send a team invitation email with an accept link.
+   */
+  async sendTeamInvitation(params: {
+    to: string;
+    teamName: string;
+    inviterName: string;
+    acceptUrl: string;
+  }): Promise<void> {
+    if (!this.isEnabled) {
+      this.logger.debug('Email service disabled, skipping team invitation');
+      return;
+    }
+    try {
+      const html = `
+        <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+          <h2 style="margin: 0 0 8px;">You're invited to join ${this.escape(params.teamName)}</h2>
+          <p style="color:#555; font-size:14px; line-height:1.5;">
+            ${this.escape(params.inviterName)} invited you to collaborate on MicroPlanner. Accept to join the team workspace.
+          </p>
+          <a href="${params.acceptUrl}" style="display:inline-block; margin:16px 0; background:#4f46e5; color:#fff; text-decoration:none; padding:10px 20px; border-radius:8px; font-weight:600;">
+            Accept invitation
+          </a>
+          <p style="color:#999; font-size:12px;">This invitation expires in 7 days. If you didn't expect it, you can ignore this email.</p>
+        </div>`;
+      const response = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: params.to,
+        subject: `Join ${params.teamName} on MicroPlanner`,
+        html,
+      });
+      if (response.error) {
+        this.logger.error(`Failed to send team invitation: ${JSON.stringify(response.error)}`);
+        return;
+      }
+      this.logger.log(`Team invitation email sent to ${params.to}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to send team invitation: ${message}`);
+    }
+  }
+
+  private escape(s: string): string {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  }
+
+  /**
    * Check if email service is enabled
    */
   isEmailEnabled(): boolean {

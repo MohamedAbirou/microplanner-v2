@@ -12,6 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ProductivityService } from './productivity.service';
+import { HabitService, CreateHabitDto, UpdateHabitDto } from './habit.service';
 import {
   UpsertWorkHoursDto,
   CreateFocusTimeDto,
@@ -35,7 +36,33 @@ import {
  */
 @Controller('productivity')
 export class ProductivityController {
-  constructor(private readonly productivityService: ProductivityService) {}
+  constructor(
+    private readonly productivityService: ProductivityService,
+    private readonly habitService: HabitService,
+  ) {}
+
+  // ==================== HABITS ====================
+
+  @Get('habits')
+  async getHabits(@Request() req: any) {
+    return this.habitService.getHabits(req.user.id);
+  }
+
+  @Post('habits')
+  async createHabit(@Request() req: any, @Body() dto: CreateHabitDto) {
+    return this.habitService.createHabit(req.user.id, dto);
+  }
+
+  @Put('habits/:id')
+  async updateHabit(@Request() req: any, @Param('id') id: string, @Body() dto: UpdateHabitDto) {
+    return this.habitService.updateHabit(id, req.user.id, dto);
+  }
+
+  @Delete('habits/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteHabit(@Request() req: any, @Param('id') id: string) {
+    await this.habitService.deleteHabit(id, req.user.id);
+  }
 
   // ==================== WORK HOURS ====================
 
@@ -118,6 +145,16 @@ export class ProductivityController {
     return this.productivityService.updateCalendarDefense(req.user.id, updateDto);
   }
 
+  @Get('calendar-defense/log')
+  async getCalendarDefenseLog(@Request() req: any, @Query('limit') limit?: string) {
+    return this.productivityService.getCalendarDefenseLog(req.user.id, limit ? Number(limit) : 20);
+  }
+
+  @Post('calendar-defense/run')
+  async runCalendarDefense(@Request() req: any) {
+    return this.productivityService.runCalendarDefense(req.user.id);
+  }
+
   // ==================== SMART 1:1 SCHEDULING ====================
 
   @Post('smart-1on1')
@@ -143,6 +180,11 @@ export class ProductivityController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteSmart1on1(@Request() req: any, @Param('id') smart1on1Id: string) {
     await this.productivityService.deleteSmart1on1(smart1on1Id, req.user.id);
+  }
+
+  @Post('smart-1on1/:id/schedule')
+  async scheduleSmart1on1(@Request() req: any, @Param('id') smart1on1Id: string) {
+    return this.productivityService.scheduleNextSmart1on1(smart1on1Id, req.user.id);
   }
 
   // ==================== TRAVEL TIME ====================

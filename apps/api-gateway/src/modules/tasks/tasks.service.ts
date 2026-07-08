@@ -4,6 +4,8 @@ import { GoalsService } from '../goals/goals.service';
 import { PatternRecognitionService } from '../analytics/pattern-recognition.service';
 import { UsageLimitService } from '../../common/middleware/usage-limit.middleware';
 import { RecurringTaskService, TaskInstance } from './recurring-task.service';
+import { IntegrationsService } from '../integrations/integrations.service';
+import { CalendarService } from '../calendar/calendar.service';
 import type { Task, SubscriptionTierType } from '@microplanner/database';
 import { Prisma, SyncStatus } from '@microplanner/database';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -22,6 +24,8 @@ export class TasksService {
     private patternRecognitionService: PatternRecognitionService,
     private usageLimitService: UsageLimitService,
     private recurringTaskService: RecurringTaskService,
+    private integrationsService: IntegrationsService,
+    private calendarService: CalendarService,
   ) {}
 
   /**
@@ -276,10 +280,24 @@ export class TasksService {
 
     this.logger.log(`Updating task ${taskId}`);
 
-    return this.prisma.task.update({
+    const updated = await this.prisma.task.update({
       where: { id: taskId },
       data,
-    }) as any;
+    });
+
+    // If this update marked an imported task complete, sync the completion back
+    // to its source PM tool (bi-directional). Non-blocking.
+    if (data.isCompleted === true) {
+      void this.integrationsService.syncTaskCompletion({
+        id: updated.id,
+        userId: updated.userId,
+        externalId: updated.externalId,
+        externalSource: updated.externalSource,
+        integrationId: updated.integrationId,
+      });
+    }
+
+    return updated as any;
   }
 
   /**
@@ -338,6 +356,16 @@ export class TasksService {
       // Don't fail the completion if pattern recording fails
       this.logger.warn(`Failed to record completion event: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+
+    // Sync completion back to the source PM tool (bi-directional). Fire-and-forget
+    // so a slow/broken external API never blocks or fails the local completion.
+    void this.integrationsService.syncTaskCompletion({
+      id: updatedTask.id,
+      userId: updatedTask.userId,
+      externalId: updatedTask.externalId,
+      externalSource: updatedTask.externalSource,
+      integrationId: updatedTask.integrationId,
+    });
 
     return updatedTask as any;
   }
@@ -503,6 +531,20 @@ export class TasksService {
     const cursor = new Date(now);
     cursor.setHours(0, 0, 0, 0);
 
+    // Pull calendar busy time (Google + Outlook) once for the whole 14-day scan
+    // window so suggested slots avoid real meetings, not just tasks/focus blocks.
+    const rangeStart = new Date(cursor);
+    const rangeEnd = new Date(cursor);
+    rangeEnd.setDate(rangeEnd.getDate() + 14);
+    rangeEnd.setHours(23, 59, 59, 999);
+    let calendarEvents: Array<{ start: Date; end: Date; isAllDay: boolean }> = [];
+    try {
+      calendarEvents = await this.calendarService.getEventsForPlanning(userId, rangeStart, rangeEnd);
+    } catch {
+      // Calendar optional — fall back to task/focus-block busy time only.
+      calendarEvents = [];
+    }
+
     while (scannedDays < 14) {
       const window = workWindow(cursor);
       if (window) {
@@ -533,6 +575,17 @@ export class TasksService {
             const s = toMinutes(fb.startTime);
             busy.push({ start: s, end: s + fb.durationMinutes });
           }
+        }
+
+        // Calendar meetings for this day become busy intervals too.
+        for (const ev of calendarEvents) {
+          if (ev.isAllDay) continue;
+          if (ev.start < dayStart || ev.start > dayEnd) continue;
+          const s = ev.start.getHours() * 60 + ev.start.getMinutes();
+          // Clamp the end to end-of-day for events that spill past midnight.
+          const sameDayEnd = ev.end <= dayEnd;
+          const e = sameDayEnd ? ev.end.getHours() * 60 + ev.end.getMinutes() : 24 * 60;
+          if (e > s) busy.push({ start: s, end: e });
         }
 
         // Earliest candidate: not in the past for today.

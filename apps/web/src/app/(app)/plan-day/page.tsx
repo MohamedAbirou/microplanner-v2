@@ -25,12 +25,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTasks, useUpdateTask } from '@/hooks/use-graphql';
+import { PmImportSection } from '@/components/plan-day/pm-import-section';
 import {
   getDailyIntention,
   setDailyIntention,
   getDailyReflection,
   setDailyReflection,
+  dateKey,
 } from '@/lib/daily-ritual';
+import { useUpdateDailyRitual } from '@/hooks/use-graphql-extended';
 
 const PRIORITY_OPTIONS = [
   { label: 'High', value: 1, variant: 'destructive' as const },
@@ -60,6 +63,7 @@ export default function PlanDayPage() {
     { take: 80 }
   );
   const { updateTask } = useUpdateTask({ notify: false });
+  const { updateDailyRitual } = useUpdateDailyRitual();
 
   const incompleteYesterday = React.useMemo(
     () => (yesterdayTasks || []).filter((t: any) => !t.isCompleted && !t.isSkipped),
@@ -120,6 +124,8 @@ export default function PlanDayPage() {
 
   const handleSaveIntention = () => {
     setDailyIntention(intention, today);
+    // Persist cross-device (best-effort).
+    void updateDailyRitual({ variables: { input: { date: dateKey(today), intention } } });
     setStep(2);
   };
 
@@ -132,9 +138,31 @@ export default function PlanDayPage() {
     }
   };
 
+  // Timeboxing: set a task's start time and re-derive its end time.
+  const handleSetTime = async (taskId: string, startTime: string, durationMinutes: number) => {
+    if (!startTime) return;
+    const [h, m] = startTime.split(':').map(Number);
+    const endMinutes = h * 60 + m + (durationMinutes || 30);
+    const endTime = `${String(Math.floor(endMinutes / 60) % 24).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`;
+    try {
+      await updateTask({ variables: { id: taskId, input: { startTime, endTime } } });
+      await refetchToday();
+    } catch {
+      toast.error('Failed to update time');
+    }
+  };
+
   const handleSaveReflection = () => {
     setDailyReflection(reflection, today);
+    void updateDailyRitual({ variables: { input: { date: dateKey(today), reflection } } });
     toast.success('Reflection saved. Rest well!');
+  };
+
+  const handleStartDay = () => {
+    void updateDailyRitual({
+      variables: { input: { date: dateKey(today), intention, planCompleted: true } },
+    });
+    router.push('/today');
   };
 
   // ----- Shutdown mode -----
@@ -226,7 +254,10 @@ export default function PlanDayPage() {
         ))}
       </div>
 
-      {/* Step 0 — Review yesterday */}
+      {/* Step 0 — Import from connected tools + Review yesterday */}
+      {step === 0 && mode === 'plan' && (
+        <PmImportSection onImported={() => refetchToday()} />
+      )}
       {step === 0 && (
         <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardHeader>
@@ -316,10 +347,10 @@ export default function PlanDayPage() {
         <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardHeader>
             <CardTitle className="text-[15px] flex items-center gap-2">
-              <Flag className="h-4 w-4" /> Prioritize today
+              <Flag className="h-4 w-4" /> Prioritize &amp; timebox
             </CardTitle>
             <CardDescription className="text-[13px]">
-              Set the priority of each task so the important work stands out.
+              Set each task&apos;s priority and start time so your day has a clear shape.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -353,8 +384,20 @@ export default function PlanDayPage() {
                         >
                           {t.title}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {t.startTime} · {t.durationMinutes}min
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <input
+                            type="time"
+                            defaultValue={t.startTime}
+                            disabled={t.isCompleted}
+                            onBlur={(e) => {
+                              if (e.target.value && e.target.value !== t.startTime) {
+                                handleSetTime(t.id, e.target.value, t.durationMinutes);
+                              }
+                            }}
+                            className="rounded-[6px] border border-border bg-background px-1.5 py-0.5 text-xs disabled:opacity-50"
+                            aria-label="Start time"
+                          />
+                          <span>· {t.durationMinutes}min</span>
                         </div>
                       </div>
                       <div className="flex gap-1 flex-none">
@@ -424,7 +467,7 @@ export default function PlanDayPage() {
               <Button variant="outline" onClick={() => setStep(2)}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
-              <Button onClick={() => router.push('/today')}>
+              <Button onClick={handleStartDay}>
                 <Check className="mr-2 h-4 w-4" /> Start my day
               </Button>
             </div>

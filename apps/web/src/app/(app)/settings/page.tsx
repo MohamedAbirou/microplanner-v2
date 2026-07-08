@@ -37,6 +37,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 import { CalendarSyncCard } from '@/components/calendar/calendar-sync-card';
+import { AutopilotSettings } from '@/components/autopilot/autopilot-settings';
 import { UpgradeButton } from '@/components/upgrade-button';
 import { useTier } from '@/contexts/tier-context';
 import {
@@ -616,6 +617,7 @@ export default function SettingsPage() {
         {/* Integrations Tab */}
         <TabsContent value="integrations" className="mt-6 space-y-4">
           <CalendarSyncCard />
+          <AutopilotSettings />
           <p className="text-sm text-muted-foreground">
             Manage all your integrations from the{' '}
             <a href="/integrations" className="underline">Integrations</a> page.

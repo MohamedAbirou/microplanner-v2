@@ -3,12 +3,22 @@ import { ConfigModule } from '@nestjs/config';
 import { CalendarController } from './calendar.controller';
 import { CalendarService } from './calendar.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
+import { OutlookOAuthService } from './services/outlook-oauth.service';
+import { GoogleCalendarProvider } from './services/google-calendar.provider';
+import { OutlookCalendarProvider } from './services/outlook-calendar.provider';
 import { EncryptionService } from './services/encryption.service';
 
 @Module({
   imports: [ConfigModule],
   controllers: [CalendarController],
-  providers: [CalendarService, GoogleOAuthService, EncryptionService],
-  exports: [CalendarService, GoogleOAuthService],
+  providers: [
+    CalendarService,
+    GoogleOAuthService,
+    OutlookOAuthService,
+    GoogleCalendarProvider,
+    OutlookCalendarProvider,
+    EncryptionService,
+  ],
+  exports: [CalendarService, GoogleOAuthService, OutlookOAuthService],
 })
 export class CalendarModule {}

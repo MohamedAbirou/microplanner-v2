@@ -24,8 +24,47 @@ enum IntegrationType {
   NOTION
   LINEAR
   GITHUB
+  TODOIST
+  JIRA
+  ASANA
   ZAPIER
   CUSTOM
+}
+
+# Returned by initiateIntegrationOAuth — the provider authorize URL the client
+# should redirect the browser to.
+type OAuthRedirect {
+  url: String!
+}
+
+# A selectable project/board/database exposed by a PM integration.
+type IntegrationResource {
+  id: ID!
+  name: String!
+}
+
+# An open task from a connected PM tool, previewed for the plan-day ritual.
+type PmInboxTask {
+  integrationId: ID!
+  source: String!
+  externalId: String!
+  title: String!
+  dueDate: DateTime
+  url: String
+  alreadyImported: Boolean!
+}
+
+input ImportPmTaskInput {
+  integrationId: ID!
+  source: String!
+  externalId: String!
+  title: String!
+  dueDate: String
+  url: String
+}
+
+type PmImportResult {
+  imported: Int!
 }
 
 # ============================================
@@ -89,6 +128,12 @@ extend type Query {
   integrations(type: IntegrationType): [Integration!]!
   integration(id: ID!): Integration
 
+  # Selectable projects/boards/databases for a PM integration
+  integrationResources(id: ID!): [IntegrationResource!]!
+
+  # Open tasks from connected PM tools (plan-day ritual)
+  pmInboxTasks: [PmInboxTask!]!
+
   # Webhooks
   webhooks: [Webhook!]!
   webhook(id: ID!): Webhook
@@ -101,6 +146,8 @@ extend type Query {
 
 extend type Mutation {
   # Integrations
+  importPmTasks(items: [ImportPmTaskInput!]!): PmImportResult!
+  initiateIntegrationOAuth(type: IntegrationType!): OAuthRedirect!
   connectIntegration(input: ConnectIntegrationInput!): Integration!
   updateIntegration(id: ID!, input: UpdateIntegrationInput!): Integration!
   disconnectIntegration(id: ID!): Boolean!

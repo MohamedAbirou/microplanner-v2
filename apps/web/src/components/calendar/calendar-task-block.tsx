@@ -35,12 +35,18 @@ export function CalendarTaskBlock({
   const showSubtaskList = !isCompact && subtasks.length > 0;
   const maxVisibleSubtasks = isMedium ? 2 : 4;
 
+  // Tasks moved by autopilot are flagged via aiReasoning; show a dotted outline.
+  const autopilotMoved =
+    typeof task.aiReasoning === 'string' && task.aiReasoning.startsWith('Autopilot');
+
   return (
     <Card
+      title={autopilotMoved ? (task.aiReasoning as string) : undefined}
       className={cn(
         'h-full overflow-hidden rounded-[10px] border-l-4 shadow-[var(--sh-sm)] transition-shadow flex flex-col',
         'hover:shadow-[var(--sh-md)] cursor-pointer',
         task.isCompleted && 'opacity-60',
+        autopilotMoved && 'border border-dashed border-primary/50',
         isDragging && 'shadow-xl ring-2 ring-primary/40 cursor-grabbing',
         isCompact ? 'p-1.5' : 'p-2',
         className

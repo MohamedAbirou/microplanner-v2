@@ -5,6 +5,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
+import { randomUUID } from 'crypto';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { GraphQLError } from 'graphql';
@@ -28,6 +29,7 @@ import {
   SchedulingAPI,
   IntegrationsAPI,
   BillingAPI,
+  AutopilotAPI,
   AiMemoryAPI,
   ReferralsAPI,
 } from './datasources/rest-api';
@@ -303,6 +305,29 @@ async function startServer() {
     credentials: true,
   };
 
+  // Correlation id + structured request logging.
+  app.use((req: any, res: any, next: any) => {
+    const start = Date.now();
+    const requestId = req.headers['x-request-id'] || randomUUID();
+    req.headers['x-request-id'] = requestId;
+    res.setHeader('x-request-id', requestId);
+    res.on('finish', () => {
+      console.log(
+        JSON.stringify({
+          level: res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info',
+          service: 'graphql-gateway',
+          requestId,
+          method: req.method,
+          path: (req.originalUrl || req.url || '').split('?')[0],
+          status: res.statusCode,
+          durationMs: Date.now() - start,
+          time: new Date().toISOString(),
+        }),
+      );
+    });
+    next();
+  });
+
   // CORS on all routes so preflight succeeds even if the client URL is misconfigured
   app.use(cors(corsOptions));
 
@@ -333,6 +358,7 @@ async function startServer() {
         const schedulingAPI = new SchedulingAPI(token);
         const integrationsAPI = new IntegrationsAPI(token);
         const billingAPI = new BillingAPI(token);
+        const autopilotAPI = new AutopilotAPI(token);
         const aiMemoryAPI = new AiMemoryAPI(token);
         const referralsAPI = new ReferralsAPI(token);
 
@@ -363,6 +389,7 @@ async function startServer() {
             schedulingAPI,
             integrationsAPI,
             billingAPI,
+            autopilotAPI,
             aiMemoryAPI,
             referralsAPI,
           },

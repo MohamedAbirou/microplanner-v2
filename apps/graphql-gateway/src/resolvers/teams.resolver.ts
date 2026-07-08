@@ -25,6 +25,16 @@ export const teamsResolvers = {
       return dataSources.teamsAPI.getTeamInvitations(teamId, user.userId);
     },
 
+    teamDashboard: async (_: any, { teamId }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.teamsAPI.getTeamDashboard(teamId, user.userId);
+    },
+
+    teamGoals: async (_: any, { teamId }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.teamsAPI.getTeamGoals(teamId, user.userId);
+    },
+
     /**
      * API Keys (Premium feature)
      */
@@ -70,6 +80,16 @@ export const teamsResolvers = {
     acceptTeamInvitation: async (_: any, { token }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.teamsAPI.acceptTeamInvitation(token, user.userId);
+    },
+
+    shareGoalWithTeam: async (_: any, { goalId, teamId }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.teamsAPI.shareGoalWithTeam(teamId, goalId, user.userId);
+    },
+
+    unshareGoalFromTeam: async (_: any, { goalId }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.teamsAPI.unshareGoalFromTeam(goalId, user.userId);
     },
 
     removeTeamMember: async (_: any, { teamId, userId }: any, { dataSources, user }: any) => {
