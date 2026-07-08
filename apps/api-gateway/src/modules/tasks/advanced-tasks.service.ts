@@ -4,6 +4,8 @@ import {
   TaskDependency,
   DependencyType,
   CreateTaskDependencyDto,
+  BatchDependenciesResult,
+  BatchSubtasksResult,
   Subtask,
   CreateSubtaskDto,
   TimeEntry,
@@ -122,6 +124,77 @@ export class AdvancedTasksService {
       isBlocked,
       canStart,
     };
+  }
+
+  /**
+   * Batch-fetch dependency edges for multiple tasks (one DB round-trip).
+   * Returns every edge where either endpoint is in taskIds and both tasks
+   * belong to the user.
+   */
+  async getDependenciesBatch(
+    userId: string,
+    taskIds: string[],
+  ): Promise<BatchDependenciesResult> {
+    const uniqueIds = [...new Set(taskIds.filter(Boolean))];
+    if (uniqueIds.length === 0) {
+      return { edges: [] };
+    }
+
+    const edges = await this.prisma.taskDependency.findMany({
+      where: {
+        OR: [
+          { blockingTaskId: { in: uniqueIds } },
+          { dependentTaskId: { in: uniqueIds } },
+        ],
+        dependentTask: { userId },
+        blockingTask: { userId },
+      },
+      select: {
+        id: true,
+        blockingTaskId: true,
+        dependentTaskId: true,
+        type: true,
+        createdAt: true,
+      },
+    });
+
+    return { edges };
+  }
+
+  /**
+   * Batch-fetch subtasks for multiple parent tasks (one DB round-trip).
+   */
+  async getSubtasksBatch(
+    userId: string,
+    parentTaskIds: string[],
+  ): Promise<BatchSubtasksResult> {
+    const uniqueIds = [...new Set(parentTaskIds.filter(Boolean))];
+    const byParentId: Record<string, Subtask[]> = Object.fromEntries(
+      uniqueIds.map((id) => [id, []]),
+    );
+
+    if (uniqueIds.length === 0) {
+      return { byParentId };
+    }
+
+    const subtasks = await this.prisma.task.findMany({
+      where: {
+        parentTaskId: { in: uniqueIds },
+        userId,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    for (const row of subtasks) {
+      const parentId = row.parentTaskId;
+      if (!parentId) continue;
+      if (!byParentId[parentId]) {
+        byParentId[parentId] = [];
+      }
+      byParentId[parentId].push(row as unknown as Subtask);
+    }
+
+    return { byParentId };
   }
 
   /**
@@ -351,6 +424,20 @@ export class AdvancedTasksService {
 
   // ==================== PROJECTS ====================
 
+  private attachListStats<T extends Record<string, unknown>>(
+    project: T,
+    taskCount: number,
+    completedTaskCount: number,
+  ) {
+    return {
+      ...project,
+      taskCount,
+      completedTaskCount,
+      progressPercentage:
+        taskCount > 0 ? Math.round((completedTaskCount / taskCount) * 100) : 0,
+    };
+  }
+
   /**
    * Create project
    */
@@ -369,7 +456,7 @@ export class AdvancedTasksService {
 
     this.logger.log(`Project created: ${project.id} by user ${userId}`);
 
-    return project as unknown as Project;
+    return this.attachListStats(project, 0, 0) as unknown as Project;
   }
 
   /**
@@ -384,9 +471,17 @@ export class AdvancedTasksService {
     const projects = await this.prisma.project.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      include: {
+        tasks: { select: { isCompleted: true } },
+      },
     });
 
-    return projects as unknown as Project[];
+    return projects.map((project) => {
+      const taskCount = project.tasks.length;
+      const completedTaskCount = project.tasks.filter((t) => t.isCompleted).length;
+      const { tasks, ...rest } = project;
+      return this.attachListStats(rest, taskCount, completedTaskCount) as unknown as Project;
+    });
   }
 
   /**

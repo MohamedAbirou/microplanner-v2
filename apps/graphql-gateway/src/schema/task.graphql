@@ -69,6 +69,11 @@ type Task {
   blockedBy: [TaskDependency!]!
   timeEntries: [TimeEntry!]!
 
+  # Lightweight counts for list views (resolved via batch loaders)
+  dependencyCount: Int
+  blockedByCount: Int
+  subtaskCount: Int
+
   # Timestamps
   createdAt: DateTime!
   updatedAt: DateTime!

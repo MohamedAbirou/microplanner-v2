@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useTier } from '@/contexts/tier-context';
 import { WorkloadWarning } from '@/components/plans/workload-warning';
-import { useTasks } from '@/hooks/use-graphql';
+import { useTasksList } from '@/hooks/use-graphql';
 import { useWorkHours } from '@/hooks/use-graphql-extended';
 
 interface CustomizePreferencesStepProps {
@@ -41,7 +41,7 @@ export function CustomizePreferencesStep({
   // room before generating more tasks into it.
   const weekStart = startOfWeek(preferences.weekStartDate);
   const weekEnd = endOfWeek(preferences.weekStartDate);
-  const { tasks: weekTasks } = useTasks(
+  const { tasks: weekTasks } = useTasksList(
     { dateRange: { start: weekStart, end: weekEnd } },
     undefined,
     { take: 200 },

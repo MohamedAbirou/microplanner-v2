@@ -73,6 +73,8 @@ export const resolvers = {
   KanbanBoard: productivityResolvers.KanbanBoard,
   KanbanColumn: productivityResolvers.KanbanColumn,
   Smart1on1: productivityResolvers.Smart1on1,
+  WorkHours: productivityResolvers.WorkHours,
+  DaySchedule: productivityResolvers.DaySchedule,
   CalendarConnection: calendarResolvers.CalendarConnection,
   Team: teamsResolvers.Team,
   TeamMember: teamsResolvers.TeamMember,

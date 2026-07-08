@@ -39,6 +39,27 @@ export interface CreateTaskDependencyDto {
   type?: DependencyType;
 }
 
+/** Batch-fetch dependency edges for many tasks in one query. */
+export interface BatchTaskIdsDto {
+  taskIds: string[];
+}
+
+export interface TaskDependencyEdge {
+  id: string;
+  blockingTaskId: string;
+  dependentTaskId: string;
+  type: string;
+  createdAt: Date;
+}
+
+export interface BatchDependenciesResult {
+  edges: TaskDependencyEdge[];
+}
+
+export interface BatchSubtasksResult {
+  byParentId: Record<string, Subtask[]>;
+}
+
 // ==================== SUBTASKS ====================
 
 /**

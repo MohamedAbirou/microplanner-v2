@@ -609,15 +609,17 @@ export class SchedulingService {
       select: { scheduledDate: true, startTime: true, endTime: true },
     });
 
-    return tasks.map((t) => {
-      const start = new Date(t.scheduledDate);
-      const [sh, sm] = t.startTime.split(':').map(Number);
-      start.setHours(sh, sm, 0, 0);
-      const end = new Date(t.scheduledDate);
-      const [eh, em] = t.endTime.split(':').map(Number);
-      end.setHours(eh, em, 0, 0);
-      return { start, end };
-    });
+    return tasks
+      .filter((t) => t.startTime && t.endTime)
+      .map((t) => {
+        const start = new Date(t.scheduledDate);
+        const [sh, sm] = t.startTime!.split(':').map(Number);
+        start.setHours(sh, sm, 0, 0);
+        const end = new Date(t.scheduledDate);
+        const [eh, em] = t.endTime!.split(':').map(Number);
+        end.setHours(eh, em, 0, 0);
+        return { start, end };
+      });
   }
 
   private isSlotAvailable(

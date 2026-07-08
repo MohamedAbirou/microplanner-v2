@@ -31,7 +31,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { useTasks, useGoals } from '@/hooks/use-graphql';
+import { useTasksAnalytics, useGoals } from '@/hooks/use-graphql';
 import {
   useDashboardStats,
   useWeeklyReview,
@@ -89,7 +89,7 @@ export default function AnalyticsPage() {
     return start;
   }, [timeRange]);
 
-  const { tasks: allTasks, loading: tasksLoading } = useTasks(
+  const { tasks: allTasks, loading: tasksLoading } = useTasksAnalytics(
     { dateRange: { start: rangeStart, end: endOfDay(new Date()) } },
     undefined,
     { take: 500 }

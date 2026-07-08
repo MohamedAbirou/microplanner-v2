@@ -245,16 +245,36 @@ export const taskResolvers = {
       return projectLoader.load(task.projectId);
     },
 
-    dependencies: async (task: any, _: any, { dataSources }: any) => {
-      return dataSources.tasksAPI.getTaskDependencies(task.id);
+    dependencies: async (task: any, _: any, { taskDependencyLoader }: any) => {
+      const bundle = await taskDependencyLoader.load(task.id);
+      return bundle.dependencies;
     },
 
-    blockedBy: async (task: any, _: any, { dataSources }: any) => {
-      return dataSources.tasksAPI.getTaskBlockers(task.id);
+    blockedBy: async (task: any, _: any, { taskDependencyLoader }: any) => {
+      const bundle = await taskDependencyLoader.load(task.id);
+      return bundle.blockedBy;
     },
 
-    subtasks: async (task: any, _: any, { dataSources }: any) => {
-      return dataSources.tasksAPI.getSubtasks(task.id);
+    subtasks: async (task: any, _: any, { subtaskLoader }: any) => {
+      return subtaskLoader.load(task.id);
+    },
+
+    dependencyCount: async (task: any, _: any, { taskDependencyLoader }: any) => {
+      if (typeof task.dependencyCount === 'number') return task.dependencyCount;
+      const bundle = await taskDependencyLoader.load(task.id);
+      return bundle.dependencies.length;
+    },
+
+    blockedByCount: async (task: any, _: any, { taskDependencyLoader }: any) => {
+      if (typeof task.blockedByCount === 'number') return task.blockedByCount;
+      const bundle = await taskDependencyLoader.load(task.id);
+      return bundle.blockedBy.length;
+    },
+
+    subtaskCount: async (task: any, _: any, { subtaskLoader }: any) => {
+      if (typeof task.subtaskCount === 'number') return task.subtaskCount;
+      const list = await subtaskLoader.load(task.id);
+      return list.length;
     },
 
     timeEntries: async (task: any, _: any, { dataSources }: any) => {

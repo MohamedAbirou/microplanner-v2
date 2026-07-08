@@ -37,8 +37,14 @@ export const schedulingResolvers = {
      * Available time slots for booking
      */
     availableSlots: async (_: any, { linkId, date }: any, { dataSources }: any) => {
-      // Public query - no auth required for viewing available slots
-      return dataSources.schedulingAPI.getAvailableSlots(linkId, date);
+      // Public query — REST uses slug; clients pass the link's database id.
+      const link = await dataSources.schedulingAPI.getSchedulingLink(linkId);
+      if (!link?.slug) {
+        throw new GraphQLError('Scheduling link not found', {
+          extensions: { code: 'NOT_FOUND' },
+        });
+      }
+      return dataSources.schedulingAPI.getAvailableSlots(link.slug, date);
     },
   },
 
@@ -71,8 +77,13 @@ export const schedulingResolvers = {
      * Booking Management
      */
     createBooking: async (_: any, { input }: any, { dataSources }: any) => {
-      // Public mutation - anyone can create a booking
-      return dataSources.schedulingAPI.createBooking(input);
+      const link = await dataSources.schedulingAPI.getSchedulingLink(input.linkId);
+      if (!link?.slug) {
+        throw new GraphQLError('Scheduling link not found', {
+          extensions: { code: 'NOT_FOUND' },
+        });
+      }
+      return dataSources.schedulingAPI.createBooking({ ...input, slug: link.slug });
     },
 
     confirmBooking: async (_: any, { id }: any, { dataSources, user }: any) => {

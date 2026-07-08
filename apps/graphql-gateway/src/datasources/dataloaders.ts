@@ -1,6 +1,26 @@
 import DataLoader from 'dataloader';
 import { TasksAPI, GoalsAPI, ProjectsAPI, UserAPI } from './rest-api';
 
+/** GraphQL TaskDependency rows grouped per parent task. */
+export interface TaskDependencyBundle {
+  dependencies: Array<{
+    id: string;
+    dependentTaskId: string;
+    blockingTaskId: string;
+    type: string;
+    createdAt: string;
+  }>;
+  blockedBy: Array<{
+    id: string;
+    dependentTaskId: string;
+    blockingTaskId: string;
+    type: string;
+    createdAt: string;
+  }>;
+}
+
+const EMPTY_BUNDLE: TaskDependencyBundle = { dependencies: [], blockedBy: [] };
+
 /**
  * DataLoader for batching task queries by goal
  */
@@ -35,6 +55,67 @@ export function createTaskLoader(tasksAPI: TasksAPI, userId: string) {
       return tasks;
     } catch {
       return taskIds.map(() => null);
+    }
+  });
+}
+
+/**
+ * Batch dependency edges for many tasks in a single REST call.
+ * Both `dependencies` and `blockedBy` field resolvers share this loader.
+ */
+export function createTaskDependencyLoader(tasksAPI: TasksAPI, userId: string) {
+  return new DataLoader<string, TaskDependencyBundle>(async (taskIds) => {
+    try {
+      const { edges } = await tasksAPI.getDependenciesBatch(userId, [...taskIds]);
+      const bundles = new Map<string, TaskDependencyBundle>();
+      for (const id of taskIds) {
+        bundles.set(id, { dependencies: [], blockedBy: [] });
+      }
+
+      for (const edge of edges) {
+        const createdAt =
+          typeof edge.createdAt === 'string'
+            ? edge.createdAt
+            : new Date(edge.createdAt).toISOString();
+
+        if (bundles.has(edge.blockingTaskId)) {
+          bundles.get(edge.blockingTaskId)!.dependencies.push({
+            id: edge.id,
+            dependentTaskId: edge.dependentTaskId,
+            blockingTaskId: edge.blockingTaskId,
+            type: edge.type || 'BLOCKS',
+            createdAt,
+          });
+        }
+
+        if (bundles.has(edge.dependentTaskId)) {
+          bundles.get(edge.dependentTaskId)!.blockedBy.push({
+            id: edge.id,
+            dependentTaskId: edge.dependentTaskId,
+            blockingTaskId: edge.blockingTaskId,
+            type: 'BLOCKED_BY',
+            createdAt,
+          });
+        }
+      }
+
+      return taskIds.map((id) => bundles.get(id) ?? EMPTY_BUNDLE);
+    } catch {
+      return taskIds.map(() => EMPTY_BUNDLE);
+    }
+  });
+}
+
+/**
+ * Batch subtasks for many parent tasks in a single REST call.
+ */
+export function createSubtaskLoader(tasksAPI: TasksAPI, userId: string) {
+  return new DataLoader<string, unknown[]>(async (parentIds) => {
+    try {
+      const { byParentId } = await tasksAPI.getSubtasksBatch(userId, [...parentIds]);
+      return parentIds.map((id) => byParentId[id] || []);
+    } catch {
+      return parentIds.map(() => []);
     }
   });
 }

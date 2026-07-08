@@ -39,8 +39,49 @@ export type UseTasksOptions = {
   skipQuery?: boolean;
 };
 
+/**
+ * Full task query with dependencies, blockers, and subtasks.
+ * Nested fields are batch-resolved server-side (2 REST calls, not N×3).
+ */
 export function useTasks(filter?: any, sort?: any, options?: UseTasksOptions) {
   const { data, loading, error, refetch } = useQuery(operations.GET_TASKS, {
+    variables: { filter, sort, take: options?.take, skip: options?.skip },
+    skip: options?.skipQuery,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
+
+  return {
+    tasks: data?.tasks || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Lightweight list query — no nested relationship arrays.
+ * Uses count fields for list badges when needed.
+ */
+export function useTasksList(filter?: any, sort?: any, options?: UseTasksOptions) {
+  const { data, loading, error, refetch } = useQuery(operations.GET_TASKS_LIST, {
+    variables: { filter, sort, take: options?.take, skip: options?.skip },
+    skip: options?.skipQuery,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
+
+  return {
+    tasks: data?.tasks || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
+/** Analytics-optimized task query — no nested dependency/subtask resolution. */
+export function useTasksAnalytics(filter?: any, sort?: any, options?: UseTasksOptions) {
+  const { data, loading, error, refetch } = useQuery(operations.GET_TASKS_ANALYTICS, {
     variables: { filter, sort, take: options?.take, skip: options?.skip },
     skip: options?.skipQuery,
     fetchPolicy: 'cache-first',
@@ -71,7 +112,7 @@ export function useTask(id: string) {
 
 export function useCreateTask() {
   const [createTask, { loading, error }] = useMutation(operations.CREATE_TASK, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    refetchQueries: [...operations.TASK_QUERY_NAMES],
     awaitRefetchQueries: true,
     onCompleted: () => {
       toast.success('Task created successfully');
@@ -156,7 +197,7 @@ export function useSmartReschedule() {
 export function useDeleteTask(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
   const [deleteTask, { loading, error }] = useMutation(operations.DELETE_TASK, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    refetchQueries: [...operations.TASK_QUERY_NAMES],
     awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Task deleted successfully', 'Failed to delete task'),
   });
@@ -179,7 +220,7 @@ export function useCompleteTask(options?: MutationNotifyOptions) {
 
 export function useBulkUpdateTasks() {
   const [bulkUpdateTasks, { loading, error }] = useMutation(operations.BULK_UPDATE_TASKS, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    refetchQueries: [...operations.TASK_QUERY_NAMES],
     awaitRefetchQueries: true,
     onCompleted: (data) => {
       toast.success(`Updated ${data.bulkUpdateTasks.length} tasks`);
@@ -196,7 +237,7 @@ export function useBulkUpdateTasks() {
 
 export function useBulkDeleteTasks() {
   const [bulkDeleteTasks, { loading, error }] = useMutation(operations.BULK_DELETE_TASKS, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    refetchQueries: [...operations.TASK_QUERY_NAMES],
     awaitRefetchQueries: true,
     onCompleted: (data) => {
       toast.success(`Deleted ${data.bulkDeleteTasks.count} tasks`);
@@ -246,7 +287,7 @@ export function useUncompleteTask(options?: MutationNotifyOptions) {
 export function useCreateSubtask(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
   const [createSubtask, { loading, error }] = useMutation(operations.CREATE_SUBTASK, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    refetchQueries: [...operations.TASK_QUERY_NAMES],
     awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Subtask created successfully', 'Failed to create subtask'),
   });
@@ -275,7 +316,7 @@ export function useSubtasks(parentTaskId: string) {
 export function useCreateTaskDependency(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
   const [createTaskDependency, { loading, error }] = useMutation(operations.CREATE_TASK_DEPENDENCY, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    refetchQueries: [...operations.TASK_QUERY_NAMES],
     awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Dependency added successfully', 'Failed to add dependency'),
   });
@@ -286,7 +327,7 @@ export function useCreateTaskDependency(options?: MutationNotifyOptions) {
 export function useDeleteTaskDependency(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
   const [deleteTaskDependency, { loading, error }] = useMutation(operations.DELETE_TASK_DEPENDENCY, {
-    refetchQueries: ['GetTasks'], // by name → refreshes every active tasks view (day/week/month/tasks)
+    refetchQueries: [...operations.TASK_QUERY_NAMES],
     awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Dependency removed successfully', 'Failed to remove dependency'),
   });
@@ -505,7 +546,7 @@ export function useUpdatePlan() {
 
 export function useAcceptPlan() {
   const [acceptPlan, { loading, error }] = useMutation(operations.ACCEPT_PLAN, {
-    refetchQueries: [{ query: operations.GET_PLANS }, { query: operations.GET_TASKS }],
+    refetchQueries: [{ query: operations.GET_PLANS }, ...operations.TASK_QUERY_NAMES],
     awaitRefetchQueries: true,
     onCompleted: () => {
       toast.success('Plan accepted successfully!');

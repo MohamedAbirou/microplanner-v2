@@ -11,9 +11,11 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
   Crown,
   Focus,
   FolderKanban,
+  Plug,
   Search,
   Settings,
   Sparkles,
@@ -52,6 +54,8 @@ const secondaryNav: NavItem[] = [
   { label: 'Search', href: '/search', icon: Search, hotkey: '/' },
   { label: 'Productivity', href: '/productivity', icon: Focus },
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { label: 'Integrations', href: '/integrations', icon: Plug },
+  { label: 'Billing', href: '/billing', icon: CreditCard },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 

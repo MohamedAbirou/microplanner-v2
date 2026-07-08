@@ -351,13 +351,49 @@ export const productivityResolvers = {
   // The REST/Prisma shape uses personName/personEmail/durationMinutes/…; map
   // them to the GraphQL field names so both CRUD and scheduling resolve.
   Smart1on1: {
-    title: (p: any) => p.title ?? p.personName,
-    participantEmail: (p: any) => p.participantEmail ?? p.personEmail,
-    duration: (p: any) => p.duration ?? p.durationMinutes,
+    title: (p: any) => p.title ?? p.personName ?? '',
+    participantEmail: (p: any) => p.participantEmail ?? p.personEmail ?? '',
+    duration: (p: any) => p.duration ?? p.durationMinutes ?? 30,
     frequency: (p: any) => String(p.frequency || 'weekly').toUpperCase(),
     agendaTemplate: (p: any) => p.agendaTemplate ?? null,
+    isActive: (p: any) => p.isActive ?? true,
+    preferredDays: (p: any) => p.preferredDays ?? [],
+    preferredTimes: (p: any) => p.preferredTimes ?? [],
     lastMeetingDate: (p: any) => p.lastMeetingDate ?? p.lastScheduledDate ?? null,
     nextMeetingDate: (p: any) => p.nextMeetingDate ?? p.nextScheduledDate ?? null,
+  },
+
+  WorkHours: {
+    schedule: (wh: any) => {
+      const raw = wh.schedule || {};
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      return Object.fromEntries(
+        days.map((day) => {
+          const d = raw[day] || {};
+          return [
+            day,
+            {
+              isWorkDay: d.isWorkDay ?? d.enabled ?? false,
+              startTime: d.startTime ?? '09:00',
+              endTime: d.endTime ?? '17:00',
+              breakTimes: (d.breakTimes || []).map((b: any) => ({
+                start: b.start ?? b.startTime ?? '12:00',
+                end: b.end ?? b.endTime ?? '13:00',
+              })),
+            },
+          ];
+        }),
+      );
+    },
+  },
+
+  DaySchedule: {
+    isWorkDay: (d: any) => d.isWorkDay ?? d.enabled ?? false,
+    breakTimes: (d: any) =>
+      (d.breakTimes || []).map((b: any) => ({
+        start: b.start ?? b.startTime ?? '12:00',
+        end: b.end ?? b.endTime ?? '13:00',
+      })),
   },
 
   KanbanBoard: {

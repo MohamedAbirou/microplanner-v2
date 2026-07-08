@@ -58,6 +58,17 @@ export const GET_ME = gql`
 // TASK OPERATIONS
 // ============================================================================
 
+/** Apollo refetch-by-name targets — keep mutations in sync with every task query variant. */
+export const TASK_QUERY_NAMES = [
+  'GetTasks',
+  'GetTasksList',
+  'GetTasksAnalytics',
+] as const;
+
+/**
+ * Full task list — dependencies, blockers, and subtasks (batched server-side).
+ * Use on Today, Dashboard, Tasks, and Calendar where relationship data is needed.
+ */
 export const GET_TASKS = gql`
   query GetTasks($filter: TaskFilterInput, $sort: TaskSortInput, $take: Int, $skip: Int) {
     tasks(filter: $filter, sort: $sort, take: $take, skip: $skip) {
@@ -149,6 +160,82 @@ export const GET_TASKS = gql`
       # Timestamps
       createdAt
       updatedAt
+    }
+  }
+`;
+
+/**
+ * Lightweight task list — no nested relationship arrays.
+ * Count fields use the same batch loaders when present (one REST call each).
+ * Use on Search, Command Palette, Plan Day, and other browse-only views.
+ */
+export const GET_TASKS_LIST = gql`
+  query GetTasksList($filter: TaskFilterInput, $sort: TaskSortInput, $take: Int, $skip: Int) {
+    tasks(filter: $filter, sort: $sort, take: $take, skip: $skip) {
+      id
+      userId
+      goalId
+      planId
+      parentTaskId
+      projectId
+      title
+      notes
+      priority
+      tags
+      scheduledDate
+      startTime
+      endTime
+      durationMinutes
+      isCompleted
+      completedAt
+      isSkipped
+      skippedReason
+      timeSpentMinutes
+      isTimerRunning
+      aiGenerated
+      goal {
+        id
+        emoji
+        title
+        color
+      }
+      project {
+        id
+        name
+        color
+        icon
+      }
+      dependencyCount
+      blockedByCount
+      subtaskCount
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+/** Lightweight task list for analytics — skips per-task dependency/subtask resolution. */
+export const GET_TASKS_ANALYTICS = gql`
+  query GetTasksAnalytics($filter: TaskFilterInput, $sort: TaskSortInput, $take: Int, $skip: Int) {
+    tasks(filter: $filter, sort: $sort, take: $take, skip: $skip) {
+      id
+      goalId
+      title
+      priority
+      tags
+      scheduledDate
+      startTime
+      endTime
+      durationMinutes
+      isCompleted
+      completedAt
+      timeSpentMinutes
+      goal {
+        id
+        emoji
+        title
+        color
+      }
     }
   }
 `;

@@ -63,6 +63,9 @@ interface TaskItemProps {
     }>;
     dependencies?: Array<{ id: string }>;
     blockedBy?: Array<{ id: string }>;
+    dependencyCount?: number;
+    blockedByCount?: number;
+    subtaskCount?: number;
     isTimerRunning?: boolean;
     timeSpentMinutes?: number;
     timerStartedAt?: string;
@@ -156,22 +159,28 @@ export function TaskItem({
           </span>
 
           {/* Subtasks indicator */}
-          {task.subtasks && task.subtasks.length > 0 && (
+          {((task.subtasks && task.subtasks.length > 0) || (task.subtaskCount ?? 0) > 0) && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <ListTodo className="h-3 w-3" />
-              <span>{task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length}</span>
+              <span>
+                {task.subtasks
+                  ? `${task.subtasks.filter((s) => s.isCompleted).length}/${task.subtasks.length}`
+                  : task.subtaskCount}
+              </span>
             </div>
           )}
 
           {/* Dependency indicator */}
-          {task.dependencies && task.dependencies.length > 0 && (
+          {((task.dependencies && task.dependencies.length > 0) ||
+            (task.dependencyCount ?? 0) > 0) && (
             <div className="flex items-center gap-1 text-xs text-blue-600" title="Has dependencies">
               <LinkIcon className="h-3 w-3" />
             </div>
           )}
 
           {/* Blocked indicator */}
-          {task.blockedBy && task.blockedBy.length > 0 && (
+          {((task.blockedBy && task.blockedBy.length > 0) ||
+            (task.blockedByCount ?? 0) > 0) && (
             <div className="flex items-center gap-1 text-xs text-orange-600" title="Blocked by other tasks">
               <LinkIcon className="h-3 w-3" />
             </div>

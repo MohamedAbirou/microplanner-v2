@@ -102,6 +102,10 @@ export const projectResolvers = {
   },
 
   Project: {
+    taskCount: (project: any) => project.taskCount ?? 0,
+    completedTaskCount: (project: any) => project.completedTaskCount ?? 0,
+    progressPercentage: (project: any) => project.progressPercentage ?? 0,
+
     // DataLoader batching for related entities
     tasks: async (project: any, _: any, { dataSources }: any) => {
       return dataSources.tasksAPI.getTasksByProject(project.id, project.userId);
@@ -112,8 +116,7 @@ export const projectResolvers = {
     },
 
     kanbanBoards: async (project: any, _: any, { dataSources }: any) => {
-      // Return kanban boards for the project
-      return dataSources.productivityAPI.getKanbanBoards(project.id, project.userId);
+      return dataSources.productivityAPI.getKanbanBoards(project.userId, project.id);
     },
   },
 };

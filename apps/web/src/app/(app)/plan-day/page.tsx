@@ -24,7 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useTasks, useUpdateTask } from '@/hooks/use-graphql';
+import { useTasksList, useUpdateTask } from '@/hooks/use-graphql';
 import { PmImportSection } from '@/components/plan-day/pm-import-section';
 import {
   getDailyIntention,
@@ -52,12 +52,12 @@ export default function PlanDayPage() {
   const today = React.useMemo(() => new Date(), []);
   const yesterday = React.useMemo(() => subDays(today, 1), [today]);
 
-  const { tasks: todayTasks, loading: todayLoading, refetch: refetchToday } = useTasks(
+  const { tasks: todayTasks, loading: todayLoading, refetch: refetchToday } = useTasksList(
     { dateRange: { start: startOfDay(today), end: endOfDay(today) } },
     undefined,
     { take: 80 }
   );
-  const { tasks: yesterdayTasks, loading: yLoading, refetch: refetchYesterday } = useTasks(
+  const { tasks: yesterdayTasks, loading: yLoading, refetch: refetchYesterday } = useTasksList(
     { dateRange: { start: startOfDay(yesterday), end: endOfDay(yesterday) } },
     undefined,
     { take: 80 }

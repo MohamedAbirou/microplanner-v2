@@ -42,6 +42,8 @@ import {
   createTaskByGoalLoader,
   createTaskByPlanLoader,
   createUserLoader,
+  createTaskDependencyLoader,
+  createSubtaskLoader,
 } from './datasources/dataloaders';
 import * as jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
@@ -369,6 +371,8 @@ async function startServer() {
         const taskByGoalLoader = createTaskByGoalLoader(tasksAPI);
         const taskByPlanLoader = createTaskByPlanLoader(tasksAPI);
         const userLoader = createUserLoader(userAPI);
+        const taskDependencyLoader = createTaskDependencyLoader(tasksAPI, userId);
+        const subtaskLoader = createSubtaskLoader(tasksAPI, userId);
 
         return {
           user,
@@ -400,6 +404,8 @@ async function startServer() {
           taskByGoalLoader,
           taskByPlanLoader,
           userLoader,
+          taskDependencyLoader,
+          subtaskLoader,
         };
       },
     })

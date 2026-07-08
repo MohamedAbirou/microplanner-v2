@@ -14,6 +14,7 @@ import {
 import { AdvancedTasksService } from './advanced-tasks.service';
 import {
   CreateTaskDependencyDto,
+  BatchTaskIdsDto,
   CreateSubtaskDto,
   StartTimerDto,
   StopTimerDto,
@@ -46,6 +47,14 @@ export class AdvancedTasksController {
   }
 
   /**
+   * Batch-fetch dependency edges for many tasks
+   */
+  @Post('dependencies/batch')
+  async getDependenciesBatch(@Request() req: any, @Body() dto: BatchTaskIdsDto) {
+    return this.advancedTasksService.getDependenciesBatch(req.user.id, dto.taskIds ?? []);
+  }
+
+  /**
    * Get task dependencies
    */
   @Get(':id/dependencies')
@@ -70,6 +79,14 @@ export class AdvancedTasksController {
   @Post('subtasks')
   async createSubtask(@Request() req: any, @Body() createDto: CreateSubtaskDto) {
     return this.advancedTasksService.createSubtask(req.user.id, createDto);
+  }
+
+  /**
+   * Batch-fetch subtasks for many parent tasks
+   */
+  @Post('subtasks/batch')
+  async getSubtasksBatch(@Request() req: any, @Body() dto: BatchTaskIdsDto) {
+    return this.advancedTasksService.getSubtasksBatch(req.user.id, dto.taskIds ?? []);
   }
 
   /**

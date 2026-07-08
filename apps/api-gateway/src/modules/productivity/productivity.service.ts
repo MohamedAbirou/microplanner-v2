@@ -59,6 +59,73 @@ export class ProductivityService {
 
   // ==================== WORK HOURS ====================
 
+  private readonly weekDays = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+  ] as const;
+
+  /** Map stored schedule JSON (enabled/startTime) → GraphQL shape (isWorkDay/breakTimes). */
+  private normalizeDaySchedule(day: any) {
+    if (!day) {
+      return { isWorkDay: false, startTime: '09:00', endTime: '17:00', breakTimes: [] };
+    }
+    const breakTimes = (day.breakTimes || []).map((b: any) => ({
+      start: b.start ?? b.startTime ?? '12:00',
+      end: b.end ?? b.endTime ?? '13:00',
+    }));
+    return {
+      isWorkDay: day.isWorkDay ?? day.enabled ?? false,
+      startTime: day.startTime ?? '09:00',
+      endTime: day.endTime ?? '17:00',
+      breakTimes,
+    };
+  }
+
+  private normalizeWorkHoursRecord(record: any) {
+    const rawSchedule = (record?.schedule as Record<string, any>) || {};
+    const schedule = Object.fromEntries(
+      this.weekDays.map((day) => [day, this.normalizeDaySchedule(rawSchedule[day])]),
+    );
+    return {
+      ...record,
+      schedule,
+      timezone: record.timezone || 'UTC',
+      enforceWorkHours: record.enforceWorkHours ?? true,
+    };
+  }
+
+  /** Accept GraphQL nested schedule or flat day keys from REST. */
+  private mergeScheduleUpdate(existing: Record<string, any>, updateDto: UpsertWorkHoursDto) {
+    const schedule = { ...existing };
+    const nested = (updateDto as any).schedule as Record<string, any> | undefined;
+    if (nested) {
+      for (const day of this.weekDays) {
+        const dayInput = nested[day];
+        if (dayInput) {
+          schedule[day] = {
+            enabled: dayInput.isWorkDay ?? dayInput.enabled ?? false,
+            startTime: dayInput.startTime ?? '09:00',
+            endTime: dayInput.endTime ?? '17:00',
+            breakTimes: (dayInput.breakTimes || []).map((b: any) => ({
+              startTime: b.start ?? b.startTime,
+              endTime: b.end ?? b.endTime,
+            })),
+          };
+        }
+      }
+    }
+    for (const day of this.weekDays) {
+      const flat = (updateDto as any)[day];
+      if (flat) schedule[day] = flat;
+    }
+    return schedule;
+  }
+
   /**
    * Get or create work hours
    */
@@ -87,7 +154,7 @@ export class ProductivityService {
       });
     }
 
-    return workHours as unknown as WorkHours;
+    return this.normalizeWorkHoursRecord(workHours) as unknown as WorkHours;
   }
 
   /**
@@ -98,16 +165,10 @@ export class ProductivityService {
       where: { userId },
     });
 
-    const schedule = existing ? (existing.schedule as any) : {};
-
-    // Update schedule with new values
-    if (updateDto.monday) schedule.monday = updateDto.monday;
-    if (updateDto.tuesday) schedule.tuesday = updateDto.tuesday;
-    if (updateDto.wednesday) schedule.wednesday = updateDto.wednesday;
-    if (updateDto.thursday) schedule.thursday = updateDto.thursday;
-    if (updateDto.friday) schedule.friday = updateDto.friday;
-    if (updateDto.saturday) schedule.saturday = updateDto.saturday;
-    if (updateDto.sunday) schedule.sunday = updateDto.sunday;
+    const schedule = this.mergeScheduleUpdate(
+      existing ? ((existing.schedule as Record<string, any>) || {}) : {},
+      updateDto,
+    );
 
     const workHours = await this.prisma.workHours.upsert({
       where: { userId },
@@ -132,7 +193,7 @@ export class ProductivityService {
 
     this.logger.log(`Work hours updated for user ${userId}`);
 
-    return workHours as unknown as WorkHours;
+    return this.normalizeWorkHoursRecord(workHours) as unknown as WorkHours;
   }
 
   // ==================== FOCUS TIME ====================

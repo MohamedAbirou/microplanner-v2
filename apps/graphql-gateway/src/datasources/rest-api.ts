@@ -682,11 +682,13 @@ export class TasksAPI {
     });
   }
 
-  async getTaskDependencies(taskId: string) {
+  async getTaskDependencies(taskId: string, userId: string) {
     // REST returns TaskWithDependencies { blockingTasks, dependentTasks, ... }.
     // GraphQL Task.dependencies wants TaskDependency rows where this task is
     // the blocking side (tasks that depend on this one) — synthesize them.
-    const { data } = await this.client.get(`/advanced/${taskId}/dependencies`);
+    const { data } = await this.client.get(`/advanced/${taskId}/dependencies`, {
+      headers: { 'x-user-id': userId },
+    });
     return (data.dependentTasks || []).map((t: RestTaskDependencySummary) => ({
       id: `${taskId}:${t.id}`,
       dependentTaskId: t.id,
@@ -696,9 +698,28 @@ export class TasksAPI {
     }));
   }
 
-  async getTaskBlockers(taskId: string) {
+  async getDependenciesBatch(userId: string, taskIds: string[]) {
+    const { data } = await this.client.post(
+      '/advanced/dependencies/batch',
+      { taskIds },
+      { headers: { 'x-user-id': userId } },
+    );
+    return data as {
+      edges: Array<{
+        id: string;
+        blockingTaskId: string;
+        dependentTaskId: string;
+        type: string;
+        createdAt: string;
+      }>;
+    };
+  }
+
+  async getTaskBlockers(taskId: string, userId: string) {
     // Blockers = dependency rows where this task is the dependent side
-    const { data } = await this.client.get(`/advanced/${taskId}/dependencies`);
+    const { data } = await this.client.get(`/advanced/${taskId}/dependencies`, {
+      headers: { 'x-user-id': userId },
+    });
     return (data.blockingTasks || []).map((t: RestTaskDependencySummary) => ({
       id: `${t.id}:${taskId}`,
       dependentTaskId: taskId,
@@ -746,9 +767,20 @@ export class TasksAPI {
     return data;
   }
 
-  async getSubtasks(taskId: string) {
-    const { data } = await this.client.get(`/advanced/${taskId}/subtasks`);
+  async getSubtasks(taskId: string, userId: string) {
+    const { data } = await this.client.get(`/advanced/${taskId}/subtasks`, {
+      headers: { 'x-user-id': userId },
+    });
     return data;
+  }
+
+  async getSubtasksBatch(userId: string, parentTaskIds: string[]) {
+    const { data } = await this.client.post(
+      '/advanced/subtasks/batch',
+      { taskIds: parentTaskIds },
+      { headers: { 'x-user-id': userId } },
+    );
+    return data as { byParentId: Record<string, unknown[]> };
   }
 }
 
@@ -812,7 +844,20 @@ export class ProductivityAPI {
   }
 
   async updateWorkHours(userId: string, input: WorkHoursInput) {
-    const { data } = await this.client.put('/work-hours', input, {
+    const body: Record<string, any> = {};
+    if (input.timezone !== undefined) body.timezone = input.timezone;
+    if (input.enforceWorkHours !== undefined) body.enforceWorkHours = input.enforceWorkHours;
+    if (input.maxMeetingsPerDay !== undefined) body.maxMeetingsPerDay = input.maxMeetingsPerDay;
+    if (input.maxMeetingHoursPerDay !== undefined) {
+      body.maxMeetingHoursPerDay = input.maxMeetingHoursPerDay;
+    }
+    if (input.maxConsecutiveMeetings !== undefined) {
+      body.maxConsecutiveMeetings = input.maxConsecutiveMeetings;
+    }
+    if (input.schedule) {
+      body.schedule = input.schedule;
+    }
+    const { data } = await this.client.put('/work-hours', body, {
       headers: { 'x-user-id': userId },
     });
     return data;
@@ -960,6 +1005,8 @@ export class ProductivityAPI {
     const out: Record<string, any> = {};
     if (input.title !== undefined) out.personName = input.title;
     if (input.participantEmail !== undefined) out.personEmail = input.participantEmail;
+    if (!out.personName && input.personName !== undefined) out.personName = input.personName;
+    if (!out.personEmail && input.personEmail !== undefined) out.personEmail = input.personEmail;
     if (input.frequency !== undefined) out.frequency = String(input.frequency).toLowerCase();
     if (input.duration !== undefined) out.durationMinutes = input.duration;
     if (input.preferredDays !== undefined) out.preferredDays = input.preferredDays;
@@ -1772,26 +1819,41 @@ export class SchedulingAPI {
     return data;
   }
 
-  async getAvailableSlots(linkId: string, date: string, slug?: string) {
-    // Note: Backend uses /links/slug/:slug/slots, not /links/:linkId/available-slots
-    // If slug is provided, use it; otherwise fetch link first to get slug
-    if (!slug) {
-      const link = await this.getSchedulingLinkBySlug(linkId); // Assuming linkId might be slug
-      slug = link.slug || linkId;
-    }
+  async getAvailableSlots(slug: string, date: string) {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
     const { data } = await this.client.get(`/links/slug/${slug}/slots`, {
-      params: { date },
+      params: {
+        startDate: dayStart.toISOString(),
+        endDate: dayEnd.toISOString(),
+      },
     });
-    return data;
+    const slots = Array.isArray(data) ? data : [];
+    return slots.map((slot: any) => ({
+      start: typeof slot.start === 'string' ? slot.start : new Date(slot.start).toISOString(),
+      end: typeof slot.end === 'string' ? slot.end : new Date(slot.end).toISOString(),
+    }));
   }
 
-  async createBooking(input: CreateBookingInput, slug?: string) {
-    // Note: Backend uses /links/slug/:slug/bookings, not /bookings
-    if (!slug && input.linkId) {
-      const link = await this.getSchedulingLinkBySlug(input.linkId);
-      slug = link.slug || input.linkId;
+  async createBooking(input: CreateBookingInput & { slug?: string }) {
+    const slug = input.slug;
+    if (!slug) {
+      throw new GraphQLError('Booking slug is required', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
     }
-    const { data } = await this.client.post(`/links/slug/${slug}/bookings`, input);
+    const body = {
+      linkSlug: slug,
+      attendeeName: input.attendeeName,
+      attendeeEmail: input.attendeeEmail,
+      attendeePhone: input.attendeePhone,
+      startTime: input.startTime,
+      timezone: input.timezone,
+      customResponses: input.customResponses,
+    };
+    const { data } = await this.client.post(`/links/slug/${slug}/bookings`, body);
     return data;
   }
 

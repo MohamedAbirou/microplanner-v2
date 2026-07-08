@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useGoals, usePlans, useTasks } from '@/hooks/use-graphql';
+import { useGoals, usePlans, useTasksList } from '@/hooks/use-graphql';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar, Clock, Search, Sparkles, Target, X } from 'lucide-react';
@@ -20,7 +20,7 @@ export default function SearchPage() {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Fetch data from GraphQL — only query tasks when the user is searching
-  const { tasks, loading: tasksLoading } = useTasks(
+  const { tasks, loading: tasksLoading } = useTasksList(
     searchQuery.trim() ? { search: searchQuery.trim() } : undefined,
     undefined,
     { take: 50, skipQuery: !searchQuery.trim() }
