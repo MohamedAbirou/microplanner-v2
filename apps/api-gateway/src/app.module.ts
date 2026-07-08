@@ -117,10 +117,9 @@ function getGraphQLErrorCode(statusCode: number): string {
     }),
 
     // Rate limiting — enforced globally via UserThrottlerGuard (keyed by
-    // authenticated user id, falling back to IP). Two named throttlers:
-    //  - default: generous per-user budget for SPA navigation bursts
-    //  - strict:  expensive operations (LLM plan generation) opt in via
-    //             @Throttle({ strict: {...} })
+    // authenticated user id, falling back to IP). Only one global throttler:
+    // Nest applies every entry in `throttlers` to all routes unless skipped,
+    // so expensive-route limits must use per-route @Throttle({ default: ... }).
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -129,12 +128,7 @@ function getGraphQLErrorCode(statusCode: number): string {
           {
             name: 'default',
             ttl: 60000, // 1 minute
-            limit: 300, // per user/IP per minute — covers SPA bursts, blocks floods
-          },
-          {
-            name: 'strict',
-            ttl: 60000, // 1 minute
-            limit: 10, // expensive ops (plan generation) — opt-in per route
+            limit: 600, // per user/IP per minute — SPA dashboard bursts
           },
         ];
 

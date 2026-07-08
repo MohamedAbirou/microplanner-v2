@@ -35,7 +35,7 @@ export class PlansController {
   // AI plan generation is the most expensive route (LLM cost + latency).
   // Cap it hard per user, independent of the tier weekly-plan quota which is
   // enforced separately in the service — this is abuse/burst protection.
-  @Throttle({ strict: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Generate weekly AI plan' })
   @ApiResponse({ status: 201, description: 'Plan generated successfully' })
   @ApiResponse({ status: 400, description: 'No active goals found or planning service unavailable' })

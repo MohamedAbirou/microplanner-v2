@@ -8,9 +8,9 @@ import { ThrottlerGuard } from '@nestjs/throttler';
  * unauthenticated / public routes.
  *
  * Registered globally so every REST + GraphQL operation is bounded. Per-route
- * overrides use `@Throttle({ default: { limit, ttl } })`; expensive routes
- * (e.g. plan generation) use a named `strict` throttler declared in
- * ThrottlerModule config.
+ * overrides use `@Throttle({ default: { limit, ttl } })` (e.g. plan generation).
+ * Do not add extra named throttlers to ThrottlerModule — Nest applies all of
+ * them globally unless each route opts out with @SkipThrottle.
  *
  * Runs AFTER ClerkAuthGuard in the global guard chain so `req.user` is
  * populated for authenticated requests.

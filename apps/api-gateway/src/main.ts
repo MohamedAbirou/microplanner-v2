@@ -174,6 +174,15 @@ async function bootstrap() {
 
   const port = configService.get<number>('PORT') || 3001;
 
+  // Platform health probes (Render/k8s) often hit `/` without the `/api` prefix.
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.head('/', (_req: unknown, res: { status: (code: number) => { end: () => void } }) => {
+    res.status(200).end();
+  });
+  expressApp.get('/', (_req: unknown, res: { redirect: (code: number, url: string) => void }) => {
+    res.redirect(302, '/api/health');
+  });
+
   // Only listen if not in serverless environment
   if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
     await app.listen(port);

@@ -130,10 +130,12 @@ Motion's core value: add a task with deadline → AI finds slot → when a meeti
 
 ### Work required
 
-**2.1 — Calendar change detection**
-- Google Calendar push notifications (watch channel) OR poll every 5 min
-- On change: enqueue `DayRescheduleJob` for affected users with autopilot enabled
-- File: new `apps/api-gateway/src/modules/calendar/calendar-watch.service.ts`
+**2.1 — Calendar change detection (production-grade push)**
+- **Google Calendar `events.watch`** — register push channel on connect/autopilot enable; public webhook `POST /calendar/webhooks/google`; verify `X-Goog-*` headers; store channel id/expiration on `CalendarToken`; daily renewal cron (channels expire ~7 days)
+- **Microsoft Graph subscriptions** — `POST /subscriptions` on `/me/events`; webhook `POST /calendar/webhooks/outlook`; renew before expiry (~3 days max)
+- Debounce webhook bursts (10–30s per user) then enqueue `AutopilotService.rescheduleDay`
+- **Remove 5-minute poll as production path** — `calendar-watch.service.ts` poll is a dev-only fallback (`CALENDAR_WATCH_FALLBACK_POLL=true`), not acceptable for Motion/Reclaim parity
+- Requires public `APP_URL` (HTTPS) for provider webhooks
 
 **2.2 — Day-level autopilot service**
 - New `AutopilotService`: for all incomplete today tasks, run slot-finder sequentially
@@ -157,7 +159,8 @@ Motion's core value: add a task with deadline → AI finds slot → when a meeti
 
 ### Acceptance criteria
 
-- [ ] New Google Calendar event triggers reschedule within 5 min (autopilot on)
+- [ ] New Google Calendar event triggers autopilot within **30 seconds** (push webhook, not poll)
+- [ ] Outlook calendar change triggers same via Graph subscription
 - [ ] User can toggle autopilot on/off and choose auto-apply vs suggest
 - [ ] Slot finder respects Google Calendar busy time
 - [ ] Overdue tasks auto-reschedule at 9am daily if autopilot on
