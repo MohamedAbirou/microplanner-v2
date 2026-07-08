@@ -4,6 +4,21 @@ export interface RedisConnectionConfig {
   host: string;
   port: number;
   password?: string;
+  username?: string;
+  /** Required for Upstash and other TLS Redis hosts (rediss:// URLs). */
+  tls?: Record<string, never>;
+}
+
+function configFromRedisUrl(redisUrl: string, fallbackPassword?: string): RedisConnectionConfig {
+  const url = new URL(redisUrl);
+  const useTls = url.protocol === 'rediss:';
+  return {
+    host: url.hostname,
+    port: parseInt(url.port, 10) || 6379,
+    username: url.username || undefined,
+    password: url.password || fallbackPassword || undefined,
+    ...(useTls ? { tls: {} } : {}),
+  };
 }
 
 /**
@@ -17,12 +32,7 @@ export function resolveRedisConfig(
 
   if (redisUrl) {
     try {
-      const url = new URL(redisUrl);
-      return {
-        host: url.hostname,
-        port: parseInt(url.port, 10) || 6379,
-        password: url.password || config.get<string>('REDIS_PASSWORD') || undefined,
-      };
+      return configFromRedisUrl(redisUrl, config.get<string>('REDIS_PASSWORD'));
     } catch {
       // Invalid URL — fall through to explicit host/port or production skip
     }

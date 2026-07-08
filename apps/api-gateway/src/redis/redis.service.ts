@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import { resolveRedisConfig } from '../common/redis-config';
 
 /**
  * Redis Service for MicroPlanner
@@ -18,34 +19,11 @@ export class RedisService implements OnModuleDestroy {
   private subscriber: Redis | null = null;
 
   constructor(private config: ConfigService) {
-    // Parse REDIS_URL if provided, otherwise use individual config vars
-    const redisUrl = config.get('REDIS_URL');
-    let redisConfig: any;
-
-    if (redisUrl) {
-      // Parse REDIS_URL (e.g., redis://host:port or redis://user:pass@host:port)
-      try {
-        const url = new URL(redisUrl);
-        redisConfig = {
-          host: url.hostname,
-          port: parseInt(url.port) || 6379,
-          password: url.password || config.get('REDIS_PASSWORD'),
-        };
-      } catch (error) {
-        this.logger.warn('Invalid REDIS_URL, falling back to defaults');
-        redisConfig = {
-          host: config.get('REDIS_HOST', 'localhost'),
-          port: config.get('REDIS_PORT', 6379),
-          password: config.get('REDIS_PASSWORD'),
-        };
-      }
-    } else {
-      redisConfig = {
-        host: config.get('REDIS_HOST', 'localhost'),
-        port: config.get('REDIS_PORT', 6379),
-        password: config.get('REDIS_PASSWORD'),
-      };
-    }
+    const redisConfig = resolveRedisConfig(config) ?? {
+      host: config.get('REDIS_HOST', 'localhost'),
+      port: config.get('REDIS_PORT', 6379),
+      password: config.get('REDIS_PASSWORD'),
+    };
 
     this.client = new Redis({
       ...redisConfig,

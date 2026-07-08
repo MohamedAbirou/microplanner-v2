@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import IoRedis from 'ioredis';
 import { RedisThrottlerStorage } from './common/redis-throttler.storage';
+import { resolveRedisConfig } from './common/redis-config';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -160,32 +161,11 @@ function getGraphQLErrorCode(statusCode: number): string {
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        // Parse REDIS_URL if provided, otherwise use individual config vars
-        const redisUrl = configService.get('REDIS_URL');
-        let redisConfig: any;
-
-        if (redisUrl) {
-          try {
-            const url = new URL(redisUrl);
-            redisConfig = {
-              host: url.hostname,
-              port: parseInt(url.port) || 6379,
-              password: url.password || configService.get('REDIS_PASSWORD'),
-            };
-          } catch (error) {
-            redisConfig = {
-              host: configService.get('REDIS_HOST') || 'localhost',
-              port: configService.get('REDIS_PORT') || 6379,
-              password: configService.get('REDIS_PASSWORD'),
-            };
-          }
-        } else {
-          redisConfig = {
-            host: configService.get('REDIS_HOST') || 'localhost',
-            port: configService.get('REDIS_PORT') || 6379,
-            password: configService.get('REDIS_PASSWORD'),
-          };
-        }
+        const redisConfig = resolveRedisConfig(configService) ?? {
+          host: configService.get('REDIS_HOST') || 'localhost',
+          port: configService.get('REDIS_PORT') || 6379,
+          password: configService.get('REDIS_PASSWORD'),
+        };
 
         return {
           redis: {
