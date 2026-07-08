@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, BadRequestException, Res } from '@nestjs/common';
+import type { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CalendarService } from './calendar.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
 import { OutlookOAuthService } from './services/outlook-oauth.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import type { User } from '@microplanner/database';
 import { SyncTasksDto } from './dto/sync-tasks.dto';
 
@@ -15,7 +18,32 @@ export class CalendarController {
     private readonly calendarService: CalendarService,
     private readonly googleOAuthService: GoogleOAuthService,
     private readonly outlookOAuthService: OutlookOAuthService,
+    private readonly configService: ConfigService,
   ) {}
+
+  /** OAuth providers redirect the browser here without a Clerk session — user id is in `state`. */
+  private parseUserIdFromState(state: string): string {
+    try {
+      const stateData = JSON.parse(Buffer.from(state, 'base64').toString('utf8'));
+      if (!stateData?.userId || typeof stateData.userId !== 'string') {
+        throw new Error('Invalid state');
+      }
+      return stateData.userId;
+    } catch {
+      throw new BadRequestException('Invalid OAuth state parameter');
+    }
+  }
+
+  private postCalendarOAuthRedirect(provider: 'google' | 'outlook', error?: string): string {
+    const webBase =
+      this.configService.get<string>('WEB_APP_URL') ||
+      this.configService.get<string>('APP_URL') ||
+      'http://localhost:3000';
+    if (error) {
+      return `${webBase}/integrations?calendar_error=${encodeURIComponent(error)}`;
+    }
+    return `${webBase}/integrations?calendar_connected=${provider.toUpperCase()}`;
+  }
 
   @Get('oauth/outlook')
   @ApiOperation({ summary: 'Initiate Outlook Calendar OAuth flow' })
@@ -27,25 +55,26 @@ export class CalendarController {
   }
 
   @Get('oauth/outlook/callback')
+  @Public()
   @ApiOperation({ summary: 'Handle Outlook OAuth callback' })
   async outlookOAuthCallback(
     @Query('code') code: string,
     @Query('state') state: string,
-    @CurrentUser() user: User,
+    @Query('error') providerError: string,
+    @Res() res: Response,
   ) {
-    if (!code || !state) {
-      throw new BadRequestException('Missing code or state parameter');
+    try {
+      if (providerError) throw new Error(providerError);
+      if (!code || !state) {
+        throw new BadRequestException('Missing code or state parameter');
+      }
+      const userId = this.parseUserIdFromState(state);
+      await this.outlookOAuthService.handleCallback(code, state, userId);
+      return res.redirect(this.postCalendarOAuthRedirect('outlook'));
+    } catch (err: any) {
+      const message = err?.message || 'Outlook Calendar connection failed';
+      return res.redirect(this.postCalendarOAuthRedirect('outlook', message));
     }
-    const token = await this.outlookOAuthService.handleCallback(code, state, user.id);
-    return {
-      message: 'Outlook Calendar connected successfully',
-      calendar: {
-        email: token.email,
-        calendarName: token.calendarName,
-        provider: token.provider,
-        connectedAt: token.createdAt,
-      },
-    };
   }
 
   @Get('oauth/google')
@@ -61,31 +90,30 @@ export class CalendarController {
   }
 
   @Get('oauth/google/callback')
+  @Public()
   @ApiOperation({ summary: 'Handle Google OAuth callback' })
-  @ApiResponse({ status: 200, description: 'Calendar connected successfully' })
+  @ApiResponse({ status: 302, description: 'Redirects to web app after connecting calendar' })
   @ApiResponse({ status: 401, description: 'OAuth authorization failed' })
   @ApiQuery({ name: 'code', required: true, type: String })
   @ApiQuery({ name: 'state', required: true, type: String })
   async googleOAuthCallback(
     @Query('code') code: string,
     @Query('state') state: string,
-    @CurrentUser() user: User,
+    @Query('error') providerError: string,
+    @Res() res: Response,
   ) {
-    if (!code || !state) {
-      throw new BadRequestException('Missing code or state parameter');
+    try {
+      if (providerError) throw new Error(providerError);
+      if (!code || !state) {
+        throw new BadRequestException('Missing code or state parameter');
+      }
+      const userId = this.parseUserIdFromState(state);
+      await this.googleOAuthService.handleCallback(code, state, userId);
+      return res.redirect(this.postCalendarOAuthRedirect('google'));
+    } catch (err: any) {
+      const message = err?.message || 'Google Calendar connection failed';
+      return res.redirect(this.postCalendarOAuthRedirect('google', message));
     }
-
-    const token = await this.googleOAuthService.handleCallback(code, state, user.id);
-
-    return {
-      message: 'Google Calendar connected successfully',
-      calendar: {
-        email: token.email,
-        calendarName: token.calendarName,
-        provider: token.provider,
-        connectedAt: token.createdAt,
-      },
-    };
   }
 
   @Get('events')

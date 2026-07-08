@@ -117,9 +117,27 @@ function ConnectionRow({ connection }: { connection: CalendarConnection }) {
 }
 
 export function CalendarSyncCard() {
-  const { connections, loading } = useCalendarConnections();
+  const { connections, loading, refetch } = useCalendarConnections();
   const { initiateAuth, loading: initiating } = useInitiateCalendarAuth();
   const [pending, setPending] = React.useState<string | null>(null);
+
+  // After OAuth, the api-gateway callback redirects here with a status query param.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get('calendar_connected');
+    const oauthError = params.get('calendar_error');
+    if (!connected && !oauthError) return;
+
+    if (connected) {
+      const label = PROVIDER_META[connected.toUpperCase()]?.label || connected;
+      toast.success(`${label} connected`);
+      refetch?.();
+    } else if (oauthError) {
+      toast.error('Calendar connection failed', { description: oauthError });
+    }
+    window.history.replaceState({}, '', '/integrations');
+  }, [refetch]);
 
   const connectedProviders = new Set(
     (connections || []).map((c: CalendarConnection) => (c.provider || '').toUpperCase()),
