@@ -4,6 +4,7 @@ import { useQuery, useMutation, useSubscription, useApolloClient, ApolloError } 
 import * as React from 'react';
 import { toast } from 'sonner';
 import * as operations from '@/graphql/operations';
+import { initialQueryLoading } from '@/lib/graphql-loading';
 
 /**
  * Custom GraphQL hooks for MicroPlanner
@@ -53,7 +54,7 @@ export function useTasks(filter?: any, sort?: any, options?: UseTasksOptions) {
 
   return {
     tasks: data?.tasks || [],
-    loading,
+    loading: initialQueryLoading(loading, data),
     error,
     refetch,
   };
@@ -73,7 +74,7 @@ export function useTasksList(filter?: any, sort?: any, options?: UseTasksOptions
 
   return {
     tasks: data?.tasks || [],
-    loading,
+    loading: initialQueryLoading(loading, data),
     error,
     refetch,
   };
@@ -90,7 +91,7 @@ export function useTasksAnalytics(filter?: any, sort?: any, options?: UseTasksOp
 
   return {
     tasks: data?.tasks || [],
-    loading,
+    loading: initialQueryLoading(loading, data),
     error,
     refetch,
   };
@@ -112,7 +113,7 @@ export function useTask(id: string) {
 
 export function useCreateTask() {
   const [createTask, { loading, error }] = useMutation(operations.CREATE_TASK, {
-    refetchQueries: [...operations.TASK_QUERY_NAMES],
+    refetchQueries: 'active',
     awaitRefetchQueries: true,
     onCompleted: () => {
       toast.success('Task created successfully');
@@ -197,7 +198,7 @@ export function useSmartReschedule() {
 export function useDeleteTask(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
   const [deleteTask, { loading, error }] = useMutation(operations.DELETE_TASK, {
-    refetchQueries: [...operations.TASK_QUERY_NAMES],
+    refetchQueries: 'active',
     awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Task deleted successfully', 'Failed to delete task'),
   });
@@ -220,7 +221,7 @@ export function useCompleteTask(options?: MutationNotifyOptions) {
 
 export function useBulkUpdateTasks() {
   const [bulkUpdateTasks, { loading, error }] = useMutation(operations.BULK_UPDATE_TASKS, {
-    refetchQueries: [...operations.TASK_QUERY_NAMES],
+    refetchQueries: 'active',
     awaitRefetchQueries: true,
     onCompleted: (data) => {
       toast.success(`Updated ${data.bulkUpdateTasks.length} tasks`);
@@ -237,7 +238,7 @@ export function useBulkUpdateTasks() {
 
 export function useBulkDeleteTasks() {
   const [bulkDeleteTasks, { loading, error }] = useMutation(operations.BULK_DELETE_TASKS, {
-    refetchQueries: [...operations.TASK_QUERY_NAMES],
+    refetchQueries: 'active',
     awaitRefetchQueries: true,
     onCompleted: (data) => {
       toast.success(`Deleted ${data.bulkDeleteTasks.count} tasks`);
@@ -287,7 +288,7 @@ export function useUncompleteTask(options?: MutationNotifyOptions) {
 export function useCreateSubtask(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
   const [createSubtask, { loading, error }] = useMutation(operations.CREATE_SUBTASK, {
-    refetchQueries: [...operations.TASK_QUERY_NAMES],
+    refetchQueries: 'active',
     awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Subtask created successfully', 'Failed to create subtask'),
   });
@@ -316,7 +317,7 @@ export function useSubtasks(parentTaskId: string) {
 export function useCreateTaskDependency(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
   const [createTaskDependency, { loading, error }] = useMutation(operations.CREATE_TASK_DEPENDENCY, {
-    refetchQueries: [...operations.TASK_QUERY_NAMES],
+    refetchQueries: 'active',
     awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Dependency added successfully', 'Failed to add dependency'),
   });
@@ -327,7 +328,7 @@ export function useCreateTaskDependency(options?: MutationNotifyOptions) {
 export function useDeleteTaskDependency(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
   const [deleteTaskDependency, { loading, error }] = useMutation(operations.DELETE_TASK_DEPENDENCY, {
-    refetchQueries: [...operations.TASK_QUERY_NAMES],
+    refetchQueries: 'active',
     awaitRefetchQueries: true,
     ...mutationToastHandlers(notify, 'Dependency removed successfully', 'Failed to remove dependency'),
   });
@@ -412,7 +413,7 @@ export function useGoals() {
 
   return {
     goals: data?.goals || [],
-    loading,
+    loading: initialQueryLoading(loading, data),
     error,
     refetch,
   };
@@ -427,7 +428,7 @@ export function useGoalsList() {
 
   return {
     goals: data?.goals || [],
-    loading,
+    loading: initialQueryLoading(loading, data),
     error,
     refetch,
   };
@@ -449,7 +450,7 @@ export function useGoal(id: string) {
 
 export function useCreateGoal() {
   const [createGoal, { loading, error }] = useMutation(operations.CREATE_GOAL, {
-    refetchQueries: [...operations.GOAL_QUERY_NAMES],
+    refetchQueries: 'active',
     onCompleted: () => {
       toast.success('Goal created successfully');
     },
@@ -465,7 +466,7 @@ export function useCreateGoal() {
 
 export function useUpdateGoal() {
   const [updateGoal, { loading, error }] = useMutation(operations.UPDATE_GOAL, {
-    refetchQueries: [...operations.GOAL_QUERY_NAMES],
+    refetchQueries: 'active',
     onCompleted: () => {
       toast.success('Goal updated successfully');
     },
@@ -481,7 +482,7 @@ export function useUpdateGoal() {
 
 export function useDeleteGoal() {
   const [deleteGoal, { loading, error }] = useMutation(operations.DELETE_GOAL, {
-    refetchQueries: [...operations.GOAL_QUERY_NAMES],
+    refetchQueries: 'active',
     onCompleted: () => {
       toast.success('Goal deleted successfully');
     },
@@ -503,11 +504,13 @@ export function usePlans(filter?: any, options?: { skipQuery?: boolean }) {
   const { data, loading, error, refetch } = useQuery(operations.GET_PLANS, {
     variables: filter ? { filter } : undefined,
     skip: options?.skipQuery,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
   return {
     plans: data?.plans || [],
-    loading,
+    loading: initialQueryLoading(loading, data),
     error,
     refetch,
   };
@@ -524,7 +527,7 @@ export function usePlansSummary(filter?: any, options?: { skipQuery?: boolean })
 
   return {
     plans: data?.plans || [],
-    loading,
+    loading: initialQueryLoading(loading, data),
     error,
     refetch,
   };
@@ -546,7 +549,7 @@ export function usePlan(id?: string | null) {
 
 export function useGeneratePlan() {
   const [generatePlan, { loading, error }] = useMutation(operations.GENERATE_PLAN, {
-    refetchQueries: [...operations.PLAN_QUERY_NAMES],
+    refetchQueries: 'active',
     onCompleted: () => {
       toast.success('Plan generated successfully!');
     },
@@ -562,7 +565,7 @@ export function useGeneratePlan() {
 
 export function useUpdatePlan() {
   const [updatePlan, { loading, error }] = useMutation(operations.UPDATE_PLAN, {
-    refetchQueries: [...operations.PLAN_QUERY_NAMES],
+    refetchQueries: 'active',
     onCompleted: () => {
       toast.success('Plan updated successfully');
     },
@@ -578,7 +581,7 @@ export function useUpdatePlan() {
 
 export function useAcceptPlan() {
   const [acceptPlan, { loading, error }] = useMutation(operations.ACCEPT_PLAN, {
-    refetchQueries: [{ query: operations.GET_PLANS }, ...operations.PLAN_QUERY_NAMES, ...operations.TASK_QUERY_NAMES],
+    refetchQueries: 'active',
     awaitRefetchQueries: true,
     onCompleted: () => {
       toast.success('Plan accepted successfully!');
@@ -595,7 +598,7 @@ export function useAcceptPlan() {
 
 export function useRegeneratePlan() {
   const [regeneratePlan, { loading, error }] = useMutation(operations.REGENERATE_PLAN, {
-    refetchQueries: [...operations.PLAN_QUERY_NAMES],
+    refetchQueries: 'active',
     onError: (error) => {
       toast.error('Failed to regenerate plan', {
         description: error.message,
@@ -645,12 +648,15 @@ export function useRemoveDependency() {
 // ============================================================================
 
 export function useUserSettings() {
-  const { data, loading, error, refetch } = useQuery(operations.GET_USER_SETTINGS);
+  const { data, loading, error, refetch } = useQuery(operations.GET_USER_SETTINGS, {
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
 
   return {
     user: data?.me,
     settings: data?.me?.settings,
-    loading,
+    loading: initialQueryLoading(loading, data),
     error,
     refetch,
   };

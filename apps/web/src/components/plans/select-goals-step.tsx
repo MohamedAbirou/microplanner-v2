@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTier } from '@/contexts/tier-context';
-import { useGoals } from '@/hooks/use-graphql';
+import { useGoalsList } from '@/hooks/use-graphql';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, ChevronRight, Loader2 } from 'lucide-react';
 import { useState } from 'react';
@@ -18,7 +18,7 @@ interface SelectGoalsStepProps {
 export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }: SelectGoalsStepProps) {
   const [selectedGoals, setSelectedGoals] = useState<string[]>(initialSelectedGoals);
   const { tier, limits } = useTier();
-  const { goals, loading } = useGoals();
+  const { goals, loading } = useGoalsList();
 
   const maxGoalsPerPlan = limits.maxGoalsPerPlan;
 

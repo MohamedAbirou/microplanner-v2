@@ -29,7 +29,8 @@ export function usePlanTemplates(variables?: {
 }) {
   const { data, loading, error, refetch } = useQuery(ops.GET_PLAN_TEMPLATES, {
     variables,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
   return {
@@ -98,7 +99,8 @@ export function useDeletePlanTemplate() {
 
 export function useDashboardStats() {
   const { data, loading, error, refetch } = useQuery(ops.GET_DASHBOARD_STATS, {
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
   return {
@@ -112,7 +114,8 @@ export function useDashboardStats() {
 export function useWeeklyStats(weekStart?: string) {
   const { data, loading, error, refetch } = useQuery(ops.GET_WEEKLY_STATS, {
     variables: { weekStart },
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
   return {
@@ -150,7 +153,8 @@ export function useInsights(type?: string, limit?: number) {
 
 export function useWeeklyReview(options?: { skipQuery?: boolean }) {
   const { data, loading, error, refetch } = useQuery(ops.GET_WEEKLY_REVIEW, {
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
     skip: options?.skipQuery,
   });
 
@@ -348,7 +352,10 @@ export function useUpdateCalendarDefense() {
 }
 
 export function useHabits() {
-  const { data, loading, refetch } = useQuery(ops.GET_HABITS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, refetch } = useQuery(ops.GET_HABITS, {
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
   return { habits: data?.habits || [], loading, refetch };
 }
 
@@ -381,7 +388,8 @@ export function useDeleteHabit() {
 export function useCalendarDefenseLog(limit = 20) {
   const { data, loading, refetch } = useQuery(ops.GET_CALENDAR_DEFENSE_LOG, {
     variables: { limit },
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
   return { log: data?.calendarDefenseLog || [], loading, refetch };
 }
@@ -749,7 +757,8 @@ export function useProjectBoard(id?: string) {
   const { data, loading, error, refetch } = useQuery(ops.GET_PROJECT_BOARD, {
     variables: { id },
     skip: !id,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
   return {
@@ -867,7 +876,8 @@ export function useTeamDashboard(teamId: string) {
   const { data, loading, error, refetch } = useQuery(ops.GET_TEAM_DASHBOARD, {
     variables: { teamId },
     skip: !teamId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
   return { dashboard: data?.teamDashboard || null, loading, error, refetch };
 }
@@ -1083,7 +1093,8 @@ export function useDailyRitual(date: string) {
   const { data, loading, refetch } = useQuery(ops.GET_DAILY_RITUAL, {
     variables: { date },
     skip: !date,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
   return { ritual: data?.dailyRitual || null, loading, refetch };
 }
@@ -1096,7 +1107,10 @@ export function useUpdateDailyRitual() {
 }
 
 export function usePmInboxTasks() {
-  const { data, loading, refetch } = useQuery(ops.PM_INBOX_TASKS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, refetch } = useQuery(ops.PM_INBOX_TASKS, {
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
   return { inbox: (data?.pmInboxTasks || []) as any[], loading, refetch };
 }
 
@@ -1187,7 +1201,8 @@ export function useUpdateIntegration() {
 
 export function useAutopilotStatus() {
   const { data, loading, error, refetch } = useQuery(ops.AUTOPILOT_STATUS, {
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
   return {
     status: data?.autopilotStatus || null,
@@ -1308,7 +1323,8 @@ export function useWebhookDeliveries(webhookId?: string, limit = 20) {
   const { data, loading, error, refetch } = useQuery(ops.GET_WEBHOOK_DELIVERIES, {
     variables: { webhookId, limit },
     skip: !webhookId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
   return {

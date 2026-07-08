@@ -32,7 +32,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { TierGate } from '@/components/tier-gate';
-import { usePlans } from '@/hooks/use-graphql';
+import { usePlansSummary } from '@/hooks/use-graphql';
 import {
   usePlanTemplates,
   useSaveAsPlanTemplate,
@@ -46,7 +46,7 @@ function nextWeekStart(): string {
 }
 
 function SaveCurrentPlanDialog() {
-  const { plans } = usePlans();
+  const { plans } = usePlansSummary();
   const { saveAsTemplate, loading } = useSaveAsPlanTemplate();
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState('');

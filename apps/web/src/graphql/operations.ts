@@ -633,11 +633,15 @@ export const GET_GOALS_LIST = gql`
       id
       emoji
       title
+      description
       color
       priority
+      frequencyPerWeek
+      durationMinutes
       isActive
       isPaused
       currentStreak
+      longestStreak
       completionRate
       projectId
     }

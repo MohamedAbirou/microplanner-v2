@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useGoals, usePlans, useTasksList } from '@/hooks/use-graphql';
+import { useGoalsList, usePlansSummary, useTasksList } from '@/hooks/use-graphql';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar, Clock, Search, Sparkles, Target, X } from 'lucide-react';
@@ -25,8 +25,8 @@ export default function SearchPage() {
     undefined,
     { take: 50, skipQuery: !searchQuery.trim() }
   );
-  const { goals, loading: goalsLoading } = useGoals();
-  const { plans, loading: plansLoading } = usePlans();
+  const { goals, loading: goalsLoading } = useGoalsList();
+  const { plans, loading: plansLoading } = usePlansSummary();
 
   const loading = tasksLoading || goalsLoading || plansLoading;
 

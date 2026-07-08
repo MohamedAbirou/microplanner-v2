@@ -152,7 +152,7 @@ const cache = new InMemoryCache({
         },
         // Merge tasks list
         tasks: {
-          keyArgs: ['filter', 'sort'],
+          keyArgs: ['filter', 'sort', 'take', 'skip'],
           merge(existing = [], incoming) {
             return incoming;
           },

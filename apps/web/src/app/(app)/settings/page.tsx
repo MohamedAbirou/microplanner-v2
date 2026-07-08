@@ -377,7 +377,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (settingsLoading) {
+  if (settingsLoading && !settings && !dbUser) {
     return (
       <div className="space-y-6 p-6 max-w-5xl mx-auto">
         <div className="space-y-2">

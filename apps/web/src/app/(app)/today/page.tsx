@@ -24,8 +24,8 @@ import {
   getTaskStatistics,
 } from '@/lib/filters';
 import {
-  useTasks,
-  useGoals,
+  useTasksList,
+  useGoalsList,
   useCompleteTask,
   useDeleteTask,
   useStartTimer,
@@ -55,7 +55,7 @@ export default function TodayPage() {
   // Fetch today's tasks from GraphQL
   // Note: We filter by single date (not dateRange) in GraphQL, then do client-side filtering
   const today = new Date();
-  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasks(
+  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasksList(
     {
       scheduledDate: startOfDay(today),
     },
@@ -67,7 +67,7 @@ export default function TodayPage() {
   );
 
   // Fetch goals for filters
-  const { goals, loading: goalsLoading } = useGoals();
+  const { goals, loading: goalsLoading } = useGoalsList();
 
   // GraphQL mutations
   const { completeTask } = useCompleteTask();

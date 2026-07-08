@@ -2,13 +2,13 @@
 
 import { GoalCard } from '@/components/goals/goal-card';
 import { Button } from '@/components/ui/button';
-import { useGoals, useUpdateGoal } from '@/hooks/use-graphql';
+import { useGoalsList, useUpdateGoal } from '@/hooks/use-graphql';
 import { Plus, Target } from 'lucide-react';
 import Link from 'next/link';
 
 export default function GoalsPage() {
   // Fetch all goals from GraphQL
-  const { goals: allGoals, loading, refetch } = useGoals();
+  const { goals: allGoals, loading, refetch } = useGoalsList();
   const { updateGoal } = useUpdateGoal();
 
   // Filter for active goals on the client side

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
-import { useTasks, useGoals, useCompleteTask, useUncompleteTask } from '@/hooks/use-graphql';
+import { useTasksList, useGoalsList, useCompleteTask, useUncompleteTask } from '@/hooks/use-graphql';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
 import { useUser } from '@clerk/nextjs';
@@ -24,14 +24,14 @@ export default function DashboardPage() {
   const today = new Date();
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
 
-  const { tasks: rawTasks, loading: tasksLoading, refetch } = useTasks(
+  const { tasks: rawTasks, loading: tasksLoading, refetch } = useTasksList(
     {
       dateRange: { start: startOfDay(today), end: endOfDay(today) },
     },
     undefined,
     { take: 80 }
   );
-  const { goals, loading: goalsLoading } = useGoals();
+  const { goals, loading: goalsLoading } = useGoalsList();
   const { completeTask } = useCompleteTask();
   const { uncompleteTask } = useUncompleteTask();
 

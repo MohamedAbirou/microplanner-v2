@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useQuery } from '@apollo/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { GET_MY_TIER } from '@/graphql/operations';
+import { initialQueryLoading } from '@/lib/graphql-loading';
 
 export type UserTier = 'FREE' | 'STARTER' | 'PRO' | 'PREMIUM';
 
@@ -138,7 +139,7 @@ function TierProviderInner({ children }: { children: React.ReactNode }) {
     tier,
     subscriptionStatus,
     limits,
-    isLoading: loading,
+    isLoading: initialQueryLoading(loading, data),
     refetchTier: () => {
       void refetch();
     },

@@ -23,7 +23,7 @@ import {
 } from '@/components/tasks/quick-add-task-modal';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTasks, useGoals, useUpdateTask, useCreateTask } from '@/hooks/use-graphql';
+import { useTasksList, useGoalsList, useUpdateTask, useCreateTask } from '@/hooks/use-graphql';
 import { useCalendarConnections, useCalendarEvents } from '@/hooks/use-graphql-extended';
 import { useTier } from '@/contexts/tier-context';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
@@ -61,12 +61,12 @@ export function CalendarPage() {
     [view, focusDate]
   );
 
-  const { tasks: allTasks, loading, refetch } = useTasks(
+  const { tasks: allTasks, loading, refetch } = useTasksList(
     taskQuery.filter,
     undefined,
     { take: taskQuery.take }
   );
-  const { goals } = useGoals();
+  const { goals } = useGoalsList();
   const { updateTask } = useUpdateTask();
   const { createTask } = useCreateTask();
 

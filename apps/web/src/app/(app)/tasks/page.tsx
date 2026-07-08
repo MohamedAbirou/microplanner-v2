@@ -24,7 +24,7 @@ import {
 } from '@/lib/filters';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useTasks, useGoals, useUpdateTask, useBulkUpdateTasks, useBulkDeleteTasks } from '@/hooks/use-graphql';
+import { useTasksList, useGoalsList, useUpdateTask, useBulkUpdateTasks, useBulkDeleteTasks } from '@/hooks/use-graphql';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
 import { getDefaultTaskListQuery } from '@/lib/task-query';
@@ -54,12 +54,12 @@ export default function TasksPage() {
     return { filter, take: filters.dateRange ? 400 : base.take };
   }, [filters]);
 
-  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasks(
+  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasksList(
     listQuery.filter,
     undefined,
     { take: listQuery.take }
   );
-  const { goals, loading: goalsLoading } = useGoals();
+  const { goals, loading: goalsLoading } = useGoalsList();
   const { updateTask } = useUpdateTask();
   const { bulkUpdateTasks } = useBulkUpdateTasks();
   const { bulkDeleteTasks } = useBulkDeleteTasks();
