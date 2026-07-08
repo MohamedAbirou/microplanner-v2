@@ -461,9 +461,10 @@ export class TasksAPI {
     // Extract filter and sort if they exist (GraphQL query style)
     // Otherwise treat entire args as flat params (dashboard resolver style)
     const filterSource = (hasNestedFilter ? args.filter : args) as TaskQueryFilterSource | undefined;
-    const { filter, sort, ...directParams } = args;
+    const { filter, sort, take, skip, ...directParams } = args;
 
-    // Start with direct params (for non-filter args like take, skip, etc.)
+    // Start with direct params (for non-filter args). Never forward GraphQL
+    // pagination names (`take`/`skip`) — REST only accepts `limit`/`page`.
     const params: RestListParams = hasNestedFilter ? { ...directParams } : {};
 
     // Handle dateRange filter (GraphQL -> REST API conversion)
@@ -496,10 +497,10 @@ export class TasksAPI {
     if (filterSource?.isCompleted !== undefined) params.isCompleted = filterSource.isCompleted;
     if (filterSource?.aiGenerated !== undefined) params.aiGenerated = filterSource.aiGenerated;
 
-    if (args.take != null) params.limit = args.take;
-    if (args.skip != null) {
+    if (take != null) params.limit = take;
+    if (skip != null) {
       const pageSize = typeof params.limit === 'number' ? params.limit : 50;
-      params.page = Math.floor(args.skip / pageSize) + 1;
+      params.page = Math.floor(skip / pageSize) + 1;
     }
 
     // For dashboard resolver compatibility: copy any remaining direct params
