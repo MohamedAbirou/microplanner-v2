@@ -4,6 +4,7 @@ import { GoalCard } from '@/components/goals/goal-card';
 import { Button } from '@/components/ui/button';
 import { useGoalsList, useUpdateGoal } from '@/hooks/use-graphql';
 import { Plus, Target } from 'lucide-react';
+import { PageLoader } from '@/components/ui/page-loader';
 import Link from 'next/link';
 
 export default function GoalsPage() {
@@ -43,13 +44,7 @@ export default function GoalsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-6 p-6 max-w-7xl mx-auto">
-        <div className="text-center py-12 text-muted-foreground">
-          Loading goals...
-        </div>
-      </div>
-    );
+    return <PageLoader label="goals" variant="page" className="max-w-7xl mx-auto" />;
   }
 
   return (

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageLoader } from '@/components/ui/page-loader';
 import { useAcceptPlan, usePlan, usePlans, useRegeneratePlan } from '@/hooks/use-graphql';
 import { useWorkHours } from '@/hooks/use-graphql-extended';
 import { WorkloadWarning } from '@/components/plans/workload-warning';
@@ -145,13 +146,7 @@ export default function PlanReviewPage() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-6 p-6 max-w-7xl mx-auto">
-        <div className="text-center py-12 text-muted-foreground">
-          Loading plan review...
-        </div>
-      </div>
-    );
+    return <PageLoader label="review" variant="page" className="max-w-7xl mx-auto" />;
   }
 
   if (!reviewPlan) {

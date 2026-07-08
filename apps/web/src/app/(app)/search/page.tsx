@@ -4,7 +4,7 @@ import { NoSearchResultsEmptyState } from '@/components/empty-states';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageLoader } from '@/components/ui/page-loader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalsList, usePlansSummary, useTasksList } from '@/hooks/use-graphql';
 import { cn } from '@/lib/utils';
@@ -121,11 +121,7 @@ export default function SearchPage() {
       </div>
 
       {loading && searchQuery && (
-        <div className="space-y-2">
-          <Skeleton className="h-16 w-full rounded-[10px]" />
-          <Skeleton className="h-16 w-full rounded-[10px]" />
-          <Skeleton className="h-16 w-full rounded-[10px]" />
-        </div>
+        <PageLoader label="search" variant="section" skeletonRows={3} />
       )}
 
       {!loading && searchQuery && (

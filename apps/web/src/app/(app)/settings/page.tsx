@@ -27,7 +27,7 @@ import { useMutation, useApolloClient } from '@apollo/client';
 import { DELETE_MY_ACCOUNT, EXPORT_MY_DATA } from '@/graphql/operations-extended';
 import * as operations from '@/graphql/operations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageLoader } from '@/components/ui/page-loader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -378,16 +378,7 @@ export default function SettingsPage() {
   };
 
   if (settingsLoading && !settings && !dbUser) {
-    return (
-      <div className="space-y-6 p-6 max-w-5xl mx-auto">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-32 rounded-[6px]" />
-          <Skeleton className="h-4 w-64 rounded-[6px]" />
-        </div>
-        <Skeleton className="h-10 w-full rounded-[10px]" />
-        <Skeleton className="h-64 rounded-[14px]" />
-      </div>
-    );
+    return <PageLoader label="settings" variant="page" className="max-w-5xl mx-auto" />;
   }
 
   return (

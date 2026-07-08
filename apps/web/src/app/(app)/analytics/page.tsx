@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PageLoader } from '@/components/ui/page-loader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
@@ -287,23 +288,7 @@ export default function AnalyticsPage() {
   const longestStreak = dashboardStats?.longestStreak ?? 0;
 
   if (loading) {
-    return (
-      <div className="space-y-6 p-6 max-w-7xl mx-auto">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-40 rounded-[6px]" />
-            <Skeleton className="h-4 w-64 rounded-[6px]" />
-          </div>
-          <Skeleton className="h-10 w-[180px] rounded-[10px]" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-[14px]" />
-          ))}
-        </div>
-        <Skeleton className="h-[360px] rounded-[14px]" />
-      </div>
-    );
+    return <PageLoader label="analytics" variant="page" skeletonRows={5} className="max-w-7xl mx-auto" />;
   }
 
   return (

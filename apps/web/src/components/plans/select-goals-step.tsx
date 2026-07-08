@@ -7,7 +7,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useTier } from '@/contexts/tier-context';
 import { useGoalsList } from '@/hooks/use-graphql';
 import { cn } from '@/lib/utils';
-import { AlertTriangle, ChevronRight, Loader2 } from 'lucide-react';
+import { PageLoader } from '@/components/ui/page-loader';
+import { AlertTriangle, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 interface SelectGoalsStepProps {
@@ -32,12 +33,7 @@ export function SelectGoalsStep({ selectedGoals: initialSelectedGoals, onNext }:
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-3 text-muted-foreground">Loading your goals...</span>
-      </div>
-    );
+    return <PageLoader label="goals" variant="section" skeletonRows={2} />;
   }
 
   if (!activeGoals || activeGoals.length === 0) {

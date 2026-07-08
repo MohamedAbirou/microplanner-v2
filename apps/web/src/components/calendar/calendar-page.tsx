@@ -22,7 +22,7 @@ import {
   type TaskFormData,
 } from '@/components/tasks/quick-add-task-modal';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageLoader } from '@/components/ui/page-loader';
 import { useTasksList, useGoalsList, useUpdateTask, useCreateTask } from '@/hooks/use-graphql';
 import { useCalendarConnections, useCalendarEvents } from '@/hooks/use-graphql-extended';
 import { useTier } from '@/contexts/tier-context';
@@ -161,14 +161,7 @@ export function CalendarPage() {
   };
 
   if (loading) {
-    return (
-      <div className="h-[calc(100vh-3.5rem)] p-6 space-y-3">
-        <div className="flex items-center justify-end">
-          <Skeleton className="h-9 w-[220px] rounded-[9px]" />
-        </div>
-        <Skeleton className="h-[calc(100%-3.25rem)] w-full rounded-[14px]" />
-      </div>
-    );
+    return <PageLoader label="calendar" variant="page" showSkeleton skeletonRows={2} className="h-[calc(100vh-3.5rem)]" />;
   }
 
   return (

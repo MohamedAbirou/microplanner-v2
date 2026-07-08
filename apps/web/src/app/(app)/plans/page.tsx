@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { PageLoader } from '@/components/ui/page-loader';
 
 export default function PlansPage() {
   const router = useRouter();
@@ -52,13 +53,7 @@ export default function PlansPage() {
     : 0;
 
   if (loading) {
-    return (
-      <div className="space-y-6 p-6 max-w-7xl mx-auto">
-        <div className="text-center py-12 text-muted-foreground">
-          Loading plans...
-        </div>
-      </div>
-    );
+    return <PageLoader label="plans" variant="page" className="max-w-7xl mx-auto" />;
   }
 
   if (!activePlan && !draftPlan) {

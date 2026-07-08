@@ -14,7 +14,7 @@ import { TaskFiltersPanel } from '@/components/filters/task-filters-panel';
 import { TaskSortMenu } from '@/components/filters/task-sort-menu';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageLoader } from '@/components/ui/page-loader';
 import {
   TaskFilters,
   TaskSort,
@@ -374,13 +374,8 @@ export default function TodayPage() {
 
       {/* Loading State */}
       {(tasksLoading || goalsLoading) && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="w-full max-w-md space-y-3 px-6">
-            <Skeleton className="h-5 w-40 mx-auto rounded-[6px]" />
-            <Skeleton className="h-16 w-full rounded-[14px]" />
-            <Skeleton className="h-16 w-full rounded-[14px]" />
-            <Skeleton className="h-16 w-full rounded-[14px]" />
-          </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <PageLoader label="dashboard" variant="section" skeletonRows={3} />
         </div>
       )}
     </div>

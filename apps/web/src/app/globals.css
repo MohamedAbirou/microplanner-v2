@@ -221,6 +221,45 @@
   .mp-fade-in {
     animation: none;
   }
+
+  .mp-loader-shimmer::after {
+    animation: none;
+  }
+}
+
+/* Page loader shimmer — Notion-style content preview */
+@keyframes mp-loader-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.mp-loader-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.mp-loader-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--foreground) / 0.04) 45%,
+    hsl(var(--foreground) / 0.08) 50%,
+    hsl(var(--foreground) / 0.04) 55%,
+    transparent 100%
+  );
+  animation: mp-loader-shimmer 1.8s ease-in-out infinite;
+}
+
+.mp-page-loader {
+  animation: mp-fade 0.28s ease;
 }
 
 /* Loading Spinner */

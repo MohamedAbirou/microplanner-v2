@@ -10,6 +10,7 @@ import { PWAProvider } from '@/components/pwa/pwa-provider';
 import { RealtimeSync } from '@/components/realtime/realtime-sync';
 import { TierProvider } from '@/contexts/tier-context';
 import { ONBOARDING_STATUS } from '@/graphql/operations';
+import { PageLoader } from '@/components/ui/page-loader';
 import { useCreateTask, useGoalsList } from '@/hooks/use-graphql';
 import { useKeyboardShortcuts, useGlobalKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useQuery } from '@apollo/client';
@@ -104,11 +105,7 @@ export default function AppLayout({
   };
 
   if (isLoaded && user && onboardingLoading && !onboardingData) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
+    return <PageLoader label="default" variant="shell" showSkeleton={false} />;
   }
 
   return (

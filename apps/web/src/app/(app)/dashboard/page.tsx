@@ -9,6 +9,7 @@ import { mapTaskDependencies } from '@/lib/dependencies';
 import { useUser } from '@clerk/nextjs';
 import { endOfDay, format, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { PageLoader } from '@/components/ui/page-loader';
 import Link from 'next/link';
 
 function getTimeOfDay(): string {
@@ -74,9 +75,7 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div className="max-w-[920px] mx-auto px-7 py-8 text-sm text-muted-foreground">Loading today…</div>
-    );
+    return <PageLoader label="dashboard" variant="page" className="max-w-[920px] mx-auto" />;
   }
 
   return (

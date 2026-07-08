@@ -28,6 +28,7 @@ import { useTasksList, useGoalsList, useUpdateTask, useBulkUpdateTasks, useBulkD
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
 import { getDefaultTaskListQuery } from '@/lib/task-query';
+import { PageLoader } from '@/components/ui/page-loader';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 
 export default function TasksPage() {
@@ -251,9 +252,7 @@ export default function TasksPage() {
             )}
           >
             {loading ? (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                Loading tasks...
-              </div>
+              <PageLoader label="tasks" variant="section" skeletonRows={3} />
             ) : (
               filteredAndSortedTasks.map((task) => (
                 <ResizableTaskCard
