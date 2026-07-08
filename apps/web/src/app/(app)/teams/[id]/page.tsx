@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { TierGate } from '@/components/tier-gate';
 import {
-  useTeams,
+  useTeam,
   useTeamMembers,
   useInviteTeamMember,
   useRemoveTeamMember,
@@ -112,8 +112,7 @@ function TeamDashboardCard({ teamId }: { teamId: string }) {
 }
 
 function TeamDetailContent({ teamId }: { teamId: string }) {
-  const { teams } = useTeams();
-  const team = teams.find((t: any) => t.id === teamId);
+  const { team, loading: teamLoading } = useTeam(teamId);
   const { members, loading, refetch } = useTeamMembers(teamId);
   const { inviteMember, loading: inviting } = useInviteTeamMember();
   const { removeTeamMember } = useRemoveTeamMember();

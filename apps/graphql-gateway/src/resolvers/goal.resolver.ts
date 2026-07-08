@@ -77,6 +77,8 @@ export const goalResolvers = {
       return projectLoader.load(goal.projectId);
     },
 
+    taskCount: (goal: any) => goal.taskCount ?? null,
+
     // Compatibility fields for frontend
     targetMetric: (goal: any) => goal.targetMetric || null,
     currentProgress: (goal: any) => goal.currentProgress || goal.completionRate || 0,

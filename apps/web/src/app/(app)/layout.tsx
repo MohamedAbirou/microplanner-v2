@@ -10,7 +10,7 @@ import { PWAProvider } from '@/components/pwa/pwa-provider';
 import { RealtimeSync } from '@/components/realtime/realtime-sync';
 import { TierProvider } from '@/contexts/tier-context';
 import { ONBOARDING_STATUS } from '@/graphql/operations';
-import { useCreateTask, useGoals } from '@/hooks/use-graphql';
+import { useCreateTask, useGoalsList } from '@/hooks/use-graphql';
 import { useKeyboardShortcuts, useGlobalKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useQuery } from '@apollo/client';
 import { useUser } from '@clerk/nextjs';
@@ -34,7 +34,7 @@ export default function AppLayout({
   const [quickAddOpen, setQuickAddOpen] = useState(false);
 
   // Fetch goals from GraphQL
-  const { goals } = useGoals();
+  const { goals } = useGoalsList();
   const { createTask } = useCreateTask();
 
   // Register global keyboard shortcuts (T/D/W/M/G/P/A/S nav, N new task, ? help).

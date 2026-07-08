@@ -164,6 +164,14 @@ export class AdvancedTasksController {
   }
 
   /**
+   * Batch-fetch projects by ID (list-card fields)
+   */
+  @Post('projects/batch')
+  async getProjectsBatch(@Request() req: any, @Body() dto: { ids?: string[] }) {
+    return this.advancedTasksService.getProjectsBatch(req.user.id, dto.ids ?? []);
+  }
+
+  /**
    * Get project with stats
    */
   @Get('projects/:id')

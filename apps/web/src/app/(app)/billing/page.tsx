@@ -88,15 +88,15 @@ function UsageMeter({ label, used, limit, percent }: UsageMeterProps) {
 export default function BillingPage() {
   const { tier } = useTier();
   const nextTier = getNextTier(tier);
+  const isPaid = tier !== 'FREE';
 
   const { subscription, loading: subLoading } = useBillingSubscription();
   const { usage, loading: usageLoading } = useUsageStats();
-  const { billingInfo, loading: billingLoading } = useBillingInfo();
+  const { billingInfo, loading: billingLoading } = useBillingInfo({ skipQuery: !isPaid });
   const { createPortalSession, loading: portalLoading } = useCreateBillingPortalSession();
   const { cancelSubscription, loading: cancelLoading } = useCancelSubscription();
   const { resumeSubscription, loading: resumeLoading } = useResumeSubscription();
 
-  const isPaid = tier !== 'FREE';
   const cancelAtPeriodEnd = subscription?.cancelAtPeriodEnd ?? false;
   const status = subscription?.status ?? (isPaid ? 'ACTIVE' : 'FREE');
   const paymentMethod = billingInfo?.paymentMethod;

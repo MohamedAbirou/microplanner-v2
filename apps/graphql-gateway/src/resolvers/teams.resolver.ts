@@ -138,9 +138,7 @@ export const teamsResolvers = {
   },
 
   TeamMember: {
-    user: async (member: any, _: any, { userLoader }: any) => {
-      return userLoader.load(member.userId);
-    },
+    user: (member: any) => member.user ?? null,
   },
 
   TeamInvitation: {

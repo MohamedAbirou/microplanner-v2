@@ -126,10 +126,9 @@ export function createSubtaskLoader(tasksAPI: TasksAPI, userId: string) {
 export function createGoalLoader(goalsAPI: GoalsAPI, userId: string) {
   return new DataLoader(async (goalIds: readonly string[]) => {
     try {
-      const goals = await Promise.all(
-        goalIds.map((id) => goalsAPI.getGoal(id as string, userId).catch(() => null))
-      );
-      return goals;
+      const goals = await goalsAPI.getGoalsByIds([...goalIds], userId);
+      const byId = new Map(goals.map((g: any) => [g.id, g]));
+      return goalIds.map((id) => byId.get(id) ?? null);
     } catch {
       return goalIds.map(() => null);
     }
@@ -142,10 +141,8 @@ export function createGoalLoader(goalsAPI: GoalsAPI, userId: string) {
 export function createProjectLoader(projectsAPI: ProjectsAPI, userId: string) {
   return new DataLoader(async (projectIds: readonly string[]) => {
     try {
-      const projects = await Promise.all(
-        projectIds.map((id) => projectsAPI.getProject(id as string, userId).catch(() => null))
-      );
-      return projects;
+      const byId = await projectsAPI.getProjectsByIds([...projectIds], userId);
+      return projectIds.map((id) => byId[id] ?? null);
     } catch {
       return projectIds.map(() => null);
     }
@@ -155,14 +152,14 @@ export function createProjectLoader(projectsAPI: ProjectsAPI, userId: string) {
 /**
  * DataLoader for batching task queries by plan
  */
-export function createTaskByPlanLoader(tasksAPI: TasksAPI) {
+export function createTaskByPlanLoader(tasksAPI: TasksAPI, userId: string) {
   return new DataLoader(async (planIds: readonly string[]) => {
-    const results = await Promise.all(
-      planIds.map((planId) =>
-        tasksAPI.getTasksByPlanId(planId as string).catch(() => [])
-      )
-    );
-    return results;
+    try {
+      const byPlanId = await tasksAPI.getTasksByPlanIds([...planIds], userId);
+      return planIds.map((id) => byPlanId[id] || []);
+    } catch {
+      return planIds.map(() => []);
+    }
   });
 }
 

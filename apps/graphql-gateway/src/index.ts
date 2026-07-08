@@ -369,7 +369,7 @@ async function startServer() {
         const goalLoader = createGoalLoader(goalsAPI, userId);
         const projectLoader = createProjectLoader(projectsAPI, userId);
         const taskByGoalLoader = createTaskByGoalLoader(tasksAPI);
-        const taskByPlanLoader = createTaskByPlanLoader(tasksAPI);
+        const taskByPlanLoader = createTaskByPlanLoader(tasksAPI, userId);
         const userLoader = createUserLoader(userAPI);
         const taskDependencyLoader = createTaskDependencyLoader(tasksAPI, userId);
         const subtaskLoader = createSubtaskLoader(tasksAPI, userId);

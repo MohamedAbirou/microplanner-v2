@@ -148,9 +148,10 @@ export function useInsights(type?: string, limit?: number) {
   };
 }
 
-export function useWeeklyReview() {
+export function useWeeklyReview(options?: { skipQuery?: boolean }) {
   const { data, loading, error, refetch } = useQuery(ops.GET_WEEKLY_REVIEW, {
     fetchPolicy: 'cache-and-network',
+    skip: options?.skipQuery,
   });
 
   return {
@@ -798,6 +799,20 @@ export function useTeams() {
   };
 }
 
+export function useTeam(id: string) {
+  const { data, loading, error, refetch } = useQuery(ops.GET_TEAM, {
+    variables: { id },
+    skip: !id,
+  });
+
+  return {
+    team: data?.team,
+    loading,
+    error,
+    refetch,
+  };
+}
+
 export function useCreateTeam() {
   const [createTeam, { loading, error }] = useMutation(ops.CREATE_TEAM, {
     refetchQueries: [{ query: ops.GET_TEAMS }],
@@ -1343,8 +1358,10 @@ export function useUsageStats() {
   };
 }
 
-export function useBillingInfo() {
-  const { data, loading, error, refetch } = useQuery(ops.GET_BILLING_INFO);
+export function useBillingInfo(options?: { skipQuery?: boolean }) {
+  const { data, loading, error, refetch } = useQuery(ops.GET_BILLING_INFO, {
+    skip: options?.skipQuery,
+  });
 
   return {
     billingInfo: data?.billingInfo,

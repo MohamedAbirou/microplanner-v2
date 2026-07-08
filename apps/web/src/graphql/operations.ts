@@ -65,6 +65,10 @@ export const TASK_QUERY_NAMES = [
   'GetTasksAnalytics',
 ] as const;
 
+export const GOAL_QUERY_NAMES = ['GetGoals', 'GetGoalsList'] as const;
+
+export const PLAN_QUERY_NAMES = ['GetPlans', 'GetPlansSummary'] as const;
+
 /**
  * Full task list — dependencies, blockers, and subtasks (batched server-side).
  * Use on Today, Dashboard, Tasks, and Calendar where relationship data is needed.
@@ -230,12 +234,6 @@ export const GET_TASKS_ANALYTICS = gql`
       isCompleted
       completedAt
       timeSpentMinutes
-      goal {
-        id
-        emoji
-        title
-        color
-      }
     }
   }
 `;
@@ -628,6 +626,24 @@ export const GET_SUBTASKS = gql`
 // GOAL OPERATIONS
 // ============================================================================
 
+/** Sidebar / layout / quick-pick — no nested project or tasks. */
+export const GET_GOALS_LIST = gql`
+  query GetGoalsList {
+    goals {
+      id
+      emoji
+      title
+      color
+      priority
+      isActive
+      isPaused
+      currentStreak
+      completionRate
+      projectId
+    }
+  }
+`;
+
 export const GET_GOALS = gql`
   query GetGoals {
     goals {
@@ -767,6 +783,37 @@ export const DELETE_GOAL = gql`
 // ============================================================================
 // PLAN OPERATIONS
 // ============================================================================
+
+/** Plans list / history — stats from DB, goals from planJson (no per-plan task fetch). */
+export const GET_PLANS_SUMMARY = gql`
+  query GetPlansSummary($filter: PlanFilterInput) {
+    plans(filter: $filter) {
+      id
+      title
+      description
+      status
+      qualityScore
+      qualityMetrics
+      aiModel
+      reasoning
+      weekStartDate
+      weekEndDate
+      generationTime
+      totalTasks
+      completedTasks
+      completionRate
+      goals {
+        id
+        emoji
+        title
+        color
+        taskCount
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
 
 export const GET_PLANS = gql`
   query GetPlans($filter: PlanFilterInput) {

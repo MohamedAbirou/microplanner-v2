@@ -31,7 +31,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { useTasksAnalytics, useGoals } from '@/hooks/use-graphql';
+import { useTasksAnalytics, useGoalsList } from '@/hooks/use-graphql';
 import {
   useDashboardStats,
   useWeeklyReview,
@@ -69,7 +69,7 @@ export default function AnalyticsPage() {
 
   const { tier } = useTier();
   const canUseAi = tier === 'PRO' || tier === 'PREMIUM';
-  const { review } = useWeeklyReview();
+  const { review } = useWeeklyReview({ skipQuery: !reviewOpen });
   const { generateInsights, loading: generatingInsights } = useGenerateInsights();
 
   const handleGenerateInsights = async () => {
@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
     undefined,
     { take: 500 }
   );
-  const { goals, loading: goalsLoading } = useGoals();
+  const { goals, loading: goalsLoading } = useGoalsList();
   const { stats: dashboardStats, loading: statsLoading } = useDashboardStats();
 
   const loading = tasksLoading || goalsLoading || statsLoading;

@@ -26,6 +26,14 @@ export class GoalsController {
     };
   }
 
+  @Post('batch')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Batch-fetch goals by ID' })
+  async findByIds(@CurrentUser() user: User, @Body() body: { ids?: string[] }) {
+    const goals = await this.goalsService.findByIds(user.id, body?.ids ?? []);
+    return { goals };
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get all goals with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Goals retrieved successfully' })

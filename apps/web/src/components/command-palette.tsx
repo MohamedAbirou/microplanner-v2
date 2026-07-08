@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
-import { useGoals, useTasksList } from '@/hooks/use-graphql';
+import { useGoalsList, useTasksList } from '@/hooks/use-graphql';
 import { subDays, endOfDay } from 'date-fns';
 
 interface CommandPaletteProps {
@@ -33,7 +33,7 @@ interface CommandPaletteProps {
 export function CommandPalette({ open, onOpenChange, onQuickAddClick }: CommandPaletteProps) {
   const router = useRouter();
   const [search, setSearch] = React.useState('');
-  const { goals } = useGoals();
+  const { goals } = useGoalsList();
   const { tasks } = useTasksList(
     open
       ? {

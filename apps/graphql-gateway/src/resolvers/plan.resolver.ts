@@ -147,20 +147,35 @@ export const planResolvers = {
     },
 
     goals: async (plan: any, _: any, { taskByPlanLoader, goalLoader }: any) => {
-      if (!taskByPlanLoader || !goalLoader) {
+      if (!goalLoader) {
         return plan.goals || [];
       }
 
-      // Derive the plan's goals from its tasks (materialized rows first,
-      // falling back to the draft schedule stored in planJson)
-      const tasks = await taskByPlanLoader.load(plan.id);
-      const source = tasks?.length ? tasks : (plan.planJson as any)?.tasks || [];
+      const draftTasks = (plan.planJson as any)?.tasks || [];
+      let tasks: any[] = draftTasks;
+
+      if (taskByPlanLoader && plan.status && plan.status !== 'DRAFT') {
+        const materialized = await taskByPlanLoader.load(plan.id);
+        if (materialized?.length) {
+          tasks = materialized;
+        }
+      }
+
       const goalIds: string[] = Array.from(
-        new Set(source.map((t: any) => t.goalId).filter(Boolean))
+        new Set(tasks.map((t: any) => t.goalId).filter(Boolean)),
       );
 
+      const counts = new Map<string, number>();
+      for (const t of tasks) {
+        if (t.goalId) {
+          counts.set(t.goalId, (counts.get(t.goalId) || 0) + 1);
+        }
+      }
+
       const goals = await Promise.all(goalIds.map((id) => goalLoader.load(id)));
-      return goals.filter(Boolean);
+      return goals
+        .filter(Boolean)
+        .map((g: any) => ({ ...g, taskCount: counts.get(g.id) || 0 }));
     },
 
     user: async (plan: any, _: any, { userLoader }: any) => {
@@ -170,31 +185,53 @@ export const planResolvers = {
       return userLoader.load(plan.userId);
     },
 
-    totalTasks: async (plan: any) => {
-      // If already computed
-      if (plan.totalTasks !== undefined) return plan.totalTasks;
-
-      // Compute from tasks array
-      return plan.tasks?.length || 0;
+    totalTasks: async (plan: any, _: any, { taskByPlanLoader }: any) => {
+      if (plan.totalTasks !== undefined && plan.totalTasks !== null) {
+        return plan.totalTasks;
+      }
+      if (!taskByPlanLoader) {
+        return plan.tasks?.length || 0;
+      }
+      const materialized = await taskByPlanLoader.load(plan.id);
+      if (materialized?.length) return materialized.length;
+      return (plan.planJson as any)?.tasks?.length || 0;
     },
 
-    completedTasks: async (plan: any) => {
-      // If already computed
-      if (plan.completedTasks !== undefined) return plan.completedTasks;
-
-      // Compute from tasks array
-      return plan.tasks?.filter((t: any) => t.isCompleted).length || 0;
+    completedTasks: async (plan: any, _: any, { taskByPlanLoader }: any) => {
+      if (plan.completedTasks !== undefined && plan.completedTasks !== null) {
+        return plan.completedTasks;
+      }
+      if (!taskByPlanLoader) {
+        return plan.tasks?.filter((t: any) => t.isCompleted).length || 0;
+      }
+      const materialized = await taskByPlanLoader.load(plan.id);
+      if (materialized?.length) {
+        return materialized.filter((t: any) => t.isCompleted).length;
+      }
+      return 0;
     },
 
-    completionRate: async (plan: any) => {
-      // If already computed
-      if (plan.completionRate !== undefined) return plan.completionRate;
-
-      // Compute from tasks
-      const total = plan.tasks?.length || 0;
+    completionRate: async (plan: any, _: any, { taskByPlanLoader }: any) => {
+      if (plan.completionRate !== undefined && plan.completionRate !== null) {
+        return plan.completionRate;
+      }
+      const total =
+        plan.totalTasks ??
+        (await (async () => {
+          if (!taskByPlanLoader) return plan.tasks?.length || 0;
+          const materialized = await taskByPlanLoader.load(plan.id);
+          return materialized?.length || (plan.planJson as any)?.tasks?.length || 0;
+        })());
       if (total === 0) return 0;
-
-      const completed = plan.tasks?.filter((t: any) => t.isCompleted).length || 0;
+      const completed =
+        plan.completedTasks ??
+        (await (async () => {
+          if (!taskByPlanLoader) {
+            return plan.tasks?.filter((t: any) => t.isCompleted).length || 0;
+          }
+          const materialized = await taskByPlanLoader.load(plan.id);
+          return materialized?.filter((t: any) => t.isCompleted).length || 0;
+        })());
       return (completed / total) * 100;
     },
   },

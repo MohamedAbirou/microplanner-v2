@@ -814,6 +814,18 @@ export const GET_TEAMS = gql`
   }
 `;
 
+export const GET_TEAM = gql`
+  query GetTeam($id: ID!) {
+    team(id: $id) {
+      id
+      name
+      description
+      ownerId
+      createdAt
+    }
+  }
+`;
+
 export const CREATE_TEAM = gql`
   mutation CreateTeam($input: CreateTeamInput!) {
     createTeam(input: $input) {

@@ -350,6 +350,15 @@ export class GoalsAPI {
     return data.goals || data.data || data;
   }
 
+  async getGoalsByIds(ids: string[], userId: string) {
+    const { data } = await this.client.post(
+      '/batch',
+      { ids },
+      { headers: { 'x-user-id': userId } },
+    );
+    return (data.goals || []) as unknown[];
+  }
+
   async getGoalAnalytics(id: string, userId: string) {
     const { data } = await this.client.get(`/${id}/analytics`, {
       headers: { 'x-user-id': userId },
@@ -610,6 +619,15 @@ export class TasksAPI {
       params: { planId },
     });
     return data.tasks || data.data || [];
+  }
+
+  async getTasksByPlanIds(planIds: string[], userId: string) {
+    const { data } = await this.client.post(
+      '/batch/by-plan',
+      { planIds },
+      { headers: { 'x-user-id': userId } },
+    );
+    return (data.byPlanId || {}) as Record<string, unknown[]>;
   }
 
   async getTasksByGoal(goalId: string, userId: string) {
@@ -1140,6 +1158,15 @@ export class ProjectsAPI {
       headers: { 'x-user-id': userId },
     });
     return data;
+  }
+
+  async getProjectsByIds(ids: string[], userId: string) {
+    const { data } = await this.client.post(
+      '/batch',
+      { ids },
+      { headers: { 'x-user-id': userId } },
+    );
+    return (data || {}) as Record<string, unknown>;
   }
 
   async getProjects(userId: string, filters: QueryProjectsArgs) {

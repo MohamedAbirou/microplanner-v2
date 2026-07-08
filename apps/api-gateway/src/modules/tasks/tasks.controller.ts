@@ -49,6 +49,17 @@ export class TasksController {
     };
   }
 
+  @Post('batch/by-plan')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Batch-fetch tasks grouped by plan ID' })
+  async findByPlanIds(
+    @CurrentUser() user: User,
+    @Body() body: { planIds?: string[] },
+  ) {
+    const byPlanId = await this.tasksService.findByPlanIds(user.id, body?.planIds ?? []);
+    return { byPlanId };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a single task by ID' })
   @ApiResponse({ status: 200, description: 'Task retrieved successfully' })

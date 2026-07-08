@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePlans } from '@/hooks/use-graphql';
+import { usePlansSummary } from '@/hooks/use-graphql';
 import { format } from 'date-fns';
 import {
     Calendar,
@@ -24,7 +24,7 @@ export default function PlansPage() {
   const router = useRouter();
 
   // Fetch plans from GraphQL
-  const { plans, loading } = usePlans();
+  const { plans, loading } = usePlansSummary();
 
   const draftPlan = plans.find((p: any) => p.status === 'DRAFT');
   const activePlan = plans.find(

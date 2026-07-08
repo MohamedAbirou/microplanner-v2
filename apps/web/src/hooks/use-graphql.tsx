@@ -418,6 +418,21 @@ export function useGoals() {
   };
 }
 
+/** Lightweight goals for layout, command palette, and pickers. */
+export function useGoalsList() {
+  const { data, loading, error, refetch } = useQuery(operations.GET_GOALS_LIST, {
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
+
+  return {
+    goals: data?.goals || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
 export function useGoal(id: string) {
   const { data, loading, error, refetch } = useQuery(operations.GET_GOAL, {
     variables: { id },
@@ -434,7 +449,7 @@ export function useGoal(id: string) {
 
 export function useCreateGoal() {
   const [createGoal, { loading, error }] = useMutation(operations.CREATE_GOAL, {
-    refetchQueries: [{ query: operations.GET_GOALS }],
+    refetchQueries: [...operations.GOAL_QUERY_NAMES],
     onCompleted: () => {
       toast.success('Goal created successfully');
     },
@@ -450,7 +465,7 @@ export function useCreateGoal() {
 
 export function useUpdateGoal() {
   const [updateGoal, { loading, error }] = useMutation(operations.UPDATE_GOAL, {
-    refetchQueries: [{ query: operations.GET_GOALS }],
+    refetchQueries: [...operations.GOAL_QUERY_NAMES],
     onCompleted: () => {
       toast.success('Goal updated successfully');
     },
@@ -466,7 +481,7 @@ export function useUpdateGoal() {
 
 export function useDeleteGoal() {
   const [deleteGoal, { loading, error }] = useMutation(operations.DELETE_GOAL, {
-    refetchQueries: [{ query: operations.GET_GOALS }],
+    refetchQueries: [...operations.GOAL_QUERY_NAMES],
     onCompleted: () => {
       toast.success('Goal deleted successfully');
     },
@@ -498,6 +513,23 @@ export function usePlans(filter?: any, options?: { skipQuery?: boolean }) {
   };
 }
 
+/** Plans list without nested tasks — uses DB stats + planJson goal breakdown. */
+export function usePlansSummary(filter?: any, options?: { skipQuery?: boolean }) {
+  const { data, loading, error, refetch } = useQuery(operations.GET_PLANS_SUMMARY, {
+    variables: filter ? { filter } : undefined,
+    skip: options?.skipQuery,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
+
+  return {
+    plans: data?.plans || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
 export function usePlan(id?: string | null) {
   const { data, loading, error, refetch } = useQuery(operations.GET_PLAN, {
     variables: { id },
@@ -514,7 +546,7 @@ export function usePlan(id?: string | null) {
 
 export function useGeneratePlan() {
   const [generatePlan, { loading, error }] = useMutation(operations.GENERATE_PLAN, {
-    refetchQueries: [{ query: operations.GET_PLANS }],
+    refetchQueries: [...operations.PLAN_QUERY_NAMES],
     onCompleted: () => {
       toast.success('Plan generated successfully!');
     },
@@ -530,7 +562,7 @@ export function useGeneratePlan() {
 
 export function useUpdatePlan() {
   const [updatePlan, { loading, error }] = useMutation(operations.UPDATE_PLAN, {
-    refetchQueries: [{ query: operations.GET_PLANS }],
+    refetchQueries: [...operations.PLAN_QUERY_NAMES],
     onCompleted: () => {
       toast.success('Plan updated successfully');
     },
@@ -546,7 +578,7 @@ export function useUpdatePlan() {
 
 export function useAcceptPlan() {
   const [acceptPlan, { loading, error }] = useMutation(operations.ACCEPT_PLAN, {
-    refetchQueries: [{ query: operations.GET_PLANS }, ...operations.TASK_QUERY_NAMES],
+    refetchQueries: [{ query: operations.GET_PLANS }, ...operations.PLAN_QUERY_NAMES, ...operations.TASK_QUERY_NAMES],
     awaitRefetchQueries: true,
     onCompleted: () => {
       toast.success('Plan accepted successfully!');
@@ -563,7 +595,7 @@ export function useAcceptPlan() {
 
 export function useRegeneratePlan() {
   const [regeneratePlan, { loading, error }] = useMutation(operations.REGENERATE_PLAN, {
-    refetchQueries: [{ query: operations.GET_PLANS }],
+    refetchQueries: [...operations.PLAN_QUERY_NAMES],
     onError: (error) => {
       toast.error('Failed to regenerate plan', {
         description: error.message,

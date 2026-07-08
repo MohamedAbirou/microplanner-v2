@@ -647,6 +647,36 @@ export class TasksService {
   }
 
   /**
+   * Batch-fetch tasks grouped by planId (one DB round-trip).
+   */
+  async findByPlanIds(
+    userId: string,
+    planIds: string[],
+  ): Promise<Record<string, Task[]>> {
+    const uniqueIds = [...new Set(planIds.filter(Boolean))];
+    const byPlanId: Record<string, Task[]> = Object.fromEntries(
+      uniqueIds.map((id) => [id, []]),
+    );
+    if (uniqueIds.length === 0) {
+      return byPlanId;
+    }
+
+    const tasks = await this.prisma.task.findMany({
+      where: { userId, planId: { in: uniqueIds } },
+      orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
+    });
+
+    for (const task of tasks) {
+      const planId = task.planId;
+      if (planId && byPlanId[planId]) {
+        byPlanId[planId].push(task as Task);
+      }
+    }
+
+    return byPlanId;
+  }
+
+  /**
    * Parse time string (HH:MM) to Date for comparison
    */
   private parseTime(timeStr: string): Date {

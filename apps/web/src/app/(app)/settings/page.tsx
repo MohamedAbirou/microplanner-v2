@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useUserSettings, useUpdateUserSettings, useUpdateUserProfile, useTasks, useGoals, usePlans } from '@/hooks/use-graphql';
+import { useUserSettings, useUpdateUserSettings, useUpdateUserProfile, useTasks } from '@/hooks/use-graphql';
 import { useTheme } from 'next-themes';
 import {
   User,
@@ -25,6 +25,7 @@ import { AiMemoryManager } from '@/components/settings/ai-memory-manager';
 import { ReferralPanel } from '@/components/settings/referral-panel';
 import { useMutation, useApolloClient } from '@apollo/client';
 import { DELETE_MY_ACCOUNT, EXPORT_MY_DATA } from '@/graphql/operations-extended';
+import * as operations from '@/graphql/operations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -107,8 +108,6 @@ export default function SettingsPage() {
 
   // Tasks are fetched on-demand during export to avoid loading full history on mount.
   const { refetch: refetchTasks } = useTasks(undefined, undefined, { skipQuery: true });
-  const { goals } = useGoals();
-  const { plans } = usePlans();
 
   // Local state for settings (synced with GraphQL)
   const [profileSettings, setProfileSettings] = React.useState({
@@ -245,6 +244,9 @@ export default function SettingsPage() {
       });
 
       let tasks: any[] = [];
+      let goals: any[] = [];
+      let plans: any[] = [];
+
       if (dataType === 'tasks' || dataType === 'all') {
         const { data } = await refetchTasks({
           filter: {
@@ -256,6 +258,22 @@ export default function SettingsPage() {
           take: 500,
         });
         tasks = data?.tasks ?? [];
+      }
+
+      if (dataType === 'goals' || dataType === 'all') {
+        const { data } = await apolloClient.query({
+          query: operations.GET_GOALS,
+          fetchPolicy: 'network-only',
+        });
+        goals = data?.goals ?? [];
+      }
+
+      if (dataType === 'plans' || dataType === 'all') {
+        const { data } = await apolloClient.query({
+          query: operations.GET_PLANS_SUMMARY,
+          fetchPolicy: 'network-only',
+        });
+        plans = data?.plans ?? [];
       }
 
       if (format === 'csv') {

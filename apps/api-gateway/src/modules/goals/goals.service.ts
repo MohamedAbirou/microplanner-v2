@@ -89,6 +89,20 @@ export class GoalsService {
   }
 
   /**
+   * Batch-fetch goals by ID (one DB round-trip).
+   */
+  async findByIds(userId: string, ids: string[]): Promise<Goal[]> {
+    const uniqueIds = [...new Set(ids.filter(Boolean))];
+    if (uniqueIds.length === 0) {
+      return [];
+    }
+
+    return this.prisma.goal.findMany({
+      where: { userId, id: { in: uniqueIds } },
+    });
+  }
+
+  /**
    * Find a single goal by ID
    */
   async findOne(goalId: string, userId: string): Promise<Goal> {

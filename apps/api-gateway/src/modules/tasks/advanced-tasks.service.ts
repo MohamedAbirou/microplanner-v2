@@ -485,6 +485,31 @@ export class AdvancedTasksService {
   }
 
   /**
+   * Batch-fetch projects by ID (one DB round-trip, list-card fields only).
+   */
+  async getProjectsBatch(
+    userId: string,
+    ids: string[],
+  ): Promise<Record<string, Pick<Project, 'id' | 'name' | 'color' | 'icon'>>> {
+    const uniqueIds = [...new Set(ids.filter(Boolean))];
+    const byId: Record<string, Pick<Project, 'id' | 'name' | 'color' | 'icon'>> = {};
+    if (uniqueIds.length === 0) {
+      return byId;
+    }
+
+    const projects = await this.prisma.project.findMany({
+      where: { userId, id: { in: uniqueIds } },
+      select: { id: true, name: true, color: true, icon: true },
+    });
+
+    for (const project of projects) {
+      byId[project.id] = project;
+    }
+
+    return byId;
+  }
+
+  /**
    * Get project with stats
    */
   async getProjectWithStats(projectId: string, userId: string): Promise<ProjectWithStats> {
