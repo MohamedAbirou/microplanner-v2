@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, HttpCode, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PremiumService } from './premium.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -122,6 +122,22 @@ export class TeamsController {
   @ApiOperation({ summary: 'Team dashboard: member stats + shared goals' })
   async getDashboard(@CurrentUser() user: User, @Param('id') id: string) {
     return this.premiumService.getTeamDashboard(id, user.id);
+  }
+
+  @Get(':id/activity')
+  @ApiOperation({ summary: 'Chronological team activity feed (cursor paginated)' })
+  async getActivity(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Query('take') take?: string,
+    @Query('cursor') cursor?: string,
+  ) {
+    return this.premiumService.getTeamActivity(
+      id,
+      user.id,
+      take ? parseInt(take, 10) : undefined,
+      cursor,
+    );
   }
 
   @Get(':id/goals')

@@ -26,21 +26,50 @@ export class ReferralsService {
 
     const active = referrals.filter((r) => r.status === ReferralStatus.ACTIVE).length;
     const pending = referrals.filter((r) => r.status === ReferralStatus.PENDING).length;
+    const rewardsEarned = referrals.filter((r) => r.rewardGranted).length;
 
     return {
       code: this.codeFor(userId),
       totalReferrals: referrals.length,
       activeReferrals: active,
       pendingReferrals: pending,
+      rewardsEarned,
       referrals: referrals.map((r) => ({
         id: r.id,
         status: r.status,
+        rewardGranted: r.rewardGranted,
         // Only surface a masked name for privacy.
         referredName: r.referred?.name || maskEmail(r.referred?.email),
         createdAt: r.createdAt,
         completedAt: r.completedAt,
       })),
     };
+  }
+
+  /**
+   * Mark a referred user's referral as rewarded when they first subscribe.
+   * Idempotent: only a PENDING referral transitions, so repeated webhook
+   * deliveries are safe. Returns the referrer to credit, or null.
+   *
+   * Deliberately has no billing dependency — the caller (BillingService) applies
+   * the actual Stripe credit, keeping the module graph acyclic.
+   */
+  async completeReferralForSubscriber(
+    referredUserId: string,
+  ): Promise<{ referrerId: string } | null> {
+    const referral = await this.prisma.referral.findFirst({
+      where: { referredId: referredUserId, status: ReferralStatus.PENDING },
+    });
+    if (!referral) return null;
+
+    await this.prisma.referral.update({
+      where: { id: referral.id },
+      data: { status: ReferralStatus.ACTIVE, rewardGranted: true, completedAt: new Date() },
+    });
+    this.logger.log(
+      `Referral completed: ${referral.referrerId} earns a reward for ${referredUserId} subscribing`,
+    );
+    return { referrerId: referral.referrerId };
   }
 
   /**

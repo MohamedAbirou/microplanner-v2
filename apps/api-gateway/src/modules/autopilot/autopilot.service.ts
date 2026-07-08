@@ -1,7 +1,9 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CalendarService } from '../calendar/calendar.service';
+import { CalendarWatchChannelService } from '../calendar/services/calendar-watch-channel.service';
 import { PushNotificationService } from '../notifications/push-notification.service';
+import { AiMemoryService } from '../ai-memory/ai-memory.service';
 
 interface Interval {
   s: number; // minutes from midnight
@@ -37,6 +39,8 @@ export class AutopilotService {
     private prisma: PrismaService,
     private calendarService: CalendarService,
     private pushService: PushNotificationService,
+    private watchChannels: CalendarWatchChannelService,
+    private aiMemory: AiMemoryService,
   ) {}
 
   // ==================== SETTINGS ====================
@@ -83,6 +87,19 @@ export class AutopilotService {
       data,
       select: { autopilotEnabled: true, autopilotMode: true },
     });
+
+    // Register/tear down calendar push channels to match the autopilot toggle so
+    // changes drive real-time rescheduling (and we don't orphan channels).
+    if (input.enabled === true) {
+      void this.watchChannels
+        .ensureWatchesForUser(userId)
+        .catch((err) => this.logger.warn(`ensureWatches on enable failed: ${err?.message || err}`));
+    } else if (input.enabled === false) {
+      void this.watchChannels
+        .stopWatchesForUser(userId)
+        .catch((err) => this.logger.warn(`stopWatches on disable failed: ${err?.message || err}`));
+    }
+
     return { enabled: user.autopilotEnabled, mode: user.autopilotMode };
   }
 
@@ -108,10 +125,17 @@ export class AutopilotService {
       where: { id: proposalId, userId },
     });
     if (!proposal) throw new NotFoundException('Proposal not found');
-    return this.prisma.autopilotProposal.update({
+    const updated = await this.prisma.autopilotProposal.update({
       where: { id: proposalId },
       data: { status: 'DISMISSED' },
     });
+    // Learn from the override: the user rejected autopilot's reschedule, a
+    // signal they prefer manual control of their schedule. Best-effort.
+    void this.aiMemory.recordRescheduleOverride(userId, {
+      source: 'autopilot-dismiss',
+      note: 'User dismissed an autopilot reschedule proposal — prefers keeping their own timing.',
+    });
+    return updated;
   }
 
   // ==================== CORE RESCHEDULE ====================

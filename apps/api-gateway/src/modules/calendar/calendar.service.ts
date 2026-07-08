@@ -7,6 +7,7 @@ import { GoogleOAuthService } from './services/google-oauth.service';
 import { OutlookOAuthService } from './services/outlook-oauth.service';
 import { GoogleCalendarProvider } from './services/google-calendar.provider';
 import { OutlookCalendarProvider } from './services/outlook-calendar.provider';
+import { CalendarWatchChannelService } from './services/calendar-watch-channel.service';
 import {
   CalendarProvider,
   CalendarProviderId,
@@ -44,6 +45,7 @@ export class CalendarService {
     private outlookOAuthService: OutlookOAuthService,
     private googleProvider: GoogleCalendarProvider,
     private outlookProvider: OutlookCalendarProvider,
+    private watchChannels: CalendarWatchChannelService,
   ) {}
 
   // ============================================================
@@ -581,12 +583,20 @@ export class CalendarService {
         `${input.provider} calendar is not supported. Connect Google or Outlook.`,
       );
     }
+    // Register a push channel so calendar changes drive autopilot in real time.
+    void this.watchChannels
+      .ensureWatch(userId, normalized as 'google' | 'outlook')
+      .catch((err) => this.logger.warn(`ensureWatch after connect failed: ${err?.message || err}`));
     return this.mapTokenToConnection(token as any);
   }
 
   async disconnectConnection(connectionId: string, userId: string) {
     // Ownership check happens in getConnection
-    await this.getConnection(connectionId, userId);
+    const connection = await this.getConnection(connectionId, userId);
+    // Tear down any push channel before deleting the token that holds its ids.
+    await this.watchChannels
+      .stopWatch(userId, connection.provider.toLowerCase() as 'google' | 'outlook')
+      .catch((err) => this.logger.warn(`stopWatch on disconnect failed: ${err?.message || err}`));
     await this.prisma.calendarToken.delete({ where: { id: connectionId } });
     this.logger.log(`Calendar connection ${connectionId} removed for user ${userId}`);
   }

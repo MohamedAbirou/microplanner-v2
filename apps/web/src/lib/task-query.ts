@@ -1,4 +1,5 @@
 import {
+  addDays,
   endOfDay,
   endOfMonth,
   endOfWeek,
@@ -41,5 +42,22 @@ export function getDefaultTaskListQuery(days = 90) {
   return {
     filter: { dateRange: { start, end } },
     take: 250,
+  };
+}
+
+/**
+ * Tasks page default — past month + next two months, capped take.
+ * Balances "see upcoming work" with fast first paint on Render.
+ */
+export function getTasksPageDefaultQuery() {
+  const today = startOfDay(new Date());
+  return {
+    filter: {
+      dateRange: {
+        start: subDays(today, 30),
+        end: endOfDay(addDays(today, 60)),
+      },
+    },
+    take: 150,
   };
 }

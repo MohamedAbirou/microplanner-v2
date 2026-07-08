@@ -20,6 +20,16 @@ export const taskResolvers = {
       return dataSources.tasksAPI.getRescheduleSuggestion(taskId, user.userId);
     },
 
+    taskTimeEntries: async (_: any, { taskId, take, skip }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.tasksAPI.listTaskTimeEntries(taskId, user.userId, take, skip);
+    },
+
+    timeReport: async (_: any, { startDate, endDate }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.tasksAPI.getTimeReport(user.userId, startDate, endDate);
+    },
+
     tasksByProject: async (_: any, { projectId }: { projectId: string }, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.tasksAPI.getTasksByProject(projectId, user.userId);
@@ -163,6 +173,16 @@ export const taskResolvers = {
       });
 
       return timeEntry;
+    },
+
+    updateTimeEntry: async (_: any, { id, input }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.tasksAPI.updateTimeEntry(id, user.userId, input);
+    },
+
+    deleteTimeEntry: async (_: any, { id }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.tasksAPI.deleteTimeEntry(id, user.userId);
     },
 
     // Bulk operations

@@ -30,6 +30,11 @@ export const teamsResolvers = {
       return dataSources.teamsAPI.getTeamDashboard(teamId, user.userId);
     },
 
+    teamActivity: async (_: any, { teamId, take, cursor }: any, { dataSources, user }: any) => {
+      if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
+      return dataSources.teamsAPI.getTeamActivity(teamId, user.userId, take, cursor);
+    },
+
     teamGoals: async (_: any, { teamId }: any, { dataSources, user }: any) => {
       if (!user) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHENTICATED' } });
       return dataSources.teamsAPI.getTeamGoals(teamId, user.userId);

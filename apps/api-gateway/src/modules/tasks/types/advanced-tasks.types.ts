@@ -122,6 +122,13 @@ export interface LogTimeDto {
   taskId: string;
   minutes: number;
   date?: Date;
+  note?: string;
+}
+
+export interface UpdateTimeEntryDto {
+  minutes?: number;
+  note?: string | null;
+  startedAt?: Date;
 }
 
 /**

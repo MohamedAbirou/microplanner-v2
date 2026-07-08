@@ -34,6 +34,32 @@ export class AiMemoryService {
     });
   }
 
+  /**
+   * Record a scheduling override the user made (dismissed an autopilot move, or
+   * smart-rescheduled a task). Stored as a moderate-confidence TIME_PREFERENCE
+   * memory so future plans (Claude + GPT) learn the user's real preferences.
+   */
+  async recordRescheduleOverride(
+    userId: string,
+    input: { taskTitle?: string; preferredStart?: string; source: string; note?: string },
+  ) {
+    try {
+      return await this.prisma.aIMemory.create({
+        data: {
+          userId,
+          memoryType: MemoryType.TIME_PREFERENCE,
+          content: { pattern: 'reschedule_override', ...input } as any,
+          confidence: 0.6,
+          source: input.source,
+        },
+      });
+    } catch (err: any) {
+      // Learning is best-effort — never let it break the reschedule action.
+      this.logger.warn(`Failed to record reschedule override for ${userId}: ${err?.message || err}`);
+      return null;
+    }
+  }
+
   async delete(userId: string, id: string) {
     const memory = await this.prisma.aIMemory.findFirst({ where: { id, userId } });
     if (!memory) throw new NotFoundException('Memory not found');

@@ -770,11 +770,42 @@ export class TasksAPI {
     return data;
   }
 
-  async getTimeEntries(taskId: string) {
-    // Time tracking is embedded on the Task row (single running timer), so
-    // there is no per-entry history table yet. Return an empty list — never
-    // throw from a field resolver.
+  async getTimeEntries(_taskId: string) {
+    // Per-task history is fetched lazily via the dedicated `taskTimeEntries`
+    // query (detail view only) to avoid an N+1 on task list queries. This
+    // Task.timeEntries field stays empty so list selections never fan out.
     return [];
+  }
+
+  // Time entry history + reports (lazy, detail-only)
+  async listTaskTimeEntries(taskId: string, userId: string, take?: number, skip?: number) {
+    const { data } = await this.client.get(`/advanced/${taskId}/time-entries`, {
+      params: { take, skip },
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async updateTimeEntry(id: string, userId: string, input: { minutes?: number; note?: string | null; startedAt?: string }) {
+    const { data } = await this.client.put(`/advanced/time-entries/${id}`, input, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async deleteTimeEntry(id: string, userId: string) {
+    await this.client.delete(`/advanced/time-entries/${id}`, {
+      headers: { 'x-user-id': userId },
+    });
+    return true;
+  }
+
+  async getTimeReport(userId: string, startDate: string, endDate: string) {
+    const { data } = await this.client.get('/advanced/time/report', {
+      params: { startDate, endDate },
+      headers: { 'x-user-id': userId },
+    });
+    return data;
   }
 
   // Subtasks
@@ -1670,6 +1701,14 @@ export class TeamsAPI {
 
   async getTeamDashboard(teamId: string, userId: string) {
     const { data } = await this.client.get(`/${teamId}/dashboard`, {
+      headers: { 'x-user-id': userId },
+    });
+    return data;
+  }
+
+  async getTeamActivity(teamId: string, userId: string, take?: number, cursor?: string) {
+    const { data } = await this.client.get(`/${teamId}/activity`, {
+      params: { take, cursor },
       headers: { 'x-user-id': userId },
     });
     return data;

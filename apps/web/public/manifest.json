@@ -1,8 +1,12 @@
 {
+  "id": "/",
   "name": "MicroPlanner - AI-Powered Weekly Planning",
   "short_name": "MicroPlanner",
   "description": "AI-powered weekly planning that adapts to you",
   "start_url": "/",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
   "display": "standalone",
   "background_color": "#0A0A0A",
   "theme_color": "#2563EB",

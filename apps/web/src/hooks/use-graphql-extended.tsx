@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { useQuery, useLazyQuery, useMutation, useSubscription } from '@apollo/client';
 import { toast } from 'sonner';
 import * as ops from '@/graphql/operations-extended';
@@ -882,6 +883,43 @@ export function useTeamDashboard(teamId: string) {
   return { dashboard: data?.teamDashboard || null, loading, error, refetch };
 }
 
+/** Cursor-paginated team activity feed (task completions, plan accepts, joins). */
+export function useTeamActivity(teamId: string, skipQuery = false) {
+  const { data, loading, error, fetchMore } = useQuery(ops.GET_TEAM_ACTIVITY, {
+    variables: { teamId, take: 30 },
+    skip: skipQuery || !teamId,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
+  const feed = data?.teamActivity;
+  const loadMore = React.useCallback(() => {
+    if (!feed?.nextCursor) return;
+    return fetchMore({
+      variables: { teamId, take: 30, cursor: feed.nextCursor },
+      updateQuery: (prev: any, { fetchMoreResult }: any) => {
+        if (!fetchMoreResult?.teamActivity) return prev;
+        return {
+          teamActivity: {
+            ...fetchMoreResult.teamActivity,
+            events: [
+              ...(prev.teamActivity?.events || []),
+              ...fetchMoreResult.teamActivity.events,
+            ],
+          },
+        };
+      },
+    });
+  }, [feed?.nextCursor, fetchMore, teamId]);
+
+  return {
+    events: (feed?.events || []) as any[],
+    nextCursor: feed?.nextCursor || null,
+    loading,
+    error,
+    loadMore,
+  };
+}
+
 export function useDeleteTeam() {
   const [deleteTeam, { loading, error }] = useMutation(ops.DELETE_TEAM, {
     refetchQueries: [{ query: ops.GET_TEAMS }],
@@ -1164,6 +1202,11 @@ export function useDisconnectIntegration() {
 export function useSyncIntegration() {
   const [syncIntegration, { loading, error }] = useMutation(ops.SYNC_INTEGRATION, {
     onCompleted: (data) => {
+      // Slack "sync" posts today's plan digest rather than importing tasks.
+      if (data?.syncIntegration?.type === 'SLACK') {
+        toast.success("Posted today's plan to Slack");
+        return;
+      }
       const stats = data?.syncIntegration?.config?.lastSyncStats;
       if (stats && (stats.imported || stats.updated || stats.completed)) {
         toast.success(

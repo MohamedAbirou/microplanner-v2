@@ -34,9 +34,101 @@ import {
   useRemoveTeamMember,
   useUpdateTeamMemberRole,
   useTeamDashboard,
+  useTeamActivity,
 } from '@/hooks/use-graphql-extended';
+import { formatDistanceToNow } from 'date-fns';
+import { Activity, CheckCircle2, CalendarCheck } from 'lucide-react';
 
 const ROLES = ['ADMIN', 'MEMBER', 'VIEWER'] as const;
+
+function activityText(e: { type: string; actorName: string; title?: string | null }): {
+  icon: React.ElementType;
+  text: React.ReactNode;
+} {
+  switch (e.type) {
+    case 'TASK_COMPLETED':
+      return {
+        icon: CheckCircle2,
+        text: (
+          <>
+            <span className="font-medium">{e.actorName}</span> completed{' '}
+            <span className="text-foreground">{e.title}</span>
+          </>
+        ),
+      };
+    case 'PLAN_ACCEPTED':
+      return {
+        icon: CalendarCheck,
+        text: (
+          <>
+            <span className="font-medium">{e.actorName}</span> accepted a plan ({e.title})
+          </>
+        ),
+      };
+    case 'MEMBER_JOINED':
+    default:
+      return {
+        icon: UserPlus,
+        text: (
+          <>
+            <span className="font-medium">{e.actorName}</span> joined the team
+          </>
+        ),
+      };
+  }
+}
+
+function TeamActivityCard({ teamId }: { teamId: string }) {
+  const { events, nextCursor, loading, loadMore } = useTeamActivity(teamId);
+
+  return (
+    <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
+      <CardHeader>
+        <CardTitle className="text-[15px] flex items-center gap-2">
+          <Activity className="h-4 w-4" /> Activity
+        </CardTitle>
+        <CardDescription className="text-[13px]">
+          Recent completions, accepted plans, and new members.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {loading && events.length === 0 ? (
+          <Skeleton className="h-32 w-full rounded-[10px]" />
+        ) : events.length === 0 ? (
+          <div className="rounded-[10px] border border-border bg-accent py-8 text-center text-[13px] text-muted-foreground">
+            No team activity yet. As members complete tasks and accept plans, it shows up here.
+          </div>
+        ) : (
+          <ul className="space-y-2.5">
+            {events.map((e: any) => {
+              const { icon: Icon, text } = activityText(e);
+              return (
+                <li key={e.id} className="flex items-start gap-2.5">
+                  <div className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <Icon className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13px]">{text}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {formatDistanceToNow(new Date(e.timestamp), { addSuffix: true })}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {nextCursor && (
+          <div className="flex justify-center">
+            <Button variant="ghost" size="sm" className="h-8" onClick={() => loadMore()}>
+              Load more
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function TeamDashboardCard({ teamId }: { teamId: string }) {
   const { dashboard, loading } = useTeamDashboard(teamId);
@@ -242,6 +334,8 @@ function TeamDetailContent({ teamId }: { teamId: string }) {
       </Card>
 
       <TeamDashboardCard teamId={teamId} />
+
+      <TeamActivityCard teamId={teamId} />
 
       {/* Invite dialog */}
       <Dialog open={open} onOpenChange={setOpen}>

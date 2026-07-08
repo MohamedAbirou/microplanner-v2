@@ -5,6 +5,7 @@ import {
   split,
   from,
 } from '@apollo/client';
+import { BatchHttpLink } from '@apollo/client/link/batch-http';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { setContext } from '@apollo/client/link/context';
@@ -27,6 +28,36 @@ const httpLink = new HttpLink({
   uri: config.graphqlUrl,
   credentials: 'include',
 });
+
+// Slow list/analytics queries — never batch these with anything else. A batch
+// response only returns once every operation in it has resolved, so grouping
+// a 3s GetTasksList with fast layout queries (GetMyTier, OnboardingStatus...)
+// would make the fast ones wait 3s too. Keep them on their own connection.
+const HEAVY_QUERY_NAMES = new Set([
+  'GetTasks',
+  'GetTasksList',
+  'GetTasksAnalytics',
+  'GetDashboardStats',
+  'GetPlansSummary',
+  'GetPlans',
+  'SearchTasks',
+]);
+
+// Combines several small operations fired in the same tick (layout queries on
+// every navigation: OnboardingStatus, GetMyTier, GetGoalsList, GetNotifications)
+// into a single HTTP request instead of one each.
+const batchHttpLink = new BatchHttpLink({
+  uri: config.graphqlUrl,
+  credentials: 'include',
+  batchInterval: 20,
+  batchMax: 10,
+});
+
+const batchableHttpLink = split((operation) => {
+  const definition = getMainDefinition(operation.query);
+  const isQuery = definition.kind === 'OperationDefinition' && definition.operation === 'query';
+  return isQuery && !HEAVY_QUERY_NAMES.has(operation.operationName || '');
+}, batchHttpLink, httpLink);
 
 // WebSocket link for subscriptions
 const wsLink =
@@ -134,9 +165,9 @@ const splitLink =
           );
         },
         wsLink,
-        from([errorLink, authLink, httpLink])
+        from([errorLink, authLink, batchableHttpLink])
       )
-    : from([errorLink, authLink, httpLink]);
+    : from([errorLink, authLink, batchableHttpLink]);
 
 // Cache configuration
 const cache = new InMemoryCache({

@@ -11,17 +11,112 @@ You are continuing the **competitive parity** implementation for MicroPlanner. P
 
 - `docs/COMPETITIVE_PARITY_GAPS.md` — gap analysis
 - `docs/COMPETITIVE_PARITY_PROMPT.md` — full spec (items 1.1–2.7 are DONE)
-- `docs/PRODUCTION_READINESS.md` — do not break query bounds / rate limits
+- `docs/PRODUCTION_READINESS.md` — query bounds, rate limits, depth limit
+- `apps/graphql-gateway/src/datasources/dataloaders.ts` — existing batch loaders
+- `apps/web/src/graphql/operations.ts` — query variants (`GetTasksList`, `GetGoalsList`, etc.)
+- `apps/web/src/hooks/use-graphql.tsx` — hooks + mutation refetch policy
+
+## Performance architecture (MANDATORY — do not regress)
+
+A prior session fixed systemic slowness: skeleton loaders lasting forever, Network tab flooded with GraphQL requests, 30–80+ REST calls behind a single page load. **Every file you touch must stay compatible with this architecture.**
+
+### Why the app was slow
+
+The GraphQL gateway is **not** a native GraphQL data layer — it **proxies REST**. Each nested field on a list (`task.dependencies`, `task.subtasks`, `plan.tasks`, `goal.project`) triggers separate REST calls unless explicitly batched:
+
+```
+Web → 1 GraphQL request
+  → Gateway resolves N list items × M nested fields
+  → N×M REST calls (N+1 storm)
+  → User sees one "graphql" line in DevTools but 50+ backend round-trips
+```
+
+**Rule:** Never add nested relationship arrays to list/browse queries without a batch endpoint + DataLoader first.
+
+### Already shipped — read before changing
+
+**API (`apps/api-gateway`)**
+- Task list bounded: `dateRange` clamped to 400 days, `take` max 500 (`QueryTasksDto`)
+- Batch endpoints (gateway must use these):
+  - `POST /tasks/advanced/dependencies/batch`
+  - `POST /tasks/advanced/subtasks/batch`
+  - `POST /tasks/batch/by-plan`
+  - `POST /goals/batch`
+  - `POST /tasks/advanced/projects/batch`
+
+**Gateway (`apps/graphql-gateway`)**
+- Per-request DataLoaders in `datasources/dataloaders.ts`: `taskLoader`, `goalLoader`, `projectLoader`, `taskByPlanLoader`, `taskDependencyLoader`, `subtaskLoader`, `userLoader`
+- Batch calls wired in `datasources/rest-api.ts`
+- Plan resolver uses DB `totalTasks`/`completedTasks` + `planJson` goals — not full `plan.tasks` on list views
+- Task schema: `dependencyCount`, `blockedByCount`, `subtaskCount` for list badges (no arrays)
+- Depth limit `depthLimit(8)` in `validation/depth-limit.ts`
+
+**Web (`apps/web`)**
+- **Query splitting** (`graphql/operations.ts`):
+  - `GetTasks` — full deps/subtasks — **detail views only**
+  - `GetTasksList` — Dashboard, Today, Tasks, Calendar, Search (no nested arrays)
+  - `GetTasksAnalytics` — analytics page only
+  - `GetGoalsList` / `GetPlansSummary` — layout, pickers, list pages
+- **Hooks:** `useTasksList`, `useGoalsList`, `usePlansSummary` on main browse pages; layout uses `useGoalsList()` once — pages must **not** also call `useGoals()`
+- **Apollo** (`lib/apollo/client.ts`): default `cache-first`; `tasks` cache `keyArgs` includes `filter`, `sort`, `take`, `skip`
+- **Loading UX:** `initialQueryLoading()` in `lib/graphql-loading.ts` — skeleton only when `data === undefined` (stale-while-revalidate on revisit); `components/ui/page-loader.tsx` + `app/(app)/loading.tsx` for route transitions
+- **Mutations:** `refetchQueries: 'active'` — NOT `['GetTasks', 'GetTasksList', 'GetTasksAnalytics']` and NOT `[...TASK_QUERY_NAMES]` (that triples network on every action)
+- **Never** `cache-and-network` on layout-level or navigation hooks (causes refetch storm + Render rate limits)
+
+### Rules for YOUR work (2.5, 2.8, Phase 3)
+
+1. **List query needs related data?** Add batch REST endpoint + DataLoader, OR use scalar count fields — never nested arrays on lists.
+2. **New page?** Use the correct query variant (table below). Lazy-fetch detail (`GET_TASK`, `GET_TASK_WITH_DEPENDENCIES`) only when modal opens.
+3. **Every task fetch:** `dateRange + take` always. Example: `useTasksList({ dateRange: { start, end } }, undefined, { take: 80 })`.
+4. **Single-entity mutations** (update, complete, DnD drag): optimistic cache / mutation response fields; `refetchQueries: 'active'` only when cache can't be patched. **No** named multi-query refetch lists.
+5. **New `@FieldResolver` on a list type:** must use DataLoader from context; register per-request in `index.ts`.
+6. **Before adding `useQuery` on a page:** check `(app)/layout.tsx` (goals, tier, onboarding) and command palette — avoid duplicate fetches; use `skipQuery: !panelOpen` for lazy panels.
+7. **New hooks:** `fetchPolicy: 'cache-first'`, return `loading: initialQueryLoading(loading, data)`.
+
+| Screen | Hook / query |
+|--------|----------------|
+| List / calendar / dashboard / search | `useTasksList` + bounded `dateRange` + `take` |
+| Task detail (deps/subtasks editing) | `GET_TASK` / `GET_TASK_WITH_DEPENDENCIES` on open |
+| Goal picker / sidebar / command palette | `useGoalsList` |
+| Plans list | `usePlansSummary` |
+| Analytics | `useTasksAnalytics` + `take: 500` max |
+
+### Performance by continuation item
+
+| Item | Requirement |
+|------|-------------|
+| **1.4-FINISH** webhooks | Debounce 10–30s/user; handler returns 200 fast, work async; no client full-list refetch |
+| **2.5-FINISH** plan-day DnD | `useTasksList` for today only; optimistic `useUpdateTask` like `week-calendar-dnd.tsx` |
+| **2.5b** daily ritual | `useDailyRitual` + `cache-first`; backend primary, localStorage offline cache only |
+| **2.8** Slack digest | Today's tasks only (`scheduledDate` + `take: 50`), not full history |
+| **3.1** time tracking | Paginated entry list; date-bounded CSV; no unbounded task load for reports |
+| **3.4** activity feed | Cursor pagination (`take: 30`); no unbounded team events query |
+| **3.6** AIMemory | Fetch memories once per plan generation, not per task in a loop |
+
+### Red flags — fix before moving on
+
+- [ ] List page uses `GET_TASKS` with `dependencies` / `subtasks` arrays
+- [ ] Page calls `useGoals()` when layout already has `useGoalsList()`
+- [ ] Mutation uses `refetchQueries: [...TASK_QUERY_NAMES]` or multiple named queries
+- [ ] Hook uses `cache-and-network` on a navigation hook
+- [ ] Resolver calls REST per row without DataLoader
+- [ ] Warm-cache navigation fires 20+ `graphql` requests
+- [ ] Skeleton shows 2+ seconds on **second visit** to same page
+
+### Perf sanity check (after each batch)
+
+Logged-in: Dashboard → Today → Tasks. Network tab filtered to `graphql`: **~4–8 ops** on warm cache (not 30+). Complete one task: **≤1** active refetch, not 3 task query variants.
 
 ## Project rules
 
 1. Web → GraphQL only, never REST directly.
 2. Reuse `use-graphql.tsx` / `use-graphql-extended.tsx` hooks before writing new ones.
-3. Bounded task queries: always `dateRange + take`.
-4. No `refetchQueries: ['GetTasks']` on single-task mutations.
+3. Bounded task queries: always `dateRange + take` (see Performance architecture).
+4. Single-task mutations: **no** `refetchQueries: ['GetTasks']` or `[...TASK_QUERY_NAMES]` — use `refetchQueries: 'active'` or cache updates.
 5. **No fake "Connected" states** — OAuth must be real or show "Coming soon".
 6. Run `tsc --noEmit` in affected apps + `next build` after each batch.
 7. **No commits** unless explicitly asked.
+8. **Performance architecture section above is binding** on every file you touch.
 
 ## Quality bar — NON-NEGOTIABLE
 
@@ -216,11 +311,11 @@ Replace (or augment) Step 2 with a **single-day timeboxing view**:
 5. **Resize duration** — optional but preferred: drag bottom edge or preset duration chips (30/60/90 min)
 6. **Show conflicts** — overlapping blocks visually stacked/warned (reuse `organizeCalendarTasks`)
 7. **Priority** — keep High/Med/Low toggles on blocks or sidebar items
-8. **Persist via `useUpdateTask`** — optimistic UI like week calendar; no `refetchQueries: ['GetTasks']` storm
+8. **Persist via `useUpdateTask`** — optimistic UI like week calendar; `refetchQueries: 'active'` only — never `['GetTasks']` or `[...TASK_QUERY_NAMES]` storm
 9. **Confirm step** — Step 3 should show the **timeline preview**, not just task count
 10. **Mobile** — timeline scrollable; sidebar collapses to top "unscheduled" strip
 
-**Suggested approach:** Extract a shared `DayTimelineDnd` component from `week-calendar-dnd.tsx` (single day mode) OR embed a narrowed `WeekCalendarDnd` locked to today only. New file: `apps/web/src/components/plan-day/day-timebox-calendar.tsx`.
+**Suggested approach:** Extract a shared `DayTimelineDnd` component from `week-calendar-dnd.tsx` (single day mode) OR embed a narrowed `WeekCalendarDnd` locked to today only. New file: `apps/web/src/components/plan-day/day-timebox-calendar.tsx`. Load tasks via **`useTasksList`** with today's `dateRange` + `take` — not `useTasks` / `GET_TASKS`.
 
 ### Acceptance criteria
 
@@ -419,6 +514,7 @@ cd apps/web && npx tsc --noEmit && npm run build
 - [ ] Team invite email + accept page
 - [ ] Real-time task updates across tabs
 - [ ] `/productivity` habits + focus + defense tabs
+- [ ] **Performance:** warm-cache navigation ≤8 graphql ops/page; no `cache-and-network` on layout hooks; list pages use `GetTasksList` not heavy `GetTasks`
 
 ### New in this session
 - [ ] Slack OAuth → channel select → digest posts
@@ -445,14 +541,15 @@ Do **not** skip 2.5-FINISH.
 ## Your first action
 
 1. Run `git log -1 --oneline` — confirm you're on `8ae778c` or later.
-2. Read `plan-day/page.tsx` Step 2 and `week-calendar-dnd.tsx` — understand the gap.
-3. Read the **SHORTCUT AUDIT** table — fix every ❌ row.
-4. **Implement 1.4-FINISH: Google + Outlook calendar push webhooks** (replace 5-min poll).
-5. **Implement 2.5-FINISH: plan-day DnD timeboxing** (reuse week calendar patterns).
-6. **2.5b:** daily ritual backend-primary.
-7. **Finish 2.8** Slack + **2.8c** Zoom/GitHub honesty.
-8. Continue 3.1 → … → 3.6.
-6. After every item, run verification checklist. **Reject your own work if any acceptance criterion fails.**
-7. Do not create new markdown docs unless asked. Do not commit unless asked.
+2. **Read Performance architecture section** + skim `dataloaders.ts`, `operations.ts`, `use-graphql.tsx`.
+3. Read `plan-day/page.tsx` Step 2 and `week-calendar-dnd.tsx` — understand the gap.
+4. Read the **SHORTCUT AUDIT** table — fix every ❌ row.
+5. **Implement 1.4-FINISH: Google + Outlook calendar push webhooks** (replace 5-min poll).
+6. **Implement 2.5-FINISH: plan-day DnD timeboxing** (reuse week calendar patterns).
+7. **2.5b:** daily ritual backend-primary.
+8. **Finish 2.8** Slack + **2.8c** Zoom/GitHub honesty.
+9. Continue 3.1 → … → 3.6.
+10. After every item: verification checklist + **perf sanity check** (Network tab). **Reject your own work if any acceptance criterion fails.**
+11. Do not create new markdown docs unless asked. Do not commit unless asked.
 
 **Begin with SHORTCUT AUDIT review, then 1.4-FINISH (calendar push), then 2.5-FINISH.**

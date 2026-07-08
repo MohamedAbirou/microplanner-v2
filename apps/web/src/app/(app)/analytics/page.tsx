@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Target, Clock, Zap, Award, Sparkles, Lightbulb, Loader2, TrendingUp } from 'lucide-react';
+import { Target, Clock, Zap, Award, Sparkles, Lightbulb, Loader2, TrendingUp, Download } from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -32,7 +32,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { useTasksAnalytics, useGoalsList } from '@/hooks/use-graphql';
+import Link from 'next/link';
+import { useTasksAnalytics, useGoalsList, useTimeReport } from '@/hooks/use-graphql';
 import {
   useDashboardStats,
   useWeeklyReview,
@@ -89,6 +90,45 @@ export default function AnalyticsPage() {
     start.setDate(start.getDate() - (days - 1));
     return start;
   }, [timeRange]);
+
+  // CSV export of the date-bounded time-entry report.
+  const { fetchReport, loading: exportingCsv } = useTimeReport();
+  const handleExportCsv = async () => {
+    const end = endOfDay(new Date());
+    const res = await fetchReport({ variables: { startDate: rangeStart, endDate: end } });
+    const rows = (res.data?.timeReport || []) as any[];
+    if (rows.length === 0) {
+      const { toast } = await import('sonner');
+      toast.info('No time entries in this range to export.');
+      return;
+    }
+    const esc = (v: any) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = ['Date', 'Minutes', 'Task', 'Goal', 'Project', 'Source', 'Note'];
+    const body = rows.map((r) =>
+      [
+        new Date(r.startedAt).toISOString(),
+        r.minutes,
+        r.taskTitle,
+        r.goalTitle ?? '',
+        r.projectName ?? '',
+        r.source,
+        r.note ?? '',
+      ]
+        .map(esc)
+        .join(',')
+    );
+    const csv = [header.join(','), ...body].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `microplanner-time-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const { tasks: allTasks, loading: tasksLoading } = useTasksAnalytics(
     { dateRange: { start: rangeStart, end: endOfDay(new Date()) } },
@@ -428,6 +468,25 @@ export default function AnalyticsPage() {
 
         {/* Time Tab */}
         <TabsContent value="time" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[13px] text-muted-foreground">
+              Time tracked across your tasks in the selected range.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={handleExportCsv}
+              disabled={exportingCsv}
+            >
+              {exportingCsv ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Export CSV
+            </Button>
+          </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -786,6 +845,13 @@ export default function AnalyticsPage() {
               </div>
             </div>
           )}
+
+          {/* Turn the review into action: launch the guided weekly planning ritual. */}
+          <Link href="/plan-week" className="mt-2 block" onClick={() => setReviewOpen(false)}>
+            <Button className="w-full">
+              <Sparkles className="mr-2 h-4 w-4" /> Start weekly planning
+            </Button>
+          </Link>
         </DialogContent>
       </Dialog>
     </div>

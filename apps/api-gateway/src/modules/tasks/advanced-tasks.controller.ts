@@ -19,6 +19,7 @@ import {
   StartTimerDto,
   StopTimerDto,
   LogTimeDto,
+  UpdateTimeEntryDto,
   CreateProjectDto,
   UpdateProjectDto,
 } from './types/advanced-tasks.types';
@@ -136,6 +137,64 @@ export class AdvancedTasksController {
       req.user.id,
       startDate ? new Date(startDate) : undefined,
       endDate ? new Date(endDate) : undefined,
+    );
+  }
+
+  /**
+   * List a task's time entries (history) — newest first.
+   */
+  @Get(':taskId/time-entries')
+  async listTimeEntries(
+    @Request() req: any,
+    @Param('taskId') taskId: string,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    return this.advancedTasksService.listTimeEntries(
+      req.user.id,
+      taskId,
+      take ? parseInt(take, 10) : undefined,
+      skip ? parseInt(skip, 10) : undefined,
+    );
+  }
+
+  /**
+   * Edit a time entry (adjusts the task's tracked total).
+   */
+  @Put('time-entries/:id')
+  async updateTimeEntry(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateTimeEntryDto,
+  ) {
+    return this.advancedTasksService.updateTimeEntry(req.user.id, id, {
+      minutes: dto.minutes,
+      note: dto.note,
+      startedAt: dto.startedAt ? new Date(dto.startedAt) : undefined,
+    });
+  }
+
+  /**
+   * Delete a time entry (adjusts the task's tracked total).
+   */
+  @Delete('time-entries/:id')
+  async deleteTimeEntry(@Request() req: any, @Param('id') id: string) {
+    return this.advancedTasksService.deleteTimeEntry(req.user.id, id);
+  }
+
+  /**
+   * Date-bounded flat time report for tables / CSV export.
+   */
+  @Get('time/report')
+  async getTimeReport(
+    @Request() req: any,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.advancedTasksService.getTimeReport(
+      req.user.id,
+      new Date(startDate),
+      new Date(endDate),
     );
   }
 

@@ -1,14 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service';
 import { CalendarService } from '../calendar/calendar.service';
+import { CalendarWatchChannelService } from '../calendar/services/calendar-watch-channel.service';
 import { AutopilotService } from './autopilot.service';
 
 /**
- * Watches connected calendars for change and triggers a same-day autopilot
- * reschedule. Uses a 5-minute poll (a lightweight, provider-agnostic alternative
- * to Google push channels) comparing a signature of the next 48h of events.
+ * FALLBACK ONLY. When the deploy has a public HTTPS endpoint, calendar changes
+ * are delivered by provider push channels (Google `events.watch` / Graph
+ * subscriptions) via {@link CalendarWebhookController} — see
+ * {@link CalendarWatchChannelService}. This 5-minute poll is a degraded
+ * alternative used only when webhooks can't be registered (e.g. local dev with
+ * no public URL) or when `CALENDAR_WATCH_FALLBACK_POLL=true` forces it on.
  */
 @Injectable()
 export class CalendarWatchService {
@@ -17,11 +22,18 @@ export class CalendarWatchService {
   constructor(
     private prisma: PrismaService,
     private calendarService: CalendarService,
+    private watchChannels: CalendarWatchChannelService,
     private autopilotService: AutopilotService,
+    private config: ConfigService,
   ) {}
 
   @Cron(CronExpression.EVERY_5_MINUTES, { name: 'autopilot-calendar-watch', timeZone: 'UTC' })
   async handleCalendarWatch() {
+    // Push webhooks are the production path — only poll when they're unavailable
+    // or explicitly forced on for a webhook-less environment.
+    const forcePoll = this.config.get<string>('CALENDAR_WATCH_FALLBACK_POLL') === 'true';
+    if (this.watchChannels.webhooksAvailable() && !forcePoll) return;
+
     const users = await this.prisma.user.findMany({
       where: {
         autopilotEnabled: true,

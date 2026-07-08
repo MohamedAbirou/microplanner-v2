@@ -5,9 +5,10 @@ import { BillingService } from './billing.service';
 import { BillingReconciliationService } from './billing-reconciliation.service';
 import { FeatureGateGuard } from './guards/feature-gate.guard';
 import { EmailModule } from '../email/email.module';
+import { ReferralsModule } from '../referrals/referrals.module';
 
 @Module({
-  imports: [ConfigModule, EmailModule],
+  imports: [ConfigModule, EmailModule, ReferralsModule],
   controllers: [BillingController],
   providers: [BillingService, BillingReconciliationService, FeatureGateGuard],
   exports: [BillingService, BillingReconciliationService, FeatureGateGuard],

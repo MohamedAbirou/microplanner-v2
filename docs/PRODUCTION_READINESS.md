@@ -152,8 +152,31 @@ no-op (the settings toggle shows "not configured on this deployment").
 Sends respect `NotificationPreferences.pushEnabled`, per-type flags, and quiet
 hours. Expired subscriptions (HTTP 404/410) are pruned automatically.
 
+## Calendar push webhooks (near-real-time autopilot)
+
+Autopilot reacts to calendar changes via provider push channels, not a poll:
+- **Google** — `calendar.events.watch` push channel → `POST /api/v1/calendar/webhooks/google`
+- **Microsoft Graph (Outlook)** — `/subscriptions` on `/me/events` → `POST /api/v1/calendar/webhooks/outlook`
+
+Channels are registered automatically when a user enables autopilot or connects a
+calendar (`CalendarWatchChannelService`), renewed hourly before expiry, and torn
+down on disconnect / autopilot-off. Incoming notifications are verified
+(Google channel token / Graph `clientState`), debounced 15s per user, then drive
+`AutopilotService.rescheduleDay(..., 'calendar_change')`.
+
+**Requirements:**
+- `API_PUBLIC_URL` (or `APP_URL`) must be a **public HTTPS** origin. When it is
+  `localhost`/`http`, watch registration is skipped and the app falls back to the
+  legacy 5-minute poll (`CalendarWatchService`) automatically — no config needed.
+- Local webhook testing: expose the gateway with ngrok and set `API_PUBLIC_URL`
+  to the https URL, or set `CALENDAR_WEBHOOK_ALLOW_INSECURE=true`.
+- `CALENDAR_WATCH_FALLBACK_POLL=true` forces the poll on even when webhooks are
+  available (debugging only).
+
 ## Pending migrations (deploy with `prisma migrate deploy`)
 - `20260708000000_task_pm_sync_fields` — PM integration sync columns on Task
 - `20260708010000_autopilot` — autopilot settings + proposal log
 - `20260708020000_focus_calendar_sync` — focus-block ↔ calendar bookkeeping
 - `20260708030000_calendar_defense_log` — defense action log
+- `20260709000000_calendar_watch_channels` — CalendarToken push-channel fields
+- `20260709010000_time_entries` — per-task TimeEntry history (manual logs + timers)

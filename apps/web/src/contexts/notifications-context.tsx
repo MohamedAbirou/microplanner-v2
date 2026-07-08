@@ -57,6 +57,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     errorPolicy: 'all',
     fetchPolicy: 'cache-first',
     nextFetchPolicy: 'cache-first',
+    notifyOnNetworkStatusChange: false,
     skip: !isLoaded || !isSignedIn,
   });
 

@@ -159,6 +159,7 @@ input CreateAiMemoryInput {
 type ReferralEntry {
   id: ID!
   status: String!
+  rewardGranted: Boolean!
   referredName: String!
   createdAt: DateTime!
   completedAt: DateTime
@@ -169,6 +170,7 @@ type ReferralStats {
   totalReferrals: Int!
   activeReferrals: Int!
   pendingReferrals: Int!
+  rewardsEarned: Int!
   referrals: [ReferralEntry!]!
 }
 

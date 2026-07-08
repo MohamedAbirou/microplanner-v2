@@ -5,6 +5,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@ne
 import { CalendarService } from './calendar.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
 import { OutlookOAuthService } from './services/outlook-oauth.service';
+import { CalendarWatchChannelService } from './services/calendar-watch-channel.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import type { User } from '@microplanner/database';
@@ -18,6 +19,7 @@ export class CalendarController {
     private readonly calendarService: CalendarService,
     private readonly googleOAuthService: GoogleOAuthService,
     private readonly outlookOAuthService: OutlookOAuthService,
+    private readonly watchChannels: CalendarWatchChannelService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -70,6 +72,7 @@ export class CalendarController {
       }
       const userId = this.parseUserIdFromState(state);
       await this.outlookOAuthService.handleCallback(code, state, userId);
+      void this.watchChannels.ensureWatch(userId, 'outlook').catch(() => undefined);
       return res.redirect(this.postCalendarOAuthRedirect('outlook'));
     } catch (err: any) {
       const message = err?.message || 'Outlook Calendar connection failed';
@@ -109,6 +112,7 @@ export class CalendarController {
       }
       const userId = this.parseUserIdFromState(state);
       await this.googleOAuthService.handleCallback(code, state, userId);
+      void this.watchChannels.ensureWatch(userId, 'google').catch(() => undefined);
       return res.redirect(this.postCalendarOAuthRedirect('google'));
     } catch (err: any) {
       const message = err?.message || 'Google Calendar connection failed';
@@ -181,6 +185,7 @@ export class CalendarController {
   @ApiOperation({ summary: 'Disconnect Google Calendar' })
   @ApiResponse({ status: 200, description: 'Calendar disconnected successfully' })
   async disconnect(@CurrentUser() user: User) {
+    await this.watchChannels.stopWatch(user.id, 'google').catch(() => undefined);
     await this.googleOAuthService.disconnect(user.id);
 
     return {

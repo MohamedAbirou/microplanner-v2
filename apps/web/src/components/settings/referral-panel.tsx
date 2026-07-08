@@ -82,6 +82,17 @@ export function ReferralPanel() {
               </div>
             </div>
 
+            {(stats?.rewardsEarned ?? 0) > 0 && (
+              <div className="flex items-start gap-2 rounded-[10px] border border-green-300/60 bg-green-50 px-3 py-2.5 text-[13px] text-green-800 dark:border-green-500/30 dark:bg-green-950/30 dark:text-green-200">
+                <Gift className="mt-0.5 h-4 w-4 flex-none" />
+                <span>
+                  You&apos;ve earned {stats?.rewardsEarned} referral reward
+                  {stats?.rewardsEarned === 1 ? '' : 's'} — a one-month credit is applied to your
+                  next invoice for each friend who subscribes.
+                </span>
+              </div>
+            )}
+
             {stats?.referrals && stats.referrals.length > 0 && (
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
@@ -94,16 +105,23 @@ export function ReferralPanel() {
                       className="flex items-center justify-between rounded-[8px] bg-muted/50 px-3 py-2"
                     >
                       <span className="text-sm truncate">{r.referredName}</span>
-                      <Badge
-                        variant={r.status === 'ACTIVE' ? 'default' : 'secondary'}
-                        className="text-[10px]"
-                      >
-                        {r.status === 'ACTIVE'
-                          ? 'Subscribed'
-                          : r.status === 'PENDING'
-                          ? 'Signed up'
-                          : r.status}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 flex-none">
+                        {r.rewardGranted && (
+                          <Badge className="gap-1 bg-green-600 text-[10px]">
+                            <Gift className="h-2.5 w-2.5" /> Reward
+                          </Badge>
+                        )}
+                        <Badge
+                          variant={r.status === 'ACTIVE' ? 'default' : 'secondary'}
+                          className="text-[10px]"
+                        >
+                          {r.status === 'ACTIVE'
+                            ? 'Subscribed'
+                            : r.status === 'PENDING'
+                            ? 'Signed up'
+                            : r.status}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>

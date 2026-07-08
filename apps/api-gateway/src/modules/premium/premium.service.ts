@@ -301,6 +301,98 @@ export class PremiumService {
     };
   }
 
+  /**
+   * Chronological team activity feed, derived from existing data (task
+   * completions, plan accepts, member joins) scoped to the team's members.
+   * Cursor pagination by timestamp keeps it bounded (no unbounded event scan).
+   */
+  async getTeamActivity(teamId: string, userId: string, take = 30, cursor?: string) {
+    const membership = await this.prisma.teamMember.findFirst({ where: { teamId, userId } });
+    if (!membership) throw new ForbiddenException('You are not a member of this team');
+
+    const members = await this.prisma.teamMember.findMany({
+      where: { teamId },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+    const memberIds = members.map((m) => m.userId);
+    const nameOf = new Map(
+      members.map((m) => [m.userId, m.user?.name || m.user?.email || 'Member']),
+    );
+
+    const limit = Math.min(Math.max(take, 1), 50);
+    const before = cursor ? new Date(cursor) : null;
+
+    const [completions, accepts, joins] = await Promise.all([
+      this.prisma.task.findMany({
+        where: {
+          userId: { in: memberIds },
+          isCompleted: true,
+          completedAt: before ? { lt: before } : { not: null },
+        },
+        orderBy: { completedAt: 'desc' },
+        take: limit,
+        select: { id: true, title: true, userId: true, completedAt: true },
+      }),
+      this.prisma.weeklyPlan.findMany({
+        where: {
+          userId: { in: memberIds },
+          acceptedAt: before ? { lt: before } : { not: null },
+        },
+        orderBy: { acceptedAt: 'desc' },
+        take: limit,
+        select: { id: true, weekStartDate: true, userId: true, acceptedAt: true },
+      }),
+      this.prisma.teamMember.findMany({
+        where: { teamId, ...(before ? { joinedAt: { lt: before } } : {}) },
+        orderBy: { joinedAt: 'desc' },
+        take: limit,
+        select: { id: true, userId: true, joinedAt: true },
+      }),
+    ]);
+
+    type Event = { id: string; type: string; actorId: string; actorName: string; title: string | null; timestamp: Date };
+    const events: Event[] = [
+      ...completions
+        .filter((c) => c.completedAt)
+        .map((c) => ({
+          id: `task-${c.id}`,
+          type: 'TASK_COMPLETED',
+          actorId: c.userId,
+          actorName: nameOf.get(c.userId) || 'Member',
+          title: c.title,
+          timestamp: c.completedAt as Date,
+        })),
+      ...accepts
+        .filter((p) => p.acceptedAt)
+        .map((p) => ({
+          id: `plan-${p.id}`,
+          type: 'PLAN_ACCEPTED',
+          actorId: p.userId,
+          actorName: nameOf.get(p.userId) || 'Member',
+          title: `week of ${p.weekStartDate.toISOString().slice(0, 10)}`,
+          timestamp: p.acceptedAt as Date,
+        })),
+      ...joins.map((m) => ({
+        id: `join-${m.id}`,
+        type: 'MEMBER_JOINED',
+        actorId: m.userId,
+        actorName: nameOf.get(m.userId) || 'Member',
+        title: null,
+        timestamp: m.joinedAt,
+      })),
+    ]
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+
+    const nextCursor =
+      events.length === limit ? events[events.length - 1].timestamp.toISOString() : null;
+
+    return {
+      events: events.map((e) => ({ ...e, timestamp: e.timestamp.toISOString() })),
+      nextCursor,
+    };
+  }
+
   /** Goals shared with a team (visible to all members). */
   async getTeamGoals(teamId: string, userId: string) {
     const membership = await this.prisma.teamMember.findFirst({ where: { teamId, userId } });

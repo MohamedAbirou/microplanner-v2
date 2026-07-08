@@ -24,9 +24,11 @@ export const GET_MY_REFERRAL_STATS = gql`
       totalReferrals
       activeReferrals
       pendingReferrals
+      rewardsEarned
       referrals {
         id
         status
+        rewardGranted
         referredName
         createdAt
       }
@@ -910,6 +912,22 @@ export const GET_TEAM_DASHBOARD = gql`
   }
 `;
 
+export const GET_TEAM_ACTIVITY = gql`
+  query GetTeamActivity($teamId: ID!, $take: Int, $cursor: String) {
+    teamActivity(teamId: $teamId, take: $take, cursor: $cursor) {
+      events {
+        id
+        type
+        actorId
+        actorName
+        title
+        timestamp
+      }
+      nextCursor
+    }
+  }
+`;
+
 export const REMOVE_TEAM_MEMBER = gql`
   mutation RemoveTeamMember($teamId: ID!, $userId: ID!) {
     removeTeamMember(teamId: $teamId, userId: $userId)
@@ -1162,6 +1180,7 @@ export const SYNC_INTEGRATION = gql`
   mutation SyncIntegration($id: ID!) {
     syncIntegration(id: $id) {
       id
+      type
       lastSyncedAt: lastSyncAt
       isActive
       config

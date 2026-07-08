@@ -2,13 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import axios from 'axios';
 import { PrismaService } from '../../database/prisma.service';
 import { IntegrationsService } from './integrations.service';
 
 /**
  * Slack integration: a daily plan digest posted to a configured channel and a
- * `/microplanner today` slash command. Uses the bot token stored during OAuth.
+ * `/microplanner today` slash command. The Slack Web API surface (posting,
+ * building the digest, listing channels) lives on IntegrationsService so the
+ * cron, the slash command, and the on-demand "Sync/Send digest" action all
+ * share one implementation.
  */
 @Injectable()
 export class SlackService {
@@ -20,17 +22,6 @@ export class SlackService {
     private integrationsService: IntegrationsService,
   ) {}
 
-  private async postMessage(token: string, channel: string, text: string): Promise<void> {
-    const { data } = await axios.post(
-      'https://slack.com/api/chat.postMessage',
-      { channel, text },
-      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } },
-    );
-    if (!data.ok) {
-      throw new Error(`Slack postMessage failed: ${data.error}`);
-    }
-  }
-
   /** Daily digest at 8am UTC to every Slack integration with a channel set. */
   @Cron('0 8 * * *', { name: 'slack-daily-digest', timeZone: 'UTC' })
   async postDailyDigests() {
@@ -38,14 +29,9 @@ export class SlackService {
       where: { type: 'slack', isActive: true },
     });
     for (const integration of integrations) {
-      const channel = (integration.config as any)?.channelId;
-      if (!channel) continue;
+      if (!(integration.config as any)?.channelId) continue;
       try {
-        const creds = this.integrationsService.decryptIntegrationCredentials(integration);
-        const token = creds?.access_token;
-        if (!token) continue;
-        const text = await this.buildTodaySummary(integration.userId);
-        await this.postMessage(token, channel, text);
+        await this.integrationsService.postSlackDigest(integration as any);
         this.logger.log(`Posted Slack digest for user ${integration.userId}`);
       } catch (err) {
         this.logger.warn(
@@ -53,27 +39,6 @@ export class SlackService {
         );
       }
     }
-  }
-
-  private async buildTodaySummary(userId: string): Promise<string> {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setHours(23, 59, 59, 999);
-    const tasks = await this.prisma.task.findMany({
-      where: { userId, scheduledDate: { gte: start, lte: end } },
-      orderBy: [{ startTime: 'asc' }],
-      take: 25,
-    });
-    if (tasks.length === 0) {
-      return ':sunny: *Today* — no tasks scheduled. Enjoy the open space!';
-    }
-    const lines = tasks.map((t) => {
-      const box = t.isCompleted ? ':white_check_mark:' : ':white_large_square:';
-      return `${box} ${t.startTime} — ${t.title}`;
-    });
-    const done = tasks.filter((t) => t.isCompleted).length;
-    return `:calendar: *Today's plan* (${done}/${tasks.length} done)\n${lines.join('\n')}`;
   }
 
   /** Verify a Slack request signature (raw body required for correctness). */
@@ -103,7 +68,7 @@ export class SlackService {
     if (!integration) {
       return { response_type: 'ephemeral', text: 'This workspace is not linked to a MicroPlanner account.' };
     }
-    const text = await this.buildTodaySummary(integration.userId);
+    const text = await this.integrationsService.buildSlackTodaySummary(integration.userId);
     return { response_type: 'ephemeral', text };
   }
 }

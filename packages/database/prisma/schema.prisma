@@ -103,6 +103,7 @@ model User {
   calendarDefenseLogs    CalendarDefenseLog[]
   habits                 Habit[]
   dailyRituals           DailyRitual[]
+  timeEntries            TimeEntry[]
 
   // Timestamps
   createdAt         DateTime           @default(now())
@@ -243,9 +244,10 @@ model Task {
   // Time tracking (Phase 17)
   actualStartTime   DateTime?    // When user actually started
   actualEndTime     DateTime?    // When user actually finished
-  timeSpentMinutes  Int          @default(0) // Actual time tracked
+  timeSpentMinutes  Int          @default(0) // Actual time tracked (aggregate of timeEntries)
   isTimerRunning    Boolean      @default(false)
   timerStartedAt    DateTime?
+  timeEntries       TimeEntry[]
 
   // Source tracking
   aiGenerated       Boolean      @default(true)
@@ -304,6 +306,27 @@ enum SyncStatus {
   SYNCED
   FAILED
   CONFLICT
+}
+
+/// Individual logged time increment against a task (manual entry or a stopped
+/// timer). Task.timeSpentMinutes is kept as the running aggregate for fast reads.
+model TimeEntry {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  minutes   Int
+  note      String?
+  source    String   @default("manual") // "manual" | "timer"
+  startedAt DateTime @default(now())     // when the work happened (for reports)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId])
+  @@index([userId, startedAt])
 }
 
 // ==================== TASK DEPENDENCIES & PROJECTS (Phase 17) ====================
@@ -517,6 +540,14 @@ model CalendarToken {
   syncErrors   Int          @default(0)
   lastError    String?
 
+  // Push-notification watch channels (Google events.watch / Graph subscriptions).
+  // Enable near-real-time autopilot rescheduling instead of a 5-minute poll.
+  watchChannelId      String?   // Google channel id (uuid we generate)
+  watchResourceId     String?   // Google resourceId returned by events.watch
+  graphSubscriptionId String?   // Outlook/Graph subscription id
+  watchExpiration     DateTime? // Channel/subscription expiry — renew before this
+  watchClientState    String?   @db.Text // signed secret echoed back for verification
+
   // Timestamps
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -524,6 +555,8 @@ model CalendarToken {
   @@unique([userId, provider])
   @@index([userId])
   @@index([provider])
+  @@index([watchChannelId])
+  @@index([graphSubscriptionId])
 }
 
 model SyncLog {

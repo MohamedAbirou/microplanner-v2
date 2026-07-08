@@ -135,6 +135,48 @@ export class OutlookCalendarProvider implements CalendarProvider {
     }
   }
 
+  /**
+   * Create a Graph change-notification subscription on the user's events.
+   * Graph first sends a validation GET to `notificationUrl` (handled by the
+   * webhook controller) before the subscription becomes active. Max lifetime
+   * for calendar resources is ~4230 minutes (~3 days) — renew before expiry.
+   */
+  async createSubscription(
+    userId: string,
+    notificationUrl: string,
+    clientState: string,
+  ): Promise<{ id: string; expiration: Date }> {
+    const client = await this.client(userId);
+    const expirationDateTime = new Date(Date.now() + 2.5 * 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await client.post('/subscriptions', {
+      changeType: 'created,updated,deleted',
+      notificationUrl,
+      resource: '/me/events',
+      expirationDateTime,
+      clientState,
+    });
+    return { id: data.id, expiration: new Date(data.expirationDateTime) };
+  }
+
+  /** Extend an existing subscription's lifetime. */
+  async renewSubscription(userId: string, subscriptionId: string): Promise<Date> {
+    const client = await this.client(userId);
+    const expirationDateTime = new Date(Date.now() + 2.5 * 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await client.patch(`/subscriptions/${subscriptionId}`, { expirationDateTime });
+    return new Date(data.expirationDateTime);
+  }
+
+  /** Remove a subscription. Safe to call if already gone. */
+  async deleteSubscription(userId: string, subscriptionId: string): Promise<void> {
+    try {
+      const client = await this.client(userId);
+      await client.delete(`/subscriptions/${subscriptionId}`);
+    } catch (err: any) {
+      if (err?.response?.status === 404) return;
+      this.logger.warn(`Failed to delete Graph subscription ${subscriptionId}: ${err?.message || err}`);
+    }
+  }
+
   private buildEventBody(task: Task) {
     const start = new Date(task.scheduledDate);
     const [sh, sm] = task.startTime.split(':').map(Number);

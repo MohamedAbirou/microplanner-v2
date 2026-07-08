@@ -135,6 +135,20 @@ type TeamDashboard {
   goals: [TeamGoal!]!
 }
 
+type TeamActivityEvent {
+  id: ID!
+  type: String!
+  actorId: ID!
+  actorName: String!
+  title: String
+  timestamp: DateTime!
+}
+
+type TeamActivityFeed {
+  events: [TeamActivityEvent!]!
+  nextCursor: String
+}
+
 extend type Query {
   # Teams
   teams: [Team!]!
@@ -142,6 +156,7 @@ extend type Query {
   teamMembers(teamId: ID!): [TeamMember!]!
   teamInvitations(teamId: ID!): [TeamInvitation!]!
   teamDashboard(teamId: ID!): TeamDashboard!
+  teamActivity(teamId: ID!, take: Int, cursor: String): TeamActivityFeed!
   teamGoals(teamId: ID!): [TeamGoal!]!
 
   # API Keys

@@ -31,13 +31,15 @@ const APPS: AppDef[] = [
   { type: 'NOTION', name: 'Notion', description: 'Sync tasks from a Notion database', icon: FileText, color: '#000000' },
   { type: 'JIRA', name: 'Jira', description: 'Import assigned Jira issues; complete syncs back', icon: SquareKanban, color: '#0052CC' },
   { type: 'ASANA', name: 'Asana', description: 'Import Asana tasks assigned to you', icon: ListChecks, color: '#F06A6A' },
-  { type: 'SLACK', name: 'Slack', description: 'Get plan reminders and task nudges in Slack', icon: MessageSquare, color: '#611f69' },
-  { type: 'ZOOM', name: 'Zoom', description: 'Auto-create Zoom links for scheduled meetings', icon: Video, color: '#2D8CFF' },
-  { type: 'GITHUB', name: 'GitHub', description: 'Track PRs and issues alongside your plan', icon: Github, color: '#24292e' },
+  { type: 'SLACK', name: 'Slack', description: 'Post your daily plan digest to a channel; /microplanner today', icon: MessageSquare, color: '#611f69' },
+  { type: 'ZOOM', name: 'Zoom', description: 'Connect your Zoom account — meeting links coming soon', icon: Video, color: '#2D8CFF' },
+  { type: 'GITHUB', name: 'GitHub', description: 'Connect GitHub — issue import coming soon', icon: Github, color: '#24292e' },
 ];
 
 // Providers that support two-way task sync (import + complete-back + settings).
 const PM_SYNC_TYPES = new Set(['TODOIST', 'LINEAR', 'NOTION', 'JIRA', 'ASANA']);
+// OAuth connects but there is no import yet — be honest, don't show a fake Sync.
+const OAUTH_ONLY_TYPES = new Set(['ZOOM', 'GITHUB']);
 
 const APP_NAME_BY_TYPE = new Map(APPS.map((a) => [a.type, a.name]));
 
@@ -120,6 +122,11 @@ export function IntegrationsHub() {
         const syncError: string | undefined = connected?.config?.syncError;
         const stats = connected?.config?.lastSyncStats;
         const isPmSync = PM_SYNC_TYPES.has(app.type);
+        const isSlack = app.type === 'SLACK';
+        const isOAuthOnly = OAUTH_ONLY_TYPES.has(app.type);
+        const hasSettings = isPmSync || isSlack;
+        const canSync = isPmSync || isSlack;
+        const slackNeedsChannel = isSlack && isConnected && !connected?.config?.channelId;
 
         return (
           <Card key={app.type} className="rounded-[14px] shadow-[var(--sh-sm)]">
@@ -160,6 +167,18 @@ export function IntegrationsHub() {
                 <p className="text-[11px] text-destructive mt-3 line-clamp-2">{syncError}</p>
               )}
 
+              {isOAuthOnly && isConnected && (
+                <p className="text-[11px] text-muted-foreground mt-3">
+                  Connected for sign-in. Task/meeting import is coming soon.
+                </p>
+              )}
+
+              {slackNeedsChannel && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-3">
+                  Choose a channel in settings to start receiving your daily digest.
+                </p>
+              )}
+
               {connected?.lastSyncedAt && (
                 <p className="text-[11px] text-muted-foreground mt-3">
                   Last synced {format(new Date(connected.lastSyncedAt), 'MMM d, h:mm a')}
@@ -176,28 +195,32 @@ export function IntegrationsHub() {
                   </Button>
                 ) : isConnected ? (
                   <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 flex-1"
-                      disabled={isBusy}
-                      onClick={() => handleSync(connected.id, app.type)}
-                    >
-                      {isBusy ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <>
-                          <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Sync
-                        </>
-                      )}
-                    </Button>
-                    {isPmSync && (
+                    {canSync && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 flex-1"
+                        disabled={isBusy || slackNeedsChannel}
+                        title={slackNeedsChannel ? 'Choose a channel first' : undefined}
+                        onClick={() => handleSync(connected.id, app.type)}
+                      >
+                        {isBusy ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                            {isSlack ? 'Send digest' : 'Sync'}
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    {hasSettings && (
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-8 px-2"
                         disabled={isBusy}
-                        aria-label="Sync settings"
+                        aria-label={isSlack ? 'Slack settings' : 'Sync settings'}
                         onClick={() => setSettingsFor(connected)}
                       >
                         <Settings2 className="h-3.5 w-3.5" />
@@ -206,7 +229,7 @@ export function IntegrationsHub() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 text-destructive"
+                      className={`h-8 text-destructive ${isOAuthOnly ? 'flex-1' : ''}`}
                       disabled={isBusy}
                       onClick={() => handleDisconnect(connected.id, app.type)}
                     >

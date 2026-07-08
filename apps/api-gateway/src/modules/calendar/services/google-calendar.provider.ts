@@ -126,6 +126,48 @@ export class GoogleCalendarProvider implements CalendarProvider {
     }
   }
 
+  /**
+   * Register a push channel on the user's primary calendar. Google POSTs to
+   * `address` whenever events change; the channel expires (max ~30 days for
+   * events, typically we request 7) and must be renewed.
+   */
+  async watchEvents(
+    userId: string,
+    address: string,
+    channelId: string,
+    token: string,
+    ttlSeconds = 7 * 24 * 60 * 60,
+  ): Promise<{ resourceId: string | null; expiration: Date | null }> {
+    const calendar = await this.client(userId);
+    const res = await calendar.events.watch({
+      calendarId: 'primary',
+      requestBody: {
+        id: channelId,
+        type: 'web_hook',
+        address,
+        token,
+        params: { ttl: String(ttlSeconds) },
+      },
+    });
+    const expirationMs = res.data.expiration ? Number(res.data.expiration) : null;
+    return {
+      resourceId: res.data.resourceId || null,
+      expiration: expirationMs ? new Date(expirationMs) : null,
+    };
+  }
+
+  /** Tear down a previously-registered push channel. Safe to call if already gone. */
+  async stopWatch(userId: string, channelId: string, resourceId: string): Promise<void> {
+    try {
+      const calendar = await this.client(userId);
+      await calendar.channels.stop({ requestBody: { id: channelId, resourceId } });
+    } catch (err: any) {
+      const status = err?.code || err?.response?.status;
+      if (status === 404 || status === 410) return;
+      this.logger.warn(`Failed to stop Google watch channel ${channelId}: ${err?.message || err}`);
+    }
+  }
+
   async respondToEvent(userId: string, eventId: string, response: 'declined' | 'accepted' | 'tentative'): Promise<void> {
     const calendar = await this.client(userId);
     const { data: event } = await calendar.events.get({ calendarId: 'primary', eventId });

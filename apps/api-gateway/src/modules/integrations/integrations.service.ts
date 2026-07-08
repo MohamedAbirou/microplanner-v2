@@ -491,8 +491,13 @@ export class IntegrationsService {
 
     const provider = getTaskProvider(integration.type);
 
-    // Non-PM integrations (Slack, Zoom, …) just record a sync timestamp.
+    // Non-PM integrations. Slack "sync" posts today's plan digest to the chosen
+    // channel — a real, honest action (not a no-op timestamp). Other OAuth-only
+    // integrations (Zoom, GitHub) have no import yet and simply record the time.
     if (!provider) {
+      if (integration.type === IntegrationType.SLACK) {
+        await this.postSlackDigest(integration);
+      }
       const updated = await this.prisma.integration.update({
         where: { id: integrationId },
         data: { lastSyncAt: new Date() },
@@ -762,6 +767,10 @@ export class IntegrationsService {
       where: { id: integrationId, userId },
     });
     if (!integration) throw new NotFoundException('Integration not found');
+    // Slack surfaces its channels through the same resource picker as PM boards.
+    if (integration.type === IntegrationType.SLACK) {
+      return this.listSlackChannels(integration);
+    }
     const provider = getTaskProvider(integration.type);
     if (!provider?.listResources) return [];
     const ctx = await this.ensureFreshContext(integration, provider);
@@ -824,6 +833,73 @@ export class IntegrationsService {
   /** Public accessor for decrypted credentials (used by SlackService). */
   decryptIntegrationCredentials(integration: { credentials: any }): any {
     return this.decryptCredentials(integration.credentials);
+  }
+
+  // ==================== SLACK (digest + channels) ====================
+  // Shared Slack API surface. SlackService (cron + slash command) and the
+  // sync/resources paths all route through here so there is a single source of
+  // truth for building the digest and talking to the Slack Web API.
+
+  private slackToken(integration: { credentials: any }): string | null {
+    const creds = this.decryptCredentials(integration.credentials);
+    return creds?.access_token || null;
+  }
+
+  private async slackPostMessage(token: string, channel: string, text: string): Promise<void> {
+    const { data } = await axios.post(
+      'https://slack.com/api/chat.postMessage',
+      { channel, text },
+      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } },
+    );
+    if (!data.ok) throw new BadRequestException(`Slack: ${data.error}`);
+  }
+
+  /** Today's plan rendered as Slack mrkdwn (bounded to today's tasks). */
+  async buildSlackTodaySummary(userId: string): Promise<string> {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setHours(23, 59, 59, 999);
+    const tasks = await this.prisma.task.findMany({
+      where: { userId, scheduledDate: { gte: start, lte: end } },
+      orderBy: [{ startTime: 'asc' }],
+      take: 50,
+    });
+    if (tasks.length === 0) {
+      return ':sunny: *Today* — no tasks scheduled. Enjoy the open space!';
+    }
+    const lines = tasks.map((t) => {
+      const box = t.isCompleted ? ':white_check_mark:' : ':white_large_square:';
+      return `${box} ${t.startTime} — ${t.title}`;
+    });
+    const done = tasks.filter((t) => t.isCompleted).length;
+    return `:calendar: *Today's plan* (${done}/${tasks.length} done)\n${lines.join('\n')}`;
+  }
+
+  /** Post today's digest to the integration's configured channel. */
+  async postSlackDigest(integration: { userId: string; credentials: any; config: any }): Promise<void> {
+    const channel = (integration.config as any)?.channelId;
+    if (!channel) {
+      throw new BadRequestException('Choose a Slack channel first (open Settings).');
+    }
+    const token = this.slackToken(integration);
+    if (!token) throw new BadRequestException('Slack is not connected.');
+    const text = await this.buildSlackTodaySummary(integration.userId);
+    await this.slackPostMessage(token, channel, text);
+  }
+
+  /** List channels the bot can see, for the channel picker. */
+  async listSlackChannels(integration: { credentials: any }): Promise<ExternalResource[]> {
+    const token = this.slackToken(integration);
+    if (!token) return [];
+    const { data } = await axios.get('https://slack.com/api/conversations.list', {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { limit: 200, exclude_archived: true, types: 'public_channel,private_channel' },
+    });
+    if (!data.ok) throw new BadRequestException(`Slack: ${data.error}`);
+    return (data.channels || [])
+      .filter((c: any) => c.is_channel || c.is_group || c.is_private)
+      .map((c: any) => ({ id: c.id, name: `#${c.name}` }));
   }
 
   /**
@@ -1088,7 +1164,7 @@ export class IntegrationsService {
   // OAuth URL generators (placeholder implementations)
   private getSlackOAuthUrl(state: string, redirectUri: string): string {
     const clientId = this.config.get('SLACK_CLIENT_ID');
-    const scopes = 'chat:write,channels:read,users:read';
+    const scopes = 'chat:write,channels:read,groups:read,users:read';
     return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}`;
   }
 

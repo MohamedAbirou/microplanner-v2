@@ -165,24 +165,28 @@ export class TasksService {
     if (isCompleted !== undefined) commonWhere.isCompleted = isCompleted;
     if (aiGenerated !== undefined) commonWhere.aiGenerated = aiGenerated;
 
-    // Fetch regular tasks in range at the DB layer (avoids loading entire history).
-    const regularTasksFromDB = await this.prisma.task.findMany({
-      where: {
-        ...commonWhere,
-        recurrenceRule: { equals: Prisma.DbNull },
-        scheduledDate: { gte: rangeStart, lte: rangeEnd },
-      },
-      orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
-    });
-
-    // Recurring templates are expanded in-memory for the requested window.
-    const recurringTasksFromDB = await this.prisma.task.findMany({
-      where: {
-        ...commonWhere,
-        NOT: { recurrenceRule: { equals: Prisma.DbNull } },
-      },
-      orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
-    });
+    // Fetch regular tasks and recurring templates concurrently — independent
+    // queries with no data dependency between them, so running them
+    // sequentially was paying for two round trips where one suffices.
+    const [regularTasksFromDB, recurringTasksFromDB] = await Promise.all([
+      // Regular tasks in range at the DB layer (avoids loading entire history).
+      this.prisma.task.findMany({
+        where: {
+          ...commonWhere,
+          recurrenceRule: { equals: Prisma.DbNull },
+          scheduledDate: { gte: rangeStart, lte: rangeEnd },
+        },
+        orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
+      }),
+      // Recurring templates, expanded in-memory for the requested window below.
+      this.prisma.task.findMany({
+        where: {
+          ...commonWhere,
+          NOT: { recurrenceRule: { equals: Prisma.DbNull } },
+        },
+        orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
+      }),
+    ]);
 
     const regularTasks = regularTasksFromDB;
 

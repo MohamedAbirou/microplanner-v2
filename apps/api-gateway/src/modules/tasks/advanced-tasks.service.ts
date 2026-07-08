@@ -335,6 +335,7 @@ export class AdvancedTasksService {
     // Calculate elapsed time
     const elapsedMs = Date.now() - task.timerStartedAt.getTime();
     const elapsedMinutes = Math.round(elapsedMs / 60000);
+    const startedAt = task.timerStartedAt;
 
     const updated = await this.prisma.task.update({
       where: { id: dto.taskId },
@@ -345,6 +346,13 @@ export class AdvancedTasksService {
         actualEndTime: new Date(),
       },
     });
+
+    // Persist the session as a discrete entry so history/reports are auditable.
+    if (elapsedMinutes > 0) {
+      await this.prisma.timeEntry.create({
+        data: { taskId: task.id, userId, minutes: elapsedMinutes, source: 'timer', startedAt },
+      });
+    }
 
     this.logger.log(`Timer stopped for task: ${dto.taskId} (${elapsedMinutes} minutes)`);
 
@@ -363,18 +371,135 @@ export class AdvancedTasksService {
       throw new NotFoundException('Task not found');
     }
 
+    const startedAt = dto.date || new Date();
     const updated = await this.prisma.task.update({
       where: { id: dto.taskId },
       data: {
         timeSpentMinutes: task.timeSpentMinutes + dto.minutes,
-        actualStartTime: task.actualStartTime || dto.date || new Date(),
-        actualEndTime: dto.date || new Date(),
+        actualStartTime: task.actualStartTime || startedAt,
+        actualEndTime: startedAt,
       },
+    });
+
+    await this.prisma.timeEntry.create({
+      data: { taskId: task.id, userId, minutes: dto.minutes, note: dto.note, source: 'manual', startedAt },
     });
 
     this.logger.log(`Time logged for task: ${dto.taskId} (${dto.minutes} minutes)`);
 
     return this.getTimeEntry(updated);
+  }
+
+  // ==================== TIME ENTRY HISTORY ====================
+
+  /** Entries for one task, newest first. */
+  async listTimeEntries(userId: string, taskId: string, take = 50, skip = 0) {
+    const task = await this.prisma.task.findFirst({ where: { id: taskId, userId }, select: { id: true } });
+    if (!task) throw new NotFoundException('Task not found');
+    return this.prisma.timeEntry.findMany({
+      where: { taskId, userId },
+      orderBy: { startedAt: 'desc' },
+      take: Math.min(Math.max(take, 1), 200),
+      skip: Math.max(skip, 0),
+    });
+  }
+
+  /** Edit an entry's minutes/note/date, keeping the task aggregate consistent. */
+  async updateTimeEntry(
+    userId: string,
+    entryId: string,
+    input: { minutes?: number; note?: string | null; startedAt?: Date },
+  ) {
+    const entry = await this.prisma.timeEntry.findFirst({ where: { id: entryId, userId } });
+    if (!entry) throw new NotFoundException('Time entry not found');
+
+    const delta =
+      input.minutes !== undefined && input.minutes !== entry.minutes
+        ? input.minutes - entry.minutes
+        : 0;
+    if (input.minutes !== undefined && input.minutes < 0) {
+      throw new BadRequestException('Minutes must be zero or positive');
+    }
+
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.timeEntry.update({
+        where: { id: entryId },
+        data: {
+          minutes: input.minutes ?? undefined,
+          note: input.note === undefined ? undefined : input.note,
+          startedAt: input.startedAt ?? undefined,
+        },
+      }),
+      ...(delta !== 0
+        ? [
+            this.prisma.task.update({
+              where: { id: entry.taskId },
+              data: { timeSpentMinutes: { increment: delta } },
+            }),
+          ]
+        : []),
+    ]);
+
+    // Guard against a negative aggregate from historical drift.
+    if (delta !== 0) await this.clampTaskTime(entry.taskId);
+    return updated;
+  }
+
+  /** Delete an entry and subtract its minutes from the task aggregate. */
+  async deleteTimeEntry(userId: string, entryId: string): Promise<{ success: boolean }> {
+    const entry = await this.prisma.timeEntry.findFirst({ where: { id: entryId, userId } });
+    if (!entry) throw new NotFoundException('Time entry not found');
+
+    await this.prisma.$transaction([
+      this.prisma.timeEntry.delete({ where: { id: entryId } }),
+      this.prisma.task.update({
+        where: { id: entry.taskId },
+        data: { timeSpentMinutes: { decrement: entry.minutes } },
+      }),
+    ]);
+    await this.clampTaskTime(entry.taskId);
+    return { success: true };
+  }
+
+  private async clampTaskTime(taskId: string) {
+    const task = await this.prisma.task.findUnique({ where: { id: taskId }, select: { timeSpentMinutes: true } });
+    if (task && task.timeSpentMinutes < 0) {
+      await this.prisma.task.update({ where: { id: taskId }, data: { timeSpentMinutes: 0 } });
+    }
+  }
+
+  /**
+   * Flat, date-bounded time report for export. Each row carries the task/goal/
+   * project labels so the client can render a table and a CSV without extra
+   * round-trips. Bounded by date range (required) to avoid unbounded scans.
+   */
+  async getTimeReport(userId: string, startDate: Date, endDate: Date) {
+    const entries = await this.prisma.timeEntry.findMany({
+      where: { userId, startedAt: { gte: startDate, lte: endDate } },
+      orderBy: { startedAt: 'desc' },
+      take: 2000,
+      include: {
+        task: {
+          select: {
+            id: true,
+            title: true,
+            goal: { select: { title: true } },
+            project: { select: { name: true } },
+          },
+        },
+      },
+    });
+    return entries.map((e) => ({
+      id: e.id,
+      startedAt: e.startedAt,
+      minutes: e.minutes,
+      note: e.note,
+      source: e.source,
+      taskId: e.taskId,
+      taskTitle: e.task?.title ?? '(deleted task)',
+      goalTitle: e.task?.goal?.title ?? null,
+      projectName: e.task?.project?.name ?? null,
+    }));
   }
 
   /**

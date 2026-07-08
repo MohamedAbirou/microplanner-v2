@@ -5,6 +5,7 @@ import Stripe from 'stripe';
 import { PrismaService } from '../../database/prisma.service';
 import { RedisService } from '../../redis/redis.service';
 import { EmailService } from '../email/email.service';
+import { ReferralsService } from '../referrals/referrals.service';
 import { PRICING_PLANS, TIER_LIMITS } from './billing.constants';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 
@@ -28,6 +29,7 @@ export class BillingService {
     private configService: ConfigService,
     private redis: RedisService,
     private emailService: EmailService,
+    private referralsService: ReferralsService,
   ) {
     const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY') || 'sk_test_dummy';
     this.stripe = new Stripe(stripeSecretKey, {
@@ -133,6 +135,43 @@ export class BillingService {
     this.logger.log(
       `Synced subscription ${subscription.id} for user ${user.id}: stripe=${subscription.status} -> ${status}${tier ? `, tier=${tier}` : ''}`
     );
+
+    // On first paid activation, reward whoever referred this user. Idempotent
+    // and best-effort — a referral failure must never break subscription sync.
+    if (status === SubscriptionStatus.ACTIVE || status === SubscriptionStatus.TRIALING) {
+      try {
+        const reward = await this.referralsService.completeReferralForSubscriber(user.id);
+        if (reward) await this.grantReferralCredit(reward.referrerId);
+      } catch (err: any) {
+        this.logger.warn(`Referral reward step failed for ${user.id}: ${err?.message || err}`);
+      }
+    }
+  }
+
+  /**
+   * Credit a referrer ~one month of their tier as a Stripe customer balance
+   * credit (applied to their next invoice). If they have no Stripe customer yet
+   * the referral stays flagged as rewarded and the credit is applied on upgrade.
+   */
+  async grantReferralCredit(referrerId: string): Promise<void> {
+    const referrer = await this.prisma.user.findUnique({ where: { id: referrerId } });
+    if (!referrer?.stripeCustomerId) {
+      this.logger.log(`Referral reward earned by ${referrerId} — no Stripe customer yet, deferring credit`);
+      return;
+    }
+    const plan = PRICING_PLANS.find((p) => p.tier === referrer.tier);
+    // One month of their current plan, or a $5 default for free-tier referrers.
+    const amountCents = plan?.price && plan.price > 0 ? plan.price : 500;
+    try {
+      await this.stripe.customers.createBalanceTransaction(referrer.stripeCustomerId, {
+        amount: -Math.abs(amountCents), // negative = credit toward future invoices
+        currency: 'usd',
+        description: 'MicroPlanner referral reward — thanks for spreading the word!',
+      });
+      this.logger.log(`Applied ${amountCents}c referral credit to ${referrerId}`);
+    } catch (err: any) {
+      this.logger.warn(`Failed to apply referral credit for ${referrerId}: ${err?.message || err}`);
+    }
   }
 
   /**

@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { IntegrationsService } from './integrations.service';
+import { SlackService } from './slack.service';
 import { Public } from '../auth/decorators/public.decorator';
 import {
   IntegrationType,
@@ -30,7 +31,31 @@ import {
  */
 @Controller('integrations')
 export class IntegrationsController {
-  constructor(private readonly integrationsService: IntegrationsService) {}
+  constructor(
+    private readonly integrationsService: IntegrationsService,
+    private readonly slackService: SlackService,
+  ) {}
+
+  // ==================== SLACK SLASH COMMANDS ====================
+
+  /**
+   * Public Slack slash-command endpoint (`/microplanner today`). Slack signs the
+   * request; we verify the signature over the RAW body (main.ts enables rawBody)
+   * before trusting the parsed form fields. Configure this URL in the Slack app:
+   *   {API_PUBLIC_URL}/api/v1/integrations/slack/commands
+   */
+  @Post('slack/commands')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async slackCommands(@Request() req: any, @Body() body: Record<string, string>) {
+    const raw: string = req.rawBody ? req.rawBody.toString('utf8') : '';
+    const signature = req.headers['x-slack-signature'];
+    const timestamp = req.headers['x-slack-request-timestamp'];
+    if (!this.slackService.verifySignature(raw, timestamp, signature)) {
+      return { response_type: 'ephemeral', text: 'Invalid request signature.' };
+    }
+    return this.slackService.handleSlashCommand(body);
+  }
 
   // NOTE: literal routes (webhooks/*, oauth/*) are declared BEFORE the
   // parameterized :id routes below — Express matches in declaration order,

@@ -45,6 +45,12 @@ export default function ProjectBoardPage() {
 
   const tasks = project?.tasks || [];
 
+  // Project-level time rollup (aggregate of per-task tracked minutes).
+  const trackedHours = React.useMemo(() => {
+    const mins = tasks.reduce((sum: number, t: any) => sum + (t.timeSpentMinutes || 0), 0);
+    return Math.round((mins / 60) * 10) / 10;
+  }, [tasks]);
+
   const grouped = React.useMemo(() => {
     const g: Record<ColumnId, any[]> = { todo: [], inProgress: [], done: [] };
     for (const t of tasks) g[columnOf(t)].push(t);
@@ -120,9 +126,16 @@ export default function ProjectBoardPage() {
         </div>
         <div className="flex-1">
           <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground inline-flex items-center gap-1 flex-wrap">
             {project.completedTaskCount}/{project.taskCount} tasks ·{' '}
             {Math.round(project.progressPercentage || 0)}% complete
+            {trackedHours > 0 && (
+              <>
+                {' · '}
+                <Clock className="h-3 w-3" />
+                {trackedHours}h tracked
+              </>
+            )}
           </p>
         </div>
       </div>

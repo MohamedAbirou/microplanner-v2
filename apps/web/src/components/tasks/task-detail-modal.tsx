@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TaskDependenciesPanel } from '@/components/dependencies/task-dependencies-panel';
 import { TaskSubtasksPanel } from '@/components/tasks/task-subtasks-panel';
+import { TaskTimeHistory } from '@/components/tasks/task-time-history';
 import { TaskDependency, DependencyType } from '@/lib/dependencies';
 
 interface Goal {
@@ -521,6 +522,17 @@ export function TaskDetailModal({
                     {isLoggingTime ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Log'}
                   </Button>
                 </div>
+
+                {/* Entry history — view / edit / delete individual logs */}
+                <TaskTimeHistory
+                  taskId={task.id}
+                  enabled={open}
+                  onTotalChanged={(delta) =>
+                    onUpdate?.(task.id, {
+                      timeSpentMinutes: Math.max(0, (task.timeSpentMinutes ?? 0) + delta),
+                    })
+                  }
+                />
               </div>
             )}
 

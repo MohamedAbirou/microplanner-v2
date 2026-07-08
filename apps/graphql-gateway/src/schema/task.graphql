@@ -125,6 +125,36 @@ type TimeEntry {
   timerStartedAt: DateTime
 }
 
+# A discrete logged time increment (manual entry or a stopped timer).
+type TimeLogEntry {
+  id: ID!
+  taskId: ID!
+  minutes: Int!
+  note: String
+  source: String!
+  startedAt: DateTime!
+  createdAt: DateTime!
+}
+
+# One flattened row of the date-bounded time report (for tables / CSV export).
+type TimeReportRow {
+  id: ID!
+  taskId: ID!
+  taskTitle: String!
+  goalTitle: String
+  projectName: String
+  minutes: Int!
+  note: String
+  source: String!
+  startedAt: DateTime!
+}
+
+input UpdateTimeEntryInput {
+  minutes: Int
+  note: String
+  startedAt: DateTime
+}
+
 # Queries
 extend type Query {
   # Get single task
@@ -160,6 +190,12 @@ extend type Query {
 
   # Suggest the next available slot to reschedule a task
   rescheduleSuggestion(taskId: ID!): RescheduleSuggestion
+
+  # A task's time-entry history (lazy — detail view only)
+  taskTimeEntries(taskId: ID!, take: Int, skip: Int): [TimeLogEntry!]!
+
+  # Date-bounded flat time report for tables / CSV export
+  timeReport(startDate: DateTime!, endDate: DateTime!): [TimeReportRow!]!
 }
 
 type RescheduleSuggestion {
@@ -203,6 +239,10 @@ extend type Mutation {
   startTimer(taskId: ID!): TimeEntry!
   stopTimer(taskId: ID!): TimeEntry!
   logTime(taskId: ID!, minutes: Int!, date: DateTime): TimeEntry!
+
+  # Time entry history edits
+  updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeLogEntry!
+  deleteTimeEntry(id: ID!): Boolean!
 
   # Bulk operations
   bulkUpdateTasks(ids: [ID!]!, input: UpdateTaskInput!): [Task!]!

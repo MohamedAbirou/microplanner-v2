@@ -248,6 +248,12 @@ async function startServer() {
       ttl: 900, // 15 minutes
     },
 
+    // Lets the client's BatchHttpLink combine several operations fired in the
+    // same tick (e.g. layout queries on mount) into one HTTP request instead
+    // of one per operation. Context (and its DataLoaders) is still created once
+    // per HTTP request and shared across the batch.
+    allowBatchedHttpRequests: true,
+
     // Error handling
     formatError: (formattedError, error) => {
       // Don't leak internal errors

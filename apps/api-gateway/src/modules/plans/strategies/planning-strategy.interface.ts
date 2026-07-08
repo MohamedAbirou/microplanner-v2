@@ -1,6 +1,26 @@
 import { Goal, User } from '@microplanner/database';
 
 /**
+ * Render the user's AIMemory (explicit overrides + learned preferences) as a
+ * prompt section. Memories are attached to the user object by PlansService
+ * (`user.aiMemories`) once per generation. Shared by every AI strategy so
+ * learned preferences influence Claude AND GPT — not just Claude.
+ */
+export function renderUserMemories(user: unknown): string {
+  const memories: { memoryType: string; content: unknown; confidence: number }[] =
+    (user as any)?.aiMemories || [];
+  if (!memories.length) return '';
+  const lines = memories
+    .slice(0, 15)
+    .map((m) => {
+      const desc = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+      return `- [${m.memoryType}] ${desc} (confidence ${Math.round(m.confidence * 100)}%)`;
+    })
+    .join('\n');
+  return `\n\n**User Overrides & Learned Preferences (honour these strongly):**\n${lines}`;
+}
+
+/**
  * Planning Strategy Interface
  *
  * Defines the contract for all planning implementations.

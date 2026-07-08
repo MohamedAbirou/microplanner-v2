@@ -8,6 +8,7 @@ import {
   ScheduledTask,
   CalendarEvent,
   PlanMetadata,
+  renderUserMemories,
 } from './planning-strategy.interface';
 
 /**
@@ -188,7 +189,7 @@ export class GPT4oMiniPlannerService implements IPlanningStrategy {
 ${goalsText}
 
 **Existing Calendar Events:**
-${eventsText}
+${eventsText}${renderUserMemories(user)}
 
 **Requirements:**
 1. Schedule each goal ${goals.map((g) => g.frequencyPerWeek || 3).join(', ')}x during the week

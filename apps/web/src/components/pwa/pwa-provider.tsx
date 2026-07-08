@@ -9,6 +9,7 @@ import {
   flushOfflineQueue,
   onQueueChange,
 } from '@/lib/offline-queue';
+import { InstallPrompt } from '@/components/pwa/install-prompt';
 
 /**
  * Registers the service worker, shows an offline indicator, and replays any
@@ -64,30 +65,33 @@ export function PWAProvider() {
     };
   }, [getToken]);
 
-  if (!offline && pending === 0) return null;
-
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60]">
-      <div
-        className={`flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] shadow-lg ${
-          offline
-            ? 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950 dark:text-amber-200'
-            : 'border-border bg-card text-foreground'
-        }`}
-      >
-        {offline ? (
-          <>
-            <WifiOff className="h-4 w-4" />
-            Offline
-            {pending > 0 && <span>· {pending} change{pending === 1 ? '' : 's'} queued</span>}
-          </>
-        ) : (
-          <>
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            Syncing {pending} change{pending === 1 ? '' : 's'}…
-          </>
-        )}
-      </div>
-    </div>
+    <>
+      <InstallPrompt />
+      {(offline || pending > 0) && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60]">
+          <div
+            className={`flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] shadow-lg ${
+              offline
+                ? 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950 dark:text-amber-200'
+                : 'border-border bg-card text-foreground'
+            }`}
+          >
+            {offline ? (
+              <>
+                <WifiOff className="h-4 w-4" />
+                Offline
+                {pending > 0 && <span>· {pending} change{pending === 1 ? '' : 's'} queued</span>}
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Syncing {pending} change{pending === 1 ? '' : 's'}…
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

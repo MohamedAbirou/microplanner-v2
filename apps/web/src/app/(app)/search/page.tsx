@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PageLoader } from '@/components/ui/page-loader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAppGoals } from '@/contexts/goals-context';
 import { useGoalsList, usePlansSummary, useTasksList } from '@/hooks/use-graphql';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';

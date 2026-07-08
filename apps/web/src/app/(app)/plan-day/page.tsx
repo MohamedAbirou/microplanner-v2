@@ -10,8 +10,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Check,
-  CheckCircle2,
-  Circle,
   Loader2,
   ListTodo,
   Flag,
@@ -27,21 +25,20 @@ import { toast } from 'sonner';
 import { useTasksList, useUpdateTask } from '@/hooks/use-graphql';
 import { PmImportSection } from '@/components/plan-day/pm-import-section';
 import {
+  DayTimeboxCalendar,
+  type TimeboxUpdate,
+} from '@/components/plan-day/day-timebox-calendar';
+import { timeToMinutes } from '@/lib/calendar-utils';
+import {
   getDailyIntention,
   setDailyIntention,
   getDailyReflection,
   setDailyReflection,
   dateKey,
 } from '@/lib/daily-ritual';
-import { useUpdateDailyRitual } from '@/hooks/use-graphql-extended';
+import { useDailyRitual, useUpdateDailyRitual } from '@/hooks/use-graphql-extended';
 
-const PRIORITY_OPTIONS = [
-  { label: 'High', value: 1, variant: 'destructive' as const },
-  { label: 'Med', value: 2, variant: 'default' as const },
-  { label: 'Low', value: 3, variant: 'secondary' as const },
-];
-
-const STEPS = ['Review', 'Intention', 'Prioritize', 'Confirm'];
+const STEPS = ['Review', 'Intention', 'Timebox', 'Confirm'];
 
 export default function PlanDayPage() {
   const router = useRouter();
@@ -64,6 +61,9 @@ export default function PlanDayPage() {
   );
   const { updateTask } = useUpdateTask({ notify: false });
   const { updateDailyRitual } = useUpdateDailyRitual();
+  // Backend is the source of truth for the ritual; localStorage is only an
+  // offline cache used until the query resolves (and as a PWA-offline fallback).
+  const { ritual, loading: ritualLoading } = useDailyRitual(dateKey(today));
 
   const incompleteYesterday = React.useMemo(
     () => (yesterdayTasks || []).filter((t: any) => !t.isCompleted && !t.isSkipped),
@@ -84,10 +84,16 @@ export default function PlanDayPage() {
 
   const [intention, setIntention] = React.useState('');
   const [reflection, setReflection] = React.useState('');
+  // Hydrate once the ritual query settles: prefer backend values, fall back to
+  // the localStorage cache (offline / not-yet-synced). Runs once so it never
+  // clobbers what the user is actively typing.
+  const hydrated = React.useRef(false);
   React.useEffect(() => {
-    setIntention(getDailyIntention(today));
-    setReflection(getDailyReflection(today));
-  }, [today]);
+    if (hydrated.current || ritualLoading) return;
+    hydrated.current = true;
+    setIntention(ritual?.intention || getDailyIntention(today));
+    setReflection(ritual?.reflection || getDailyReflection(today));
+  }, [ritual, ritualLoading, today]);
 
   const totalMinutes = React.useMemo(
     () => (todayTasks || []).reduce((sum: number, t: any) => sum + (t.durationMinutes || 0), 0),
@@ -129,28 +135,32 @@ export default function PlanDayPage() {
     setStep(2);
   };
 
-  const handleSetPriority = async (taskId: string, priority: number) => {
-    try {
-      await updateTask({ variables: { id: taskId, input: { priority } } });
-      await refetchToday();
-    } catch {
-      toast.error('Failed to update priority');
-    }
-  };
+  // Timeboxing persistence for the DnD calendar. UPDATE_TASK returns the changed
+  // scalar fields, so Apollo patches the normalized Task in place — no refetch
+  // storm. The calendar keeps its own optimistic state and rolls back on throw.
+  const handleTimeboxUpdate = React.useCallback(
+    async (taskId: string, input: TimeboxUpdate) => {
+      await updateTask({ variables: { id: taskId, input } });
+    },
+    [updateTask]
+  );
 
-  // Timeboxing: set a task's start time and re-derive its end time.
-  const handleSetTime = async (taskId: string, startTime: string, durationMinutes: number) => {
-    if (!startTime) return;
-    const [h, m] = startTime.split(':').map(Number);
-    const endMinutes = h * 60 + m + (durationMinutes || 30);
-    const endTime = `${String(Math.floor(endMinutes / 60) % 24).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`;
-    try {
-      await updateTask({ variables: { id: taskId, input: { startTime, endTime } } });
-      await refetchToday();
-    } catch {
-      toast.error('Failed to update time');
-    }
-  };
+  // Read-only ordered schedule for the confirm step preview.
+  const scheduledPreview = React.useMemo(
+    () =>
+      (todayTasks || [])
+        .filter((t: any) => !t.parentTaskId && timeToMinutes(t.startTime) >= 6 * 60)
+        .slice()
+        .sort((a: any, b: any) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)),
+    [todayTasks]
+  );
+  const unscheduledCount = React.useMemo(
+    () =>
+      (todayTasks || []).filter(
+        (t: any) => !t.parentTaskId && timeToMinutes(t.startTime) < 6 * 60
+      ).length,
+    [todayTasks]
+  );
 
   const handleSaveReflection = () => {
     setDailyReflection(reflection, today);
@@ -342,82 +352,32 @@ export default function PlanDayPage() {
         </Card>
       )}
 
-      {/* Step 2 — Prioritize */}
+      {/* Step 2 — Timebox (drag & drop) */}
       {step === 2 && (
         <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
           <CardHeader>
             <CardTitle className="text-[15px] flex items-center gap-2">
-              <Flag className="h-4 w-4" /> Prioritize &amp; timebox
+              <Flag className="h-4 w-4" /> Timebox your day
             </CardTitle>
             <CardDescription className="text-[13px]">
-              Set each task&apos;s priority and start time so your day has a clear shape.
+              Drag tasks onto the timeline to give each one a slot. Drag a block to
+              a new time to reschedule, or into the pool to unschedule it. Click a
+              block to fine-tune duration and priority.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {todayLoading ? (
-              <Skeleton className="h-24 w-full rounded-[10px]" />
+              <Skeleton className="h-64 w-full rounded-[10px]" />
             ) : (todayTasks || []).length === 0 ? (
               <div className="rounded-[10px] border border-border bg-accent py-8 text-center text-[13px] text-muted-foreground">
                 No tasks scheduled for today yet. Generate a plan or add tasks first.
               </div>
             ) : (
-              <div className="space-y-2">
-                {(todayTasks || [])
-                  .slice()
-                  .sort((a: any, b: any) => (a.priority || 2) - (b.priority || 2))
-                  .map((t: any) => (
-                    <div
-                      key={t.id}
-                      className="flex items-center gap-3 rounded-[10px] border border-border p-3"
-                    >
-                      {t.isCompleted ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600 flex-none" />
-                      ) : (
-                        <Circle className="h-4 w-4 text-muted-foreground flex-none" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div
-                          className={cn(
-                            'text-sm font-medium truncate',
-                            t.isCompleted && 'line-through text-muted-foreground'
-                          )}
-                        >
-                          {t.title}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <input
-                            type="time"
-                            defaultValue={t.startTime}
-                            disabled={t.isCompleted}
-                            onBlur={(e) => {
-                              if (e.target.value && e.target.value !== t.startTime) {
-                                handleSetTime(t.id, e.target.value, t.durationMinutes);
-                              }
-                            }}
-                            className="rounded-[6px] border border-border bg-background px-1.5 py-0.5 text-xs disabled:opacity-50"
-                            aria-label="Start time"
-                          />
-                          <span>· {t.durationMinutes}min</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-1 flex-none">
-                        {PRIORITY_OPTIONS.map((opt) => (
-                          <Button
-                            key={opt.value}
-                            size="sm"
-                            variant={
-                              (t.priority || 2) === opt.value ? opt.variant : 'outline'
-                            }
-                            className="h-7 px-2 text-xs"
-                            onClick={() => handleSetPriority(t.id, opt.value)}
-                          >
-                            {opt.label}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-              </div>
+              <DayTimeboxCalendar
+                date={today}
+                tasks={todayTasks as any}
+                onUpdate={handleTimeboxUpdate}
+              />
             )}
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(1)}>
@@ -463,6 +423,45 @@ export default function PlanDayPage() {
                 <div className="text-[13px] text-muted-foreground">of planned work</div>
               </div>
             </div>
+
+            {/* Timeline preview — ordered schedule from the timebox step */}
+            {scheduledPreview.length > 0 && (
+              <div className="rounded-[10px] border border-border">
+                <div className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Today&apos;s timeline
+                </div>
+                <div className="divide-y divide-border">
+                  {scheduledPreview.map((t: any) => (
+                    <div key={t.id} className="flex items-center gap-3 px-3 py-2">
+                      <span className="font-mono text-xs text-muted-foreground w-24 tabular-nums">
+                        {t.startTime}–{t.endTime}
+                      </span>
+                      <span className="text-sm">{t.goal?.emoji ?? '📌'}</span>
+                      <span
+                        className={cn(
+                          'min-w-0 flex-1 truncate text-sm',
+                          t.isCompleted && 'line-through text-muted-foreground'
+                        )}
+                      >
+                        {t.title}
+                      </span>
+                      {t.priority === 1 && (
+                        <Badge variant="destructive" className="h-4 px-1 text-[9px]">
+                          High
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {unscheduledCount > 0 && (
+              <div className="rounded-[10px] border border-amber-300/60 bg-amber-50 px-3 py-2 text-[13px] text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200">
+                {unscheduledCount} task{unscheduledCount > 1 ? 's are' : ' is'} still
+                unscheduled. Go back to timebox {unscheduledCount > 1 ? 'them' : 'it'} for a clearer day.
+              </div>
+            )}
+
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(2)}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back

@@ -24,10 +24,11 @@ import {
 } from '@/lib/filters';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useTasksList, useGoalsList, useUpdateTask, useBulkUpdateTasks, useBulkDeleteTasks } from '@/hooks/use-graphql';
+import { useAppGoals } from '@/contexts/goals-context';
+import { useTasksList, useUpdateTask, useBulkUpdateTasks, useBulkDeleteTasks } from '@/hooks/use-graphql';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
-import { getDefaultTaskListQuery } from '@/lib/task-query';
+import { getTasksPageDefaultQuery } from '@/lib/task-query';
 import { PageLoader } from '@/components/ui/page-loader';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 
@@ -39,7 +40,7 @@ export default function TasksPage() {
   const isMobile = useIsMobile();
 
   const listQuery = React.useMemo(() => {
-    const base = getDefaultTaskListQuery(90);
+    const base = getTasksPageDefaultQuery();
     const filter: Record<string, unknown> = { ...base.filter };
     if (filters.dateRange) {
       filter.dateRange = filters.dateRange;
@@ -52,15 +53,18 @@ export default function TasksPage() {
     }
     if (filters.completed === true) filter.isCompleted = true;
     if (filters.completed === false) filter.isCompleted = false;
-    return { filter, take: filters.dateRange ? 400 : base.take };
+    return {
+      filter,
+      take: filters.dateRange ? 400 : base.take,
+    };
   }, [filters]);
 
-  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasksList(
+  const { tasks: allTasks, loading: tasksInitialLoading, isRefreshing, refetch } = useTasksList(
     listQuery.filter,
     undefined,
     { take: listQuery.take }
   );
-  const { goals, loading: goalsLoading } = useGoalsList();
+  const { goals } = useAppGoals();
   const { updateTask } = useUpdateTask();
   const { bulkUpdateTasks } = useBulkUpdateTasks();
   const { bulkDeleteTasks } = useBulkDeleteTasks();
@@ -70,7 +74,7 @@ export default function TasksPage() {
   const taskActions = useTaskDetailActions(allTasks, refetch);
   const taskDependencies = React.useMemo(() => mapTaskDependencies(allTasks), [allTasks]);
 
-  const loading = tasksLoading || goalsLoading;
+  const loading = tasksInitialLoading;
 
   // Filter and sort tasks
   const filteredAndSortedTasks = React.useMemo(() => {
@@ -235,6 +239,9 @@ export default function TasksPage() {
                 {filteredAndSortedTasks.length === allTasks.length
                   ? 'All tasks'
                   : `${filteredAndSortedTasks.length} of ${allTasks.length} tasks`}
+                {isRefreshing && (
+                  <span className="ml-2 text-muted-foreground/80">· Updating…</span>
+                )}
               </CardDescription>
             </div>
             {taskSelection.isAnySelected && (
@@ -252,7 +259,16 @@ export default function TasksPage() {
             )}
           >
             {loading ? (
-              <PageLoader label="tasks" variant="section" skeletonRows={3} />
+              <div className="col-span-full">
+                <PageLoader label="tasks" variant="section" skeletonRows={3} />
+              </div>
+            ) : filteredAndSortedTasks.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                <p>No tasks found</p>
+                <Button variant="link" onClick={() => setFilters(clearAllFilters())} className="mt-2">
+                  Clear filters
+                </Button>
+              </div>
             ) : (
               filteredAndSortedTasks.map((task) => (
                 <ResizableTaskCard
@@ -267,15 +283,6 @@ export default function TasksPage() {
               ))
             )}
           </div>
-
-          {filteredAndSortedTasks.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No tasks found</p>
-              <Button variant="link" onClick={() => setFilters(clearAllFilters())} className="mt-2">
-                Clear filters
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
 

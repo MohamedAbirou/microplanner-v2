@@ -1,9 +1,10 @@
 'use client';
 
-import { useQuery, useMutation, useSubscription, useApolloClient, ApolloError } from '@apollo/client';
+import { useQuery, useLazyQuery, useMutation, useSubscription, useApolloClient, ApolloError } from '@apollo/client';
 import * as React from 'react';
 import { toast } from 'sonner';
 import * as operations from '@/graphql/operations';
+import { CREATE_AI_MEMORY } from '@/graphql/operations-extended';
 import { initialQueryLoading } from '@/lib/graphql-loading';
 
 /**
@@ -70,11 +71,13 @@ export function useTasksList(filter?: any, sort?: any, options?: UseTasksOptions
     skip: options?.skipQuery,
     fetchPolicy: 'cache-first',
     nextFetchPolicy: 'cache-first',
+    notifyOnNetworkStatusChange: false,
   });
 
   return {
     tasks: data?.tasks || [],
     loading: initialQueryLoading(loading, data),
+    isRefreshing: Boolean(loading && data !== undefined),
     error,
     refetch,
   };
@@ -150,6 +153,7 @@ export function useUpdateTask(options?: MutationNotifyOptions) {
 export function useSmartReschedule() {
   const client = useApolloClient();
   const [updateTask] = useMutation(operations.UPDATE_TASK);
+  const [createAiMemory] = useMutation(CREATE_AI_MEMORY);
   const [reschedulingId, setReschedulingId] = React.useState<string | null>(null);
 
   const reschedule = React.useCallback(
@@ -179,6 +183,21 @@ export function useSmartReschedule() {
           },
         });
         toast.success('Task rescheduled', { description: suggestion.reason });
+        // Learn from the override so future plans respect this preferred slot.
+        void createAiMemory({
+          variables: {
+            input: {
+              memoryType: 'TIME_PREFERENCE',
+              content: {
+                pattern: 'smart_reschedule',
+                taskId,
+                preferredStart: suggestion.startTime,
+                scheduledDate: suggestion.scheduledDate,
+              },
+              confidence: 0.6,
+            },
+          },
+        }).catch(() => undefined);
         return true;
       } catch (error) {
         toast.error('Failed to reschedule task', {
@@ -401,6 +420,45 @@ export function useLogTime() {
   return { logTime, loading, error };
 }
 
+/** A task's time-entry history. Lazy — pass skip=true until the panel opens. */
+export function useTaskTimeEntries(taskId: string, skip = false) {
+  const { data, loading, refetch } = useQuery(operations.TASK_TIME_ENTRIES, {
+    variables: { taskId, take: 100 },
+    skip: skip || !taskId,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
+  return { entries: (data?.taskTimeEntries || []) as any[], loading, refetch };
+}
+
+export function useUpdateTimeEntry() {
+  // Editing an entry changes the task's tracked total server-side; refetch the
+  // active detail/history queries so both reflect the new number. Low-frequency
+  // action, so 'active' is the sanctioned choice over hand-patching the cache.
+  const [updateTimeEntry, { loading }] = useMutation(operations.UPDATE_TIME_ENTRY, {
+    refetchQueries: 'active',
+    onError: (error) => toast.error('Failed to update entry', { description: error.message }),
+  });
+  return { updateTimeEntry, loading };
+}
+
+export function useDeleteTimeEntry() {
+  const [deleteTimeEntry, { loading }] = useMutation(operations.DELETE_TIME_ENTRY, {
+    refetchQueries: 'active',
+    onCompleted: () => toast.success('Time entry deleted'),
+    onError: (error) => toast.error('Failed to delete entry', { description: error.message }),
+  });
+  return { deleteTimeEntry, loading };
+}
+
+/** On-demand date-bounded time report (for CSV export). */
+export function useTimeReport() {
+  const [fetchReport, { loading }] = useLazyQuery(operations.TIME_REPORT, {
+    fetchPolicy: 'network-only',
+  });
+  return { fetchReport, loading };
+}
+
 // ============================================================================
 // GOALS
 // ============================================================================
@@ -424,6 +482,7 @@ export function useGoalsList() {
   const { data, loading, error, refetch } = useQuery(operations.GET_GOALS_LIST, {
     fetchPolicy: 'cache-first',
     nextFetchPolicy: 'cache-first',
+    notifyOnNetworkStatusChange: false,
   });
 
   return {

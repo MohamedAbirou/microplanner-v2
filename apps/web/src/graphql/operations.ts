@@ -582,6 +582,55 @@ export const LOG_TIME = gql`
   }
 `;
 
+// Time entry history (lazy — detail view only)
+export const TASK_TIME_ENTRIES = gql`
+  query TaskTimeEntries($taskId: ID!, $take: Int, $skip: Int) {
+    taskTimeEntries(taskId: $taskId, take: $take, skip: $skip) {
+      id
+      taskId
+      minutes
+      note
+      source
+      startedAt
+      createdAt
+    }
+  }
+`;
+
+export const UPDATE_TIME_ENTRY = gql`
+  mutation UpdateTimeEntry($id: ID!, $input: UpdateTimeEntryInput!) {
+    updateTimeEntry(id: $id, input: $input) {
+      id
+      minutes
+      note
+      startedAt
+    }
+  }
+`;
+
+export const DELETE_TIME_ENTRY = gql`
+  mutation DeleteTimeEntry($id: ID!) {
+    deleteTimeEntry(id: $id)
+  }
+`;
+
+// Date-bounded time report for tables / CSV export
+export const TIME_REPORT = gql`
+  query TimeReport($startDate: DateTime!, $endDate: DateTime!) {
+    timeReport(startDate: $startDate, endDate: $endDate) {
+      id
+      taskId
+      taskTitle
+      goalTitle
+      projectName
+      minutes
+      note
+      source
+      startedAt
+    }
+  }
+`;
+
 // Task with Dependencies Query
 export const GET_TASK_WITH_DEPENDENCIES = gql`
   query GetTaskWithDependencies($id: ID!) {
