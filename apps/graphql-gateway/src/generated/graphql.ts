@@ -718,6 +718,7 @@ export type Goal = {
   projectId?: Maybe<Scalars['ID']['output']>;
   targetMetric?: Maybe<Scalars['String']['output']>;
   targetValue?: Maybe<Scalars['Float']['output']>;
+  taskCount?: Maybe<Scalars['Int']['output']>;
   tasks: Array<Task>;
   title: Scalars['String']['output'];
   totalCompletions?: Maybe<Scalars['Int']['output']>;
@@ -2630,11 +2631,13 @@ export type Task = {
   aiGenerated: Scalars['Boolean']['output'];
   aiReasoning?: Maybe<Scalars['String']['output']>;
   blockedBy: Array<TaskDependency>;
+  blockedByCount?: Maybe<Scalars['Int']['output']>;
   calendarEventId?: Maybe<Scalars['String']['output']>;
   calendarProvider?: Maybe<Scalars['String']['output']>;
   completedAt?: Maybe<Scalars['DateTime']['output']>;
   createdAt: Scalars['DateTime']['output'];
   dependencies: Array<TaskDependency>;
+  dependencyCount?: Maybe<Scalars['Int']['output']>;
   durationMinutes: Scalars['Int']['output'];
   endTime: Scalars['String']['output'];
   goal?: Maybe<Goal>;
@@ -2663,6 +2666,7 @@ export type Task = {
   skippedAt?: Maybe<Scalars['DateTime']['output']>;
   skippedReason?: Maybe<Scalars['String']['output']>;
   startTime: Scalars['String']['output'];
+  subtaskCount?: Maybe<Scalars['Int']['output']>;
   subtasks: Array<Task>;
   syncError?: Maybe<Scalars['String']['output']>;
   syncStatus: SyncStatus;
@@ -4196,6 +4200,7 @@ export type GoalResolvers<ContextType = GraphQLContext, ParentType extends Resol
   projectId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   targetMetric?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   targetValue?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  taskCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   tasks?: Resolver<Array<ResolversTypes['Task']>, ParentType, ContextType>;
   title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   totalCompletions?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
@@ -4940,11 +4945,13 @@ export type TaskResolvers<ContextType = GraphQLContext, ParentType extends Resol
   aiGenerated?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   aiReasoning?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   blockedBy?: Resolver<Array<ResolversTypes['TaskDependency']>, ParentType, ContextType>;
+  blockedByCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   calendarEventId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   calendarProvider?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   completedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   dependencies?: Resolver<Array<ResolversTypes['TaskDependency']>, ParentType, ContextType>;
+  dependencyCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   durationMinutes?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   endTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   goal?: Resolver<Maybe<ResolversTypes['Goal']>, ParentType, ContextType>;
@@ -4973,6 +4980,7 @@ export type TaskResolvers<ContextType = GraphQLContext, ParentType extends Resol
   skippedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   skippedReason?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   startTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  subtaskCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   subtasks?: Resolver<Array<ResolversTypes['Task']>, ParentType, ContextType>;
   syncError?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   syncStatus?: Resolver<ResolversTypes['SyncStatus'], ParentType, ContextType>;

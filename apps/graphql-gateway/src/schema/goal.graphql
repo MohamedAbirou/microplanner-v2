@@ -39,7 +39,7 @@ type Goal {
   # Relations
   tasks: [Task!]!
   project: Project
-  /** Populated in plan goal breakdown — not stored on the goal row. */
+  # Populated in plan goal breakdown — not stored on the goal row.
   taskCount: Int
 
   # Timestamps
