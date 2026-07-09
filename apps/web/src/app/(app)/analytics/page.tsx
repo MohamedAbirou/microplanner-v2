@@ -334,12 +334,12 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
           <p className="text-[13px] text-muted-foreground mt-1">Track your productivity and insights</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" className="h-9" onClick={() => setReviewOpen(true)}>
             <Sparkles className="mr-2 h-4 w-4" />
             Weekly Review
@@ -468,7 +468,7 @@ export default function AnalyticsPage() {
 
         {/* Time Tab */}
         <TabsContent value="time" className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-[13px] text-muted-foreground">
               Time tracked across your tasks in the selected range.
             </p>

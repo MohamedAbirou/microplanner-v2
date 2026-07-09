@@ -86,7 +86,7 @@ function UsageMeter({ label, used, limit, percent }: UsageMeterProps) {
 }
 
 export default function BillingPage() {
-  const { tier } = useTier();
+  const { tier, isLoading: tierLoading } = useTier();
   const nextTier = getNextTier(tier);
   const isPaid = tier !== 'FREE';
 
@@ -119,6 +119,19 @@ export default function BillingPage() {
           <CardDescription className="text-[13px]">Your active MicroPlanner subscription</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {tierLoading ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-7 w-24" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <Skeleton className="h-5 w-14" />
+              </div>
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <>
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold">{formatTierLabel(tier)}</div>
@@ -198,6 +211,8 @@ export default function BillingPage() {
           )}
 
           {subLoading && !subscription && <Skeleton className="h-4 w-40" />}
+            </>
+          )}
         </CardContent>
       </Card>
 

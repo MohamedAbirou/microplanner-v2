@@ -72,7 +72,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
-  const { tier: userTier } = useTier();
+  const { tier: userTier, isLoading: tierLoading } = useTier();
   const pathname = usePathname();
   const tierInfo = tierConfig[userTier];
   const TierIcon = tierInfo.icon;
@@ -214,7 +214,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         </Link>
 
         {/* Tier / Upgrade card */}
-        {!collapsed && nextTier && upgradePitch && (
+        {!collapsed && !tierLoading && nextTier && upgradePitch && (
           <div className="mt-2.5 rounded-xl border border-border bg-accent p-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-accent-foreground">
               <TierIcon className="h-3.5 w-3.5" />

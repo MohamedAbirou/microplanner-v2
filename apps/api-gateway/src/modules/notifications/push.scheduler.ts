@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../database/prisma.service';
 import { PushNotificationService } from './push-notification.service';
+import { zonedDateTimeToUtc } from '../../common/utils/timezone.util';
 
 const ICON = '/logo-icon.svg';
 
@@ -18,40 +19,81 @@ export class PushScheduler {
     private push: PushNotificationService,
   ) {}
 
-  /** Task due in ~15 minutes. Runs every 5 minutes (5-minute match window). */
+  /**
+   * Task due in ~15 minutes. Runs every 5 minutes (5-minute match window).
+   * Always records an in-app SmartNotification; browser push is sent on top
+   * when VAPID is configured - the two are independent delivery channels.
+   */
   @Cron(CronExpression.EVERY_5_MINUTES, { name: 'push-task-due', timeZone: 'UTC' })
   async taskDueSoon() {
-    if (!this.push.isConfigured()) return;
     const now = Date.now();
     const windowStart = new Date(now + 13 * 60 * 1000);
     const windowEnd = new Date(now + 18 * 60 * 1000);
 
-    const tasks = await this.prisma.task.findMany({
+    // `scheduledDate` is a bare calendar date - the real time of day is in
+    // `startTime` ("HH:mm"), interpreted in the user's timezone. Pull a
+    // date-bounded superset and filter precisely in JS on the real start
+    // instant (see [[reminder.scheduler.ts]] for the same fix).
+    const dayBefore = new Date(now - 24 * 60 * 60 * 1000);
+    const dayAfter = new Date(now + 24 * 60 * 60 * 1000);
+
+    const candidates = await this.prisma.task.findMany({
       where: {
-        scheduledDate: { gte: windowStart, lt: windowEnd },
+        scheduledDate: { gte: dayBefore, lte: dayAfter },
         isCompleted: false,
         isSkipped: false,
       },
-      select: { id: true, userId: true, title: true, startTime: true },
-      take: 500,
+      select: {
+        id: true,
+        userId: true,
+        title: true,
+        startTime: true,
+        scheduledDate: true,
+        user: { select: { timezone: true } },
+      },
+      take: 2000,
+    });
+    const tasks = candidates.filter((task) => {
+      if (!task.startTime) return false;
+      const startsAt = zonedDateTimeToUtc(
+        task.scheduledDate,
+        task.startTime,
+        task.user.timezone || 'UTC',
+      );
+      return startsAt >= windowStart && startsAt < windowEnd;
     });
     for (const task of tasks) {
-      await this.push
-        .sendToUser(
-          task.userId,
-          {
+      await this.prisma.smartNotification
+        .create({
+          data: {
+            userId: task.userId,
+            type: 'TASK_DUE_SOON',
             title: 'Starting soon',
-            body: `${task.title} at ${task.startTime}`,
-            url: `/today?task=${task.id}`,
-            icon: ICON,
-            tag: `task-due-${task.id}`,
-            actions: [{ action: 'complete', title: 'Mark done' }],
+            message: `${task.title} at ${task.startTime}`,
+            priority: 'medium',
+            actionUrl: `/today?task=${task.id}`,
           },
-          { eventType: 'taskDue' },
-        )
-        .catch((e) => this.logger.warn(`task-due push failed: ${e?.message || e}`));
+        })
+        .catch((e) => this.logger.warn(`task-due notification failed: ${e?.message || e}`));
+
+      if (this.push.isConfigured()) {
+        await this.push
+          .sendToUser(
+            task.userId,
+            {
+              title: 'Starting soon',
+              body: `${task.title} at ${task.startTime}`,
+              url: `/today?task=${task.id}`,
+              icon: ICON,
+              tag: `task-due-${task.id}`,
+              actions: [{ action: 'complete', title: 'Mark done' }],
+            },
+            { eventType: 'taskDue' },
+          )
+          .catch((e) => this.logger.warn(`task-due push failed: ${e?.message || e}`));
+      }
     }
-    if (tasks.length) this.logger.debug(`Queued ${tasks.length} task-due push(es)`);
+    if (tasks.length) this.logger.debug(`Queued ${tasks.length} task-due notification(s)`);
   }
 
   /** Focus block starting in ~5 minutes. Runs every 5 minutes. */

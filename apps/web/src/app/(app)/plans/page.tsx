@@ -87,12 +87,12 @@ export default function PlansPage() {
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto mp-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Weekly Plans</h1>
           <p className="text-[13px] text-muted-foreground mt-1">AI-generated weekly schedules</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link href="/plans/templates">
             <Button variant="outline" className="h-9">
               Templates
@@ -129,7 +129,7 @@ export default function PlansPage() {
       {activePlan && (
       <Card className="rounded-[14px] shadow-[var(--sh-sm)] border-primary/20 bg-primary/5">
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <CardTitle className="text-[15px]">Active Plan</CardTitle>
@@ -268,24 +268,24 @@ export default function PlansPage() {
                 {planHistory.map((plan: any) => (
                   <div
                     key={plan.id}
-                    className="flex items-center justify-between p-4 rounded-[10px] border border-border hover:bg-accent/50 transition-colors cursor-pointer"
+                    className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-[10px] border border-border hover:bg-accent/50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/plans/review?id=${plan.id}`)}
                   >
-                    <div className="flex items-start gap-4 flex-1">
+                    <div className="flex min-w-0 items-start gap-4 flex-1">
                       <div className="p-2 rounded-lg bg-muted">
                         <Calendar className="h-5 w-5" />
                       </div>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <div className="font-medium mb-1">
                           {format(new Date(plan.weekStartDate), 'MMM d')} -{' '}
                           {format(new Date(plan.weekEndDate), 'MMM d, yyyy')}
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                           <span>
                             {plan.completedTasks}/{plan.totalTasks} tasks
                           </span>
                           <span>•</span>
-                          <span>{plan.completionRate}% completion</span>
+                          <span>{Math.round(plan.completionRate)}% completion</span>
                           <span>•</span>
                           <span>Quality: {plan.qualityScore}/100</span>
                         </div>
@@ -296,7 +296,7 @@ export default function PlansPage() {
                       <Badge
                         variant={plan.completionRate >= 90 ? 'default' : 'secondary'}
                       >
-                        {plan.completionRate}%
+                        {Math.round(plan.completionRate)}%
                       </Badge>
                       <Button variant="ghost" size="sm">
                         <Eye className="h-4 w-4" />

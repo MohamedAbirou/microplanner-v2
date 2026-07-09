@@ -63,9 +63,9 @@ function ConnectionRow({ connection }: { connection: CalendarConnection }) {
           {meta.initial}
         </div>
         <div className="min-w-0">
-          <div className="flex items-center gap-2 font-medium">
-            {connection.email || meta.label}
-            <Badge variant={connection.isActive ? 'default' : 'secondary'}>
+          <div className="flex min-w-0 items-center gap-2 font-medium">
+            <span className="min-w-0 truncate">{connection.email || meta.label}</span>
+            <Badge variant={connection.isActive ? 'default' : 'secondary'} className="flex-none">
               {connection.isActive ? 'Connected' : 'Paused'}
             </Badge>
           </div>

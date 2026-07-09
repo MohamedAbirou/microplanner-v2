@@ -150,7 +150,7 @@ function TeamDashboardCard({ teamId }: { teamId: string }) {
           <>
             <div className="flex items-center gap-4 rounded-[10px] border border-border bg-accent/40 p-3">
               <div>
-                <div className="text-2xl font-semibold">{dashboard.completionRate}%</div>
+                <div className="text-2xl font-semibold">{Math.round(dashboard.completionRate)}%</div>
                 <div className="text-[12px] text-muted-foreground">Team completion (7d)</div>
               </div>
               <div className="text-[13px] text-muted-foreground">
@@ -166,11 +166,11 @@ function TeamDashboardCard({ teamId }: { teamId: string }) {
                   <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                     <div
                       className="h-full bg-primary"
-                      style={{ width: `${m.completionRate}%` }}
+                      style={{ width: `${Math.round(m.completionRate)}%` }}
                     />
                   </div>
                   <div className="w-24 text-right text-[12px] text-muted-foreground">
-                    {m.tasksCompleted}/{m.tasksTotal} · {m.completionRate}%
+                    {m.tasksCompleted}/{m.tasksTotal} · {Math.round(m.completionRate)}%
                   </div>
                 </div>
               ))}

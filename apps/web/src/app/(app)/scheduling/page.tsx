@@ -121,7 +121,7 @@ function SchedulingContent() {
 
   return (
     <div className="space-y-6 p-6 max-w-5xl mx-auto mp-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
             <CalendarClock className="h-6 w-6" /> Scheduling Links

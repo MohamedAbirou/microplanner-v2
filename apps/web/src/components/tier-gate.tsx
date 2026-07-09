@@ -6,6 +6,7 @@ import { UpgradeButton } from '@/components/upgrade-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PageLoader } from '@/components/ui/page-loader';
 import { Lock, Sparkles, Users, Zap, Check } from 'lucide-react';
 import Link from 'next/link';
 
@@ -54,7 +55,14 @@ export function TierGate({
   fallback,
   softGate = false,
 }: TierGateProps) {
-  const { tier } = useTier();
+  const { tier, isLoading } = useTier();
+
+  // `tier` defaults to 'FREE' while the tier query is in flight - checking
+  // access before it resolves would flash the upgrade prompt for paid users
+  // every time this gate mounts fresh (e.g. on a hard navigation).
+  if (isLoading) {
+    return <PageLoader label="Checking your plan" variant="section" showSkeleton={false} />;
+  }
 
   const hasAccess = checkTierAccess(tier, requiredTier);
 
@@ -152,7 +160,7 @@ function UpgradePrompt({
           </div>
 
           {/* CTA */}
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <UpgradeButton className="flex-1" size="lg" targetTier={requiredTier}>
               Upgrade to {requiredTier}
             </UpgradeButton>

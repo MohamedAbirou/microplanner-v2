@@ -129,7 +129,7 @@ export default function GoalDetailPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="text-center p-4 rounded-[10px] bg-muted/50">
-          <div className="text-2xl font-bold">{goal.completionRate}%</div>
+          <div className="text-2xl font-bold">{Math.round(goal.completionRate)}%</div>
           <div className="text-xs text-muted-foreground mt-1">Completion Rate</div>
         </div>
         <div className="text-center p-4 rounded-[10px] bg-muted/50">
@@ -163,7 +163,7 @@ export default function GoalDetailPage() {
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Overall completion</span>
-            <span className="font-medium">{goal.completionRate}%</span>
+            <span className="font-medium">{Math.round(goal.completionRate)}%</span>
           </div>
           <Progress value={goal.completionRate} className="h-2" />
           <div className="grid grid-cols-2 gap-4 text-sm pt-2">

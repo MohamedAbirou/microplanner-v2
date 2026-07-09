@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../database/prisma.service';
 import { EmailService } from './email.service';
+import { zonedDateTimeToUtc } from '../../common/utils/timezone.util';
 
 /**
  * Reminder Scheduler
@@ -57,18 +58,37 @@ export class ReminderScheduler {
       const windowStart = new Date(now.getTime() + 55 * 60 * 1000);
       const windowEnd = new Date(now.getTime() + 65 * 60 * 1000);
 
-      // Find tasks starting in ~1 hour
-      const tasks = await this.prisma.task.findMany({
+      // `scheduledDate` only stores the calendar date (midnight) - the actual
+      // time of day lives in `startTime` ("HH:mm"), interpreted in the user's
+      // timezone. Pull a date-bounded superset (wide enough to cover any
+      // timezone offset) and then filter precisely in JS using the real
+      // start instant, instead of comparing the window directly against
+      // `scheduledDate` (which would match every task on a day near midnight
+      // regardless of its actual start time).
+      const dayBefore = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const dayAfter = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+      const candidates = await this.prisma.task.findMany({
         where: {
           scheduledDate: {
-            gte: windowStart,
-            lte: windowEnd,
+            gte: dayBefore,
+            lte: dayAfter,
           },
           isCompleted: false,
         },
         include: {
           user: true,
         },
+      });
+
+      const tasks = candidates.filter((task) => {
+        if (!task.startTime) return false;
+        const startsAt = zonedDateTimeToUtc(
+          task.scheduledDate,
+          task.startTime,
+          task.user.timezone || 'UTC',
+        );
+        return startsAt >= windowStart && startsAt <= windowEnd;
       });
 
       if (tasks.length === 0) {

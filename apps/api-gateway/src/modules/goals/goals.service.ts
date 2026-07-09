@@ -205,7 +205,7 @@ export class GoalsService {
 
     const totalScheduled = tasks.length;
     const totalCompletions = tasks.filter(t => t.isCompleted).length;
-    const completionRate = totalScheduled > 0 ? (totalCompletions / totalScheduled) * 100 : 0;
+    const completionRate = totalScheduled > 0 ? Math.round((totalCompletions / totalScheduled) * 100) : 0;
 
     // Calculate streaks
     let currentStreak = 0;

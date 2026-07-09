@@ -18,7 +18,7 @@ import { useQuery } from '@apollo/client';
 import { useUser } from '@clerk/nextjs';
 import { Geist } from 'next/font/google';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-app-sans' });
 
@@ -93,7 +93,17 @@ export default function AppLayout({
     }
   };
 
-  if (isLoaded && user && onboardingLoading && !onboardingData) {
+  // Once the app shell has painted once, never replace it with the
+  // full-screen gate loader again - `onboardingLoading` can flip back to
+  // true later (e.g. Clerk's `isLoaded` resolving after the shell already
+  // rendered), and re-showing this would flash the sidebar away and back.
+  const shellRenderedRef = useRef(false);
+  const showGateLoader = isLoaded && user && onboardingLoading && !onboardingData && !shellRenderedRef.current;
+  if (!showGateLoader) {
+    shellRenderedRef.current = true;
+  }
+
+  if (showGateLoader) {
     return <PageLoader label="default" variant="shell" showSkeleton={false} />;
   }
 
@@ -174,7 +184,7 @@ function AppLayoutShell({
         <div
           className={
             isMobile
-              ? `fixed inset-y-0 left-0 z-40 transition-transform duration-300 ${
+              ? `fixed inset-y-0 left-0 z-40 w-[236px] transition-transform duration-300 ${
                   sidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
                 }`
               : ''

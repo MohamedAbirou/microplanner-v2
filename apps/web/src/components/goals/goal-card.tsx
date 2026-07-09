@@ -8,6 +8,11 @@ import { BarChart3, Clock, Flame, Pause, Play } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 
+/** Percentages coming off older analytics rows can carry full float precision. */
+function roundPct(value: number): number {
+  return Math.round(value);
+}
+
 interface GoalCardProps {
   goal: {
     id: string;
@@ -46,12 +51,12 @@ export const GoalCard = React.memo<GoalCardProps>(function GoalCard({ goal, comp
                   )}
                 </div>
               </div>
-              <Badge variant="outline">{goal.completionRate}%</Badge>
+              <Badge variant="outline">{roundPct(goal.completionRate)}%</Badge>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">{goal.completionRate}%</span>
+                <span className="font-medium">{roundPct(goal.completionRate)}%</span>
               </div>
               <Progress value={goal.completionRate} />
               <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -117,7 +122,7 @@ export const GoalCard = React.memo<GoalCardProps>(function GoalCard({ goal, comp
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div className="text-center p-3 rounded-lg bg-muted/50">
-            <div className="text-2xl font-bold">{goal.completionRate}%</div>
+            <div className="text-2xl font-bold">{roundPct(goal.completionRate)}%</div>
             <div className="text-xs text-muted-foreground mt-1">Completion Rate</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-muted/50">
@@ -144,7 +149,7 @@ export const GoalCard = React.memo<GoalCardProps>(function GoalCard({ goal, comp
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Overall Progress</span>
-            <span className="font-medium">{goal.completionRate}%</span>
+            <span className="font-medium">{roundPct(goal.completionRate)}%</span>
           </div>
           <Progress value={goal.completionRate} className="h-2" />
         </div>
