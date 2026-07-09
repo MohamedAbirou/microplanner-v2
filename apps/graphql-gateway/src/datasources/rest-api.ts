@@ -212,7 +212,8 @@ export class UserAPI {
     const { data } = await this.client.put('/me', input, {
       headers: { 'x-user-id': userId },
     });
-    return data;
+    // REST wraps the payload: { message, user }, extract the flat user record
+    return data.user || data;
   }
 
   // GDPR: permanently delete the user's account + all data (backend cascade).
