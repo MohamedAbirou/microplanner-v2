@@ -90,7 +90,7 @@ export function useTaskDetailActions(tasks: any[] = [], refetch?: () => any) {
   );
 
   const onToggleComplete = React.useCallback(
-    async (taskId: string) => {
+    async (taskId: string): Promise<boolean> => {
       const current = taskById.get(taskId);
       if (current?.isCompleted) {
         await uncompleteTask({ variables: { id: taskId } });
@@ -100,11 +100,12 @@ export function useTaskDetailActions(tasks: any[] = [], refetch?: () => any) {
           toast.error('Task is blocked', {
             description: 'Complete its blocking tasks before marking it complete.',
           });
-          return;
+          return false;
         }
         await completeTask({ variables: { id: taskId } });
       }
       await afterMutation();
+      return true;
     },
     [taskById, tasks, completeTask, uncompleteTask, afterMutation]
   );
@@ -157,17 +158,18 @@ export function useTaskDetailActions(tasks: any[] = [], refetch?: () => any) {
   );
 
   const onStartTimer = React.useCallback(
-    async (taskId: string) => {
+    async (taskId: string): Promise<boolean> => {
       const current = taskById.get(taskId);
       const dependencies = mapTaskDependencies(tasks);
       if (current && !canStartTask(current, tasks, dependencies)) {
         toast.error('Task is blocked', {
           description: 'Complete its blocking tasks before starting the timer.',
         });
-        return;
+        return false;
       }
       await startTimer({ variables: { taskId } });
       await afterMutation();
+      return true;
     },
     [taskById, tasks, startTimer, afterMutation]
   );

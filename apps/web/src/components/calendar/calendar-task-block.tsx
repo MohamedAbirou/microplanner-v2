@@ -95,13 +95,15 @@ export function CalendarTaskBlock({
             </div>
           )}
         </div>
-        {(subtasks.length > 0 || dependencyBadges.length > 0) && (
+        {!isCompact && (subtasks.length > 0 || dependencyBadges.length > 0) && (
           <div className="flex shrink-0 items-center gap-1">
             {subtasks.length > 0 && (
               <Badge
                 variant="secondary"
                 className="h-4 gap-0.5 px-1 text-[9px]"
-                title={subtasks.map(subtask => `${subtask.isCompleted ? 'Done' : 'Open'}: ${subtask.title}`).join('\n')}
+                title={subtasks
+                  .map(subtask => `${subtask.isCompleted ? 'Done' : 'Open'}: ${subtask.title}`)
+                  .join('\n')}
                 aria-label={`${completedSubtasks} of ${subtasks.length} subtasks completed`}
               >
                 <ListTree className="h-2.5 w-2.5" />
@@ -138,6 +140,40 @@ export function CalendarTaskBlock({
           </div>
         )}
       </div>
+
+      {isCompact && (subtasks.length > 0 || dependencyBadges.length > 0) && (
+        <div className="mt-auto flex min-h-4 items-center gap-1 pt-1">
+          {subtasks.length > 0 && (
+            <Badge
+              variant="secondary"
+              className="h-4 max-w-full gap-0.5 px-1 text-[9px]"
+              title={subtasks
+                .map(subtask => `${subtask.isCompleted ? 'Done' : 'Open'}: ${subtask.title}`)
+                .join('\n')}
+              aria-label={`${completedSubtasks} of ${subtasks.length} subtasks completed`}
+            >
+              <ListTree className="h-2.5 w-2.5" />
+              {completedSubtasks}/{subtasks.length} subtasks
+            </Badge>
+          )}
+          {dependencyBadges.length > 0 && (
+            <Badge
+              variant={dependencySummary.blockedBy > 0 ? 'destructive' : 'outline'}
+              className="h-4 gap-0.5 px-1 text-[9px]"
+              title="Task dependencies"
+            >
+              {dependencySummary.blockedBy > 0 ? (
+                <Ban className="h-2.5 w-2.5" />
+              ) : dependencySummary.blocks > 0 ? (
+                <LockKeyhole className="h-2.5 w-2.5" />
+              ) : (
+                <Link2 className="h-2.5 w-2.5" />
+              )}
+              {dependencyBadges.length}
+            </Badge>
+          )}
+        </div>
+      )}
 
       {showSubtaskList && (
         <div className="mt-1.5 pt-1.5 border-t border-border/60 space-y-1 flex-1 min-h-0 overflow-hidden">

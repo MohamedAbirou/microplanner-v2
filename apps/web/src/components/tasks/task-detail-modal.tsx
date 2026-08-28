@@ -89,13 +89,13 @@ interface TaskDetailModalProps {
   dependencies?: TaskDependency[];
   onUpdate?: (taskId: string, updates: Partial<Task>) => void | Promise<void>;
   onDelete?: (taskId: string) => void | Promise<void>;
-  onToggleComplete?: (taskId: string) => void | Promise<void>;
+  onToggleComplete?: (taskId: string) => boolean | void | Promise<boolean | void>;
   onAddDependency?: (fromTaskId: string, toTaskId: string, type: DependencyType) => Promise<void>;
   onRemoveDependency?: (dependencyId: string) => Promise<void>;
   onAddSubtask?: (taskId: string, title: string) => Promise<void>;
   onToggleSubtask?: (subtaskId: string) => Promise<void>;
   onDeleteSubtask?: (subtaskId: string) => Promise<void>;
-  onStartTimer?: (taskId: string) => void | Promise<void>;
+  onStartTimer?: (taskId: string) => boolean | void | Promise<boolean | void>;
   onStopTimer?: (taskId: string) => void | Promise<void>;
 }
 
@@ -200,7 +200,8 @@ export function TaskDetailModal({
     if (!task.id) return;
 
     try {
-      await onToggleComplete?.(task.id);
+      const completed = await onToggleComplete?.(task.id);
+      if (completed === false) return;
       toast.success(task.isCompleted ? 'Task marked as incomplete' : 'Task completed!', {
         description: task.isCompleted
           ? `"${task.title}" has been reopened`
