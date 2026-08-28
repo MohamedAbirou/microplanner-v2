@@ -9,13 +9,17 @@ export const CALENDAR_HOURS = Array.from(
   (_, i) => i + CALENDAR_HOUR_START
 );
 
-export const CALENDAR_GRID_HEIGHT_PX =
-  CALENDAR_HOURS.length * CALENDAR_SLOT_HEIGHT_PX;
+export const CALENDAR_GRID_HEIGHT_PX = CALENDAR_HOURS.length * CALENDAR_SLOT_HEIGHT_PX;
 
 export interface CalendarSubtask {
   id: string;
   title: string;
   isCompleted: boolean;
+}
+
+export interface CalendarDependency {
+  id: string;
+  type: 'BLOCKS' | 'BLOCKED_BY' | 'RELATED_TO';
 }
 
 export interface CalendarTaskLike {
@@ -31,6 +35,8 @@ export interface CalendarTaskLike {
   aiReasoning?: string | null;
   parentTaskId?: string | null;
   subtasks?: CalendarSubtask[];
+  dependencies?: CalendarDependency[];
+  blockedBy?: CalendarDependency[];
   goal?: {
     id: string;
     emoji: string;
@@ -50,7 +56,10 @@ export interface CalendarEventLike {
 }
 
 /** Top/height in px for an external event within the day time-grid. */
-export function getEventLayoutPx(startISO: string, endISO: string): {
+export function getEventLayoutPx(
+  startISO: string,
+  endISO: string
+): {
   topPx: number;
   heightPx: number;
 } {
@@ -96,8 +105,7 @@ export function getTaskDurationMinutes(task: {
 }
 
 export function getTaskTopPx(startTime: string): number {
-  const minutesFromGridStart =
-    timeToMinutes(startTime) - CALENDAR_HOUR_START * 60;
+  const minutesFromGridStart = timeToMinutes(startTime) - CALENDAR_HOUR_START * 60;
   return (minutesFromGridStart / 60) * CALENDAR_SLOT_HEIGHT_PX;
 }
 
@@ -108,9 +116,7 @@ export function getTaskHeightPx(durationMinutes: number): number {
 }
 
 /** Top-level calendar blocks only — subtasks render nested inside their parent. */
-export function organizeCalendarTasks<T extends CalendarTaskLike>(
-  tasks: T[]
-): T[] {
+export function organizeCalendarTasks<T extends CalendarTaskLike>(tasks: T[]): T[] {
   const subtasksByParent = new Map<string, CalendarSubtask[]>();
 
   for (const task of tasks) {
@@ -126,8 +132,8 @@ export function organizeCalendarTasks<T extends CalendarTaskLike>(
   }
 
   return tasks
-    .filter((task) => !task.parentTaskId)
-    .map((task) => {
+    .filter(task => !task.parentTaskId)
+    .map(task => {
       const fromFlat = subtasksByParent.get(task.id) ?? [];
       const nested = task.subtasks?.length ? task.subtasks : fromFlat;
       return { ...task, subtasks: nested };

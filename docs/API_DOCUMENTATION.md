@@ -1,6 +1,7 @@
 # MicroPlanner API Documentation
 
 ## Base URL
+
 ```
 Production: https://api.microplanner.ai/api/v1
 Development: http://localhost:3000/api/v1
@@ -8,19 +9,43 @@ Development: http://localhost:3000/api/v1
 
 ## Authentication
 
-All endpoints (except webhooks and public endpoints) require Bearer token authentication:
+Interactive first-party requests use a Clerk JWT. Premium API consumers can instead use
+an API key created in Settings. API-key requests use the same Bearer header:
 
 ```http
 Authorization: Bearer <clerk_jwt_token>
 ```
 
-Get JWT token from Clerk after user signs in.
+```http
+Authorization: Bearer mp_<api-key>
+```
+
+API keys are shown only once when created. They are hashed at rest, can be revoked or
+disabled, expire when configured, and are limited to the selected scopes. API keys are
+available only to PREMIUM users. A request with an insufficient scope returns `403`.
+
+### API key scopes
+
+| Scope             | Permissions                                                                      |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `tasks:read`      | Read tasks, task details, and reschedule suggestions                             |
+| `tasks:write`     | Create, update, delete, complete, skip, and bulk-update tasks                    |
+| `goals:read`      | Read goals and goal lists                                                        |
+| `goals:write`     | Create, update, pause, activate, and delete goals                                |
+| `plans:read`      | Read plans, plan history, and plan templates                                     |
+| `plans:write`     | Generate, create, update, accept, regenerate, archive, and manage plan templates |
+| `analytics:read`  | Read metrics, insights, usage, patterns, and goal analytics                      |
+| `webhooks:manage` | Create, read, test, update, and delete webhooks                                  |
+
+API keys are intended for REST resources under `/api/v1`. GraphQL continues to use
+Clerk authentication and does not accept API keys.
 
 ---
 
 ## 📋 API Endpoints Overview
 
 ### Users
+
 - `GET /users/me` - Get current user profile
 - `PUT /users/me` - Update user profile
 - `PUT /users/me/preferences` - Update user preferences
@@ -28,6 +53,7 @@ Get JWT token from Clerk after user signs in.
 - `GET /users/me/export` - Export all user data (GDPR)
 
 ### Goals
+
 - `POST /goals` - Create a new goal
 - `GET /goals` - List all goals (with filters)
 - `GET /goals/:id` - Get single goal
@@ -37,6 +63,7 @@ Get JWT token from Clerk after user signs in.
 - `PUT /goals/:id/activate` - Activate paused goal
 
 ### Plans
+
 - `POST /plans/generate` - Generate AI weekly plan
 - `GET /plans/current` - Get current week's plan
 - `GET /plans/:id` - Get plan by ID
@@ -46,6 +73,7 @@ Get JWT token from Clerk after user signs in.
 - `DELETE /plans/:id` - Archive plan
 
 ### Tasks
+
 - `POST /tasks` - Create manual task
 - `GET /tasks` - List tasks (with filters)
 - `GET /tasks/:id` - Get single task
@@ -56,6 +84,7 @@ Get JWT token from Clerk after user signs in.
 - `PATCH /tasks/bulk` - Bulk operations
 
 ### Calendar
+
 - `GET /calendar/oauth/google` - Initiate Google OAuth
 - `GET /calendar/oauth/google/callback` - OAuth callback
 - `GET /calendar/events` - Get calendar events
@@ -64,6 +93,7 @@ Get JWT token from Clerk after user signs in.
 - `DELETE /calendar/disconnect` - Disconnect calendar
 
 ### Billing
+
 - `GET /billing/plans` - Get pricing tiers
 - `POST /billing/checkout` - Create Stripe checkout
 - `GET /billing/portal` - Get customer portal URL
@@ -72,6 +102,7 @@ Get JWT token from Clerk after user signs in.
 - `POST /billing/webhooks/stripe` - Stripe webhook (no auth)
 
 ### Analytics
+
 - `POST /analytics/events` - Track event
 - `GET /analytics/metrics` - Get user metrics
 - `GET /analytics/insights` - Get weekly insights
@@ -85,9 +116,11 @@ Get JWT token from Clerk after user signs in.
 ### Users Module
 
 #### GET /users/me
+
 Get current user profile with all preferences.
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -105,9 +138,11 @@ Get current user profile with all preferences.
 ```
 
 #### PUT /users/me
+
 Update user profile.
 
 **Request:**
+
 ```json
 {
   "name": "John Doe",
@@ -117,6 +152,7 @@ Update user profile.
 ```
 
 #### DELETE /users/me
+
 Delete user account (GDPR compliant - cascades to all data).
 
 **Response:** `204 No Content`
@@ -126,9 +162,11 @@ Delete user account (GDPR compliant - cascades to all data).
 ### Goals Module
 
 #### POST /goals
+
 Create a new goal. Subject to tier limits (FREE: 2, STARTER: 5, PRO: unlimited).
 
 **Request:**
+
 ```json
 {
   "title": "Morning Workout",
@@ -141,6 +179,7 @@ Create a new goal. Subject to tier limits (FREE: 2, STARTER: 5, PRO: unlimited).
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Goal created successfully",
@@ -157,6 +196,7 @@ Create a new goal. Subject to tier limits (FREE: 2, STARTER: 5, PRO: unlimited).
 ```
 
 **Error (Tier Limit):**
+
 ```json
 {
   "statusCode": 403,
@@ -165,15 +205,18 @@ Create a new goal. Subject to tier limits (FREE: 2, STARTER: 5, PRO: unlimited).
 ```
 
 #### GET /goals?page=1&limit=10&isActive=true
+
 List all goals with pagination and filters.
 
 **Query Parameters:**
+
 - `page` (number): Page number (default: 1)
 - `limit` (number): Items per page (default: 10)
 - `isActive` (boolean): Filter by active status
 - `isPaused` (boolean): Filter by paused status
 
 **Response:**
+
 ```json
 {
   "goals": [...],
@@ -188,9 +231,11 @@ List all goals with pagination and filters.
 ### Plans Module
 
 #### POST /plans/generate
+
 Generate AI-powered weekly plan. Subject to tier limits (FREE: 5/week, STARTER: 20/week, PRO: unlimited).
 
 **Request:**
+
 ```json
 {
   "weekStartDate": "2025-01-13",
@@ -199,6 +244,7 @@ Generate AI-powered weekly plan. Subject to tier limits (FREE: 5/week, STARTER: 
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Plan generated successfully",
@@ -217,9 +263,11 @@ Generate AI-powered weekly plan. Subject to tier limits (FREE: 5/week, STARTER: 
 ```
 
 #### PUT /plans/:id/accept
+
 Accept a generated plan and mark it as active.
 
 **Response:**
+
 ```json
 {
   "message": "Plan accepted successfully",
@@ -236,9 +284,11 @@ Accept a generated plan and mark it as active.
 ### Tasks Module
 
 #### POST /tasks
+
 Create a manual task (user-created, not AI-generated).
 
 **Request:**
+
 ```json
 {
   "title": "Team meeting prep",
@@ -252,9 +302,11 @@ Create a manual task (user-created, not AI-generated).
 ```
 
 #### GET /tasks?date=2025-01-15&isCompleted=false
+
 List tasks with powerful filtering.
 
 **Query Parameters:**
+
 - `date` (YYYY-MM-DD): Filter by specific date
 - `weekStart` (YYYY-MM-DD): Filter by week
 - `goalId` (string): Filter by goal
@@ -264,9 +316,11 @@ List tasks with powerful filtering.
 - `page`, `limit`: Pagination
 
 #### POST /tasks/:id/complete
+
 Mark task as complete. Automatically updates goal analytics (completion rate, streaks).
 
 **Response:**
+
 ```json
 {
   "message": "Task marked as complete",
@@ -283,9 +337,11 @@ Mark task as complete. Automatically updates goal analytics (completion rate, st
 ```
 
 #### PATCH /tasks/bulk
+
 Perform bulk operations on multiple tasks.
 
 **Request:**
+
 ```json
 {
   "taskIds": ["task_1", "task_2", "task_3"],
@@ -300,9 +356,11 @@ Perform bulk operations on multiple tasks.
 ### Calendar Module
 
 #### GET /calendar/oauth/google
+
 Initiate Google Calendar OAuth flow.
 
 **Response:**
+
 ```json
 {
   "message": "Please visit the auth URL to connect your Google Calendar",
@@ -311,9 +369,11 @@ Initiate Google Calendar OAuth flow.
 ```
 
 #### POST /calendar/sync
+
 Sync tasks to Google Calendar with conflict detection.
 
 **Request:**
+
 ```json
 {
   "planId": "plan_123",
@@ -322,11 +382,13 @@ Sync tasks to Google Calendar with conflict detection.
 ```
 
 **Conflict Resolution Options:**
+
 - `skip`: Don't sync conflicting tasks
 - `adjust`: Auto-reschedule to suggested time
 - `overwrite`: Force sync anyway
 
 **Response:**
+
 ```json
 {
   "message": "Successfully synced 12 tasks",
@@ -350,9 +412,11 @@ Sync tasks to Google Calendar with conflict detection.
 ### Billing Module
 
 #### GET /billing/plans
+
 Get all pricing tiers.
 
 **Response:**
+
 ```json
 {
   "plans": [
@@ -395,9 +459,11 @@ Get all pricing tiers.
 ```
 
 #### POST /billing/checkout
+
 Create Stripe checkout session.
 
 **Request:**
+
 ```json
 {
   "tier": "PRO",
@@ -407,6 +473,7 @@ Create Stripe checkout session.
 ```
 
 **Response:**
+
 ```json
 {
   "sessionId": "cs_test_...",
@@ -415,14 +482,17 @@ Create Stripe checkout session.
 ```
 
 #### POST /billing/webhooks/stripe
+
 Stripe webhook receiver (NO AUTHENTICATION REQUIRED).
 
 **Headers:**
+
 ```
 stripe-signature: t=...,v1=...
 ```
 
 **Handled Events:**
+
 - `checkout.session.completed` → Upgrade user
 - `customer.subscription.updated` → Update tier/status
 - `customer.subscription.deleted` → Downgrade to FREE
@@ -434,9 +504,11 @@ stripe-signature: t=...,v1=...
 ### Analytics Module
 
 #### POST /analytics/events
+
 Track user events for analytics.
 
 **Request:**
+
 ```json
 {
   "event": "plan_generated",
@@ -452,14 +524,17 @@ Track user events for analytics.
 ```
 
 **Supported Events:**
+
 - `user_signup`, `user_onboarding_complete`
 - `goal_created`, `plan_generated`, `plan_accepted`
 - `task_completed`, `calendar_connected`, `subscription_started`
 
 #### GET /analytics/metrics
+
 Get user dashboard metrics.
 
 **Response:**
+
 ```json
 {
   "metrics": {
@@ -476,9 +551,11 @@ Get user dashboard metrics.
 ```
 
 #### GET /analytics/insights
+
 Get weekly insights with personalized recommendations.
 
 **Response:**
+
 ```json
 {
   "insights": {
@@ -499,14 +576,17 @@ Get weekly insights with personalized recommendations.
 ```
 
 **Productivity Levels:**
+
 - `high`: ≥80% completion rate
 - `medium`: 50-79% completion rate
 - `low`: <50% completion rate
 
 #### GET /analytics/usage?days=30
+
 Get LLM usage and costs.
 
 **Response:**
+
 ```json
 {
   "usage": {
@@ -528,6 +608,7 @@ Get LLM usage and costs.
 ## 🔒 Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "statusCode": 400,
@@ -537,6 +618,7 @@ Get LLM usage and costs.
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "statusCode": 401,
@@ -545,6 +627,7 @@ Get LLM usage and costs.
 ```
 
 ### 403 Forbidden (Tier Limit)
+
 ```json
 {
   "statusCode": 403,
@@ -553,6 +636,7 @@ Get LLM usage and costs.
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "statusCode": 404,
@@ -561,6 +645,7 @@ Get LLM usage and costs.
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "statusCode": 500,
@@ -582,19 +667,20 @@ Get LLM usage and costs.
 
 Endpoints with tier restrictions automatically enforce limits:
 
-| Feature | FREE | STARTER | PRO |
-|---------|------|---------|-----|
-| Goals | 2 | 5 | ∞ |
-| Plans/Week | 5 | 20 | ∞ |
-| Calendar Sync | ❌ | ✅ | ✅ |
-| AI Model | gpt-4o-mini | gpt-4o-mini | gpt-4o |
-| Priority Support | ❌ | ❌ | ✅ |
+| Feature          | FREE        | STARTER     | PRO    |
+| ---------------- | ----------- | ----------- | ------ |
+| Goals            | 2           | 5           | ∞      |
+| Plans/Week       | 5           | 20          | ∞      |
+| Calendar Sync    | ❌          | ✅          | ✅     |
+| AI Model         | gpt-4o-mini | gpt-4o-mini | gpt-4o |
+| Priority Support | ❌          | ❌          | ✅     |
 
 ---
 
 ## 🔗 Swagger/OpenAPI
 
 Interactive API documentation available at:
+
 ```
 http://localhost:3000/api
 ```
@@ -604,13 +690,14 @@ http://localhost:3000/api
 ## 📱 SDK Examples
 
 ### JavaScript/TypeScript
+
 ```typescript
 const token = await clerk.session.getToken();
 
 const response = await fetch('http://localhost:3000/api/v1/goals', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
@@ -624,6 +711,7 @@ const data = await response.json();
 ```
 
 ### cURL
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/goals \
   -H "Authorization: Bearer $TOKEN" \
@@ -640,11 +728,13 @@ curl -X POST http://localhost:3000/api/v1/goals \
 ## 🚀 Postman Collection
 
 Import the Postman collection for quick testing:
+
 ```
 [Link to Postman collection]
 ```
 
 Includes:
+
 - All endpoints with examples
 - Environment variables
 - Pre-request scripts for authentication

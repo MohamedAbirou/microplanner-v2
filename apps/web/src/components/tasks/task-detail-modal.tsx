@@ -12,7 +12,6 @@ import {
   Edit2,
   CheckCircle2,
   Circle,
-  X,
   Timer,
   Play,
   StopCircle,
@@ -23,7 +22,6 @@ import { useLogTime } from '@/hooks/use-graphql';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -31,10 +29,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -198,14 +201,11 @@ export function TaskDetailModal({
 
     try {
       await onToggleComplete?.(task.id);
-      toast.success(
-        task.isCompleted ? 'Task marked as incomplete' : 'Task completed!',
-        {
-          description: task.isCompleted
-            ? `"${task.title}" has been reopened`
-            : `Great job completing "${task.title}"!`,
-        }
-      );
+      toast.success(task.isCompleted ? 'Task marked as incomplete' : 'Task completed!', {
+        description: task.isCompleted
+          ? `"${task.title}" has been reopened`
+          : `Great job completing "${task.title}"!`,
+      });
     } catch (error) {
       console.error('Failed to toggle task completion:', error);
       toast.error('Failed to update task status', {
@@ -240,7 +240,7 @@ export function TaskDetailModal({
     }
   };
 
-  const selectedGoal = goals.find((g) => g.id === (editedTask.goalId || task.goal?.id));
+  const selectedGoal = goals.find(g => g.id === (editedTask.goalId || task.goal?.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -251,7 +251,7 @@ export function TaskDetailModal({
               {isEditing ? (
                 <Input
                   value={editedTask.title as string}
-                  onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+                  onChange={e => setEditedTask({ ...editedTask, title: e.target.value })}
                   className="text-xl font-semibold mb-2"
                   placeholder="Task title..."
                 />
@@ -279,9 +279,7 @@ export function TaskDetailModal({
                       {task.goal.title}
                     </Badge>
                   )}
-                  {task.priority === 1 && (
-                    <Badge variant="destructive">High Priority</Badge>
-                  )}
+                  {task.priority === 1 && <Badge variant="destructive">High Priority</Badge>}
                 </div>
               )}
             </div>
@@ -323,9 +321,12 @@ export function TaskDetailModal({
             </TabsTrigger>
             <TabsTrigger value="dependencies">
               Dependencies
-              {(getBlockingTasks(task.id, dependencies).length + getBlockedTasks(task.id, dependencies).length) > 0 && (
+              {getBlockingTasks(task.id, dependencies).length +
+                getBlockedTasks(task.id, dependencies).length >
+                0 && (
                 <Badge variant="secondary" className="ml-2">
-                  {getBlockingTasks(task.id, dependencies).length + getBlockedTasks(task.id, dependencies).length}
+                  {getBlockingTasks(task.id, dependencies).length +
+                    getBlockedTasks(task.id, dependencies).length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -341,7 +342,7 @@ export function TaskDetailModal({
                 </Label>
                 <Select
                   value={editedTask.goalId as string}
-                  onValueChange={(value) => setEditedTask({ ...editedTask, goalId: value } as any)}
+                  onValueChange={value => setEditedTask({ ...editedTask, goalId: value } as any)}
                 >
                   <SelectTrigger id="goal">
                     <SelectValue>
@@ -354,7 +355,7 @@ export function TaskDetailModal({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {goals.map((goal) => (
+                    {goals.map(goal => (
                       <SelectItem key={goal.id} value={goal.id}>
                         <div className="flex items-center gap-2">
                           <span>{goal.emoji}</span>
@@ -379,7 +380,9 @@ export function TaskDetailModal({
                     id="date"
                     type="date"
                     value={editedTask.scheduledDate as string}
-                    onChange={(e) => setEditedTask({ ...editedTask, scheduledDate: e.target.value } as any)}
+                    onChange={e =>
+                      setEditedTask({ ...editedTask, scheduledDate: e.target.value } as any)
+                    }
                   />
                 ) : (
                   <div className="text-sm p-2 rounded-[10px] bg-muted">
@@ -397,7 +400,9 @@ export function TaskDetailModal({
                     id="time"
                     type="time"
                     value={editedTask.startTime as string}
-                    onChange={(e) => setEditedTask({ ...editedTask, startTime: e.target.value } as any)}
+                    onChange={e =>
+                      setEditedTask({ ...editedTask, startTime: e.target.value } as any)
+                    }
                   />
                 ) : (
                   <div className="text-sm p-2 rounded-[10px] bg-muted">
@@ -413,7 +418,7 @@ export function TaskDetailModal({
               {isEditing ? (
                 <Select
                   value={(editedTask.durationMinutes || task.durationMinutes).toString()}
-                  onValueChange={(value) =>
+                  onValueChange={value =>
                     setEditedTask({ ...editedTask, durationMinutes: parseInt(value) } as any)
                   }
                 >
@@ -421,7 +426,7 @@ export function TaskDetailModal({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {DURATION_OPTIONS.map((option) => (
+                    {DURATION_OPTIONS.map(option => (
                       <SelectItem key={option.value} value={option.value.toString()}>
                         {option.label}
                       </SelectItem>
@@ -443,7 +448,7 @@ export function TaskDetailModal({
                   Priority
                 </Label>
                 <div className="flex gap-2">
-                  {PRIORITY_OPTIONS.map((option) => (
+                  {PRIORITY_OPTIONS.map(option => (
                     <Button
                       key={option.value}
                       type="button"
@@ -453,7 +458,9 @@ export function TaskDetailModal({
                           : 'outline'
                       }
                       size="sm"
-                      onClick={() => setEditedTask({ ...editedTask, priority: option.value } as any)}
+                      onClick={() =>
+                        setEditedTask({ ...editedTask, priority: option.value } as any)
+                      }
                       className="flex-1"
                     >
                       {option.label}
@@ -509,7 +516,7 @@ export function TaskDetailModal({
                     min={1}
                     placeholder="Log minutes"
                     value={manualMinutes}
-                    onChange={(e) => setManualMinutes(e.target.value)}
+                    onChange={e => setManualMinutes(e.target.value)}
                     className="h-9"
                   />
                   <Button
@@ -527,7 +534,7 @@ export function TaskDetailModal({
                 <TaskTimeHistory
                   taskId={task.id}
                   enabled={open}
-                  onTotalChanged={(delta) =>
+                  onTotalChanged={delta =>
                     onUpdate?.(task.id, {
                       timeSpentMinutes: Math.max(0, (task.timeSpentMinutes ?? 0) + delta),
                     })
@@ -543,7 +550,7 @@ export function TaskDetailModal({
                 <Textarea
                   id="notes"
                   value={editedTask.notes as string}
-                  onChange={(e) => setEditedTask({ ...editedTask, notes: e.target.value } as any)}
+                  onChange={e => setEditedTask({ ...editedTask, notes: e.target.value } as any)}
                   rows={4}
                   placeholder="Add any additional details..."
                 />
@@ -563,13 +570,13 @@ export function TaskDetailModal({
             <TaskSubtasksPanel
               taskId={task.id}
               subtasks={task.subtasks || []}
-              onAddSubtask={async (title) => {
+              onAddSubtask={async title => {
                 await onAddSubtask?.(task.id, title);
               }}
-              onToggleSubtask={async (subtaskId) => {
+              onToggleSubtask={async subtaskId => {
                 await onToggleSubtask?.(subtaskId);
               }}
-              onDeleteSubtask={async (subtaskId) => {
+              onDeleteSubtask={async subtaskId => {
                 await onDeleteSubtask?.(subtaskId);
               }}
             />
@@ -592,7 +599,9 @@ export function TaskDetailModal({
               <Button variant="outline" className="h-9" onClick={() => setIsEditing(false)}>
                 Cancel
               </Button>
-              <Button className="h-9" onClick={handleSave}>Save Changes</Button>
+              <Button className="h-9" onClick={handleSave}>
+                Save Changes
+              </Button>
             </>
           ) : (
             <>

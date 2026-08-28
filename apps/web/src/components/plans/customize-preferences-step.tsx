@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { startOfWeek, endOfWeek, addWeeks, format } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -30,12 +30,12 @@ interface CustomizePreferencesStepProps {
 
 export function CustomizePreferencesStep({
   preferences: initialPreferences,
-  selectedGoals,
+  selectedGoals: _selectedGoals,
   onNext,
   onBack,
 }: CustomizePreferencesStepProps) {
   const [preferences, setPreferences] = useState(initialPreferences);
-  const { tier, limits } = useTier();
+  const { tier } = useTier();
 
   // Preview how busy the target week already is, so the user knows if there's
   // room before generating more tasks into it.
@@ -44,22 +44,18 @@ export function CustomizePreferencesStep({
   const { tasks: weekTasks } = useTasksList(
     { dateRange: { start: weekStart, end: weekEnd } },
     undefined,
-    { take: 200 },
+    { take: 200 }
   );
   const { workHours } = useWorkHours();
 
   const isThisWeek = (date: Date) => {
     const now = new Date();
-    return (
-      startOfWeek(date).getTime() === startOfWeek(now).getTime()
-    );
+    return startOfWeek(date).getTime() === startOfWeek(now).getTime();
   };
 
   const isNextWeek = (date: Date) => {
     const nextWeek = addWeeks(new Date(), 1);
-    return (
-      startOfWeek(date).getTime() === startOfWeek(nextWeek).getTime()
-    );
+    return startOfWeek(date).getTime() === startOfWeek(nextWeek).getTime();
   };
 
   return (
@@ -67,9 +63,7 @@ export function CustomizePreferencesStep({
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold mb-2">Customize Your Plan</h1>
-        <p className="text-muted-foreground">
-          Fine-tune how your week should be scheduled.
-        </p>
+        <p className="text-muted-foreground">Fine-tune how your week should be scheduled.</p>
       </div>
 
       {/* Existing workload for the target week */}
@@ -130,7 +124,7 @@ export function CustomizePreferencesStep({
               </div>
               <Switch
                 checked={preferences.prioritizePeakHours}
-                onCheckedChange={(checked) =>
+                onCheckedChange={checked =>
                   setPreferences({ ...preferences, prioritizePeakHours: checked })
                 }
               />
@@ -142,11 +136,13 @@ export function CustomizePreferencesStep({
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Avoid Weekends</Label>
-                <p className="text-sm text-muted-foreground">Keep weekends free from scheduled tasks</p>
+                <p className="text-sm text-muted-foreground">
+                  Keep weekends free from scheduled tasks
+                </p>
               </div>
               <Switch
                 checked={preferences.avoidWeekends}
-                onCheckedChange={(checked) =>
+                onCheckedChange={checked =>
                   setPreferences({ ...preferences, avoidWeekends: checked })
                 }
               />

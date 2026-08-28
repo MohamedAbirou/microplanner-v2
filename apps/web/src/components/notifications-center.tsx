@@ -3,9 +3,9 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -17,14 +17,8 @@ import Link from 'next/link';
 import * as React from 'react';
 
 export function NotificationsCenter() {
-  const {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    clearAll,
-  } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } =
+    useNotifications();
 
   const [open, setOpen] = React.useState(false);
 
@@ -32,23 +26,6 @@ export function NotificationsCenter() {
     markAsRead(id);
     if (actionUrl) {
       setOpen(false);
-    }
-  };
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'task_reminder':
-        return '⏰';
-      case 'goal_milestone':
-        return '🎯';
-      case 'plan_ready':
-        return '✨';
-      case 'achievement':
-        return '🏆';
-      case 'system':
-        return '🔔';
-      default:
-        return '📌';
     }
   };
 
@@ -75,30 +52,18 @@ export function NotificationsCenter() {
           <div>
             <h3 className="font-semibold">Notifications</h3>
             {unreadCount > 0 && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {unreadCount} unread
-              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">{unreadCount} unread</p>
             )}
           </div>
           <div className="flex items-center gap-1">
             {unreadCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={markAllAsRead}
-                className="h-8 text-xs"
-              >
+              <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-8 text-xs">
                 <CheckCheck className="h-3.5 w-3.5 mr-1" />
                 Mark all read
               </Button>
             )}
             {notifications.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={clearAll}
-                className="h-8 w-8"
-              >
+              <Button variant="ghost" size="icon" onClick={clearAll} className="h-8 w-8">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             )}
@@ -110,9 +75,7 @@ export function NotificationsCenter() {
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Bell className="h-12 w-12 text-muted-foreground/50 mb-3" />
             <h4 className="font-medium mb-1">No notifications</h4>
-            <p className="text-sm text-muted-foreground">
-              You're all caught up!
-            </p>
+            <p className="text-sm text-muted-foreground">You're all caught up!</p>
           </div>
         ) : (
           <ScrollArea className="h-[400px]">
@@ -147,7 +110,7 @@ export function NotificationsCenter() {
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.preventDefault();
                             e.stopPropagation();
                             markAsRead(notification.id);
@@ -160,7 +123,7 @@ export function NotificationsCenter() {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
-                        onClick={(e) => {
+                        onClick={e => {
                           e.preventDefault();
                           e.stopPropagation();
                           deleteNotification(notification.id);
@@ -210,9 +173,7 @@ function NotificationContent({ notification }: { notification: any }) {
         <div className="flex items-start justify-between gap-2">
           <h4 className="font-medium text-sm leading-tight">{notification.title}</h4>
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2">
-          {notification.message}
-        </p>
+        <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
         <div className="flex items-center gap-2">
           <p className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
@@ -220,9 +181,7 @@ function NotificationContent({ notification }: { notification: any }) {
           {notification.actionLabel && (
             <>
               <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs text-primary font-medium">
-                {notification.actionLabel}
-              </span>
+              <span className="text-xs text-primary font-medium">{notification.actionLabel}</span>
             </>
           )}
         </div>

@@ -3,7 +3,7 @@
  * Supports dependency types, validation, and scheduling
  */
 
-import { parseISO, isBefore, isAfter, addDays, format } from 'date-fns';
+import { parseISO, isAfter, addDays } from 'date-fns';
 
 export type DependencyType = 'BLOCKS' | 'BLOCKED_BY' | 'RELATED_TO';
 
@@ -108,14 +108,12 @@ export function wouldCreateCircularDependency(
 /**
  * Get all tasks that a given task depends on (blocking tasks)
  */
-export function getBlockingTasks(
-  taskId: string,
-  dependencies: TaskDependency[]
-): string[] {
+export function getBlockingTasks(taskId: string, dependencies: TaskDependency[]): string[] {
   return dependencies
-    .filter(dep =>
-      (dep.type === 'BLOCKED_BY' && dep.fromTaskId === taskId) ||
-      (dep.type === 'BLOCKS' && dep.toTaskId === taskId)
+    .filter(
+      dep =>
+        (dep.type === 'BLOCKED_BY' && dep.fromTaskId === taskId) ||
+        (dep.type === 'BLOCKS' && dep.toTaskId === taskId)
     )
     .map(dep => (dep.type === 'BLOCKED_BY' ? dep.toTaskId : dep.fromTaskId));
 }
@@ -123,14 +121,12 @@ export function getBlockingTasks(
 /**
  * Get all tasks that depend on a given task (blocked tasks)
  */
-export function getBlockedTasks(
-  taskId: string,
-  dependencies: TaskDependency[]
-): string[] {
+export function getBlockedTasks(taskId: string, dependencies: TaskDependency[]): string[] {
   return dependencies
-    .filter(dep =>
-      (dep.type === 'BLOCKS' && dep.fromTaskId === taskId) ||
-      (dep.type === 'BLOCKED_BY' && dep.toTaskId === taskId)
+    .filter(
+      dep =>
+        (dep.type === 'BLOCKS' && dep.fromTaskId === taskId) ||
+        (dep.type === 'BLOCKED_BY' && dep.toTaskId === taskId)
     )
     .map(dep => (dep.type === 'BLOCKS' ? dep.toTaskId : dep.fromTaskId));
 }
@@ -138,14 +134,10 @@ export function getBlockedTasks(
 /**
  * Get all related tasks
  */
-export function getRelatedTasks(
-  taskId: string,
-  dependencies: TaskDependency[]
-): string[] {
+export function getRelatedTasks(taskId: string, dependencies: TaskDependency[]): string[] {
   return dependencies
-    .filter(dep =>
-      dep.type === 'RELATED_TO' &&
-      (dep.fromTaskId === taskId || dep.toTaskId === taskId)
+    .filter(
+      dep => dep.type === 'RELATED_TO' && (dep.fromTaskId === taskId || dep.toTaskId === taskId)
     )
     .map(dep => (dep.fromTaskId === taskId ? dep.toTaskId : dep.fromTaskId));
 }
@@ -342,10 +334,7 @@ export function getDependencyStats(
 /**
  * Get human-readable dependency description
  */
-export function getDependencyDescription(
-  dependency: TaskDependency,
-  tasks: Task[]
-): string {
+export function getDependencyDescription(dependency: TaskDependency, tasks: Task[]): string {
   const fromTask = tasks.find(t => t.id === dependency.fromTaskId);
   const toTask = tasks.find(t => t.id === dependency.toTaskId);
 
@@ -366,10 +355,7 @@ export function getDependencyDescription(
 /**
  * Sort tasks by dependency order (topological sort)
  */
-export function sortTasksByDependencies(
-  tasks: Task[],
-  dependencies: TaskDependency[]
-): Task[] {
+export function sortTasksByDependencies(tasks: Task[], dependencies: TaskDependency[]): Task[] {
   const graph = new Map<string, Set<string>>();
   const inDegree = new Map<string, number>();
 

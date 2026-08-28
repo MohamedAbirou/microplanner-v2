@@ -3,15 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import {
-  CalendarRange,
-  Target,
-  ArrowRight,
-  ArrowLeft,
-  Sparkles,
-  TrendingUp,
-  Check,
-} from 'lucide-react';
+import { CalendarRange, Target, ArrowRight, ArrowLeft, Sparkles, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -93,9 +85,7 @@ export default function PlanWeekPage() {
 
       <div className="mb-8">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-[13px] font-medium">
-            Step {STEP_META[step].index} of 5
-          </span>
+          <span className="text-[13px] font-medium">Step {STEP_META[step].index} of 5</span>
           <span className="text-[13px] text-muted-foreground">{STEP_META[step].label}</span>
         </div>
         <Progress value={progress} />
@@ -119,7 +109,10 @@ export default function PlanWeekPage() {
               <>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <Stat label="Tasks completed" value={String(review.tasksCompleted ?? 0)} />
-                  <Stat label="Completion rate" value={`${Math.round(review.completionRate ?? 0)}%`} />
+                  <Stat
+                    label="Completion rate"
+                    value={`${Math.round(review.completionRate ?? 0)}%`}
+                  />
                   <Stat label="Productivity" value={review.productivity ?? '—'} />
                 </div>
                 {Array.isArray(review.topGoals) && review.topGoals.length > 0 && (
@@ -172,7 +165,7 @@ export default function PlanWeekPage() {
           <CardContent className="space-y-4">
             <Textarea
               value={intention}
-              onChange={(e) => setIntention(e.target.value)}
+              onChange={e => setIntention(e.target.value)}
               rows={3}
               placeholder="This week I want to…"
               autoFocus
@@ -193,7 +186,7 @@ export default function PlanWeekPage() {
       {step === 'select-goals' && (
         <SelectGoalsStep
           selectedGoals={selectedGoals}
-          onNext={(ids) => {
+          onNext={ids => {
             setSelectedGoals(ids);
             setStep('customize');
           }}

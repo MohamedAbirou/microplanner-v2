@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Calendar, Clock, Target, Flag, Repeat } from 'lucide-react';
+import { Calendar, Clock, Flag, Repeat } from 'lucide-react';
 import { RecurrenceRule, RECURRENCE_PRESETS, getRecurrenceDescription } from '@/lib/recurrence';
 import {
   Dialog,
@@ -16,9 +16,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 
 interface Goal {
   id: string;
@@ -79,7 +84,9 @@ export function QuickAddTaskModal({
     title: '',
     notes: '',
     goalId: goals[0]?.id || '',
-    scheduledDate: defaultDate ? format(defaultDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+    scheduledDate: defaultDate
+      ? format(defaultDate, 'yyyy-MM-dd')
+      : format(new Date(), 'yyyy-MM-dd'),
     startTime: defaultTime || '09:00',
     durationMinutes: 60,
     priority: 2,
@@ -95,7 +102,9 @@ export function QuickAddTaskModal({
         title: '',
         notes: '',
         goalId: goals[0]?.id || '',
-        scheduledDate: defaultDate ? format(defaultDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+        scheduledDate: defaultDate
+          ? format(defaultDate, 'yyyy-MM-dd')
+          : format(new Date(), 'yyyy-MM-dd'),
         startTime: defaultTime || '09:00',
         durationMinutes: 60,
         priority: 2,
@@ -221,9 +230,10 @@ export function QuickAddTaskModal({
     try {
       await onSubmit?.(formData);
 
-      const recurringText = formData.isRecurring && formData.recurrenceRule
-        ? ` (${getRecurrenceDescription(formData.recurrenceRule)})`
-        : '';
+      const recurringText =
+        formData.isRecurring && formData.recurrenceRule
+          ? ` (${getRecurrenceDescription(formData.recurrenceRule)})`
+          : '';
 
       toast.success('Task created successfully!', {
         description: `"${formData.title}" has been added to your calendar${recurringText}`,
@@ -261,16 +271,14 @@ export function QuickAddTaskModal({
                 id="title"
                 placeholder="e.g., Morning workout, Team meeting..."
                 value={formData.title}
-                onChange={(e) => {
+                onChange={e => {
                   setFormData({ ...formData, title: e.target.value });
                   if (errors.title) setErrors({ ...errors, title: '' });
                 }}
                 required
                 className={errors.title ? 'border-destructive' : ''}
               />
-              {errors.title && (
-                <p className="text-sm text-destructive">{errors.title}</p>
-              )}
+              {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
             </div>
 
             {/* Goal Selection */}
@@ -278,7 +286,7 @@ export function QuickAddTaskModal({
               <Label htmlFor="goal">Goal *</Label>
               <Select
                 value={formData.goalId}
-                onValueChange={(value) => {
+                onValueChange={value => {
                   setFormData({ ...formData, goalId: value });
                   if (errors.goalId) setErrors({ ...errors, goalId: '' });
                 }}
@@ -294,7 +302,7 @@ export function QuickAddTaskModal({
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {goals.map((goal) => (
+                  {goals.map(goal => (
                     <SelectItem key={goal.id} value={goal.id}>
                       <div className="flex items-center gap-2">
                         <span>{goal.emoji}</span>
@@ -304,9 +312,7 @@ export function QuickAddTaskModal({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.goalId && (
-                <p className="text-sm text-destructive">{errors.goalId}</p>
-              )}
+              {errors.goalId && <p className="text-sm text-destructive">{errors.goalId}</p>}
             </div>
 
             {/* Date & Time */}
@@ -320,7 +326,7 @@ export function QuickAddTaskModal({
                   id="date"
                   type="date"
                   value={formData.scheduledDate}
-                  onChange={(e) => {
+                  onChange={e => {
                     setFormData({ ...formData, scheduledDate: e.target.value });
                     if (errors.scheduledDate) setErrors({ ...errors, scheduledDate: '' });
                   }}
@@ -340,16 +346,14 @@ export function QuickAddTaskModal({
                   id="time"
                   type="time"
                   value={formData.startTime}
-                  onChange={(e) => {
+                  onChange={e => {
                     setFormData({ ...formData, startTime: e.target.value });
                     if (errors.startTime) setErrors({ ...errors, startTime: '' });
                   }}
                   required
                   className={errors.startTime ? 'border-destructive' : ''}
                 />
-                {errors.startTime && (
-                  <p className="text-sm text-destructive">{errors.startTime}</p>
-                )}
+                {errors.startTime && <p className="text-sm text-destructive">{errors.startTime}</p>}
               </div>
             </div>
 
@@ -358,16 +362,19 @@ export function QuickAddTaskModal({
               <Label htmlFor="duration">Duration</Label>
               <Select
                 value={formData.durationMinutes.toString()}
-                onValueChange={(value) => {
+                onValueChange={value => {
                   setFormData({ ...formData, durationMinutes: parseInt(value) });
                   if (errors.durationMinutes) setErrors({ ...errors, durationMinutes: '' });
                 }}
               >
-                <SelectTrigger id="duration" className={errors.durationMinutes ? 'border-destructive' : ''}>
+                <SelectTrigger
+                  id="duration"
+                  className={errors.durationMinutes ? 'border-destructive' : ''}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {DURATION_OPTIONS.map((option) => (
+                  {DURATION_OPTIONS.map(option => (
                     <SelectItem key={option.value} value={option.value.toString()}>
                       {option.label}
                     </SelectItem>
@@ -386,7 +393,7 @@ export function QuickAddTaskModal({
                 Priority
               </Label>
               <div className="flex gap-2">
-                {PRIORITY_OPTIONS.map((option) => (
+                {PRIORITY_OPTIONS.map(option => (
                   <Button
                     key={option.value}
                     type="button"
@@ -442,21 +449,24 @@ export function QuickAddTaskModal({
                 id="notes"
                 placeholder="Add any additional details..."
                 value={formData.notes}
-                onChange={(e) => {
+                onChange={e => {
                   setFormData({ ...formData, notes: e.target.value });
                   if (errors.notes) setErrors({ ...errors, notes: '' });
                 }}
                 rows={3}
                 className={errors.notes ? 'border-destructive' : ''}
               />
-              {errors.notes && (
-                <p className="text-sm text-destructive">{errors.notes}</p>
-              )}
+              {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
             </div>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" className="h-9" disabled={!formData.title.trim() || isSubmitting}>

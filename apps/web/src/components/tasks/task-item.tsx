@@ -12,7 +12,6 @@ import {
   MoreVertical,
   Copy,
   Trash,
-  CheckCircle2,
   ListTodo,
   Link as LinkIcon,
   StopCircle,
@@ -164,7 +163,7 @@ export function TaskItem({
               <ListTodo className="h-3 w-3" />
               <span>
                 {task.subtasks
-                  ? `${task.subtasks.filter((s) => s.isCompleted).length}/${task.subtasks.length}`
+                  ? `${task.subtasks.filter(s => s.isCompleted).length}/${task.subtasks.length}`
                   : task.subtaskCount}
               </span>
             </div>
@@ -179,9 +178,11 @@ export function TaskItem({
           )}
 
           {/* Blocked indicator */}
-          {((task.blockedBy && task.blockedBy.length > 0) ||
-            (task.blockedByCount ?? 0) > 0) && (
-            <div className="flex items-center gap-1 text-xs text-orange-600" title="Blocked by other tasks">
+          {((task.blockedBy && task.blockedBy.length > 0) || (task.blockedByCount ?? 0) > 0) && (
+            <div
+              className="flex items-center gap-1 text-xs text-orange-600"
+              title="Blocked by other tasks"
+            >
               <LinkIcon className="h-3 w-3" />
             </div>
           )}
@@ -244,11 +245,12 @@ export function TaskItem({
               {task.goal.title}
             </Badge>
           )}
-          {task.tags && task.tags.map(tag => (
-            <Badge key={tag} variant="secondary" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
+          {task.tags &&
+            task.tags.map(tag => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
         </div>
       </div>
 
@@ -311,10 +313,7 @@ export function TaskItem({
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => onDelete?.(task.id)}
-            >
+            <DropdownMenuItem className="text-destructive" onClick={() => onDelete?.(task.id)}>
               <Trash className="mr-2 h-4 w-4" />
               Delete
             </DropdownMenuItem>

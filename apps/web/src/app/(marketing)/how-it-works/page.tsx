@@ -1,7 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, Zap, Brain, Calendar, TrendingUp, Lightbulb, Rocket, Target } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Zap,
+  Brain,
+  Calendar,
+  TrendingUp,
+  Lightbulb,
+  Target,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function HowItWorksPage() {
@@ -9,7 +18,8 @@ export default function HowItWorksPage() {
     {
       number: 1,
       title: 'Define Your Goals',
-      description: 'Start by setting the goals you want to achieve. Whether it\'s learning a new skill, completing a project, or building a habit, MicroPlanner has you covered.',
+      description:
+        "Start by setting the goals you want to achieve. Whether it's learning a new skill, completing a project, or building a habit, MicroPlanner has you covered.",
       details: [
         'Set frequency (daily, weekly, or custom)',
         'Define duration (30 min sessions, 2-hour blocks, etc.)',
@@ -21,7 +31,8 @@ export default function HowItWorksPage() {
     {
       number: 2,
       title: 'AI Analyzes Your Context',
-      description: 'Our AI engine analyzes your goals, calendar, energy patterns, constraints, and historical data to understand your unique situation.',
+      description:
+        'Our AI engine analyzes your goals, calendar, energy patterns, constraints, and historical data to understand your unique situation.',
       details: [
         'Reviews your existing calendar',
         'Learns your productivity patterns',
@@ -33,7 +44,8 @@ export default function HowItWorksPage() {
     {
       number: 3,
       title: 'Get Your Perfect Week',
-      description: 'Receive an optimized weekly plan that fits seamlessly into your schedule. Every goal is scheduled at the perfect time for maximum success.',
+      description:
+        'Receive an optimized weekly plan that fits seamlessly into your schedule. Every goal is scheduled at the perfect time for maximum success.',
       details: [
         'AI generates multiple plan options',
         'Choose or customize your preferred plan',
@@ -45,7 +57,8 @@ export default function HowItWorksPage() {
     {
       number: 4,
       title: 'Execute and Track',
-      description: 'Follow your plan, track progress, and watch as you crush your goals. MicroPlanner learns from your performance to improve recommendations.',
+      description:
+        'Follow your plan, track progress, and watch as you crush your goals. MicroPlanner learns from your performance to improve recommendations.',
       details: [
         'Check off completed tasks',
         'View real-time progress',
@@ -57,7 +70,8 @@ export default function HowItWorksPage() {
     {
       number: 5,
       title: 'Learn and Optimize',
-      description: 'Our AI analyzes what worked and what didn\'t. Each week, your plan gets smarter and better aligned with your actual productivity patterns.',
+      description:
+        "Our AI analyzes what worked and what didn't. Each week, your plan gets smarter and better aligned with your actual productivity patterns.",
       details: [
         'Advanced productivity analytics',
         'Pattern recognition over time',
@@ -88,7 +102,8 @@ export default function HowItWorksPage() {
               How <span className="text-gradient">MicroPlanner</span> Works
             </h1>
             <p className="mb-8 text-base text-muted-foreground md:text-lg">
-              A simple 5-step process to transform your productivity and achieve your goals with AI-powered planning.
+              A simple 5-step process to transform your productivity and achieve your goals with
+              AI-powered planning.
             </p>
           </div>
 
@@ -140,7 +155,8 @@ export default function HowItWorksPage() {
                 </div>
                 <h4 className="mb-2 font-semibold">AI-Powered Optimization</h4>
                 <p className="text-sm text-muted-foreground">
-                  Our Claude Sonnet 3.5 AI understands complex scheduling constraints and optimizes for your success.
+                  Our Claude Sonnet 3.5 AI understands complex scheduling constraints and optimizes
+                  for your success.
                 </p>
               </div>
 
@@ -150,7 +166,8 @@ export default function HowItWorksPage() {
                 </div>
                 <h4 className="mb-2 font-semibold">Continuous Learning</h4>
                 <p className="text-sm text-muted-foreground">
-                  The system learns from your actual behavior to improve future recommendations automatically.
+                  The system learns from your actual behavior to improve future recommendations
+                  automatically.
                 </p>
               </div>
 
@@ -160,7 +177,8 @@ export default function HowItWorksPage() {
                 </div>
                 <h4 className="mb-2 font-semibold">Calendar Integration</h4>
                 <p className="text-sm text-muted-foreground">
-                  Bi-directional sync with Google Calendar ensures your plan is always up-to-date and conflict-free.
+                  Bi-directional sync with Google Calendar ensures your plan is always up-to-date
+                  and conflict-free.
                 </p>
               </div>
 
@@ -170,7 +188,8 @@ export default function HowItWorksPage() {
                 </div>
                 <h4 className="mb-2 font-semibold">Measurable Results</h4>
                 <p className="text-sm text-muted-foreground">
-                  Track completion rates, streaks, and progress with detailed analytics to see your improvement over time.
+                  Track completion rates, streaks, and progress with detailed analytics to see your
+                  improvement over time.
                 </p>
               </div>
             </div>
@@ -178,9 +197,7 @@ export default function HowItWorksPage() {
 
           {/* CTA Section */}
           <div className="mt-16 rounded-2xl border border-border bg-card p-12 text-center">
-            <h2 className="mb-4 text-2xl font-bold">
-              Ready to Get Started?
-            </h2>
+            <h2 className="mb-4 text-2xl font-bold">Ready to Get Started?</h2>
             <p className="mb-6 text-muted-foreground">
               See how MicroPlanner can transform your planning in action.
             </p>

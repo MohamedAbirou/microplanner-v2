@@ -6,7 +6,6 @@ import { Plus, Grid, List } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { TaskFiltersPanel } from '@/components/filters/task-filters-panel';
 import { TaskSortMenu } from '@/components/filters/task-sort-menu';
@@ -22,10 +21,14 @@ import {
   SORT_PRESETS,
   getTaskStatistics,
 } from '@/lib/filters';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useAppGoals } from '@/contexts/goals-context';
-import { useTasksList, useUpdateTask, useBulkUpdateTasks, useBulkDeleteTasks } from '@/hooks/use-graphql';
+import {
+  useTasks,
+  useUpdateTask,
+  useBulkUpdateTasks,
+  useBulkDeleteTasks,
+} from '@/hooks/use-graphql';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
 import { getTasksPageDefaultQuery } from '@/lib/task-query';
@@ -59,11 +62,12 @@ export default function TasksPage() {
     };
   }, [filters]);
 
-  const { tasks: allTasks, loading: tasksInitialLoading, isRefreshing, refetch } = useTasksList(
-    listQuery.filter,
-    undefined,
-    { take: listQuery.take }
-  );
+  const {
+    tasks: allTasks,
+    loading: tasksInitialLoading,
+    isRefreshing,
+    refetch,
+  } = useTasks(listQuery.filter, undefined, { take: listQuery.take });
   const { goals } = useAppGoals();
   const { updateTask } = useUpdateTask();
   const { bulkUpdateTasks } = useBulkUpdateTasks();
@@ -85,7 +89,7 @@ export default function TasksPage() {
   const taskSelection = useTaskSelection();
 
   React.useEffect(() => {
-    taskSelection.setAvailableTaskIds(filteredAndSortedTasks.map((t) => t.id));
+    taskSelection.setAvailableTaskIds(filteredAndSortedTasks.map(t => t.id));
   }, [filteredAndSortedTasks, taskSelection.setAvailableTaskIds]);
 
   // Calculate statistics
@@ -188,7 +192,10 @@ export default function TasksPage() {
                 {stats.completed} of {stats.total} tasks completed
               </CardDescription>
             </div>
-            <Badge variant={completionPercentage === 100 ? 'default' : 'secondary'} className="text-lg px-4 py-2">
+            <Badge
+              variant={completionPercentage === 100 ? 'default' : 'secondary'}
+              className="text-lg px-4 py-2"
+            >
               {completionPercentage}%
             </Badge>
           </div>
@@ -239,15 +246,11 @@ export default function TasksPage() {
                 {filteredAndSortedTasks.length === allTasks.length
                   ? 'All tasks'
                   : `${filteredAndSortedTasks.length} of ${allTasks.length} tasks`}
-                {isRefreshing && (
-                  <span className="ml-2 text-muted-foreground/80">· Updating…</span>
-                )}
+                {isRefreshing && <span className="ml-2 text-muted-foreground/80">· Updating…</span>}
               </CardDescription>
             </div>
             {taskSelection.isAnySelected && (
-              <Badge variant="secondary">
-                {taskSelection.selectedCount} selected
-              </Badge>
+              <Badge variant="secondary">{taskSelection.selectedCount} selected</Badge>
             )}
           </div>
         </CardHeader>
@@ -265,12 +268,16 @@ export default function TasksPage() {
             ) : filteredAndSortedTasks.length === 0 ? (
               <div className="col-span-full text-center py-12 text-muted-foreground">
                 <p>No tasks found</p>
-                <Button variant="link" onClick={() => setFilters(clearAllFilters())} className="mt-2">
+                <Button
+                  variant="link"
+                  onClick={() => setFilters(clearAllFilters())}
+                  className="mt-2"
+                >
                   Clear filters
                 </Button>
               </div>
             ) : (
-              filteredAndSortedTasks.map((task) => (
+              filteredAndSortedTasks.map(task => (
                 <ResizableTaskCard
                   key={task.id}
                   task={task as any}
@@ -299,7 +306,7 @@ export default function TasksPage() {
       <TaskDetailModal
         task={(allTasks.find((t: any) => t.id === selectedTaskId) as any) || null}
         open={!!selectedTaskId}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setSelectedTaskId(null);
         }}
         goals={goals}

@@ -15,6 +15,7 @@ import {
   Crown,
   Focus,
   FolderKanban,
+  ListTodo,
   Plug,
   Search,
   Settings,
@@ -27,7 +28,7 @@ import {
 } from 'lucide-react';
 import { UpgradeButton } from '@/components/upgrade-button';
 import { useTier } from '@/contexts/tier-context';
-import { formatTierLabel, getNextTier, getTierPrice, getUpgradePitch } from '@/lib/upgrade';
+import { formatTierLabel, getNextTier, getUpgradePitch } from '@/lib/upgrade';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -49,6 +50,7 @@ const primaryNav: NavItem[] = [
 ];
 
 const secondaryNav: NavItem[] = [
+  { label: 'Tasks', href: '/tasks', icon: ListTodo },
   { label: 'Plan Day', href: '/plan-day', icon: Sunrise },
   { label: 'Projects', href: '/projects', icon: FolderKanban },
   { label: 'Search', href: '/search', icon: Search, hotkey: '/' },
@@ -96,7 +98,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       )}
     >
       {/* Logo/Brand Header */}
-      <div className={cn('flex items-center gap-2 px-1 pb-3.5', collapsed ? 'justify-center' : 'justify-between')}>
+      <div
+        className={cn(
+          'flex items-center gap-2 px-1 pb-3.5',
+          collapsed ? 'justify-center' : 'justify-between'
+        )}
+      >
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-7 h-7 flex-none rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
             <Sparkles className="h-3.5 w-3.5" />
@@ -129,13 +136,11 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 
       {/* Primary Navigation */}
       <nav className="flex flex-col gap-0.5 mt-1">
-        {primaryNav.map((item) => {
+        {primaryNav.map(item => {
           const Icon = item.icon;
           const isActive =
             item.href === '/week'
-              ? calendarPaths.some(
-                  (path) => pathname === path || pathname.startsWith(path + '/')
-                )
+              ? calendarPaths.some(path => pathname === path || pathname.startsWith(path + '/'))
               : pathname === item.href || pathname.startsWith(item.href + '/');
 
           return (
@@ -159,7 +164,10 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                       </kbd>
                     )}
                     {item.badge !== undefined && (
-                      <Badge variant="secondary" className="h-5 min-w-[20px] justify-center px-1.5 text-xs">
+                      <Badge
+                        variant="secondary"
+                        className="h-5 min-w-[20px] justify-center px-1.5 text-xs"
+                      >
                         {item.badge}
                       </Badge>
                     )}
@@ -173,8 +181,8 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         <div className="my-2 border-t border-border/60" />
 
         {secondaryNavItems
-          .filter((item) => item.label !== 'Settings')
-          .map((item) => {
+          .filter(item => item.label !== 'Settings')
+          .map(item => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 

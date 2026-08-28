@@ -22,11 +22,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-app-sans' });
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isLoaded, user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
@@ -53,16 +49,17 @@ export default function AppLayout({
     if (isMobile) setSidebarCollapsed(true);
   }, [pathname, isMobile]);
 
-  const { data: onboardingData, loading: onboardingLoading, error: onboardingError } = useQuery(
-    ONBOARDING_STATUS,
-    {
-      skip: !isLoaded || !user,
-      errorPolicy: 'all',
-      fetchPolicy: 'cache-first',
-      nextFetchPolicy: 'cache-first',
-      notifyOnNetworkStatusChange: false,
-    },
-  );
+  const {
+    data: onboardingData,
+    loading: onboardingLoading,
+    error: onboardingError,
+  } = useQuery(ONBOARDING_STATUS, {
+    skip: !isLoaded || !user,
+    errorPolicy: 'all',
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+    notifyOnNetworkStatusChange: false,
+  });
 
   useEffect(() => {
     const handleQuickAdd = () => setQuickAddOpen(true);
@@ -85,7 +82,8 @@ export default function AppLayout({
 
   const handleQuickAddSubmit = async (data: TaskFormData) => {
     try {
-      const { isRecurring, ...taskInput } = data;
+      const taskInput = { ...data };
+      delete taskInput.isRecurring;
       await createTask({ variables: { input: taskInput } });
       setQuickAddOpen(false);
     } catch (error) {
@@ -98,7 +96,8 @@ export default function AppLayout({
   // true later (e.g. Clerk's `isLoaded` resolving after the shell already
   // rendered), and re-showing this would flash the sidebar away and back.
   const shellRenderedRef = useRef(false);
-  const showGateLoader = isLoaded && user && onboardingLoading && !onboardingData && !shellRenderedRef.current;
+  const showGateLoader =
+    isLoaded && user && onboardingLoading && !onboardingData && !shellRenderedRef.current;
   if (!showGateLoader) {
     shellRenderedRef.current = true;
   }

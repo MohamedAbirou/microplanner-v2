@@ -1,10 +1,4 @@
-import {
-  ApolloClient,
-  InMemoryCache,
-  HttpLink,
-  split,
-  from,
-} from '@apollo/client';
+import { ApolloClient, InMemoryCache, HttpLink, split, from } from '@apollo/client';
 import { BatchHttpLink } from '@apollo/client/link/batch-http';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
@@ -53,11 +47,15 @@ const batchHttpLink = new BatchHttpLink({
   batchMax: 10,
 });
 
-const batchableHttpLink = split((operation) => {
-  const definition = getMainDefinition(operation.query);
-  const isQuery = definition.kind === 'OperationDefinition' && definition.operation === 'query';
-  return isQuery && !HEAVY_QUERY_NAMES.has(operation.operationName || '');
-}, batchHttpLink, httpLink);
+const batchableHttpLink = split(
+  operation => {
+    const definition = getMainDefinition(operation.query);
+    const isQuery = definition.kind === 'OperationDefinition' && definition.operation === 'query';
+    return isQuery && !HEAVY_QUERY_NAMES.has(operation.operationName || '');
+  },
+  batchHttpLink,
+  httpLink
+);
 
 // WebSocket link for subscriptions
 const wsLink =
@@ -130,8 +128,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
     if (isOffline) {
       try {
         const def = getMainDefinition(operation.query);
-        const isMutation =
-          def.kind === 'OperationDefinition' && def.operation === 'mutation';
+        const isMutation = def.kind === 'OperationDefinition' && def.operation === 'mutation';
         const body = operation.query.loc?.source.body;
         if (isMutation && body) {
           void enqueueMutation({
@@ -160,8 +157,7 @@ const splitLink =
         ({ query }) => {
           const definition = getMainDefinition(query);
           return (
-            definition.kind === 'OperationDefinition' &&
-            definition.operation === 'subscription'
+            definition.kind === 'OperationDefinition' && definition.operation === 'subscription'
           );
         },
         wsLink,
@@ -177,14 +173,14 @@ const cache = new InMemoryCache({
         // Merge goals list
         goals: {
           keyArgs: ['filter', 'sort'],
-          merge(existing = [], incoming) {
+          merge(_existing = [], incoming) {
             return incoming;
           },
         },
         // Merge tasks list
         tasks: {
           keyArgs: ['filter', 'sort', 'take', 'skip'],
-          merge(existing = [], incoming) {
+          merge(_existing = [], incoming) {
             return incoming;
           },
         },

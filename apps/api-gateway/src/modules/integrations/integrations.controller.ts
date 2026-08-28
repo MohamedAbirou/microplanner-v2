@@ -16,6 +16,8 @@ import type { Response } from 'express';
 import { IntegrationsService } from './integrations.service';
 import { SlackService } from './slack.service';
 import { Public } from '../auth/decorators/public.decorator';
+import { RequireApiScope } from '../auth/decorators/api-scope.decorator';
+import { ApiScope } from '../premium/types/premium.types';
 import {
   IntegrationType,
   CreateIntegrationDto,
@@ -33,7 +35,7 @@ import {
 export class IntegrationsController {
   constructor(
     private readonly integrationsService: IntegrationsService,
-    private readonly slackService: SlackService,
+    private readonly slackService: SlackService
   ) {}
 
   // ==================== SLACK SLASH COMMANDS ====================
@@ -86,13 +88,9 @@ export class IntegrationsController {
   async updateIntegration(
     @Request() req: any,
     @Param('id') integrationId: string,
-    @Body() updateDto: UpdateIntegrationDto,
+    @Body() updateDto: UpdateIntegrationDto
   ) {
-    return this.integrationsService.updateIntegration(
-      integrationId,
-      req.user.id,
-      updateDto,
-    );
+    return this.integrationsService.updateIntegration(integrationId, req.user.id, updateDto);
   }
 
   /**
@@ -131,7 +129,7 @@ export class IntegrationsController {
     @Query('code') code: string,
     @Query('state') state: string,
     @Query('error') providerError: string,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
     try {
       if (providerError) {
@@ -151,6 +149,7 @@ export class IntegrationsController {
    * Create webhook
    */
   @Post('webhooks')
+  @RequireApiScope(ApiScope.MANAGE_WEBHOOKS)
   async createWebhook(@Request() req: any, @Body() createDto: CreateWebhookDto) {
     return this.integrationsService.createWebhook(req.user.id, createDto);
   }
@@ -159,6 +158,7 @@ export class IntegrationsController {
    * Get user's webhooks
    */
   @Get('webhooks')
+  @RequireApiScope(ApiScope.MANAGE_WEBHOOKS)
   async getUserWebhooks(@Request() req: any) {
     return this.integrationsService.getUserWebhooks(req.user.id);
   }
@@ -167,10 +167,11 @@ export class IntegrationsController {
    * Update webhook
    */
   @Put('webhooks/:id')
+  @RequireApiScope(ApiScope.MANAGE_WEBHOOKS)
   async updateWebhook(
     @Request() req: any,
     @Param('id') webhookId: string,
-    @Body() updateDto: UpdateWebhookDto,
+    @Body() updateDto: UpdateWebhookDto
   ) {
     return this.integrationsService.updateWebhook(webhookId, req.user.id, updateDto);
   }
@@ -179,6 +180,7 @@ export class IntegrationsController {
    * Delete webhook
    */
   @Delete('webhooks/:id')
+  @RequireApiScope(ApiScope.MANAGE_WEBHOOKS)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteWebhook(@Request() req: any, @Param('id') webhookId: string) {
     await this.integrationsService.deleteWebhook(webhookId, req.user.id);
@@ -188,16 +190,13 @@ export class IntegrationsController {
    * Test webhook
    */
   @Post('webhooks/:id/test')
+  @RequireApiScope(ApiScope.MANAGE_WEBHOOKS)
   async testWebhook(@Request() req: any, @Param('id') _webhookId: string) {
     // Trigger a test webhook event
-    await this.integrationsService.triggerWebhook(
-      'goal.created' as any,
-      req.user.id,
-      {
-        test: true,
-        message: 'This is a test webhook delivery',
-      },
-    );
+    await this.integrationsService.triggerWebhook('goal.created' as any, req.user.id, {
+      test: true,
+      message: 'This is a test webhook delivery',
+    });
 
     return { success: true, message: 'Test webhook triggered' };
   }
@@ -206,6 +205,7 @@ export class IntegrationsController {
    * Get a single webhook
    */
   @Get('webhooks/:id')
+  @RequireApiScope(ApiScope.MANAGE_WEBHOOKS)
   async getWebhook(@Request() req: any, @Param('id') webhookId: string) {
     return this.integrationsService.getWebhook(webhookId, req.user.id);
   }
@@ -214,6 +214,7 @@ export class IntegrationsController {
    * Toggle webhook active state
    */
   @Put('webhooks/:id/toggle')
+  @RequireApiScope(ApiScope.MANAGE_WEBHOOKS)
   async toggleWebhook(@Request() req: any, @Param('id') webhookId: string) {
     return this.integrationsService.toggleWebhook(webhookId, req.user.id);
   }
@@ -222,10 +223,11 @@ export class IntegrationsController {
    * List webhook deliveries
    */
   @Get('webhooks/:id/deliveries')
+  @RequireApiScope(ApiScope.MANAGE_WEBHOOKS)
   async getWebhookDeliveries(
     @Request() req: any,
     @Param('id') webhookId: string,
-    @Query('take') take?: number,
+    @Query('take') take?: number
   ) {
     return this.integrationsService.getWebhookDeliveries(webhookId, req.user.id, take);
   }
@@ -234,6 +236,7 @@ export class IntegrationsController {
    * Retry a webhook delivery
    */
   @Post('webhooks/deliveries/:id/retry')
+  @RequireApiScope(ApiScope.MANAGE_WEBHOOKS)
   async retryWebhookDelivery(@Request() req: any, @Param('id') deliveryId: string) {
     return this.integrationsService.retryWebhookDelivery(deliveryId, req.user.id);
   }
@@ -253,7 +256,7 @@ export class IntegrationsController {
     @Param('type') _type: string,
     @Query('integration') integrationId: string,
     @Body() payload: any,
-    @Request() req: any,
+    @Request() req: any
   ) {
     if (!integrationId) {
       return { applied: false };

@@ -5,7 +5,6 @@ import { Brain, Plus, Trash2, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -15,11 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  useAiMemories,
-  useCreateAiMemory,
-  useDeleteAiMemory,
-} from '@/hooks/use-graphql-extended';
+import { useAiMemories, useCreateAiMemory, useDeleteAiMemory } from '@/hooks/use-graphql-extended';
 
 const MEMORY_TYPES = [
   { value: 'TIME_PREFERENCE', label: 'Time preference' },
@@ -63,8 +58,8 @@ export function AiMemoryManager() {
           <Brain className="h-4 w-4" /> AI Scheduling Memory
         </CardTitle>
         <CardDescription className="text-[13px]">
-          Teach the planner your preferences. These overrides are fed into every plan you
-          generate — e.g. &ldquo;Always schedule deep work before noon&rdquo;.
+          Teach the planner your preferences. These overrides are fed into every plan you generate —
+          e.g. &ldquo;Always schedule deep work before noon&rdquo;.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -75,7 +70,7 @@ export function AiMemoryManager() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {MEMORY_TYPES.map((t) => (
+              {MEMORY_TYPES.map(t => (
                 <SelectItem key={t.value} value={t.value}>
                   {t.label}
                 </SelectItem>
@@ -85,14 +80,18 @@ export function AiMemoryManager() {
           <div className="flex-1 flex gap-2">
             <Input
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={e => setText(e.target.value)}
               placeholder="e.g. Never schedule meetings on Fridays"
-              onKeyDown={(e) => {
+              onKeyDown={e => {
                 if (e.key === 'Enter') handleAdd();
               }}
             />
             <Button onClick={handleAdd} disabled={!text.trim() || creating}>
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {creating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
@@ -116,7 +115,7 @@ export function AiMemoryManager() {
                 className="flex items-center gap-3 rounded-[10px] border border-border p-3"
               >
                 <Badge variant="secondary" className="text-[10px] flex-none">
-                  {(MEMORY_TYPES.find((t) => t.value === m.memoryType)?.label || m.memoryType)}
+                  {MEMORY_TYPES.find(t => t.value === m.memoryType)?.label || m.memoryType}
                 </Badge>
                 <span className="flex-1 min-w-0 text-sm truncate">{describe(m.content)}</span>
                 {m.source === 'user-override' ? (

@@ -1,6 +1,13 @@
 'use client';
 
-import { useQuery, useLazyQuery, useMutation, useSubscription, useApolloClient, ApolloError } from '@apollo/client';
+import {
+  useQuery,
+  useLazyQuery,
+  useMutation,
+  useSubscription,
+  useApolloClient,
+  ApolloError,
+} from '@apollo/client';
 import * as React from 'react';
 import { toast } from 'sonner';
 import * as operations from '@/graphql/operations';
@@ -17,16 +24,11 @@ export type MutationNotifyOptions = {
   notify?: boolean;
 };
 
-function mutationToastHandlers(
-  notify: boolean,
-  successMessage: string,
-  errorMessage: string,
-) {
+function mutationToastHandlers(notify: boolean, successMessage: string, errorMessage: string) {
   if (!notify) return {};
   return {
     onCompleted: () => toast.success(successMessage),
-    onError: (error: ApolloError) =>
-      toast.error(errorMessage, { description: error.message }),
+    onError: (error: ApolloError) => toast.error(errorMessage, { description: error.message }),
   };
 }
 
@@ -56,6 +58,7 @@ export function useTasks(filter?: any, sort?: any, options?: UseTasksOptions) {
   return {
     tasks: data?.tasks || [],
     loading: initialQueryLoading(loading, data),
+    isRefreshing: Boolean(loading && data !== undefined),
     error,
     refetch,
   };
@@ -121,7 +124,7 @@ export function useCreateTask() {
     onCompleted: () => {
       toast.success('Task created successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to create task', {
         description: error.message,
       });
@@ -242,10 +245,10 @@ export function useBulkUpdateTasks() {
   const [bulkUpdateTasks, { loading, error }] = useMutation(operations.BULK_UPDATE_TASKS, {
     refetchQueries: 'active',
     awaitRefetchQueries: true,
-    onCompleted: (data) => {
+    onCompleted: data => {
       toast.success(`Updated ${data.bulkUpdateTasks.length} tasks`);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to update tasks', {
         description: error.message,
       });
@@ -259,10 +262,10 @@ export function useBulkDeleteTasks() {
   const [bulkDeleteTasks, { loading, error }] = useMutation(operations.BULK_DELETE_TASKS, {
     refetchQueries: 'active',
     awaitRefetchQueries: true,
-    onCompleted: (data) => {
+    onCompleted: data => {
       toast.success(`Deleted ${data.bulkDeleteTasks.count} tasks`);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to delete tasks', {
         description: error.message,
       });
@@ -279,7 +282,7 @@ export function useSkipTask() {
     onCompleted: () => {
       toast.success('Task skipped');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to skip task', {
         description: error.message,
       });
@@ -335,22 +338,32 @@ export function useSubtasks(parentTaskId: string) {
 
 export function useCreateTaskDependency(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
-  const [createTaskDependency, { loading, error }] = useMutation(operations.CREATE_TASK_DEPENDENCY, {
-    refetchQueries: 'active',
-    awaitRefetchQueries: true,
-    ...mutationToastHandlers(notify, 'Dependency added successfully', 'Failed to add dependency'),
-  });
+  const [createTaskDependency, { loading, error }] = useMutation(
+    operations.CREATE_TASK_DEPENDENCY,
+    {
+      refetchQueries: 'active',
+      awaitRefetchQueries: true,
+      ...mutationToastHandlers(notify, 'Dependency added successfully', 'Failed to add dependency'),
+    }
+  );
 
   return { createTaskDependency, loading, error };
 }
 
 export function useDeleteTaskDependency(options?: MutationNotifyOptions) {
   const notify = options?.notify !== false;
-  const [deleteTaskDependency, { loading, error }] = useMutation(operations.DELETE_TASK_DEPENDENCY, {
-    refetchQueries: 'active',
-    awaitRefetchQueries: true,
-    ...mutationToastHandlers(notify, 'Dependency removed successfully', 'Failed to remove dependency'),
-  });
+  const [deleteTaskDependency, { loading, error }] = useMutation(
+    operations.DELETE_TASK_DEPENDENCY,
+    {
+      refetchQueries: 'active',
+      awaitRefetchQueries: true,
+      ...mutationToastHandlers(
+        notify,
+        'Dependency removed successfully',
+        'Failed to remove dependency'
+      ),
+    }
+  );
 
   return { deleteTaskDependency, loading, error };
 }
@@ -378,7 +391,7 @@ export function useStartTimer() {
     onCompleted: () => {
       toast.success('Timer started');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to start timer', {
         description: error.message,
       });
@@ -390,11 +403,11 @@ export function useStartTimer() {
 
 export function useStopTimer() {
   const [stopTimer, { loading, error }] = useMutation(operations.STOP_TIMER, {
-    onCompleted: (data) => {
+    onCompleted: data => {
       const minutes = data.stopTimer.timeSpentMinutes;
       toast.success(`Timer stopped: ${minutes} minutes logged`);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to stop timer', {
         description: error.message,
       });
@@ -406,11 +419,11 @@ export function useStopTimer() {
 
 export function useLogTime() {
   const [logTime, { loading, error }] = useMutation(operations.LOG_TIME, {
-    onCompleted: (data) => {
+    onCompleted: data => {
       const minutes = data.logTime.timeSpentMinutes;
       toast.success(`${minutes} minutes logged`);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to log time', {
         description: error.message,
       });
@@ -437,7 +450,7 @@ export function useUpdateTimeEntry() {
   // action, so 'active' is the sanctioned choice over hand-patching the cache.
   const [updateTimeEntry, { loading }] = useMutation(operations.UPDATE_TIME_ENTRY, {
     refetchQueries: 'active',
-    onError: (error) => toast.error('Failed to update entry', { description: error.message }),
+    onError: error => toast.error('Failed to update entry', { description: error.message }),
   });
   return { updateTimeEntry, loading };
 }
@@ -446,7 +459,7 @@ export function useDeleteTimeEntry() {
   const [deleteTimeEntry, { loading }] = useMutation(operations.DELETE_TIME_ENTRY, {
     refetchQueries: 'active',
     onCompleted: () => toast.success('Time entry deleted'),
-    onError: (error) => toast.error('Failed to delete entry', { description: error.message }),
+    onError: error => toast.error('Failed to delete entry', { description: error.message }),
   });
   return { deleteTimeEntry, loading };
 }
@@ -513,7 +526,7 @@ export function useCreateGoal() {
     onCompleted: () => {
       toast.success('Goal created successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to create goal', {
         description: error.message,
       });
@@ -529,7 +542,7 @@ export function useUpdateGoal() {
     onCompleted: () => {
       toast.success('Goal updated successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to update goal', {
         description: error.message,
       });
@@ -545,7 +558,7 @@ export function useDeleteGoal() {
     onCompleted: () => {
       toast.success('Goal deleted successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to delete goal', {
         description: error.message,
       });
@@ -612,7 +625,7 @@ export function useGeneratePlan() {
     onCompleted: () => {
       toast.success('Plan generated successfully!');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to generate plan', {
         description: error.message,
       });
@@ -628,7 +641,7 @@ export function useUpdatePlan() {
     onCompleted: () => {
       toast.success('Plan updated successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to update plan', {
         description: error.message,
       });
@@ -645,7 +658,7 @@ export function useAcceptPlan() {
     onCompleted: () => {
       toast.success('Plan accepted successfully!');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to accept plan', {
         description: error.message,
       });
@@ -658,7 +671,7 @@ export function useAcceptPlan() {
 export function useRegeneratePlan() {
   const [regeneratePlan, { loading, error }] = useMutation(operations.REGENERATE_PLAN, {
     refetchQueries: 'active',
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to regenerate plan', {
         description: error.message,
       });
@@ -677,7 +690,7 @@ export function useAddDependency() {
     onCompleted: () => {
       toast.success('Dependency added successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to add dependency', {
         description: error.message,
       });
@@ -692,7 +705,7 @@ export function useRemoveDependency() {
     onCompleted: () => {
       toast.success('Dependency removed successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to remove dependency', {
         description: error.message,
       });
@@ -727,7 +740,7 @@ export function useUpdateUserSettings() {
     onCompleted: () => {
       toast.success('Settings updated successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to update settings', {
         description: error.message,
       });
@@ -743,7 +756,7 @@ export function useUpdateUserProfile() {
     onCompleted: () => {
       toast.success('Profile updated successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to update profile', {
         description: error.message,
       });
@@ -760,10 +773,10 @@ export function useUpdateUserProfile() {
 export function useConnectCalendar() {
   const [connectCalendar, { loading, error }] = useMutation(operations.CONNECT_CALENDAR, {
     refetchQueries: [{ query: operations.GET_USER_SETTINGS }],
-    onCompleted: (data) => {
+    onCompleted: data => {
       toast.success(`Connected to ${data.connectCalendar.provider} calendar`);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to connect calendar', {
         description: error.message,
       });
@@ -776,10 +789,10 @@ export function useConnectCalendar() {
 export function useDisconnectCalendar() {
   const [disconnectCalendar, { loading, error }] = useMutation(operations.DISCONNECT_CALENDAR, {
     refetchQueries: [{ query: operations.GET_USER_SETTINGS }],
-    onCompleted: (data) => {
+    onCompleted: data => {
       toast.success(`Disconnected ${data.disconnectCalendar.provider} calendar`);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to disconnect calendar', {
         description: error.message,
       });
@@ -791,10 +804,10 @@ export function useDisconnectCalendar() {
 
 export function useSyncCalendar() {
   const [syncCalendar, { loading, error }] = useMutation(operations.SYNC_CALENDAR, {
-    onCompleted: (data) => {
+    onCompleted: data => {
       toast.success(`Synced ${data.syncCalendar.syncedEventsCount} events`);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to sync calendar', {
         description: error.message,
       });

@@ -4,7 +4,12 @@ import * as React from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useUserSettings, useUpdateUserSettings, useUpdateUserProfile, useTasks } from '@/hooks/use-graphql';
+import {
+  useUserSettings,
+  useUpdateUserSettings,
+  useUpdateUserProfile,
+  useTasks,
+} from '@/hooks/use-graphql';
 import { useTheme } from 'next-themes';
 import {
   User,
@@ -33,7 +38,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
@@ -81,12 +92,12 @@ const THEME_TO_ENUM: Record<string, string> = {
 };
 
 export default function SettingsPage() {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const router = useRouter();
   const [isSaving, setIsSaving] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('profile');
-  const [deletingAccount, setDeletingAccount] = React.useState(false);
+  const [, setDeletingAccount] = React.useState(false);
   const [gdprExporting, setGdprExporting] = React.useState(false);
   const apolloClient = useApolloClient();
   const [deleteMyAccount] = useMutation(DELETE_MY_ACCOUNT);
@@ -196,7 +207,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleNotificationChange = async (key: keyof typeof notificationSettings, value: boolean) => {
+  const handleNotificationChange = async (
+    key: keyof typeof notificationSettings,
+    value: boolean
+  ) => {
     const next = { ...notificationSettings, [key]: value };
     setNotificationSettings(next);
 
@@ -237,7 +251,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleExportData = async (format: 'csv' | 'json', dataType: 'all' | 'tasks' | 'goals' | 'plans') => {
+  const handleExportData = async (
+    format: 'csv' | 'json',
+    dataType: 'all' | 'tasks' | 'goals' | 'plans'
+  ) => {
     try {
       toast.info('Preparing your data export...', {
         description: 'Your download will begin shortly',
@@ -362,7 +379,7 @@ export default function SettingsPage() {
       await user?.delete();
 
       toast.success('Account deleted successfully', {
-        description: 'We\'re sorry to see you go. You can create a new account anytime.',
+        description: "We're sorry to see you go. You can create a new account anytime.",
       });
 
       // Redirect to landing page
@@ -386,7 +403,9 @@ export default function SettingsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-[13px] text-muted-foreground mt-1">Manage your account and preferences</p>
+        <p className="text-[13px] text-muted-foreground mt-1">
+          Manage your account and preferences
+        </p>
       </div>
 
       {/* Settings Tabs */}
@@ -437,7 +456,7 @@ export default function SettingsPage() {
                 <Input
                   id="name"
                   value={profileSettings.name}
-                  onChange={(e) => setProfileSettings({ ...profileSettings, name: e.target.value })}
+                  onChange={e => setProfileSettings({ ...profileSettings, name: e.target.value })}
                 />
               </div>
 
@@ -447,7 +466,7 @@ export default function SettingsPage() {
                   id="email"
                   type="email"
                   value={profileSettings.email}
-                  onChange={(e) => setProfileSettings({ ...profileSettings, email: e.target.value })}
+                  onChange={e => setProfileSettings({ ...profileSettings, email: e.target.value })}
                   disabled
                 />
                 <p className="text-xs text-muted-foreground">
@@ -459,24 +478,18 @@ export default function SettingsPage() {
                 <Label htmlFor="chronotype">Chronotype</Label>
                 <Select
                   value={profileSettings.chronotype}
-                  onValueChange={(value) => setProfileSettings({ ...profileSettings, chronotype: value })}
+                  onValueChange={value =>
+                    setProfileSettings({ ...profileSettings, chronotype: value })
+                  }
                 >
                   <SelectTrigger id="chronotype">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="lion">
-                      Lion (Early Bird - Best: 6am-12pm)
-                    </SelectItem>
-                    <SelectItem value="bear">
-                      Bear (Standard - Best: 10am-2pm)
-                    </SelectItem>
-                    <SelectItem value="wolf">
-                      Wolf (Night Owl - Best: 5pm-12am)
-                    </SelectItem>
-                    <SelectItem value="dolphin">
-                      Dolphin (Light Sleeper - Best: 3pm-9pm)
-                    </SelectItem>
+                    <SelectItem value="lion">Lion (Early Bird - Best: 6am-12pm)</SelectItem>
+                    <SelectItem value="bear">Bear (Standard - Best: 10am-2pm)</SelectItem>
+                    <SelectItem value="wolf">Wolf (Night Owl - Best: 5pm-12am)</SelectItem>
+                    <SelectItem value="dolphin">Dolphin (Light Sleeper - Best: 3pm-9pm)</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
@@ -488,7 +501,9 @@ export default function SettingsPage() {
                 <Label htmlFor="timezone">Timezone</Label>
                 <Select
                   value={profileSettings.timezone}
-                  onValueChange={(value) => setProfileSettings({ ...profileSettings, timezone: value })}
+                  onValueChange={value =>
+                    setProfileSettings({ ...profileSettings, timezone: value })
+                  }
                 >
                   <SelectTrigger id="timezone">
                     <SelectValue />
@@ -516,9 +531,7 @@ export default function SettingsPage() {
           <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>
-                Configure how and when you want to be notified
-              </CardDescription>
+              <CardDescription>Configure how and when you want to be notified</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Web push opt-in (device-level) */}
@@ -536,7 +549,9 @@ export default function SettingsPage() {
                 <Switch
                   id="task-reminders"
                   checked={notificationSettings.enableTaskReminders}
-                  onCheckedChange={(checked) => handleNotificationChange('enableTaskReminders', checked)}
+                  onCheckedChange={checked =>
+                    handleNotificationChange('enableTaskReminders', checked)
+                  }
                 />
               </div>
 
@@ -552,7 +567,9 @@ export default function SettingsPage() {
                 <Switch
                   id="break-reminders"
                   checked={notificationSettings.enableBreakReminders}
-                  onCheckedChange={(checked) => handleNotificationChange('enableBreakReminders', checked)}
+                  onCheckedChange={checked =>
+                    handleNotificationChange('enableBreakReminders', checked)
+                  }
                 />
               </div>
 
@@ -568,7 +585,7 @@ export default function SettingsPage() {
                 <Switch
                   id="weekly-plan"
                   checked={notificationSettings.enableWeeklyPlan}
-                  onCheckedChange={(checked) => handleNotificationChange('enableWeeklyPlan', checked)}
+                  onCheckedChange={checked => handleNotificationChange('enableWeeklyPlan', checked)}
                 />
               </div>
 
@@ -584,7 +601,9 @@ export default function SettingsPage() {
                 <Switch
                   id="upcoming-meetings"
                   checked={notificationSettings.enableUpcomingMeetings}
-                  onCheckedChange={(checked) => handleNotificationChange('enableUpcomingMeetings', checked)}
+                  onCheckedChange={checked =>
+                    handleNotificationChange('enableUpcomingMeetings', checked)
+                  }
                 />
               </div>
 
@@ -600,7 +619,9 @@ export default function SettingsPage() {
                 <Switch
                   id="overbooked-alerts"
                   checked={notificationSettings.enableOverbookedAlerts}
-                  onCheckedChange={(checked) => handleNotificationChange('enableOverbookedAlerts', checked)}
+                  onCheckedChange={checked =>
+                    handleNotificationChange('enableOverbookedAlerts', checked)
+                  }
                 />
               </div>
 
@@ -616,7 +637,9 @@ export default function SettingsPage() {
                 <Switch
                   id="focus-alerts"
                   checked={notificationSettings.enableFocusTimeAlerts}
-                  onCheckedChange={(checked) => handleNotificationChange('enableFocusTimeAlerts', checked)}
+                  onCheckedChange={checked =>
+                    handleNotificationChange('enableFocusTimeAlerts', checked)
+                  }
                 />
               </div>
             </CardContent>
@@ -629,7 +652,10 @@ export default function SettingsPage() {
           <AutopilotSettings />
           <p className="text-sm text-muted-foreground">
             Manage all your integrations from the{' '}
-            <a href="/integrations" className="underline">Integrations</a> page.
+            <a href="/integrations" className="underline">
+              Integrations
+            </a>{' '}
+            page.
           </p>
         </TabsContent>
 
@@ -638,9 +664,7 @@ export default function SettingsPage() {
           <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Appearance</CardTitle>
-              <CardDescription>
-                Customize how MicroPlanner looks and feels
-              </CardDescription>
+              <CardDescription>Customize how MicroPlanner looks and feels</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -681,9 +705,7 @@ export default function SettingsPage() {
           <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Billing & Subscription</CardTitle>
-              <CardDescription>
-                Manage your subscription and billing information
-              </CardDescription>
+              <CardDescription>Manage your subscription and billing information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
@@ -693,9 +715,7 @@ export default function SettingsPage() {
                     <div className="text-2xl font-bold">{formatTierLabel(userTier)}</div>
                     <div className="text-sm text-muted-foreground">{getTierPrice(userTier)}</div>
                   </div>
-                  <Badge variant={userTier === 'FREE' ? 'secondary' : 'default'}>
-                    {userTier}
-                  </Badge>
+                  <Badge variant={userTier === 'FREE' ? 'secondary' : 'default'}>{userTier}</Badge>
                 </div>
 
                 {nextTier && upgradePitch && (
@@ -705,9 +725,7 @@ export default function SettingsPage() {
                     </h4>
                     <p className="text-sm text-muted-foreground mb-3">{upgradePitch}</p>
                     <div className="flex flex-wrap gap-2">
-                      <UpgradeButton targetTier={nextTier}>
-                        Upgrade now
-                      </UpgradeButton>
+                      <UpgradeButton targetTier={nextTier}>Upgrade now</UpgradeButton>
                       <Button variant="outline" asChild>
                         <Link href="/billing">View billing details</Link>
                       </Button>
@@ -762,9 +780,7 @@ export default function SettingsPage() {
           <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
             <CardHeader>
               <CardTitle>Privacy & Data</CardTitle>
-              <CardDescription>
-                Control your data and privacy settings
-              </CardDescription>
+              <CardDescription>Control your data and privacy settings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>

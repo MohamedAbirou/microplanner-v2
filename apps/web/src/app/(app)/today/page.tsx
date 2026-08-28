@@ -1,15 +1,22 @@
 'use client';
 
 import * as React from 'react';
-import { format, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import Link from 'next/link';
-import { CheckCircle2, Plus, Calendar as CalendarIcon, AlertTriangle, Loader2, Sunrise, Target } from 'lucide-react';
+import {
+  CheckCircle2,
+  Plus,
+  Calendar as CalendarIcon,
+  AlertTriangle,
+  Loader2,
+  Sunrise,
+  Target,
+} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TaskList } from '@/components/tasks/task-list';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { calculateCompletionPercentage } from '@/lib/utils';
 import { TaskFiltersPanel } from '@/components/filters/task-filters-panel';
 import { TaskSortMenu } from '@/components/filters/task-sort-menu';
 import { DeleteConfirmationDialog } from '@/components/confirmation-dialog';
@@ -24,7 +31,7 @@ import {
   getTaskStatistics,
 } from '@/lib/filters';
 import {
-  useTasksList,
+  useTasks,
   useGoalsList,
   useCompleteTask,
   useDeleteTask,
@@ -55,7 +62,11 @@ export default function TodayPage() {
   // Fetch today's tasks from GraphQL
   // Note: We filter by single date (not dateRange) in GraphQL, then do client-side filtering
   const today = new Date();
-  const { tasks: allTasks, loading: tasksLoading, refetch } = useTasksList(
+  const {
+    tasks: allTasks,
+    loading: tasksLoading,
+    refetch,
+  } = useTasks(
     {
       scheduledDate: startOfDay(today),
     },
@@ -71,7 +82,7 @@ export default function TodayPage() {
 
   // GraphQL mutations
   const { completeTask } = useCompleteTask();
-  const { deleteTask, loading: deleting } = useDeleteTask();
+  const { deleteTask } = useDeleteTask();
   const { startTimer } = useStartTimer();
   const { stopTimer } = useStopTimer();
   const { skipTask } = useSkipTask();
@@ -176,11 +187,15 @@ export default function TodayPage() {
             <Sunrise className="h-4 w-4 text-primary flex-none" />
             <div className="text-[13px]">
               <span className="font-medium">Start your daily ritual?</span>{' '}
-              <span className="text-muted-foreground">Set today&apos;s intention and plan your tasks.</span>
+              <span className="text-muted-foreground">
+                Set today&apos;s intention and plan your tasks.
+              </span>
             </div>
           </div>
           <Link href="/plan-day">
-            <Button size="sm" className="h-8">Plan day</Button>
+            <Button size="sm" className="h-8">
+              Plan day
+            </Button>
           </Link>
         </div>
       )}
@@ -211,7 +226,10 @@ export default function TodayPage() {
                 {stats.completed} of {stats.total} tasks completed
               </CardDescription>
             </div>
-            <Badge variant={completionPercentage === 100 ? 'default' : 'secondary'} className="text-lg px-4 py-2">
+            <Badge
+              variant={completionPercentage === 100 ? 'default' : 'secondary'}
+              className="text-lg px-4 py-2"
+            >
               {completionPercentage}%
             </Badge>
           </div>
@@ -235,7 +253,8 @@ export default function TodayPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[15px] text-amber-900 dark:text-amber-200">
               <AlertTriangle className="h-5 w-5" />
-              {overdueTasks.length} task{overdueTasks.length === 1 ? '' : 's'} past their scheduled time
+              {overdueTasks.length} task{overdueTasks.length === 1 ? '' : 's'} past their scheduled
+              time
             </CardTitle>
             <CardDescription className="text-[13px] text-amber-800/80 dark:text-amber-300/70">
               Reschedule to the next open slot that fits your working hours and focus time.
@@ -249,7 +268,9 @@ export default function TodayPage() {
               >
                 <div className="min-w-0">
                   <div className="truncate font-medium">{task.title}</div>
-                  <div className="text-[13px] text-muted-foreground">Was scheduled for {task.startTime}</div>
+                  <div className="text-[13px] text-muted-foreground">
+                    Was scheduled for {task.startTime}
+                  </div>
                 </div>
                 <Button
                   variant="outline"
@@ -274,11 +295,7 @@ export default function TodayPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1">
-            <TaskFiltersPanel
-              filters={filters}
-              onFiltersChange={setFilters}
-              goals={goals}
-            />
+            <TaskFiltersPanel filters={filters} onFiltersChange={setFilters} goals={goals} />
           </div>
           <TaskSortMenu sort={sort} onSortChange={setSort} />
         </div>
@@ -287,7 +304,7 @@ export default function TodayPage() {
       {/* Tasks List */}
       <Card className="rounded-[14px] shadow-[var(--sh-sm)]">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <div>
               <CardTitle className="text-[15px]">Your Tasks</CardTitle>
               <CardDescription className="text-[13px]">
@@ -296,11 +313,23 @@ export default function TodayPage() {
                   : `${filteredAndSortedTasks.length} of ${allTasks.length} tasks`}
               </CardDescription>
             </div>
-            {filteredAndSortedTasks.length !== allTasks.length && (
-              <Button variant="ghost" size="sm" className="h-9" onClick={() => setFilters(clearAllFilters())}>
-                Clear filters
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {filteredAndSortedTasks.length !== allTasks.length && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9"
+                  onClick={() => setFilters(clearAllFilters())}
+                >
+                  Clear filters
+                </Button>
+              )}
+              <Link href="/tasks">
+                <Button variant="outline" size="sm" className="h-9">
+                  All tasks
+                </Button>
+              </Link>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -340,7 +369,8 @@ export default function TodayPage() {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-accent-foreground">
-                {filteredAndSortedTasks.reduce((acc, task) => acc + (task.durationMinutes || 0), 0)}m
+                {filteredAndSortedTasks.reduce((acc, task) => acc + (task.durationMinutes || 0), 0)}
+                m
               </div>
               <div className="text-sm text-muted-foreground mt-1">Total Time</div>
             </div>
@@ -352,7 +382,7 @@ export default function TodayPage() {
       <TaskDetailModal
         task={(allTasks.find((t: any) => t.id === selectedTaskId) as any) || null}
         open={!!selectedTaskId}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setSelectedTaskId(null);
         }}
         goals={goals}
@@ -364,7 +394,7 @@ export default function TodayPage() {
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         open={deleteTaskId !== null}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setDeleteTaskId(null);
         }}
         onConfirm={confirmDelete}

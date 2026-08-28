@@ -1,11 +1,24 @@
 import type { User } from '@microplanner/database';
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { QueryGoalsDto } from './dto/query-goals.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { GoalsService } from './goals.service';
+import { RequireApiScope } from '../auth/decorators/api-scope.decorator';
+import { ApiScope } from '../premium/types/premium.types';
 
 @ApiTags('goals')
 @ApiBearerAuth()
@@ -14,6 +27,7 @@ export class GoalsController {
   constructor(private readonly goalsService: GoalsService) {}
 
   @Post()
+  @RequireApiScope(ApiScope.WRITE_GOALS)
   @ApiOperation({ summary: 'Create a new goal' })
   @ApiResponse({ status: 201, description: 'Goal created successfully' })
   @ApiResponse({ status: 403, description: 'Tier limit exceeded' })
@@ -27,6 +41,7 @@ export class GoalsController {
   }
 
   @Post('batch')
+  @RequireApiScope(ApiScope.READ_GOALS)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Batch-fetch goals by ID' })
   async findByIds(@CurrentUser() user: User, @Body() body: { ids?: string[] }) {
@@ -35,6 +50,7 @@ export class GoalsController {
   }
 
   @Get()
+  @RequireApiScope(ApiScope.READ_GOALS)
   @ApiOperation({ summary: 'Get all goals with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Goals retrieved successfully' })
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
@@ -51,6 +67,7 @@ export class GoalsController {
   }
 
   @Get(':id')
+  @RequireApiScope(ApiScope.READ_GOALS)
   @ApiOperation({ summary: 'Get a single goal by ID' })
   @ApiResponse({ status: 200, description: 'Goal retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Goal not found' })
@@ -64,6 +81,7 @@ export class GoalsController {
   }
 
   @Put(':id')
+  @RequireApiScope(ApiScope.WRITE_GOALS)
   @ApiOperation({ summary: 'Update a goal' })
   @ApiResponse({ status: 200, description: 'Goal updated successfully' })
   @ApiResponse({ status: 404, description: 'Goal not found' })
@@ -81,6 +99,7 @@ export class GoalsController {
   }
 
   @Delete(':id')
+  @RequireApiScope(ApiScope.WRITE_GOALS)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft delete a goal (set inactive)' })
   @ApiResponse({ status: 204, description: 'Goal deleted successfully' })
@@ -91,6 +110,7 @@ export class GoalsController {
   }
 
   @Put(':id/pause')
+  @RequireApiScope(ApiScope.WRITE_GOALS)
   @ApiOperation({ summary: 'Pause a goal' })
   @ApiResponse({ status: 200, description: 'Goal paused successfully' })
   @ApiResponse({ status: 404, description: 'Goal not found' })
@@ -104,6 +124,7 @@ export class GoalsController {
   }
 
   @Put(':id/activate')
+  @RequireApiScope(ApiScope.WRITE_GOALS)
   @ApiOperation({ summary: 'Activate (unpause) a goal' })
   @ApiResponse({ status: 200, description: 'Goal activated successfully' })
   @ApiResponse({ status: 404, description: 'Goal not found' })
@@ -118,6 +139,7 @@ export class GoalsController {
   }
 
   @Get(':id/analytics')
+  @RequireApiScope(ApiScope.READ_ANALYTICS)
   @ApiOperation({ summary: 'Get goal analytics and progress metrics' })
   @ApiResponse({ status: 200, description: 'Analytics retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Goal not found' })

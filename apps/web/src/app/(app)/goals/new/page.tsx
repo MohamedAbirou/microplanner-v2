@@ -12,7 +12,7 @@ import { useState } from 'react';
 
 export default function NewGoalPage() {
   const router = useRouter();
-  const { createGoal, loading } = useCreateGoal();
+  const { createGoal } = useCreateGoal();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { toast } = useToast();
 

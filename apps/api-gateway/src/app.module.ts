@@ -16,6 +16,7 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ClerkAuthGuard } from './modules/auth/guards/clerk-auth.guard';
+import { ApiKeyGuard } from './modules/auth/guards/api-key.guard';
 import { SubscriptionGuard } from './modules/auth/guards/subscription.guard';
 import { UserThrottlerGuard } from './common/guards/user-throttler.guard';
 import { UsersModule } from './modules/users/users.module';
@@ -215,6 +216,10 @@ function getGraphQLErrorCode(statusCode: number): string {
     // Global authentication guard - all routes require auth unless marked with @Public()
     // MUST be registered before UserThrottlerGuard so req.user is populated
     // and the throttler can bucket by user id rather than IP.
+    {
+      provide: APP_GUARD,
+      useClass: ApiKeyGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: ClerkAuthGuard,

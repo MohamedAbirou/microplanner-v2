@@ -23,7 +23,6 @@ import {
   getBlockingTasks,
   getBlockedTasks,
   getRelatedTasks,
-  getDependencyDescription,
 } from '@/lib/dependencies';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -129,7 +128,12 @@ export function TaskDependenciesPanel({
     }
   };
 
-  const DependencyItem = ({ dependencyId, relatedTaskId, type, canRemove = true }: {
+  const DependencyItem = ({
+    dependencyId,
+    relatedTaskId,
+    type,
+    canRemove = true,
+  }: {
     dependencyId: string;
     relatedTaskId: string;
     type: DependencyType;
@@ -165,7 +169,10 @@ export function TaskDependenciesPanel({
                 </span>
               )}
               {relatedTask.isCompleted ? (
-                <Badge variant="outline" className="text-xs bg-green-500/10 text-green-700 dark:text-green-400">
+                <Badge
+                  variant="outline"
+                  className="text-xs bg-green-500/10 text-green-700 dark:text-green-400"
+                >
                   <CheckCircle2 className="h-3 w-3 mr-1" />
                   Completed
                 </Badge>
@@ -196,18 +203,19 @@ export function TaskDependenciesPanel({
     <div className="space-y-4">
       {/* Stats Overview */}
       {(stats.totalBlocking > 0 || stats.totalBlocked > 0) && (
-        <Alert className={cn(
-          !stats.canStart && 'border-yellow-500/50 bg-yellow-500/10'
-        )}>
+        <Alert className={cn(!stats.canStart && 'border-yellow-500/50 bg-yellow-500/10')}>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             {stats.canStart ? (
               <span className="text-sm">
-                This task can be started. {stats.totalBlocking > 0 && `${stats.completedBlocking}/${stats.totalBlocking} blocking tasks completed.`}
+                This task can be started.{' '}
+                {stats.totalBlocking > 0 &&
+                  `${stats.completedBlocking}/${stats.totalBlocking} blocking tasks completed.`}
               </span>
             ) : (
               <span className="text-sm">
-                This task is blocked. Complete {stats.totalBlocking - stats.completedBlocking} blocking task(s) first.
+                This task is blocked. Complete {stats.totalBlocking - stats.completedBlocking}{' '}
+                blocking task(s) first.
                 {stats.suggestedDate && (
                   <> Suggested start date: {format(stats.suggestedDate, 'MMM d, yyyy')}</>
                 )}
@@ -229,9 +237,12 @@ export function TaskDependenciesPanel({
           </p>
           <div className="space-y-2">
             {blockingTaskIds.map(relatedId => {
-              const dep = dependencies.find(d =>
-                (d.type === 'BLOCKED_BY' && d.fromTaskId === task.id && d.toTaskId === relatedId) ||
-                (d.type === 'BLOCKS' && d.toTaskId === task.id && d.fromTaskId === relatedId)
+              const dep = dependencies.find(
+                d =>
+                  (d.type === 'BLOCKED_BY' &&
+                    d.fromTaskId === task.id &&
+                    d.toTaskId === relatedId) ||
+                  (d.type === 'BLOCKS' && d.toTaskId === task.id && d.fromTaskId === relatedId)
               );
               return dep ? (
                 <DependencyItem
@@ -260,9 +271,12 @@ export function TaskDependenciesPanel({
             </p>
             <div className="space-y-2">
               {blockedTaskIds.map(relatedId => {
-                const dep = dependencies.find(d =>
-                  (d.type === 'BLOCKS' && d.fromTaskId === task.id && d.toTaskId === relatedId) ||
-                  (d.type === 'BLOCKED_BY' && d.toTaskId === task.id && d.fromTaskId === relatedId)
+                const dep = dependencies.find(
+                  d =>
+                    (d.type === 'BLOCKS' && d.fromTaskId === task.id && d.toTaskId === relatedId) ||
+                    (d.type === 'BLOCKED_BY' &&
+                      d.toTaskId === task.id &&
+                      d.fromTaskId === relatedId)
                 );
                 return dep ? (
                   <DependencyItem
@@ -287,15 +301,14 @@ export function TaskDependenciesPanel({
               <Link2 className="h-4 w-4 text-blue-500" />
               Related Tasks ({relatedTaskIds.length})
             </Label>
-            <p className="text-xs text-muted-foreground mb-2">
-              Tasks related to this one
-            </p>
+            <p className="text-xs text-muted-foreground mb-2">Tasks related to this one</p>
             <div className="space-y-2">
               {relatedTaskIds.map(relatedId => {
-                const dep = dependencies.find(d =>
-                  d.type === 'RELATED_TO' &&
-                  ((d.fromTaskId === task.id && d.toTaskId === relatedId) ||
-                   (d.toTaskId === task.id && d.fromTaskId === relatedId))
+                const dep = dependencies.find(
+                  d =>
+                    d.type === 'RELATED_TO' &&
+                    ((d.fromTaskId === task.id && d.toTaskId === relatedId) ||
+                      (d.toTaskId === task.id && d.fromTaskId === relatedId))
                 );
                 return dep ? (
                   <DependencyItem
@@ -312,15 +325,12 @@ export function TaskDependenciesPanel({
       )}
 
       {/* Add Dependency */}
-      {(blockingTaskIds.length > 0 || blockedTaskIds.length > 0 || relatedTaskIds.length > 0) && <Separator />}
+      {(blockingTaskIds.length > 0 || blockedTaskIds.length > 0 || relatedTaskIds.length > 0) && (
+        <Separator />
+      )}
 
       {!isAdding ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={() => setIsAdding(true)}
-        >
+        <Button variant="outline" size="sm" className="w-full" onClick={() => setIsAdding(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Dependency
         </Button>
@@ -328,7 +338,10 @@ export function TaskDependenciesPanel({
         <div className="space-y-3 p-3 border rounded-lg bg-accent/20">
           <div className="space-y-2">
             <Label htmlFor="dependency-type">Dependency Type</Label>
-            <Select value={selectedType} onValueChange={(value) => setSelectedType(value as DependencyType)}>
+            <Select
+              value={selectedType}
+              onValueChange={value => setSelectedType(value as DependencyType)}
+            >
               <SelectTrigger id="dependency-type">
                 <SelectValue />
               </SelectTrigger>
@@ -382,13 +395,16 @@ export function TaskDependenciesPanel({
       )}
 
       {/* Empty State */}
-      {blockingTaskIds.length === 0 && blockedTaskIds.length === 0 && relatedTaskIds.length === 0 && !isAdding && (
-        <div className="text-center py-8 text-muted-foreground">
-          <Link2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
-          <p className="text-sm">No dependencies yet</p>
-          <p className="text-xs mt-1">Add dependencies to manage task relationships</p>
-        </div>
-      )}
+      {blockingTaskIds.length === 0 &&
+        blockedTaskIds.length === 0 &&
+        relatedTaskIds.length === 0 &&
+        !isAdding && (
+          <div className="text-center py-8 text-muted-foreground">
+            <Link2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p className="text-sm">No dependencies yet</p>
+            <p className="text-xs mt-1">Add dependencies to manage task relationships</p>
+          </div>
+        )}
     </div>
   );
 }

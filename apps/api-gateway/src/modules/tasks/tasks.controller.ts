@@ -1,4 +1,16 @@
-import { Controller, Post, Get, Put, Delete, Patch, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Patch,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { TasksService } from './tasks.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -8,6 +20,8 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { QueryTasksDto } from './dto/query-tasks.dto';
 import { BulkOperationDto } from './dto/bulk-operation.dto';
 import { SkipTaskDto } from './dto/skip-task.dto';
+import { RequireApiScope } from '../auth/decorators/api-scope.decorator';
+import { ApiScope } from '../premium/types/premium.types';
 
 @ApiTags('tasks')
 @ApiBearerAuth()
@@ -16,6 +30,7 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Post()
+  @RequireApiScope(ApiScope.WRITE_TASKS)
   @ApiOperation({ summary: 'Create a manual task' })
   @ApiResponse({ status: 201, description: 'Task created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input or time validation failed' })
@@ -30,10 +45,21 @@ export class TasksController {
   }
 
   @Get()
+  @RequireApiScope(ApiScope.READ_TASKS)
   @ApiOperation({ summary: 'Get tasks with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Tasks retrieved successfully' })
-  @ApiQuery({ name: 'date', required: false, type: String, description: 'Filter by date (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'weekStart', required: false, type: String, description: 'Filter by week start (Monday)' })
+  @ApiQuery({
+    name: 'date',
+    required: false,
+    type: String,
+    description: 'Filter by date (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'weekStart',
+    required: false,
+    type: String,
+    description: 'Filter by week start (Monday)',
+  })
   @ApiQuery({ name: 'goalId', required: false, type: String })
   @ApiQuery({ name: 'planId', required: false, type: String })
   @ApiQuery({ name: 'isCompleted', required: false, type: Boolean })
@@ -50,17 +76,16 @@ export class TasksController {
   }
 
   @Post('batch/by-plan')
+  @RequireApiScope(ApiScope.READ_TASKS)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Batch-fetch tasks grouped by plan ID' })
-  async findByPlanIds(
-    @CurrentUser() user: User,
-    @Body() body: { planIds?: string[] },
-  ) {
+  async findByPlanIds(@CurrentUser() user: User, @Body() body: { planIds?: string[] }) {
     const byPlanId = await this.tasksService.findByPlanIds(user.id, body?.planIds ?? []);
     return { byPlanId };
   }
 
   @Get(':id')
+  @RequireApiScope(ApiScope.READ_TASKS)
   @ApiOperation({ summary: 'Get a single task by ID' })
   @ApiResponse({ status: 200, description: 'Task retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Task not found' })
@@ -74,6 +99,7 @@ export class TasksController {
   }
 
   @Get(':id/reschedule-suggestion')
+  @RequireApiScope(ApiScope.READ_TASKS)
   @ApiOperation({ summary: 'Suggest the next available slot to reschedule a task' })
   @ApiResponse({ status: 200, description: 'Suggestion returned (may be null)' })
   @ApiResponse({ status: 404, description: 'Task not found' })
@@ -83,11 +109,16 @@ export class TasksController {
   }
 
   @Put(':id')
+  @RequireApiScope(ApiScope.WRITE_TASKS)
   @ApiOperation({ summary: 'Update a task' })
   @ApiResponse({ status: 200, description: 'Task updated successfully' })
   @ApiResponse({ status: 404, description: 'Task not found' })
   @ApiResponse({ status: 400, description: 'Invalid input or time validation failed' })
-  async update(@CurrentUser() user: User, @Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
+  async update(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() updateTaskDto: UpdateTaskDto
+  ) {
     const task = await this.tasksService.update(id, user.id, updateTaskDto);
 
     return {
@@ -97,6 +128,7 @@ export class TasksController {
   }
 
   @Delete(':id')
+  @RequireApiScope(ApiScope.WRITE_TASKS)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a task' })
   @ApiResponse({ status: 204, description: 'Task deleted successfully' })
@@ -107,6 +139,7 @@ export class TasksController {
   }
 
   @Post(':id/complete')
+  @RequireApiScope(ApiScope.WRITE_TASKS)
   @ApiOperation({ summary: 'Mark task as complete' })
   @ApiResponse({ status: 200, description: 'Task marked as complete' })
   @ApiResponse({ status: 404, description: 'Task not found' })
@@ -125,6 +158,7 @@ export class TasksController {
   }
 
   @Post(':id/skip')
+  @RequireApiScope(ApiScope.WRITE_TASKS)
   @ApiOperation({ summary: 'Mark task as skipped with optional reason' })
   @ApiResponse({ status: 200, description: 'Task marked as skipped' })
   @ApiResponse({ status: 404, description: 'Task not found' })
@@ -143,6 +177,7 @@ export class TasksController {
   }
 
   @Patch('bulk')
+  @RequireApiScope(ApiScope.WRITE_TASKS)
   @ApiOperation({ summary: 'Perform bulk operations on multiple tasks' })
   @ApiResponse({ status: 200, description: 'Bulk operation completed' })
   @ApiResponse({ status: 400, description: 'Invalid operation or missing data' })

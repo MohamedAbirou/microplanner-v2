@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { format, parseISO, isSameDay } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { TaskItem } from './task-item';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -12,9 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, List, LayoutGrid, Calendar } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -62,7 +60,7 @@ export function TaskList({
   const [filterPriority, setFilterPriority] = useState<'all' | '1' | '2' | '3'>('all');
 
   // Filter tasks
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = tasks.filter(task => {
     if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
@@ -88,7 +86,7 @@ export function TaskList({
                   placeholder="Search tasks..."
                   className="pl-9"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                 />
               </div>
 
@@ -127,7 +125,7 @@ export function TaskList({
           <div key={group}>
             <h3 className="text-sm font-semibold text-muted-foreground mb-3">{group}</h3>
             <div className="space-y-2">
-              {groupTasks.map((task) => (
+              {groupTasks.map(task => (
                 <TaskItem
                   key={task.id}
                   task={task}
@@ -159,7 +157,7 @@ export function TaskList({
 function groupTasksBy(tasks: Task[], groupBy: 'date' | 'goal' | 'priority') {
   const grouped: Record<string, Task[]> = {};
 
-  tasks.forEach((task) => {
+  tasks.forEach(task => {
     let key: string;
 
     switch (groupBy) {
@@ -170,7 +168,12 @@ function groupTasksBy(tasks: Task[], groupBy: 'date' | 'goal' | 'priority') {
         key = task.goal?.title || 'No Goal';
         break;
       case 'priority':
-        key = task.priority === 1 ? 'High Priority' : task.priority === 2 ? 'Medium Priority' : 'Low Priority';
+        key =
+          task.priority === 1
+            ? 'High Priority'
+            : task.priority === 2
+              ? 'Medium Priority'
+              : 'Low Priority';
         break;
       default:
         key = 'All Tasks';

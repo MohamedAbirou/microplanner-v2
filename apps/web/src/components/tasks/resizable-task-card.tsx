@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { GripVertical, CheckCircle2, Circle } from 'lucide-react';
+import { GripVertical, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useTaskResize } from '@/hooks/use-task-resize';
@@ -78,7 +78,7 @@ export function ResizableTaskCard({
         isResizing(task.id) && 'ring-2 ring-blue-500 shadow-lg',
         className
       )}
-      onClick={(e) => {
+      onClick={e => {
         if (!(e.target as HTMLElement).closest('.resize-handle') && !showCheckbox) {
           onClick?.();
         }
@@ -104,7 +104,7 @@ export function ResizableTaskCard({
           <Checkbox
             checked={isSelected}
             onCheckedChange={onToggleSelect}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           />
         )}
 

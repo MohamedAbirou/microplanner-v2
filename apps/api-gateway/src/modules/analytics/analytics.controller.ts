@@ -7,6 +7,8 @@ import { RequireSubscription } from '../auth/decorators/require-subscription.dec
 import { AnalyticsService } from './analytics.service';
 import { TrackEventDto } from './dto/track-event.dto';
 import { PatternRecognitionService } from './pattern-recognition.service';
+import { RequireApiScope } from '../auth/decorators/api-scope.decorator';
+import { ApiScope } from '../premium/types/premium.types';
 
 @ApiTags('analytics')
 @ApiBearerAuth()
@@ -16,7 +18,7 @@ export class AnalyticsController {
 
   constructor(
     private readonly analyticsService: AnalyticsService,
-    private readonly patternRecognitionService: PatternRecognitionService,
+    private readonly patternRecognitionService: PatternRecognitionService
   ) {}
 
   @Post('events')
@@ -36,6 +38,7 @@ export class AnalyticsController {
   }
 
   @Get('metrics')
+  @RequireApiScope(ApiScope.READ_ANALYTICS)
   @ApiOperation({ summary: 'Get user metrics for dashboard' })
   @ApiResponse({ status: 200, description: 'Metrics retrieved successfully' })
   async getUserMetrics(@CurrentUser() user: User) {
@@ -48,6 +51,7 @@ export class AnalyticsController {
   }
 
   @Get('insights')
+  @RequireApiScope(ApiScope.READ_ANALYTICS)
   @ApiOperation({ summary: 'Get weekly insights' })
   @ApiResponse({ status: 200, description: 'Weekly insights retrieved successfully' })
   async getWeeklyInsights(@CurrentUser() user: User) {
@@ -60,11 +64,20 @@ export class AnalyticsController {
   }
 
   @Get('usage')
+  @RequireApiScope(ApiScope.READ_ANALYTICS)
   @ApiOperation({ summary: 'Get LLM usage statistics' })
   @ApiResponse({ status: 200, description: 'LLM usage statistics retrieved successfully' })
-  @ApiQuery({ name: 'days', required: false, type: Number, description: 'Number of days to look back (default: 30)' })
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    type: Number,
+    description: 'Number of days to look back (default: 30)',
+  })
   async getLLMUsage(@CurrentUser() user: User, @Query('days') days?: number) {
-    const usage = await this.analyticsService.getLLMUsage(user.id, days ? parseInt(days.toString(), 10) : 30);
+    const usage = await this.analyticsService.getLLMUsage(
+      user.id,
+      days ? parseInt(days.toString(), 10) : 30
+    );
 
     return {
       message: 'LLM usage statistics retrieved successfully',
@@ -89,6 +102,7 @@ export class AnalyticsController {
    * Get AI-learned patterns and insights (PRO/PREMIUM only)
    */
   @Get('patterns')
+  @RequireApiScope(ApiScope.READ_ANALYTICS)
   @ApiOperation({ summary: 'Get AI-learned pattern insights (PRO/PREMIUM)' })
   @ApiResponse({ status: 200, description: 'Pattern insights retrieved successfully' })
   @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])

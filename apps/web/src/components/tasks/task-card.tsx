@@ -1,7 +1,6 @@
 'use client';
 
-import { format, parseISO } from 'date-fns';
-import { Clock, Calendar, CheckCircle2, Timer } from 'lucide-react';
+import { Clock, CheckCircle2, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 

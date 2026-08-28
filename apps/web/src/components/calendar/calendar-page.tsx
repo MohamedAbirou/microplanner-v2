@@ -2,14 +2,7 @@
 
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  endOfDay,
-  endOfWeek,
-  format,
-  isValid,
-  parseISO,
-  startOfWeek,
-} from 'date-fns';
+import { endOfDay, endOfWeek, format, isValid, parseISO, startOfWeek } from 'date-fns';
 import { DayCalendar } from '@/components/calendar/day-calendar';
 import { WeekCalendarDnd } from '@/components/calendar/week-calendar-dnd';
 import { MonthCalendar } from '@/components/calendar/month-calendar';
@@ -17,13 +10,10 @@ import {
   CalendarViewSwitcher,
   type CalendarView,
 } from '@/components/calendar/calendar-view-switcher';
-import {
-  QuickAddTaskModal,
-  type TaskFormData,
-} from '@/components/tasks/quick-add-task-modal';
+import { QuickAddTaskModal, type TaskFormData } from '@/components/tasks/quick-add-task-modal';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import { PageLoader } from '@/components/ui/page-loader';
-import { useTasksList, useGoalsList, useUpdateTask, useCreateTask } from '@/hooks/use-graphql';
+import { useTasks, useGoalsList, useUpdateTask, useCreateTask } from '@/hooks/use-graphql';
 import { useCalendarConnections, useCalendarEvents } from '@/hooks/use-graphql-extended';
 import { useTier } from '@/contexts/tier-context';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
@@ -46,26 +36,20 @@ export function CalendarPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const view = parseViewParam(searchParams.get('view'));
-  const focusDate = React.useMemo(
-    () => parseDateParam(searchParams.get('date')),
-    [searchParams]
-  );
+  const focusDate = React.useMemo(() => parseDateParam(searchParams.get('date')), [searchParams]);
 
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
   const [quickAddTime, setQuickAddTime] = React.useState<{ hour: number; minute: number } | null>(
     null
   );
 
-  const taskQuery = React.useMemo(
-    () => getCalendarTaskQuery(view, focusDate),
-    [view, focusDate]
-  );
+  const taskQuery = React.useMemo(() => getCalendarTaskQuery(view, focusDate), [view, focusDate]);
 
-  const { tasks: allTasks, loading, refetch } = useTasksList(
-    taskQuery.filter,
-    undefined,
-    { take: taskQuery.take }
-  );
+  const {
+    tasks: allTasks,
+    loading,
+    refetch,
+  } = useTasks(taskQuery.filter, undefined, { take: taskQuery.take });
   const { goals } = useGoalsList();
   const { updateTask } = useUpdateTask();
   const { createTask } = useCreateTask();
@@ -150,7 +134,8 @@ export function CalendarPage() {
   };
 
   const handleQuickAddSubmit = async (data: TaskFormData) => {
-    const { isRecurring, ...taskInput } = data as TaskFormData & { isRecurring?: boolean };
+    const taskInput = { ...data } as TaskFormData & { isRecurring?: boolean };
+    delete taskInput.isRecurring;
     await createTask({ variables: { input: taskInput } });
     setQuickAddTime(null);
     refetch();
@@ -161,7 +146,15 @@ export function CalendarPage() {
   };
 
   if (loading) {
-    return <PageLoader label="calendar" variant="page" showSkeleton skeletonRows={2} className="h-[calc(100vh-3.5rem)]" />;
+    return (
+      <PageLoader
+        label="calendar"
+        variant="page"
+        showSkeleton
+        skeletonRows={2}
+        className="h-[calc(100vh-3.5rem)]"
+      />
+    );
   }
 
   return (
@@ -202,7 +195,7 @@ export function CalendarPage() {
       <TaskDetailModal
         task={selectedTask}
         open={!!selectedTask}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setSelectedTaskId(null);
         }}
         goals={goals}
@@ -214,7 +207,7 @@ export function CalendarPage() {
       {quickAddTime && (
         <QuickAddTaskModal
           open={!!quickAddTime}
-          onOpenChange={(open) => {
+          onOpenChange={open => {
             if (!open) setQuickAddTime(null);
           }}
           goals={goals}

@@ -2,24 +2,17 @@
 
 import * as React from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Bell, Check, CheckCheck, Filter, Trash2, X } from 'lucide-react';
+import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useNotifications } from '@/contexts/notifications-context';
 import Link from 'next/link';
 
 export default function NotificationsPage() {
-  const {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    clearAll,
-  } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } =
+    useNotifications();
 
   const [filter, setFilter] = React.useState<'all' | 'unread'>('all');
 
@@ -82,7 +75,12 @@ export default function NotificationsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <Tabs defaultValue="all" value={filter} onValueChange={(v) => setFilter(v as 'all' | 'unread')} className="mb-6">
+      <Tabs
+        defaultValue="all"
+        value={filter}
+        onValueChange={v => setFilter(v as 'all' | 'unread')}
+        className="mb-6"
+      >
         <TabsList>
           <TabsTrigger value="all">
             All
@@ -116,7 +114,7 @@ export default function NotificationsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredNotifications.map((notification, index) => (
+          {filteredNotifications.map(notification => (
             <React.Fragment key={notification.id}>
               <div
                 className={cn(
@@ -130,11 +128,20 @@ export default function NotificationsPage() {
                     onClick={() => handleNotificationClick(notification.id)}
                     className="block"
                   >
-                    <NotificationContent notification={notification} getIcon={getNotificationIcon} />
+                    <NotificationContent
+                      notification={notification}
+                      getIcon={getNotificationIcon}
+                    />
                   </Link>
                 ) : (
-                  <div onClick={() => handleNotificationClick(notification.id)} className="cursor-pointer">
-                    <NotificationContent notification={notification} getIcon={getNotificationIcon} />
+                  <div
+                    onClick={() => handleNotificationClick(notification.id)}
+                    className="cursor-pointer"
+                  >
+                    <NotificationContent
+                      notification={notification}
+                      getIcon={getNotificationIcon}
+                    />
                   </div>
                 )}
 
@@ -145,7 +152,7 @@ export default function NotificationsPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.preventDefault();
                         e.stopPropagation();
                         markAsRead(notification.id);
@@ -159,7 +166,7 @@ export default function NotificationsPage() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       e.stopPropagation();
                       deleteNotification(notification.id);
@@ -185,7 +192,7 @@ export default function NotificationsPage() {
 
 function NotificationContent({
   notification,
-  getIcon
+  getIcon,
 }: {
   notification: any;
   getIcon: (type: string) => string;
@@ -202,14 +209,10 @@ function NotificationContent({
             {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
           </time>
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {notification.message}
-        </p>
+        <p className="text-sm text-muted-foreground leading-relaxed">{notification.message}</p>
         {notification.actionLabel && (
           <div className="pt-1">
-            <span className="text-sm text-primary font-medium">
-              {notification.actionLabel} →
-            </span>
+            <span className="text-sm text-primary font-medium">{notification.actionLabel} →</span>
           </div>
         )}
       </div>

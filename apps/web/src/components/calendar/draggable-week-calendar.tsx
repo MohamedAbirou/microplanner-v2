@@ -1,9 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { WeekCalendar } from './week-calendar';
 import { CalendarTaskLike, getTaskDurationMinutes } from '@/lib/calendar-utils';
 
@@ -42,9 +42,10 @@ export function DraggableWeekCalendar({
     const { source, destination, draggableId } = result;
 
     // No destination or dropped in same position
-    if (!destination ||
-        (source.droppableId === destination.droppableId &&
-         source.index === destination.index)) {
+    if (
+      !destination ||
+      (source.droppableId === destination.droppableId && source.index === destination.index)
+    ) {
       return;
     }
 

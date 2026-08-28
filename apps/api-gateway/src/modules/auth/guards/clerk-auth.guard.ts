@@ -56,6 +56,16 @@ export class ClerkAuthGuard extends AuthGuard('clerk') {
       return true;
     }
 
+    // API keys are authenticated by ApiKeyGuard, which runs before this guard.
+    // Do not attempt to parse an mp_ key as a Clerk JWT.
+    if ((context.getType() as string) !== 'graphql') {
+      const request = context.switchToHttp().getRequest();
+      const authorization = request.headers?.authorization;
+      if (typeof authorization === 'string' && authorization.startsWith('Bearer mp_')) {
+        return Boolean(request.user);
+      }
+    }
+
     // Proceed with authentication
     return super.canActivate(context);
   }

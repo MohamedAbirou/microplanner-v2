@@ -3,7 +3,16 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronLeft, UserPlus, Loader2, Users, Trash2, Mail, BarChart3, Target } from 'lucide-react';
+import {
+  ChevronLeft,
+  UserPlus,
+  Loader2,
+  Users,
+  Trash2,
+  Mail,
+  BarChart3,
+  Target,
+} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -150,7 +159,9 @@ function TeamDashboardCard({ teamId }: { teamId: string }) {
           <>
             <div className="flex items-center gap-4 rounded-[10px] border border-border bg-accent/40 p-3">
               <div>
-                <div className="text-2xl font-semibold">{Math.round(dashboard.completionRate)}%</div>
+                <div className="text-2xl font-semibold">
+                  {Math.round(dashboard.completionRate)}%
+                </div>
                 <div className="text-[12px] text-muted-foreground">Team completion (7d)</div>
               </div>
               <div className="text-[13px] text-muted-foreground">
@@ -204,7 +215,7 @@ function TeamDashboardCard({ teamId }: { teamId: string }) {
 }
 
 function TeamDetailContent({ teamId }: { teamId: string }) {
-  const { team, loading: teamLoading } = useTeam(teamId);
+  const { team } = useTeam(teamId);
   const { members, loading, refetch } = useTeamMembers(teamId);
   const { inviteMember, loading: inviting } = useInviteTeamMember();
   const { removeTeamMember } = useRemoveTeamMember();
@@ -300,15 +311,12 @@ function TeamDetailContent({ teamId }: { teamId: string }) {
                       <Badge variant="secondary">Owner</Badge>
                     ) : (
                       <>
-                        <Select
-                          value={m.role}
-                          onValueChange={(v) => handleRoleChange(m.userId, v)}
-                        >
+                        <Select value={m.role} onValueChange={v => handleRoleChange(m.userId, v)}>
                           <SelectTrigger className="h-8 w-[110px]">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {ROLES.map((r) => (
+                            {ROLES.map(r => (
                               <SelectItem key={r} value={r}>
                                 {r.charAt(0) + r.slice(1).toLowerCase()}
                               </SelectItem>
@@ -355,7 +363,7 @@ function TeamDetailContent({ teamId }: { teamId: string }) {
                   id="invite-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   placeholder="teammate@company.com"
                   className="pl-9"
                   autoFocus
@@ -364,12 +372,12 @@ function TeamDetailContent({ teamId }: { teamId: string }) {
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
-              <Select value={role} onValueChange={(v) => setRole(v as any)}>
+              <Select value={role} onValueChange={v => setRole(v as any)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ROLES.map((r) => (
+                  {ROLES.map(r => (
                     <SelectItem key={r} value={r}>
                       {r.charAt(0) + r.slice(1).toLowerCase()}
                     </SelectItem>

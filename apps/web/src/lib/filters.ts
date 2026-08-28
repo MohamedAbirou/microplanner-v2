@@ -2,7 +2,7 @@
  * Advanced filtering and sorting utilities for tasks, goals, and plans
  */
 
-import { startOfDay, endOfDay, isWithinInterval, isBefore, isAfter, parseISO } from 'date-fns';
+import { startOfDay, endOfDay, isWithinInterval, isBefore, parseISO } from 'date-fns';
 
 export interface Task {
   id: string;
@@ -94,10 +94,12 @@ export function filterTasks(tasks: Task[], filters: TaskFilters): Task[] {
       const taskDate = parseISO(task.scheduledDate);
       const { start, end } = filters.dateRange;
 
-      if (!isWithinInterval(taskDate, {
-        start: startOfDay(start),
-        end: endOfDay(end),
-      })) {
+      if (
+        !isWithinInterval(taskDate, {
+          start: startOfDay(start),
+          end: endOfDay(end),
+        })
+      ) {
         return false;
       }
     }
@@ -182,9 +184,7 @@ export function sortTasks(tasks: Task[], sort: TaskSort): Task[] {
 
     // Handle string comparison
     if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return sort.direction === 'asc'
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
+      return sort.direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     }
 
     // Handle numeric comparison
@@ -199,11 +199,7 @@ export function sortTasks(tasks: Task[], sort: TaskSort): Task[] {
 /**
  * Apply filters and sorting to tasks
  */
-export function filterAndSortTasks(
-  tasks: Task[],
-  filters: TaskFilters,
-  sort: TaskSort
-): Task[] {
+export function filterAndSortTasks(tasks: Task[], filters: TaskFilters, sort: TaskSort): Task[] {
   const filtered = filterTasks(tasks, filters);
   return sortTasks(filtered, sort);
 }
@@ -279,8 +275,14 @@ export const SORT_PRESETS = {
   PRIORITY_LOW_FIRST: { field: 'priority' as TaskSortField, direction: 'desc' as SortDirection },
   TITLE_A_Z: { field: 'title' as TaskSortField, direction: 'asc' as SortDirection },
   TITLE_Z_A: { field: 'title' as TaskSortField, direction: 'desc' as SortDirection },
-  DURATION_SHORTEST: { field: 'durationMinutes' as TaskSortField, direction: 'asc' as SortDirection },
-  DURATION_LONGEST: { field: 'durationMinutes' as TaskSortField, direction: 'desc' as SortDirection },
+  DURATION_SHORTEST: {
+    field: 'durationMinutes' as TaskSortField,
+    direction: 'asc' as SortDirection,
+  },
+  DURATION_LONGEST: {
+    field: 'durationMinutes' as TaskSortField,
+    direction: 'desc' as SortDirection,
+  },
   CREATED_OLDEST: { field: 'createdAt' as TaskSortField, direction: 'asc' as SortDirection },
   CREATED_NEWEST: { field: 'createdAt' as TaskSortField, direction: 'desc' as SortDirection },
 } as const;
@@ -288,7 +290,10 @@ export const SORT_PRESETS = {
 /**
  * Group tasks by a specific field
  */
-export function groupTasksBy(tasks: Task[], groupBy: 'goal' | 'priority' | 'date'): Record<string, Task[]> {
+export function groupTasksBy(
+  tasks: Task[],
+  groupBy: 'goal' | 'priority' | 'date'
+): Record<string, Task[]> {
   const groups: Record<string, Task[]> = {};
 
   tasks.forEach(task => {

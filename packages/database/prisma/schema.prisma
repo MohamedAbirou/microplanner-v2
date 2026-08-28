@@ -10,7 +10,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  directUrl  = env("DIRECT_URL")
   extensions = [pgvector(map: "vector")]
 }
 
@@ -19,96 +19,96 @@ datasource db {
 // ============================================
 
 model User {
-  id                String              @id @default(cuid())
-  clerkId           String              @unique
-  email             String              @unique
-  name              String?
-  avatar            String?
-  timezone          String              @default("UTC")
+  id       String  @id @default(cuid())
+  clerkId  String  @unique
+  email    String  @unique
+  name     String?
+  avatar   String?
+  timezone String  @default("UTC")
 
   // Subscription
-  tier              SubscriptionTier    @default(FREE)
-  stripeCustomerId  String?             @unique
-  subscriptionId    String?
+  tier               SubscriptionTier   @default(FREE)
+  stripeCustomerId   String?            @unique
+  subscriptionId     String?
   subscriptionStatus SubscriptionStatus @default(INACTIVE)
 
   // Dunning state (billing lifecycle)
-  paymentFailedCount Int                @default(0)  // consecutive failed payments
-  paymentGraceUntil  DateTime?          // anchored to FIRST failure; never slides forward
+  paymentFailedCount Int       @default(0) // consecutive failed payments
+  paymentGraceUntil  DateTime? // anchored to FIRST failure; never slides forward
 
   // Embedded preferences (denormalized for performance)
-  wakeTime          String              @default("07:00")
-  sleepTime         String              @default("23:00")
-  workStartTime     String              @default("09:00")
-  workEndTime       String              @default("17:00")
-  productivityPeaks String[]           @default([])
+  wakeTime          String         @default("07:00")
+  sleepTime         String         @default("23:00")
+  workStartTime     String         @default("09:00")
+  workEndTime       String         @default("17:00")
+  productivityPeaks String[]       @default([])
   energyPattern     EnergyPattern?
-  theme             Theme               @default(SYSTEM)
-  blockedTimes      Json?               // [{day: "monday", start: "12:00", end: "13:00"}]
+  theme             Theme          @default(SYSTEM)
+  blockedTimes      Json? // [{day: "monday", start: "12:00", end: "13:00"}]
 
   // Device tokens for push notifications
-  pushTokens        String[]           @default([])
+  pushTokens String[] @default([])
 
   // Full-day autopilot (Motion-style live rescheduling)
-  autopilotEnabled     Boolean         @default(false)
-  autopilotMode        String          @default("SUGGEST") // AUTO | SUGGEST
-  autopilotCalendarSig String?         // last-seen calendar signature (change detection)
+  autopilotEnabled     Boolean @default(false)
+  autopilotMode        String  @default("SUGGEST") // AUTO | SUGGEST
+  autopilotCalendarSig String? // last-seen calendar signature (change detection)
 
   // Metadata
-  onboardingCompleted Boolean          @default(false)
-  onboardingStep    Int                @default(0)
-  language          String             @default("en")
-  context           String?            // User context: employed_fulltime, student, freelancer, etc.
-  focusAreas        String[]           @default([]) // Focus areas: career, learning, health, etc.
+  onboardingCompleted Boolean  @default(false)
+  onboardingStep      Int      @default(0)
+  language            String   @default("en")
+  context             String? // User context: employed_fulltime, student, freelancer, etc.
+  focusAreas          String[] @default([]) // Focus areas: career, learning, health, etc.
 
   // Usage tracking for tier limits enforcement
-  activeGoalsCount     Int @default(0)     // Current active goals
-  plansCreatedThisWeek Int @default(0)     // Plans created this week
-  tasksCreatedToday    Int @default(0)     // Tasks created today
-  lastPlanCreatedAt    DateTime?           // Last plan generation timestamp
-  weeklyPlanResetAt    DateTime @default(now()) // When to reset weekly plan count
-  dailyTaskResetAt     DateTime @default(now()) // When to reset daily task count
+  activeGoalsCount     Int       @default(0) // Current active goals
+  plansCreatedThisWeek Int       @default(0) // Plans created this week
+  tasksCreatedToday    Int       @default(0) // Tasks created today
+  lastPlanCreatedAt    DateTime? // Last plan generation timestamp
+  weeklyPlanResetAt    DateTime  @default(now()) // When to reset weekly plan count
+  dailyTaskResetAt     DateTime  @default(now()) // When to reset daily task count
 
   // Relations
-  goals             Goal[]
-  plans             WeeklyPlan[]
-  planTemplates     PlanTemplate[]
-  tasks             Task[]
-  calendarTokens    CalendarToken[]
-  aiMemory          AIMemory[]
-  referrals         Referral[]         @relation("ReferredBy")
-  referredUsers     Referral[]         @relation("Referrer")
-  ownedTeams        Team[]             @relation("TeamOwner")
-  teamMemberships   TeamMember[]
-  sentInvitations   TeamInvitation[]
-  apiKeys           ApiKey[]
-  schedulingLinks   SchedulingLink[]
-  integrations      Integration[]
-  webhooks          Webhook[]
-  projects          Project[]
+  goals           Goal[]
+  plans           WeeklyPlan[]
+  planTemplates   PlanTemplate[]
+  tasks           Task[]
+  calendarTokens  CalendarToken[]
+  aiMemory        AIMemory[]
+  referrals       Referral[]       @relation("ReferredBy")
+  referredUsers   Referral[]       @relation("Referrer")
+  ownedTeams      Team[]           @relation("TeamOwner")
+  teamMemberships TeamMember[]
+  sentInvitations TeamInvitation[]
+  apiKeys         ApiKey[]
+  schedulingLinks SchedulingLink[]
+  integrations    Integration[]
+  webhooks        Webhook[]
+  projects        Project[]
 
   // Productivity & Work-Life Balance (Phase 18)
-  workHours              WorkHours?
-  focusTimeBlocks        FocusTimeBlock[]
-  noMeetingDays          NoMeetingDay[]
-  priorityHours          PriorityHours?
-  calendarDefense        CalendarDefense?
-  smart1on1s             Smart1on1[]
-  travelTimes            TravelTime[]
-  kanbanBoards           KanbanBoard[]
-  productivityScores     ProductivityScore[]
-  smartNotifications     SmartNotification[]
+  workHours               WorkHours?
+  focusTimeBlocks         FocusTimeBlock[]
+  noMeetingDays           NoMeetingDay[]
+  priorityHours           PriorityHours?
+  calendarDefense         CalendarDefense?
+  smart1on1s              Smart1on1[]
+  travelTimes             TravelTime[]
+  kanbanBoards            KanbanBoard[]
+  productivityScores      ProductivityScore[]
+  smartNotifications      SmartNotification[]
   notificationPreferences NotificationPreferences?
-  autopilotProposals     AutopilotProposal[]
-  calendarDefenseLogs    CalendarDefenseLog[]
-  habits                 Habit[]
-  dailyRituals           DailyRitual[]
-  timeEntries            TimeEntry[]
+  autopilotProposals      AutopilotProposal[]
+  calendarDefenseLogs     CalendarDefenseLog[]
+  habits                  Habit[]
+  dailyRituals            DailyRitual[]
+  timeEntries             TimeEntry[]
 
   // Timestamps
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  lastSeenAt        DateTime           @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastSeenAt DateTime @default(now())
 
   @@index([email])
   @@index([tier])
@@ -147,50 +147,50 @@ enum Theme {
 // ============================================
 
 model Goal {
-  id               String       @id @default(cuid())
-  userId           String
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Project grouping (Phase 17)
-  projectId        String?
-  project          Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   // Team sharing (optional): when set, the goal is visible to team members.
-  teamId           String?
-  team             Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   // Goal details
-  title            String
-  description      String?
-  emoji            String?      @default("🎯")
-  color            String?      @default("#3B82F6")
+  title       String
+  description String?
+  emoji       String? @default("🎯")
+  color       String? @default("#3B82F6")
 
   // Scheduling parameters
-  frequencyPerWeek Int          @default(3)
-  durationMinutes  Int          @default(60)
-  preferredTimes   String[]     @default([]) // ["morning", "evening"]
-  flexibilityScore Int          @default(5) // 1-10, how flexible scheduling is
+  frequencyPerWeek Int      @default(3)
+  durationMinutes  Int      @default(60)
+  preferredTimes   String[] @default([]) // ["morning", "evening"]
+  flexibilityScore Int      @default(5) // 1-10, how flexible scheduling is
 
   // Priority & status
-  priority         Int          @default(5) // 1-10
-  isActive         Boolean      @default(true)
-  isPaused         Boolean      @default(false)
-  pausedUntil      DateTime?
+  priority    Int       @default(5) // 1-10
+  isActive    Boolean   @default(true)
+  isPaused    Boolean   @default(false)
+  pausedUntil DateTime?
 
   // Analytics
-  completionRate   Float        @default(0) // 0-100
-  totalCompletions Int          @default(0)
-  totalScheduled   Int          @default(0)
-  currentStreak    Int          @default(0)
-  longestStreak    Int          @default(0)
+  completionRate   Float     @default(0) // 0-100
+  totalCompletions Int       @default(0)
+  totalScheduled   Int       @default(0)
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
   lastCompletedAt  DateTime?
 
   // Relations
-  tasks            Task[]
+  tasks Task[]
 
   // Timestamps
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, isActive])
   @@index([userId, priority])
@@ -203,82 +203,85 @@ model Goal {
 // ============================================
 
 model Task {
-  id                String       @id @default(cuid())
-  userId            String
-  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  goalId            String?
-  goal              Goal?        @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  planId            String?
-  plan              WeeklyPlan?  @relation(fields: [planId], references: [id], onDelete: SetNull)
+  id     String      @id @default(cuid())
+  userId String
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId String?
+  goal   Goal?       @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  planId String?
+  plan   WeeklyPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
 
   // Advanced task management (Phase 17)
-  parentTaskId      String?
-  parentTask        Task?        @relation("TaskSubtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
-  subtasks          Task[]       @relation("TaskSubtasks")
-  dependencies      TaskDependency[] @relation("DependentTask")
-  blockedBy         TaskDependency[] @relation("BlockingTask")
-  projectId         String?
-  project           Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  parentTaskId String?
+  parentTask   Task?            @relation("TaskSubtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks     Task[]           @relation("TaskSubtasks")
+  dependencies TaskDependency[] @relation("DependentTask")
+  blockedBy    TaskDependency[] @relation("BlockingTask")
+  projectId    String?
+  project      Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   // Task details
-  title             String
-  notes             String?
-  priority          Int          @default(2) // 1=High, 2=Medium, 3=Low
-  tags              String[]     @default([])
+  title    String
+  notes    String?
+  priority Int      @default(2) // 1=High, 2=Medium, 3=Low
+  tags     String[] @default([])
 
   // Scheduling
-  scheduledDate     DateTime
-  startTime         String       // "09:00"
-  endTime           String       // "10:00"
-  durationMinutes   Int
-  recurrenceRule    Json?        // Recurring task configuration: { frequency, interval, daysOfWeek, etc. }
-  recurrenceExceptions Json?     // Array of exceptions: { date, type: "deleted" | "modified", modifications: {...} }
+  scheduledDate        DateTime
+  startTime            String // "09:00"
+  endTime              String // "10:00"
+  durationMinutes      Int
+  recurrenceRule       Json? // Recurring task configuration: { frequency, interval, daysOfWeek, etc. }
+  recurrenceExceptions Json? // Array of exceptions: { date, type: "deleted" | "modified", modifications: {...} }
 
   // Status
-  isCompleted       Boolean      @default(false)
-  completedAt       DateTime?
-  isSkipped         Boolean      @default(false)
-  skippedReason     String?
-  skippedAt         DateTime?
+  isCompleted   Boolean   @default(false)
+  completedAt   DateTime?
+  isSkipped     Boolean   @default(false)
+  skippedReason String?
+  skippedAt     DateTime?
 
   // Time tracking (Phase 17)
-  actualStartTime   DateTime?    // When user actually started
-  actualEndTime     DateTime?    // When user actually finished
-  timeSpentMinutes  Int          @default(0) // Actual time tracked (aggregate of timeEntries)
-  isTimerRunning    Boolean      @default(false)
-  timerStartedAt    DateTime?
-  timeEntries       TimeEntry[]
+  actualStartTime  DateTime? // When user actually started
+  actualEndTime    DateTime? // When user actually finished
+  timeSpentMinutes Int         @default(0) // Actual time tracked (aggregate of timeEntries)
+  isTimerRunning   Boolean     @default(false)
+  timerStartedAt   DateTime?
+  timeEntries      TimeEntry[]
 
   // Source tracking
-  aiGenerated       Boolean      @default(true)
-  manuallyAdded     Boolean      @default(false)
-  manuallyMoved     Boolean      @default(false)
-  aiReasoning       String?      // Why AI scheduled at this time
+  aiGenerated   Boolean @default(true)
+  manuallyAdded Boolean @default(false)
+  manuallyMoved Boolean @default(false)
+  aiReasoning   String? // Why AI scheduled at this time
 
   // Calendar sync
-  calendarEventId   String?      @unique
-  calendarProvider  String?      // "google" | "outlook"
-  syncedAt          DateTime?
-  syncStatus        SyncStatus   @default(PENDING)
-  syncError         String?
+  calendarEventId  String?    @unique
+  calendarProvider String? // "google" | "outlook"
+  syncedAt         DateTime?
+  syncStatus       SyncStatus @default(PENDING)
+  syncError        String?
 
   // PM tool sync (Todoist, Linear, Notion, Jira, Asana)
-  externalId        String?      // ID of the item in the external system
-  externalSource    String?      // "todoist" | "linear" | "notion" | "jira" | "asana"
-  externalUrl       String?      // Deep link back to the external item
-  externalSyncedAt  DateTime?    // Last successful sync with the external source
-  integrationId     String?
-  integration       Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+  externalId       String? // ID of the item in the external system
+  externalSource   String? // "todoist" | "linear" | "notion" | "jira" | "asana"
+  externalUrl      String? // Deep link back to the external item
+  externalSyncedAt DateTime? // Last successful sync with the external source
+  integrationId    String?
+  integration      Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
 
   // Offline support
-  localId           String?      @unique // Client-generated UUID
-  pendingSync       Boolean      @default(false)
-  offlineCreatedAt  DateTime?
+  localId          String?   @unique // Client-generated UUID
+  pendingSync      Boolean   @default(false)
+  offlineCreatedAt DateTime?
 
   // Timestamps
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  // PM import idempotency: one MicroPlanner task per external item per user.
+  // NULLs are distinct in Postgres, so native (non-imported) tasks are unaffected.
+  @@unique([userId, externalSource, externalId])
   @@index([userId, scheduledDate])
   // Completion analytics (weekly-completed counts, streaks) filter by
   // userId + isCompleted and range over completedAt.
@@ -294,9 +297,6 @@ model Task {
   @@index([parentTaskId])
   @@index([projectId])
   @@index([priority])
-  // PM import idempotency: one MicroPlanner task per external item per user.
-  // NULLs are distinct in Postgres, so native (non-imported) tasks are unaffected.
-  @@unique([userId, externalSource, externalId])
   @@index([integrationId])
 }
 
@@ -311,16 +311,16 @@ enum SyncStatus {
 /// Individual logged time increment against a task (manual entry or a stopped
 /// timer). Task.timeSpentMinutes is kept as the running aggregate for fast reads.
 model TimeEntry {
-  id        String   @id @default(cuid())
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   minutes   Int
   note      String?
   source    String   @default("manual") // "manual" | "timer"
-  startedAt DateTime @default(now())     // when the work happened (for reports)
+  startedAt DateTime @default(now()) // when the work happened (for reports)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -333,21 +333,21 @@ model TimeEntry {
 
 // Task dependencies (this task depends on another task)
 model TaskDependency {
-  id              String   @id @default(cuid())
+  id String @id @default(cuid())
 
   // The task that is blocked
   dependentTaskId String
-  dependentTask   Task     @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
+  dependentTask   Task   @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
 
   // The task that must be completed first
-  blockingTaskId  String
-  blockingTask    Task     @relation("BlockingTask", fields: [blockingTaskId], references: [id], onDelete: Cascade)
+  blockingTaskId String
+  blockingTask   Task   @relation("BlockingTask", fields: [blockingTaskId], references: [id], onDelete: Cascade)
 
   // Dependency type
-  type            String   @default("BLOCKS") // BLOCKS, BLOCKED_BY, RELATED_TO
+  type String @default("BLOCKS") // BLOCKS, BLOCKED_BY, RELATED_TO
 
   // Timestamps
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([dependentTaskId, blockingTaskId])
   @@index([dependentTaskId])
@@ -356,33 +356,33 @@ model TaskDependency {
 
 // Projects (grouping tasks into projects)
 model Project {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Project details
-  name            String
-  description     String?
-  color           String   @default("#3B82F6")
-  icon            String?
+  name        String
+  description String?
+  color       String  @default("#3B82F6")
+  icon        String?
 
   // Status
-  isArchived      Boolean  @default(false)
-  archivedAt      DateTime?
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
 
   // Dates
-  startDate       DateTime?
-  targetDate      DateTime?
-  completedAt     DateTime?
+  startDate   DateTime?
+  targetDate  DateTime?
+  completedAt DateTime?
 
   // Relations
-  tasks           Task[]
-  goals           Goal[]
-  kanbanBoards    KanbanBoard[]
+  tasks        Task[]
+  goals        Goal[]
+  kanbanBoards KanbanBoard[]
 
   // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([isArchived])
@@ -393,48 +393,48 @@ model Project {
 // ============================================
 
 model WeeklyPlan {
-  id              String       @id @default(cuid())
-  userId          String
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Plan timing
-  weekStartDate   DateTime     // Always Monday 00:00
-  weekEndDate     DateTime     // Always Sunday 23:59
+  weekStartDate DateTime // Always Monday 00:00
+  weekEndDate   DateTime // Always Sunday 23:59
 
   // Plan data
-  planJson        Json         // Full structured plan
-  reasoning       Json?        // AI's reasoning for each task
+  planJson  Json // Full structured plan
+  reasoning Json? // AI's reasoning for each task
 
   // Status
-  status          PlanStatus   @default(DRAFT)
-  acceptedAt      DateTime?
-  appliedAt       DateTime?    // When synced to calendar
-  archivedAt      DateTime?
+  status     PlanStatus @default(DRAFT)
+  acceptedAt DateTime?
+  appliedAt  DateTime? // When synced to calendar
+  archivedAt DateTime?
 
   // AI metadata
-  aiModel         String?      // "gpt-4o-mini" | "gpt-4o" | "rule-based"
-  complexity      String?      // "simple" | "standard" | "complex"
-  generationTime  Float?       // seconds
-  generationCost  Float?       // USD cents
-  tokenUsage      Int?
+  aiModel        String? // "gpt-4o-mini" | "gpt-4o" | "rule-based"
+  complexity     String? // "simple" | "standard" | "complex"
+  generationTime Float? // seconds
+  generationCost Float? // USD cents
+  tokenUsage     Int?
 
   // Quality metrics
-  qualityScore    Float?       // 0-100
-  userSatisfaction String?     // "accepted" | "edited" | "rejected" | "regenerated"
-  editCount       Int          @default(0)
-  regenerateCount Int          @default(0)
+  qualityScore     Float? // 0-100
+  userSatisfaction String? // "accepted" | "edited" | "rejected" | "regenerated"
+  editCount        Int     @default(0)
+  regenerateCount  Int     @default(0)
 
   // Analytics
-  completionRate  Float        @default(0) // 0-100
-  totalTasks      Int          @default(0)
-  completedTasks  Int          @default(0)
+  completionRate Float @default(0) // 0-100
+  totalTasks     Int   @default(0)
+  completedTasks Int   @default(0)
 
   // Relations
-  tasks           Task[]
+  tasks Task[]
 
   // Timestamps
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, weekStartDate])
   @@index([status])
@@ -450,27 +450,27 @@ enum PlanStatus {
 
 // Plan Templates (PRO/PREMIUM feature)
 model PlanTemplate {
-  id                  String   @id @default(cuid())
-  userId              String
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Template metadata
-  name                String
-  description         String?
-  category            String   @default("custom")
-  isPublic            Boolean  @default(false)
-  isDefault           Boolean  @default(false)
-  usageCount          Int      @default(0)
-  tags                String[] @default([])
+  name        String
+  description String?
+  category    String   @default("custom")
+  isPublic    Boolean  @default(false)
+  isDefault   Boolean  @default(false)
+  usageCount  Int      @default(0)
+  tags        String[] @default([])
 
   // Template data
-  tasks               Json     // Array of TemplateTask objects
-  estimatedTotalHours Float    @default(0)
-  tasksPerDay         Json     // Record<dayOfWeek, taskCount>
+  tasks               Json // Array of TemplateTask objects
+  estimatedTotalHours Float @default(0)
+  tasksPerDay         Json // Record<dayOfWeek, taskCount>
 
   // Timestamps
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([isPublic])
@@ -482,34 +482,34 @@ model PlanTemplate {
 // ============================================
 
 model AIMemory {
-  id              String       @id @default(cuid())
-  userId          String
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Memory details
-  memoryType      MemoryType
-  content         Json         // Flexible JSON structure
+  memoryType MemoryType
+  content    Json // Flexible JSON structure
 
   // Metadata
-  confidence      Float        @default(0.5) // 0-1
-  useCount        Int          @default(0)
-  lastUsedAt      DateTime?
-  source          String?      // Which plan/interaction created this
+  confidence Float     @default(0.5) // 0-1
+  useCount   Int       @default(0)
+  lastUsedAt DateTime?
+  source     String? // Which plan/interaction created this
 
   // Timestamps
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, memoryType])
   @@index([userId, confidence])
 }
 
 enum MemoryType {
-  TIME_PREFERENCE      // "User prefers gym at 7am"
-  COMPLETION_PATTERN   // "User completes 90% of morning tasks"
-  ENERGY_INSIGHT       // "Most productive on Tuesdays"
-  AVOIDANCE_PATTERN    // "User always skips evening workouts"
-  CONTEXT_PREFERENCE   // "User needs 2-hour focus blocks for coding"
+  TIME_PREFERENCE // "User prefers gym at 7am"
+  COMPLETION_PATTERN // "User completes 90% of morning tasks"
+  ENERGY_INSIGHT // "Most productive on Tuesdays"
+  AVOIDANCE_PATTERN // "User always skips evening workouts"
+  CONTEXT_PREFERENCE // "User needs 2-hour focus blocks for coding"
 }
 
 // ============================================
@@ -517,40 +517,40 @@ enum MemoryType {
 // ============================================
 
 model CalendarToken {
-  id           String       @id @default(cuid())
-  userId       String
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Provider
-  provider     String       // "google" | "outlook" | "apple"
+  provider String // "google" | "outlook" | "apple"
 
   // OAuth tokens (encrypted at application level before storing)
-  accessToken  String       @db.Text
-  refreshToken String?      @db.Text
+  accessToken  String    @db.Text
+  refreshToken String?   @db.Text
   expiresAt    DateTime?
 
   // Calendar metadata
-  calendarId   String?      // Primary calendar ID
+  calendarId   String? // Primary calendar ID
   calendarName String?
-  email        String?      // Calendar account email
+  email        String? // Calendar account email
 
   // Sync state
-  lastSyncAt   DateTime?
-  syncEnabled  Boolean      @default(true)
-  syncErrors   Int          @default(0)
-  lastError    String?
+  lastSyncAt  DateTime?
+  syncEnabled Boolean   @default(true)
+  syncErrors  Int       @default(0)
+  lastError   String?
 
   // Push-notification watch channels (Google events.watch / Graph subscriptions).
   // Enable near-real-time autopilot rescheduling instead of a 5-minute poll.
-  watchChannelId      String?   // Google channel id (uuid we generate)
-  watchResourceId     String?   // Google resourceId returned by events.watch
-  graphSubscriptionId String?   // Outlook/Graph subscription id
+  watchChannelId      String? // Google channel id (uuid we generate)
+  watchResourceId     String? // Google resourceId returned by events.watch
+  graphSubscriptionId String? // Outlook/Graph subscription id
   watchExpiration     DateTime? // Channel/subscription expiry — renew before this
   watchClientState    String?   @db.Text // signed secret echoed back for verification
 
   // Timestamps
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, provider])
   @@index([userId])
@@ -560,23 +560,23 @@ model CalendarToken {
 }
 
 model SyncLog {
-  id              String       @id @default(cuid())
-  userId          String
-  planId          String?
+  id     String  @id @default(cuid())
+  userId String
+  planId String?
 
   // Sync details
-  syncType        String       // "full" | "partial" | "rollback"
-  tasksAttempted  Int
-  tasksSucceeded  Int
-  tasksFailed     Int
+  syncType       String // "full" | "partial" | "rollback"
+  tasksAttempted Int
+  tasksSucceeded Int
+  tasksFailed    Int
 
   // Results
-  success         Boolean
-  errors          Json?        // Array of error objects
-  duration        Int          // milliseconds
+  success  Boolean
+  errors   Json? // Array of error objects
+  duration Int // milliseconds
 
   // Timestamp
-  createdAt       DateTime     @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([planId])
@@ -588,21 +588,21 @@ model SyncLog {
 // ============================================
 
 model AnalyticsEvent {
-  id         String       @id @default(cuid())
-  userId     String?
-  sessionId  String?
+  id        String  @id @default(cuid())
+  userId    String?
+  sessionId String?
 
   // Event details
-  event      String       // "plan_generated", "task_completed", etc.
+  event      String // "plan_generated", "task_completed", etc.
   properties Json?
 
   // Context
-  platform   String?      // "ios" | "android" | "web"
+  platform   String? // "ios" | "android" | "web"
   appVersion String?
   userTier   String?
 
   // Timestamp
-  timestamp  DateTime     @default(now())
+  timestamp DateTime @default(now())
 
   @@index([userId])
   @@index([event])
@@ -611,27 +611,27 @@ model AnalyticsEvent {
 }
 
 model LLMUsage {
-  id             String       @id @default(cuid())
-  userId         String?
-  planId         String?
+  id     String  @id @default(cuid())
+  userId String?
+  planId String?
 
   // LLM details
-  model          String       // "gpt-4o-mini" | "gpt-4o"
-  operation      String       // "plan_generation" | "chat"
+  model     String // "gpt-4o-mini" | "gpt-4o"
+  operation String // "plan_generation" | "chat"
 
   // Token usage
-  inputTokens    Int
-  outputTokens   Int
-  totalTokens    Int
-  cost           Float        // USD cents
+  inputTokens  Int
+  outputTokens Int
+  totalTokens  Int
+  cost         Float // USD cents
 
   // Performance
-  latency        Float        // seconds
-  success        Boolean      @default(true)
-  errorMessage   String?
+  latency      Float // seconds
+  success      Boolean @default(true)
+  errorMessage String?
 
   // Timestamp
-  timestamp      DateTime     @default(now())
+  timestamp DateTime @default(now())
 
   @@index([userId])
   @@index([model])
@@ -643,22 +643,22 @@ model LLMUsage {
 // ============================================
 
 model Referral {
-  id          String       @id @default(cuid())
-  referrerId  String
-  referrer    User         @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
-  referredId  String
-  referred    User         @relation("ReferredBy", fields: [referredId], references: [id], onDelete: Cascade)
+  id         String @id @default(cuid())
+  referrerId String
+  referrer   User   @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredId String
+  referred   User   @relation("ReferredBy", fields: [referredId], references: [id], onDelete: Cascade)
 
   // Status
-  status      ReferralStatus @default(PENDING)
-  rewardGranted Boolean    @default(false)
+  status        ReferralStatus @default(PENDING)
+  rewardGranted Boolean        @default(false)
 
   // Metadata
   referralCode String?
-  source      String?      // "link" | "email" | "social"
+  source       String? // "link" | "email" | "social"
 
   // Timestamps
-  createdAt   DateTime     @default(now())
+  createdAt   DateTime  @default(now())
   completedAt DateTime?
 
   @@unique([referrerId, referredId])
@@ -668,9 +668,9 @@ model Referral {
 }
 
 enum ReferralStatus {
-  PENDING    // Signed up, not subscribed yet
-  ACTIVE     // Subscribed, both users get reward
-  EXPIRED    // Never subscribed
+  PENDING // Signed up, not subscribed yet
+  ACTIVE // Subscribed, both users get reward
+  EXPIRED // Never subscribed
 }
 
 // ============================================
@@ -678,36 +678,36 @@ enum ReferralStatus {
 // ============================================
 
 model InviteCode {
-  id         String       @id @default(cuid())
-  code       String       @unique
-  maxUses    Int          @default(1)
-  usedCount  Int          @default(0)
-  createdBy  String?      // Admin user ID or null for system
-  expiresAt  DateTime?
+  id        String    @id @default(cuid())
+  code      String    @unique
+  maxUses   Int       @default(1)
+  usedCount Int       @default(0)
+  createdBy String? // Admin user ID or null for system
+  expiresAt DateTime?
 
   // Metadata
-  source     String?      // "beta" | "referral" | "influencer"
-  notes      String?
+  source String? // "beta" | "referral" | "influencer"
+  notes  String?
 
   // Timestamps
-  createdAt  DateTime     @default(now())
+  createdAt DateTime @default(now())
 
   @@index([code])
   @@index([expiresAt])
 }
 
 model SystemConfig {
-  id        String       @id @default(cuid())
-  key       String       @unique
-  value     Json
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
 
   // Metadata
   description String?
-  updatedBy String?
+  updatedBy   String?
 
   // Timestamps
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([key])
 }
@@ -718,19 +718,19 @@ model SystemConfig {
 
 // Team Workspace (PREMIUM tier)
 model Team {
-  id          String         @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
   description String?
   ownerId     String
-  owner       User           @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User    @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
   // Team plan
-  plan        String         @default("premium") // "premium" | "enterprise"
-  maxMembers  Int            @default(10)
-  logoUrl     String?
+  plan       String  @default("premium") // "premium" | "enterprise"
+  maxMembers Int     @default(10)
+  logoUrl    String?
 
   // Settings
-  settings    Json           // TeamSettings object
+  settings Json // TeamSettings object
 
   // Relations
   members     TeamMember[]
@@ -738,27 +738,27 @@ model Team {
   goals       Goal[]
 
   // Timestamps
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ownerId])
   @@index([plan])
 }
 
 model TeamMember {
-  id        String   @id @default(cuid())
-  teamId    String
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Member details
-  role      String   @default("member") // "owner" | "admin" | "member" | "viewer"
-  status    String   @default("active") // "active" | "invited" | "suspended"
+  role      String  @default("member") // "owner" | "admin" | "member" | "viewer"
+  status    String  @default("active") // "active" | "invited" | "suspended"
   invitedBy String?
 
   // Timestamps
-  joinedAt  DateTime @default(now())
+  joinedAt DateTime @default(now())
 
   @@unique([teamId, userId])
   @@index([teamId])
@@ -779,7 +779,7 @@ model TeamInvitation {
   acceptedAt DateTime?
 
   // Timestamps
-  createdAt  DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@index([teamId])
   @@index([email])
@@ -789,30 +789,32 @@ model TeamInvitation {
 
 // API Access (PREMIUM tier)
 model ApiKey {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Key details
-  name        String
-  key         String    @unique // Hashed
-  keyPrefix   String    // First 8 chars for display
+  name      String
+  key       String @unique // Hashed
+  keyPrefix String // First 8 chars for display
 
   // Permissions
-  scopes      String[]  // Array of ApiScope
-  rateLimit   Int       @default(1000) // Requests per hour
+  scopes    String[] // Array of ApiScope
+  rateLimit Int      @default(1000) // Requests per hour
 
   // Usage tracking
-  usageCount  Int       @default(0)
-  lastUsedAt  DateTime?
+  usageCount       Int       @default(0)
+  lastUsedAt       DateTime?
+  usageWindowStart DateTime  @default(now())
+  usageWindowCount Int       @default(0)
 
   // Status
-  isActive    Boolean   @default(true)
-  expiresAt   DateTime?
+  isActive  Boolean   @default(true)
+  expiresAt DateTime?
 
   // Timestamps
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([key])
@@ -827,43 +829,43 @@ model ApiKey {
 
 // Scheduling Link (Calendly-like)
 model SchedulingLink {
-  id                    String    @id @default(cuid())
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Link details
-  name                  String
-  slug                  String    @unique
-  description           String?
-  duration              Int       // Minutes
-  bufferBefore          Int       @default(0)
-  bufferAfter           Int       @default(0)
-  meetingType           String    @default("one-on-one")
-  location              String?
-  color                 String    @default("#3B82F6")
+  name         String
+  slug         String  @unique
+  description  String?
+  duration     Int // Minutes
+  bufferBefore Int     @default(0)
+  bufferAfter  Int     @default(0)
+  meetingType  String  @default("one-on-one")
+  location     String?
+  color        String  @default("#3B82F6")
 
   // Settings
-  isActive              Boolean   @default(true)
-  isPublic              Boolean   @default(true)
-  requiresConfirmation  Boolean   @default(false)
-  maxBookingsPerDay     Int?
-  noticeTime            Int       @default(24) // Hours
+  isActive             Boolean @default(true)
+  isPublic             Boolean @default(true)
+  requiresConfirmation Boolean @default(false)
+  maxBookingsPerDay    Int?
+  noticeTime           Int     @default(24) // Hours
 
   // Availability & customization
-  availability          Json      // AvailabilitySettings
-  customQuestions       Json      @default("[]")
-  redirectUrl           String?
-  confirmationMessage   String?
+  availability        Json // AvailabilitySettings
+  customQuestions     Json    @default("[]")
+  redirectUrl         String?
+  confirmationMessage String?
 
   // Stats
-  bookingCount          Int       @default(0)
+  bookingCount Int @default(0)
 
   // Relations
-  bookings              Booking[]
+  bookings Booking[]
 
   // Timestamps
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([slug])
@@ -873,36 +875,36 @@ model SchedulingLink {
 
 // Booking
 model Booking {
-  id                String         @id @default(cuid())
-  linkId            String
-  link              SchedulingLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  id     String         @id @default(cuid())
+  linkId String
+  link   SchedulingLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
 
   // Attendee details
-  attendeeName      String
-  attendeeEmail     String
-  attendeePhone     String?
+  attendeeName  String
+  attendeeEmail String
+  attendeePhone String?
 
   // Booking time
-  startTime         DateTime
-  endTime           DateTime
-  timezone          String
+  startTime DateTime
+  endTime   DateTime
+  timezone  String
 
   // Status
-  status            String         @default("pending") // "pending" | "confirmed" | "canceled" | "completed"
-  canceledAt        DateTime?
-  cancelReason      String?
+  status       String    @default("pending") // "pending" | "confirmed" | "canceled" | "completed"
+  canceledAt   DateTime?
+  cancelReason String?
 
   // Custom responses
-  customResponses   Json           @default("{}")
+  customResponses Json @default("{}")
 
   // Meeting details
-  meetingUrl        String?
-  calendarEventId   String?
-  reminderSent      Boolean        @default(false)
+  meetingUrl      String?
+  calendarEventId String?
+  reminderSent    Boolean @default(false)
 
   // Timestamps
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([linkId])
   @@index([attendeeEmail])
@@ -917,48 +919,48 @@ model Booking {
 // stored as AUTO_APPLIED (an audit log), SUGGEST runs as PENDING until the user
 // applies or dismisses them.
 model AutopilotProposal {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  date       DateTime  // the day (start-of-day) that was rescheduled
-  mode       String    // AUTO | SUGGEST
-  status     String    @default("PENDING") // PENDING | APPLIED | DISMISSED | AUTO_APPLIED
-  trigger    String?   // calendar_change | manual | daily_cron
-  summary    String
-  moves      Json      // [{ taskId, title, fromDate, fromStart, toDate, toStart, toEnd, reason }]
+  date    DateTime // the day (start-of-day) that was rescheduled
+  mode    String // AUTO | SUGGEST
+  status  String   @default("PENDING") // PENDING | APPLIED | DISMISSED | AUTO_APPLIED
+  trigger String? // calendar_change | manual | daily_cron
+  summary String
+  moves   Json // [{ taskId, title, fromDate, fromStart, toDate, toStart, toEnd, reason }]
 
-  createdAt  DateTime  @default(now())
-  appliedAt  DateTime?
+  createdAt DateTime  @default(now())
+  appliedAt DateTime?
 
   @@index([userId, status])
   @@index([userId, createdAt])
 }
 
 model Integration {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Integration details
-  type          String   // slack, zoom, google-meet, notion, linear, github
-  name          String
-  isActive      Boolean  @default(true)
+  type     String // slack, zoom, google-meet, notion, linear, github
+  name     String
+  isActive Boolean @default(true)
 
   // Configuration
-  config        Json     @default("{}") // Type-specific configuration
-  credentials   Json     @default("{}") // Encrypted OAuth tokens
-  metadata      Json     @default("{}") // Additional data
+  config      Json @default("{}") // Type-specific configuration
+  credentials Json @default("{}") // Encrypted OAuth tokens
+  metadata    Json @default("{}") // Additional data
 
   // Sync tracking
-  lastSyncAt    DateTime?
+  lastSyncAt DateTime?
 
   // Tasks imported from this integration (PM tools)
   importedTasks Task[]
 
   // Timestamps
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([type])
@@ -967,25 +969,25 @@ model Integration {
 
 // Webhooks for external event notifications
 model Webhook {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Webhook details
-  url             String
-  events          String[] // Array of event types
-  secret          String   // For signature verification
-  isActive        Boolean  @default(true)
+  url      String
+  events   String[] // Array of event types
+  secret   String // For signature verification
+  isActive Boolean  @default(true)
 
   // Delivery tracking
   lastTriggeredAt DateTime?
-  failureCount    Int      @default(0)
+  failureCount    Int       @default(0)
 
   // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  deliveries      WebhookDelivery[]
+  deliveries WebhookDelivery[]
 
   @@index([userId])
   @@index([isActive])
@@ -993,24 +995,24 @@ model Webhook {
 
 // Webhook delivery log
 model WebhookDelivery {
-  id            String   @id @default(cuid())
-  webhookId     String
-  webhook       Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  webhookId String
+  webhook   Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
   // Delivery details
-  event         String
-  payload       Json
-  status        String   // pending, success, failed
-  statusCode    Int?
-  responseBody  String?
-  error         String?
+  event        String
+  payload      Json
+  status       String // pending, success, failed
+  statusCode   Int?
+  responseBody String?
+  error        String?
 
   // Retry tracking
-  attempts      Int      @default(0)
+  attempts      Int       @default(0)
   lastAttemptAt DateTime?
 
   // Timestamps
-  createdAt     DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([webhookId])
   @@index([status])
@@ -1021,55 +1023,55 @@ model WebhookDelivery {
 
 // Work hours configuration
 model WorkHours {
-  id                      String   @id @default(cuid())
-  userId                  String   @unique
-  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  timezone                String   @default("UTC")
+  timezone String @default("UTC")
 
   // Weekly schedule (stored as JSON for flexibility)
-  schedule                Json     // { monday: {...}, tuesday: {...}, etc. }
+  schedule Json // { monday: {...}, tuesday: {...}, etc. }
 
   // Work-life balance rules
-  enforceWorkHours        Boolean  @default(true)
-  maxMeetingsPerDay       Int?
-  maxMeetingHoursPerDay   Int?
-  maxConsecutiveMeetings  Int?
+  enforceWorkHours       Boolean @default(true)
+  maxMeetingsPerDay      Int?
+  maxMeetingHoursPerDay  Int?
+  maxConsecutiveMeetings Int?
 
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 // Focus time blocks
 model FocusTimeBlock {
-  id                  String   @id @default(cuid())
-  userId              String
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title               String
-  frequency           String   // daily, weekdays, weekly, custom
-  daysOfWeek          Int[]    // [1,2,3,4,5] for weekdays
-  startTime           String?  // "09:00" or null if autoSchedule
-  durationMinutes     Int
+  title           String
+  frequency       String // daily, weekdays, weekly, custom
+  daysOfWeek      Int[] // [1,2,3,4,5] for weekdays
+  startTime       String? // "09:00" or null if autoSchedule
+  durationMinutes Int
 
-  priority            Int      @default(5)
-  protected           Boolean  @default(true)
-  isActive            Boolean  @default(true)
-  autoSchedule        Boolean  @default(false)
-  preferredTimeSlots  String[] @default([])
+  priority           Int      @default(5)
+  protected          Boolean  @default(true)
+  isActive           Boolean  @default(true)
+  autoSchedule       Boolean  @default(false)
+  preferredTimeSlots String[] @default([])
 
-  color               String   @default("#3B82F6")
+  color String @default("#3B82F6")
 
   // Calendar sync (recurring "🎯 Focus Time" event)
-  calendarEventId     String?
-  calendarProvider    String?  // "google" | "outlook"
-  calendarSyncSig     String?  // hash of synced fields, to detect changes
-  calendarSyncedAt    DateTime?
+  calendarEventId  String?
+  calendarProvider String? // "google" | "outlook"
+  calendarSyncSig  String? // hash of synced fields, to detect changes
+  calendarSyncedAt DateTime?
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([isActive])
@@ -1077,17 +1079,17 @@ model FocusTimeBlock {
 
 // Guided daily planning ritual — cross-device intention/reflection + done flag.
 model DailyRitual {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   date          DateTime // start-of-day
   intention     String?
   reflection    String?
   planCompleted Boolean  @default(false)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, date])
   @@index([userId])
@@ -1096,28 +1098,28 @@ model DailyRitual {
 // Flexible recurring habits (Reclaim-style). Placed into a free slot within a
 // preferred window each day and written to the calendar; move around meetings.
 model Habit {
-  id                   String    @id @default(cuid())
-  userId               String
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   title                String
-  daysOfWeek           Int[]     @default([]) // 0=Sun..6=Sat
-  preferredWindowStart String    // "11:30"
-  preferredWindowEnd   String    // "13:30"
+  daysOfWeek           Int[]   @default([]) // 0=Sun..6=Sat
+  preferredWindowStart String // "11:30"
+  preferredWindowEnd   String // "13:30"
   durationMinutes      Int
-  priority             Int       @default(5)
-  flexible             Boolean   @default(true) // false = fixed at window start
-  isActive             Boolean   @default(true)
-  color                String    @default("#8B5CF6")
+  priority             Int     @default(5)
+  flexible             Boolean @default(true) // false = fixed at window start
+  isActive             Boolean @default(true)
+  color                String  @default("#8B5CF6")
 
   // Calendar sync (current placement)
-  calendarEventId      String?
-  calendarProvider     String?
-  calendarSyncSig      String?
-  calendarSyncedAt     DateTime?
+  calendarEventId  String?
+  calendarProvider String?
+  calendarSyncSig  String?
+  calendarSyncedAt DateTime?
 
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([isActive])
@@ -1125,16 +1127,16 @@ model Habit {
 
 // No-meeting days
 model NoMeetingDay {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  dayOfWeek       Int      // 0=Sunday, 1=Monday, etc.
-  isActive        Boolean  @default(true)
-  allowExceptions Boolean  @default(false)
+  dayOfWeek       Int // 0=Sunday, 1=Monday, etc.
+  isActive        Boolean @default(true)
+  allowExceptions Boolean @default(false)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, dayOfWeek])
   @@index([userId])
@@ -1142,18 +1144,18 @@ model NoMeetingDay {
 
 // Calendar-defense action log (what the executor did and why)
 model CalendarDefenseLog {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   eventId    String
-  provider   String   // google | outlook
-  action     String   // auto_decline | notify_only | mark_busy
+  provider   String // google | outlook
+  action     String // auto_decline | notify_only | mark_busy
   eventTitle String
   eventStart DateTime
   reason     String
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([userId, eventId, action])
   @@index([userId, createdAt])
@@ -1161,69 +1163,69 @@ model CalendarDefenseLog {
 
 // Priority hours
 model PriorityHours {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  timeSlots             Json     // Array of { dayOfWeek, startTime, endTime, priority }
-  prioritizeFocusTime   Boolean  @default(true)
-  prioritizeTasks       Boolean  @default(true)
-  deprioritizeMeetings  Boolean  @default(true)
+  timeSlots            Json // Array of { dayOfWeek, startTime, endTime, priority }
+  prioritizeFocusTime  Boolean @default(true)
+  prioritizeTasks      Boolean @default(true)
+  deprioritizeMeetings Boolean @default(true)
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 // Calendar defense rules
 model CalendarDefense {
-  id                            String   @id @default(cuid())
-  userId                        String   @unique
-  user                          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  autoAcceptDuringOpenHours     Boolean  @default(false)
-  autoDeclineDuringFocusTime    Boolean  @default(true)
-  autoDeclineOutsideWorkHours   Boolean  @default(true)
-  autoDeclineDoubleBookings     Boolean  @default(true)
+  autoAcceptDuringOpenHours   Boolean @default(false)
+  autoDeclineDuringFocusTime  Boolean @default(true)
+  autoDeclineOutsideWorkHours Boolean @default(true)
+  autoDeclineDoubleBookings   Boolean @default(true)
 
-  requireMinimumNotice          Boolean  @default(true)
-  minimumNoticeHours            Int      @default(24)
+  requireMinimumNotice Boolean @default(true)
+  minimumNoticeHours   Int     @default(24)
 
-  requireBufferBetweenMeetings  Boolean  @default(true)
-  bufferMinutes                 Int      @default(15)
+  requireBufferBetweenMeetings Boolean @default(true)
+  bufferMinutes                Int     @default(15)
 
-  suggestShorterMeetings        Boolean  @default(true)
-  defaultMeetingDuration        Int      @default(30)
+  suggestShorterMeetings Boolean @default(true)
+  defaultMeetingDuration Int     @default(30)
 
-  createdAt                     DateTime @default(now())
-  updatedAt                     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 // Smart 1:1 scheduling
 model Smart1on1 {
-  id                      String    @id @default(cuid())
-  userId                  String
-  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  personName              String
-  personEmail             String
-  frequency               String    // weekly, biweekly, monthly
-  durationMinutes         Int       @default(30)
+  personName      String
+  personEmail     String
+  frequency       String // weekly, biweekly, monthly
+  durationMinutes Int    @default(30)
 
-  autoSchedule            Boolean   @default(true)
+  autoSchedule             Boolean  @default(true)
   autoRescheduleOnConflict Boolean  @default(true)
-  preferredDays           Int[]     @default([])
-  preferredTimes          String[]  @default([])
+  preferredDays            Int[]    @default([])
+  preferredTimes           String[] @default([])
 
-  isActive                Boolean   @default(true)
-  lastScheduledDate       DateTime?
-  nextScheduledDate       DateTime?
+  isActive          Boolean   @default(true)
+  lastScheduledDate DateTime?
+  nextScheduledDate DateTime?
 
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([isActive])
@@ -1231,16 +1233,16 @@ model Smart1on1 {
 
 // Travel time entries
 model TravelTime {
-  id                String   @id @default(cuid())
-  userId            String
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  fromEventId       String
-  toEventId         String
-  estimatedMinutes  Int
-  method            String   // driving, walking, transit, auto
+  fromEventId      String
+  toEventId        String
+  estimatedMinutes Int
+  method           String // driving, walking, transit, auto
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([fromEventId])
@@ -1249,20 +1251,20 @@ model TravelTime {
 
 // Kanban boards
 model KanbanBoard {
-  id          String         @id @default(cuid())
-  userId      String
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectId   String?
-  project     Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   name        String
   description String?
-  isDefault   Boolean        @default(false)
+  isDefault   Boolean @default(false)
 
-  columns     KanbanColumn[]
+  columns KanbanColumn[]
 
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([projectId])
@@ -1270,40 +1272,40 @@ model KanbanBoard {
 
 // Kanban columns
 model KanbanColumn {
-  id       String      @id @default(cuid())
-  boardId  String
-  board    KanbanBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  id      String      @id @default(cuid())
+  boardId String
+  board   KanbanBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
-  name     String
-  order    Int
-  color    String      @default("#3B82F6")
-  taskIds  String[]    @default([])
+  name    String
+  order   Int
+  color   String   @default("#3B82F6")
+  taskIds String[] @default([])
 
   @@index([boardId])
 }
 
 // Productivity scores (daily)
 model ProductivityScore {
-  id                      String   @id @default(cuid())
-  userId                  String
-  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date                    DateTime
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date   DateTime
 
-  overallScore            Int      // 0-100
-  focusTimeScore          Int
-  taskCompletionScore     Int
-  meetingEfficiencyScore  Int
-  workLifeBalanceScore    Int
+  overallScore           Int // 0-100
+  focusTimeScore         Int
+  taskCompletionScore    Int
+  meetingEfficiencyScore Int
+  workLifeBalanceScore   Int
 
-  totalFocusMinutes       Int
-  totalMeetingMinutes     Int
-  totalTaskMinutes        Int
-  totalBreakMinutes       Int
+  totalFocusMinutes   Int
+  totalMeetingMinutes Int
+  totalTaskMinutes    Int
+  totalBreakMinutes   Int
 
-  insights                String[]
-  recommendations         String[]
+  insights        String[]
+  recommendations String[]
 
-  createdAt               DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([userId, date])
   @@index([userId])
@@ -1312,18 +1314,18 @@ model ProductivityScore {
 
 // Smart notifications
 model SmartNotification {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  type       String   // NotificationType enum
-  title      String
-  message    String
-  priority   String   @default("medium") // low, medium, high, urgent
-  actionUrl  String?
-  isRead     Boolean  @default(false)
+  type      String // NotificationType enum
+  title     String
+  message   String
+  priority  String  @default("medium") // low, medium, high, urgent
+  actionUrl String?
+  isRead    Boolean @default(false)
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([isRead])
@@ -1332,26 +1334,26 @@ model SmartNotification {
 
 // Notification preferences
 model NotificationPreferences {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  emailEnabled          Boolean  @default(true)
-  pushEnabled           Boolean  @default(true)
-  smsEnabled            Boolean  @default(false)
+  emailEnabled Boolean @default(true)
+  pushEnabled  Boolean @default(true)
+  smsEnabled   Boolean @default(false)
 
-  overbookedAlerts      Boolean  @default(true)
-  breakReminders        Boolean  @default(true)
-  focusTimeAlerts       Boolean  @default(true)
-  upcomingMeetingAlerts Boolean  @default(true)
-  taskDueAlerts         Boolean  @default(true)
-  weeklySummary         Boolean  @default(true)
+  overbookedAlerts      Boolean @default(true)
+  breakReminders        Boolean @default(true)
+  focusTimeAlerts       Boolean @default(true)
+  upcomingMeetingAlerts Boolean @default(true)
+  taskDueAlerts         Boolean @default(true)
+  weeklySummary         Boolean @default(true)
 
-  quietHoursStart       String   @default("22:00")
-  quietHoursEnd         String   @default("08:00")
+  quietHoursStart String @default("22:00")
+  quietHoursEnd   String @default("08:00")
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }

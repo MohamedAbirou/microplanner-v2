@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PageLoader } from '@/components/ui/page-loader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAppGoals } from '@/contexts/goals-context';
 import { useGoalsList, usePlansSummary, useTasksList } from '@/hooks/use-graphql';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -53,14 +52,12 @@ export default function SearchPage() {
 
     const filteredGoals = goals.filter(
       (goal: any) =>
-        goal.title?.toLowerCase().includes(query) ||
-        goal.description?.toLowerCase().includes(query)
+        goal.title?.toLowerCase().includes(query) || goal.description?.toLowerCase().includes(query)
     );
 
     const filteredPlans = plans.filter(
       (plan: any) =>
-        plan.title?.toLowerCase().includes(query) ||
-        plan.description?.toLowerCase().includes(query)
+        plan.title?.toLowerCase().includes(query) || plan.description?.toLowerCase().includes(query)
     );
 
     return {
@@ -71,19 +68,17 @@ export default function SearchPage() {
   }, [searchQuery, tasks, goals, plans]);
 
   const totalResults =
-    filteredResults.tasks.length +
-    filteredResults.goals.length +
-    filteredResults.plans.length;
+    filteredResults.tasks.length + filteredResults.goals.length + filteredResults.plans.length;
 
-  const handleTaskClick = (taskId: string) => {
+  const handleTaskClick = (_taskId: string) => {
     router.push(`/today`); // Navigate to today view (task will be there)
   };
 
-  const handleGoalClick = (goalId: string) => {
+  const handleGoalClick = (_goalId: string) => {
     router.push(`/goals`);
   };
 
-  const handlePlanClick = (planId: string) => {
+  const handlePlanClick = (_planId: string) => {
     router.push(`/plans`);
   };
 
@@ -97,7 +92,9 @@ export default function SearchPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Search</h1>
-        <p className="text-[13px] text-muted-foreground mt-1">Search across all your tasks, goals, and plans</p>
+        <p className="text-[13px] text-muted-foreground mt-1">
+          Search across all your tasks, goals, and plans
+        </p>
       </div>
 
       {/* Search Input */}
@@ -108,7 +105,7 @@ export default function SearchPage() {
           type="text"
           placeholder="Search for tasks, goals, plans..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
           className="pl-10 pr-10 h-12 text-base"
         />
         {searchQuery && (
@@ -121,9 +118,7 @@ export default function SearchPage() {
         )}
       </div>
 
-      {loading && searchQuery && (
-        <PageLoader label="search" variant="section" skeletonRows={3} />
-      )}
+      {loading && searchQuery && <PageLoader label="search" variant="section" skeletonRows={3} />}
 
       {!loading && searchQuery && (
         <>
@@ -137,9 +132,7 @@ export default function SearchPage() {
           {/* Search Results Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
-              <TabsTrigger value="all">
-                All ({totalResults})
-              </TabsTrigger>
+              <TabsTrigger value="all">All ({totalResults})</TabsTrigger>
               <TabsTrigger value="tasks">
                 <Clock className="mr-2 h-4 w-4" />
                 Tasks ({filteredResults.tasks.length})
@@ -175,16 +168,16 @@ export default function SearchPage() {
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex-1">
-                                <div className={cn(
-                                  "font-medium",
-                                  task.isCompleted && "line-through text-muted-foreground"
-                                )}>
+                                <div
+                                  className={cn(
+                                    'font-medium',
+                                    task.isCompleted && 'line-through text-muted-foreground'
+                                  )}
+                                >
                                   {task.title}
                                 </div>
                                 {task.notes && (
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {task.notes}
-                                  </p>
+                                  <p className="text-sm text-muted-foreground mt-1">{task.notes}</p>
                                 )}
                                 {task.scheduledDate && (
                                   <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
@@ -225,12 +218,12 @@ export default function SearchPage() {
                               <div className="flex-1">
                                 <div className="font-medium">{goal.title}</div>
                                 {goal.description && (
-                                  <p className="text-sm text-muted-foreground">{goal.description}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {goal.description}
+                                  </p>
                                 )}
                               </div>
-                              {goal.isActive && (
-                                <Badge>Active</Badge>
-                              )}
+                              {goal.isActive && <Badge>Active</Badge>}
                             </div>
                           </CardContent>
                         </Card>
@@ -261,9 +254,7 @@ export default function SearchPage() {
                                 )}
                                 <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                                   {plan.weekStart && (
-                                    <span>
-                                      Week of {format(new Date(plan.weekStart), 'MMM d')}
-                                    </span>
+                                    <span>Week of {format(new Date(plan.weekStart), 'MMM d')}</span>
                                   )}
                                   {plan.qualityScore && (
                                     <span>Quality: {plan.qualityScore}/100</span>
@@ -271,7 +262,13 @@ export default function SearchPage() {
                                 </div>
                               </div>
                               {plan.status && (
-                                <Badge variant={plan.status === 'ACCEPTED' || plan.status === 'APPLIED' ? 'default' : 'secondary'}>
+                                <Badge
+                                  variant={
+                                    plan.status === 'ACCEPTED' || plan.status === 'APPLIED'
+                                      ? 'default'
+                                      : 'secondary'
+                                  }
+                                >
                                   {plan.status}
                                 </Badge>
                               )}
@@ -299,16 +296,16 @@ export default function SearchPage() {
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className={cn(
-                            "font-medium",
-                            task.isCompleted && "line-through text-muted-foreground"
-                          )}>
+                          <div
+                            className={cn(
+                              'font-medium',
+                              task.isCompleted && 'line-through text-muted-foreground'
+                            )}
+                          >
                             {task.title}
                           </div>
                           {task.notes && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {task.notes}
-                            </p>
+                            <p className="text-sm text-muted-foreground mt-1">{task.notes}</p>
                           )}
                           {task.scheduledDate && (
                             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
@@ -351,9 +348,7 @@ export default function SearchPage() {
                             <p className="text-sm text-muted-foreground">{goal.description}</p>
                           )}
                         </div>
-                        {goal.isActive && (
-                          <Badge>Active</Badge>
-                        )}
+                        {goal.isActive && <Badge>Active</Badge>}
                       </div>
                     </CardContent>
                   </Card>
@@ -377,23 +372,23 @@ export default function SearchPage() {
                         <div className="flex-1">
                           <div className="font-medium">{plan.title || 'Weekly Plan'}</div>
                           {plan.description && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {plan.description}
-                            </p>
+                            <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
                           )}
                           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                             {plan.weekStart && (
-                              <span>
-                                Week of {format(new Date(plan.weekStart), 'MMM d')}
-                              </span>
+                              <span>Week of {format(new Date(plan.weekStart), 'MMM d')}</span>
                             )}
-                            {plan.qualityScore && (
-                              <span>Quality: {plan.qualityScore}/100</span>
-                            )}
+                            {plan.qualityScore && <span>Quality: {plan.qualityScore}/100</span>}
                           </div>
                         </div>
                         {plan.status && (
-                          <Badge variant={plan.status === 'ACCEPTED' || plan.status === 'APPLIED' ? 'default' : 'secondary'}>
+                          <Badge
+                            variant={
+                              plan.status === 'ACCEPTED' || plan.status === 'APPLIED'
+                                ? 'default'
+                                : 'secondary'
+                            }
+                          >
                             {plan.status}
                           </Badge>
                         )}
@@ -411,7 +406,9 @@ export default function SearchPage() {
       {!searchQuery && !loading && (
         <div className="flex flex-col items-center justify-center py-16 text-center rounded-[14px] border border-border bg-accent">
           <Search className="h-12 w-12 text-accent-foreground/60 mb-4" />
-          <p className="text-[13px] text-muted-foreground">Start typing to search across your tasks, goals, and plans</p>
+          <p className="text-[13px] text-muted-foreground">
+            Start typing to search across your tasks, goals, and plans
+          </p>
         </div>
       )}
     </div>

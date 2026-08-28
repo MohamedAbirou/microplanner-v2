@@ -5,6 +5,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  TooManyRequestsException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
@@ -420,14 +421,31 @@ export class PremiumService {
     const goal = await this.prisma.goal.findFirst({ where: { id: goalId, userId } });
     if (!goal) throw new NotFoundException('Goal not found');
     if (teamId) {
-      const membership = await this.prisma.teamMember.findFirst({ where: { teamId, userId } });
-      if (!membership) throw new ForbiddenException('You are not a member of this team');
-    }
-    return this.prisma.goal.update({ where: { id: goalId }, data: { teamId } });
-  }
-
-  /**
-   * Update team (owner/admin only)
+        const now = new Date();
+        const windowExpired = now.getTime() - key.usageWindowStart.getTime() >= 60 * 60 * 1000;
+        if (windowExpired) {
+          await this.prisma.apiKey.update({
+            where: { id: key.id },
+            data: {
+              usageCount: { increment: 1 },
+              usageWindowStart: now,
+              usageWindowCount: 1,
+              lastUsedAt: now,
+            },
+          });
+        } else {
+          const updated = await this.prisma.apiKey.updateMany({
+            where: { id: key.id, usageWindowCount: { lt: key.rateLimit } },
+            data: {
+              usageCount: { increment: 1 },
+              usageWindowCount: { increment: 1 },
+              lastUsedAt: now,
+            },
+          });
+          if (updated.count === 0) {
+            throw new TooManyRequestsException('API key rate limit exceeded');
+          }
+        }
    */
   async updateTeam(
     teamId: string,
@@ -592,6 +610,18 @@ export class PremiumService {
     if (userTier !== SubscriptionTier.PREMIUM) {
       throw new ForbiddenException('API access is only available for PREMIUM users');
     }
+    if (!createDto.name?.trim()) {
+      throw new BadRequestException('API key name is required');
+    }
+    if (!Array.isArray(createDto.scopes) || createDto.scopes.length === 0) {
+      throw new BadRequestException('At least one API scope is required');
+    }
+    if (createDto.expiresInDays !== undefined && (!Number.isInteger(createDto.expiresInDays) || createDto.expiresInDays <= 0)) {
+      throw new BadRequestException('expiresInDays must be a positive integer');
+    }
+    if (createDto.rateLimit !== undefined && (!Number.isInteger(createDto.rateLimit) || createDto.rateLimit <= 0)) {
+      throw new BadRequestException('rateLimit must be a positive integer');
+    }
 
     // Generate random API key
     const rawKey = `mp_${crypto.randomBytes(32).toString('hex')}`;
@@ -607,13 +637,17 @@ export class PremiumService {
       expiresAt.setDate(expiresAt.getDate() + createDto.expiresInDays);
     }
 
+    // Validate aliases, but preserve the GraphQL enum names in storage so the
+    // API-key management UI can read them back without enum serialization errors.
+    createDto.scopes.forEach((scope) => this.normalizeApiScope(scope));
+    const scopes = [...new Set(createDto.scopes)];
     const apiKey = await this.prisma.apiKey.create({
       data: {
         userId,
-        name: createDto.name,
+        name: createDto.name.trim(),
         key: hashedKey,
         keyPrefix,
-        scopes: createDto.scopes,
+        scopes,
         rateLimit: createDto.rateLimit || 1000,
         expiresAt,
       },
@@ -626,7 +660,7 @@ export class PremiumService {
       name: apiKey.name,
       key: rawKey, // Only returned on creation
       keyPrefix: apiKey.keyPrefix,
-      scopes: apiKey.scopes as any[],
+      scopes: apiKey.scopes as ApiScope[],
       rateLimit: apiKey.rateLimit,
       expiresAt: apiKey.expiresAt,
       createdAt: apiKey.createdAt,
@@ -722,7 +756,9 @@ export class PremiumService {
     for (const key of keys) {
       // Hash the provided key and compare with stored hash
       const hashedProvidedKey = crypto.createHash('sha256').update(rawKey).digest('hex');
-      const isValid = hashedProvidedKey === key.key;
+      const storedHash = Buffer.from(key.key, 'hex');
+      const providedHash = Buffer.from(hashedProvidedKey, 'hex');
+      const isValid = storedHash.length === providedHash.length && crypto.timingSafeEqual(storedHash, providedHash);
 
       if (isValid) {
         // Update usage
@@ -736,11 +772,29 @@ export class PremiumService {
 
         return {
           userId: key.userId,
-          scopes: key.scopes as ApiScope[],
+            scopes: (key.scopes as string[]).map((scope) => this.normalizeApiScope(scope)),
         };
       }
     }
 
     return null;
+  }
+
+  private normalizeApiScope(scope: string): ApiScope {
+    const aliases: Record<string, ApiScope> = {
+      READ_TASKS: ApiScope.READ_TASKS,
+      WRITE_TASKS: ApiScope.WRITE_TASKS,
+      READ_GOALS: ApiScope.READ_GOALS,
+      WRITE_GOALS: ApiScope.WRITE_GOALS,
+      READ_PLANS: ApiScope.READ_PLANS,
+      WRITE_PLANS: ApiScope.WRITE_PLANS,
+      READ_ANALYTICS: ApiScope.READ_ANALYTICS,
+      WEBHOOKS: ApiScope.MANAGE_WEBHOOKS,
+    };
+    const normalized = aliases[scope] ?? scope;
+    if (!Object.values(ApiScope).includes(normalized as ApiScope)) {
+      throw new BadRequestException(`Unsupported API scope: ${scope}`);
+    }
+    return normalized as ApiScope;
   }
 }

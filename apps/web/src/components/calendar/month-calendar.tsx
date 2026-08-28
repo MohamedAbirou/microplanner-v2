@@ -13,7 +13,7 @@ import {
   addMonths,
   subMonths,
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
@@ -113,9 +113,7 @@ export function MonthCalendar({
         {/* Header with navigation */}
         <div className="flex items-center justify-between mb-4 pb-4 border-b">
           <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold">
-              {format(selectedDate, 'MMMM yyyy')}
-            </h2>
+            <h2 className="text-2xl font-bold">{format(selectedDate, 'MMMM yyyy')}</h2>
             <Button variant="outline" size="sm" onClick={handleToday}>
               Today
             </Button>
@@ -134,7 +132,7 @@ export function MonthCalendar({
         <div className="flex-1 border rounded-lg overflow-hidden">
           {/* Weekday headers */}
           <div className="grid grid-cols-7 bg-muted/50 border-b">
-            {weekDays.map((day) => (
+            {weekDays.map(day => (
               <div
                 key={day}
                 className="p-2 text-center text-sm font-medium text-muted-foreground border-r last:border-r-0"
@@ -174,7 +172,8 @@ export function MonthCalendar({
                     <span
                       className={cn(
                         'text-sm font-medium',
-                        isToday && 'bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center'
+                        isToday &&
+                          'bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center'
                       )}
                     >
                       {format(day, 'd')}
@@ -210,7 +209,7 @@ export function MonthCalendar({
                   {/* First task preview */}
                   {dayTasks.length > 0 && isCurrentMonth && (
                     <div className="space-y-1">
-                      {dayTasks.slice(0, 2).map((task) => (
+                      {dayTasks.slice(0, 2).map(task => (
                         <div
                           key={task.id}
                           className={cn(
@@ -246,7 +245,7 @@ export function MonthCalendar({
             Tasks for {format(new Date(selectedDayTasks[0].scheduledDate), 'MMM d, yyyy')}
           </h3>
           <div className="space-y-2">
-            {selectedDayTasks.map((task) => (
+            {selectedDayTasks.map(task => (
               <div
                 key={task.id}
                 className={cn(
@@ -259,16 +258,18 @@ export function MonthCalendar({
                 <div className="flex items-start gap-2">
                   <span className="text-lg">{task.goal?.emoji ?? '📌'}</span>
                   <div className="flex-1 min-w-0">
-                    <div className={cn(
-                      'font-medium text-sm mb-1',
-                      task.isCompleted && 'line-through'
-                    )}>
+                    <div
+                      className={cn('font-medium text-sm mb-1', task.isCompleted && 'line-through')}
+                    >
                       {task.title}
                     </div>
                     <Badge
                       variant="outline"
                       className="text-xs"
-                      style={{ borderColor: task.goal?.color ?? '#94a3b8', color: task.goal?.color ?? '#94a3b8' }}
+                      style={{
+                        borderColor: task.goal?.color ?? '#94a3b8',
+                        color: task.goal?.color ?? '#94a3b8',
+                      }}
                     >
                       {task.goal?.title ?? 'No goal'}
                     </Badge>

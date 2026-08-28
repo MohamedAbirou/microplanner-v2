@@ -1,4 +1,16 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { PlansService } from './plans.service';
@@ -16,8 +28,10 @@ import {
   CreateTemplateDto,
   UpdateTemplateDto,
   QueryTemplatesDto,
-  GenerateFromTemplateDto
+  GenerateFromTemplateDto,
 } from './types/plan-template.types';
+import { RequireApiScope } from '../auth/decorators/api-scope.decorator';
+import { ApiScope } from '../premium/types/premium.types';
 
 @ApiTags('plans')
 @ApiBearerAuth()
@@ -28,17 +42,21 @@ export class PlansController {
   constructor(
     private readonly plansService: PlansService,
     private readonly planAutomationService: PlanAutomationService,
-    private readonly planTemplatesService: PlanTemplatesService,
+    private readonly planTemplatesService: PlanTemplatesService
   ) {}
 
   @Post('generate')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   // AI plan generation is the most expensive route (LLM cost + latency).
   // Cap it hard per user, independent of the tier weekly-plan quota which is
   // enforced separately in the service — this is abuse/burst protection.
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Generate weekly AI plan' })
   @ApiResponse({ status: 201, description: 'Plan generated successfully' })
-  @ApiResponse({ status: 400, description: 'No active goals found or planning service unavailable' })
+  @ApiResponse({
+    status: 400,
+    description: 'No active goals found or planning service unavailable',
+  })
   @ApiResponse({ status: 403, description: 'Weekly plan limit exceeded' })
   @ApiResponse({ status: 429, description: 'Too many plan generation requests' })
   async generate(@CurrentUser() user: User, @Body() generatePlanDto: GeneratePlanDto) {
@@ -57,6 +75,7 @@ export class PlansController {
   }
 
   @Get('current')
+  @RequireApiScope(ApiScope.READ_PLANS)
   @ApiOperation({ summary: 'Get current week plan' })
   @ApiResponse({ status: 200, description: 'Current week plan retrieved' })
   @ApiResponse({ status: 404, description: 'No plan for current week' })
@@ -77,6 +96,7 @@ export class PlansController {
   }
 
   @Post()
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @ApiOperation({ summary: 'Create a plan manually (empty draft, no AI)' })
   @ApiResponse({ status: 201, description: 'Plan created successfully' })
   async create(@CurrentUser() user: User, @Body() createPlanDto: CreatePlanDto) {
@@ -89,6 +109,7 @@ export class PlansController {
   }
 
   @Put(':id')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @ApiOperation({ summary: 'Update plan title/description/status' })
   @ApiResponse({ status: 200, description: 'Plan updated successfully' })
   @ApiResponse({ status: 404, description: 'Plan not found' })
@@ -106,6 +127,7 @@ export class PlansController {
   }
 
   @Get()
+  @RequireApiScope(ApiScope.READ_PLANS)
   @ApiOperation({ summary: 'Get plan history with pagination' })
   @ApiResponse({ status: 200, description: 'Plans retrieved successfully' })
   @ApiQuery({ name: 'page', required: false, type: Number })
@@ -120,6 +142,7 @@ export class PlansController {
   }
 
   @Put(':id/accept')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @ApiOperation({ summary: 'Accept a generated plan' })
   @ApiResponse({ status: 200, description: 'Plan accepted successfully' })
   @ApiResponse({ status: 404, description: 'Plan not found' })
@@ -133,6 +156,7 @@ export class PlansController {
   }
 
   @Post(':id/regenerate')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @ApiOperation({ summary: 'Regenerate plan for same week' })
   @ApiResponse({ status: 201, description: 'Plan regenerated successfully' })
   @ApiResponse({ status: 404, description: 'Original plan not found' })
@@ -152,6 +176,7 @@ export class PlansController {
   }
 
   @Delete(':id')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Archive a plan' })
   @ApiResponse({ status: 204, description: 'Plan archived successfully' })
@@ -231,6 +256,7 @@ export class PlansController {
    * Create a new plan template
    */
   @Post('templates')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @ApiOperation({ summary: 'Create a new plan template (PRO/PREMIUM only)' })
   @ApiResponse({ status: 201, description: 'Template created successfully' })
   @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
@@ -250,13 +276,14 @@ export class PlansController {
    * Create template from existing plan
    */
   @Post(':id/save-as-template')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @ApiOperation({ summary: 'Save plan as template (PRO/PREMIUM only)' })
   @ApiResponse({ status: 201, description: 'Template created from plan' })
   @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
   async saveAsTemplate(
     @CurrentUser() user: User,
     @Param('id') planId: string,
-    @Body() body: { name: string; description?: string },
+    @Body() body: { name: string; description?: string }
   ) {
     this.logger.log(`Saving plan ${planId} as template for user ${user.id}`);
 
@@ -264,7 +291,7 @@ export class PlansController {
       user.id,
       planId,
       body.name,
-      body.description,
+      body.description
     );
 
     return {
@@ -278,6 +305,7 @@ export class PlansController {
    * Get all templates (user's + public)
    */
   @Get('templates')
+  @RequireApiScope(ApiScope.READ_PLANS)
   @ApiOperation({ summary: 'Get all plan templates' })
   @ApiResponse({ status: 200, description: 'Templates retrieved successfully' })
   async getTemplates(@CurrentUser() user: User, @Query() query: QueryTemplatesDto) {
@@ -294,6 +322,7 @@ export class PlansController {
    * Get template statistics
    */
   @Get('templates/stats')
+  @RequireApiScope(ApiScope.READ_PLANS)
   @ApiOperation({ summary: 'Get template statistics' })
   @ApiResponse({ status: 200, description: 'Template statistics retrieved' })
   async getTemplateStats(@CurrentUser() user: User) {
@@ -310,6 +339,7 @@ export class PlansController {
    * Get user's default template
    */
   @Get('templates/default')
+  @RequireApiScope(ApiScope.READ_PLANS)
   @ApiOperation({ summary: 'Get default template' })
   @ApiResponse({ status: 200, description: 'Default template retrieved' })
   async getDefaultTemplate(@CurrentUser() user: User) {
@@ -333,6 +363,7 @@ export class PlansController {
    * Get single template by ID
    */
   @Get('templates/:id')
+  @RequireApiScope(ApiScope.READ_PLANS)
   @ApiOperation({ summary: 'Get template by ID' })
   @ApiResponse({ status: 200, description: 'Template retrieved successfully' })
   async getTemplate(@CurrentUser() user: User, @Param('id') templateId: string) {
@@ -349,13 +380,14 @@ export class PlansController {
    * Update a template
    */
   @Put('templates/:id')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @ApiOperation({ summary: 'Update template' })
   @ApiResponse({ status: 200, description: 'Template updated successfully' })
   @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
   async updateTemplate(
     @CurrentUser() user: User,
     @Param('id') templateId: string,
-    @Body() updateDto: UpdateTemplateDto,
+    @Body() updateDto: UpdateTemplateDto
   ) {
     this.logger.log(`Updating template ${templateId}`);
 
@@ -372,6 +404,7 @@ export class PlansController {
    * Set template as default
    */
   @Put('templates/:id/set-default')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @ApiOperation({ summary: 'Set template as default' })
   @ApiResponse({ status: 200, description: 'Template set as default' })
   @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
@@ -389,6 +422,7 @@ export class PlansController {
    * Delete a template
    */
   @Delete('templates/:id')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete template' })
   @ApiResponse({ status: 204, description: 'Template deleted successfully' })
@@ -403,21 +437,30 @@ export class PlansController {
    * Generate plan from template
    */
   @Post('generate-from-template')
+  @RequireApiScope(ApiScope.WRITE_PLANS)
   @ApiOperation({ summary: 'Generate plan from template (PRO/PREMIUM only)' })
   @ApiResponse({ status: 201, description: 'Plan generated from template successfully' })
   @RequireSubscription([SubscriptionTier.PRO, SubscriptionTier.PREMIUM])
-  async generateFromTemplate(@CurrentUser() user: User, @Body() generateDto: GenerateFromTemplateDto) {
+  async generateFromTemplate(
+    @CurrentUser() user: User,
+    @Body() generateDto: GenerateFromTemplateDto
+  ) {
     this.logger.log(`Generating plan from template ${generateDto.templateId} for user ${user.id}`);
 
     // Generate tasks from template
     const tasks = await this.planTemplatesService.generateTasksFromTemplate(
       generateDto.templateId,
       user.id,
-      generateDto,
+      generateDto
     );
 
     // Create plan with generated tasks (using PlansService to save to database)
-    const plan = await this.plansService.generateFromTemplate(user.id, generateDto.weekStartDate, tasks, user);
+    const plan = await this.plansService.generateFromTemplate(
+      user.id,
+      generateDto.weekStartDate,
+      tasks,
+      user
+    );
 
     return {
       message: 'Plan generated from template successfully',
@@ -432,6 +475,7 @@ export class PlansController {
   // NOTE: keep this LAST — a parameterized GET :id declared earlier would
   // shadow literal routes like GET /plans/templates and GET /plans/current.
   @Get(':id')
+  @RequireApiScope(ApiScope.READ_PLANS)
   @ApiOperation({ summary: 'Get a single plan by ID' })
   @ApiResponse({ status: 200, description: 'Plan retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Plan not found' })

@@ -152,6 +152,7 @@ export enum ApiScope {
   READ_TASKS = 'tasks:read',
   WRITE_TASKS = 'tasks:write',
   READ_ANALYTICS = 'analytics:read',
+  MANAGE_WEBHOOKS = 'webhooks:manage',
   READ_USER = 'user:read',
   WRITE_USER = 'user:write',
   ADMIN = 'admin',

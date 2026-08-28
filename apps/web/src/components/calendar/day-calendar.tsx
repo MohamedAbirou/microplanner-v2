@@ -4,7 +4,6 @@ import * as React from 'react';
 import { format, addDays, subDays, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { calculateCompletionPercentage } from '@/lib/utils';
 import { CalendarTaskBlock } from '@/components/calendar/calendar-task-block';
@@ -40,18 +39,15 @@ export function DayCalendar({
   const [selectedDate, setSelectedDate] = React.useState(currentDate);
 
   const dayTasks = React.useMemo(() => {
-    return organizeCalendarTasks(tasks).filter((task) =>
+    return organizeCalendarTasks(tasks).filter(task =>
       isSameDay(new Date(task.scheduledDate), selectedDate)
     );
   }, [tasks, selectedDate]);
 
-  const completedTasks = dayTasks.filter((t) => t.isCompleted).length;
+  const completedTasks = dayTasks.filter(t => t.isCompleted).length;
   const totalTasks = dayTasks.length;
   const completionPercentage = calculateCompletionPercentage(completedTasks, totalTasks);
-  const totalMinutes = dayTasks.reduce(
-    (acc, t) => acc + getTaskDurationMinutes(t),
-    0
-  );
+  const totalMinutes = dayTasks.reduce((acc, t) => acc + getTaskDurationMinutes(t), 0);
 
   const handlePreviousDay = () => {
     const newDate = subDays(selectedDate, 1);
@@ -119,7 +115,7 @@ export function DayCalendar({
       <div className="flex-1 overflow-auto rounded-[14px] border border-border shadow-[var(--sh-sm)]">
         <div className="flex">
           <div className="w-20 border-r border-border bg-muted/50 sticky left-0 z-10">
-            {CALENDAR_HOURS.map((hour) => (
+            {CALENDAR_HOURS.map(hour => (
               <div
                 key={hour}
                 className="px-2 py-2 font-mono text-xs text-muted-foreground border-b border-border text-right"
@@ -134,7 +130,7 @@ export function DayCalendar({
             className="flex-1 relative min-w-[400px]"
             style={{ height: CALENDAR_GRID_HEIGHT_PX }}
           >
-            {CALENDAR_HOURS.map((hour) => (
+            {CALENDAR_HOURS.map(hour => (
               <div
                 key={hour}
                 className="border-b border-border absolute w-full"
@@ -155,7 +151,7 @@ export function DayCalendar({
             ))}
 
             <div className="absolute inset-0 pointer-events-none px-2 z-10">
-              {dayTasks.map((task) => {
+              {dayTasks.map(task => {
                 const heightPx = getTaskHeightPx(getTaskDurationMinutes(task));
                 const topPx = getTaskTopPx(task.startTime);
 
@@ -165,11 +161,7 @@ export function DayCalendar({
                     className="absolute left-2 right-2 pointer-events-auto"
                     style={{ top: topPx, height: heightPx }}
                   >
-                    <CalendarTaskBlock
-                      task={task}
-                      heightPx={heightPx}
-                      onClick={onTaskClick}
-                    />
+                    <CalendarTaskBlock task={task} heightPx={heightPx} onClick={onTaskClick} />
                   </div>
                 );
               })}
@@ -204,9 +196,7 @@ export function DayCalendar({
           <div>
             <Clock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No tasks scheduled</h3>
-            <p className="text-muted-foreground">
-              Click on a time slot to create a new task
-            </p>
+            <p className="text-muted-foreground">Click on a time slot to create a new task</p>
           </div>
         </div>
       )}

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
-import { useTasksList, useGoalsList, useCompleteTask, useUncompleteTask } from '@/hooks/use-graphql';
+import { useTasks, useGoalsList, useCompleteTask, useUncompleteTask } from '@/hooks/use-graphql';
 import { useTaskDetailActions } from '@/hooks/use-task-detail-actions';
 import { mapTaskDependencies } from '@/lib/dependencies';
 import { useUser } from '@clerk/nextjs';
@@ -25,7 +25,11 @@ export default function DashboardPage() {
   const today = new Date();
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
 
-  const { tasks: rawTasks, loading: tasksLoading, refetch } = useTasksList(
+  const {
+    tasks: rawTasks,
+    loading: tasksLoading,
+    refetch,
+  } = useTasks(
     {
       dateRange: { start: startOfDay(today), end: endOfDay(today) },
     },
@@ -100,6 +104,11 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2.5">
+          <Link href="/tasks">
+            <Button variant="outline" className="h-9">
+              All tasks
+            </Button>
+          </Link>
           <Link href="/plans/generate">
             <Button variant="outline" className="h-9">
               Plan tomorrow
@@ -130,11 +139,15 @@ export default function DashboardPage() {
             <div className="flex-1">
               <div className="text-sm font-semibold">Today's progress</div>
               <div className="text-[13px] text-muted-foreground mt-0.5">
-                {remainingCount > 0 ? `${remainingCount} task${remainingCount === 1 ? '' : 's'} left.` : "You're all caught up."}
+                {remainingCount > 0
+                  ? `${remainingCount} task${remainingCount === 1 ? '' : 's'} left.`
+                  : "You're all caught up."}
               </div>
               <div className="flex gap-4 mt-3">
                 <div>
-                  <div className="text-lg font-semibold text-[hsl(var(--success))]">{completedCount}</div>
+                  <div className="text-lg font-semibold text-[hsl(var(--success))]">
+                    {completedCount}
+                  </div>
                   <div className="text-[11px] text-muted-foreground">Done</div>
                 </div>
                 <div>
@@ -142,7 +155,9 @@ export default function DashboardPage() {
                   <div className="text-[11px] text-muted-foreground">Left</div>
                 </div>
                 <div>
-                  <div className="text-lg font-semibold">{focusMinutesLeft > 0 ? focusLabel : '—'}</div>
+                  <div className="text-lg font-semibold">
+                    {focusMinutesLeft > 0 ? focusLabel : '—'}
+                  </div>
                   <div className="text-[11px] text-muted-foreground">Focus left</div>
                 </div>
               </div>
@@ -158,7 +173,10 @@ export default function DashboardPage() {
               </div>
               <div className="text-[17px] font-semibold mt-2">{upNext.title}</div>
               <div className="text-[13px] text-muted-foreground mt-1">
-                {[upNext.durationMinutes ? `${upNext.durationMinutes} min` : null, upNext.goal?.title]
+                {[
+                  upNext.durationMinutes ? `${upNext.durationMinutes} min` : null,
+                  upNext.goal?.title,
+                ]
                   .filter(Boolean)
                   .join(' · ')}
               </div>
@@ -166,7 +184,12 @@ export default function DashboardPage() {
                 <Button size="sm" className="h-[34px]" onClick={() => setSelectedTaskId(upNext.id)}>
                   Open
                 </Button>
-                <Button size="sm" variant="outline" className="h-[34px]" onClick={() => handleToggle(upNext)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-[34px]"
+                  onClick={() => handleToggle(upNext)}
+                >
                   Mark done
                 </Button>
               </div>
@@ -198,7 +221,7 @@ export default function DashboardPage() {
               {task.startTime || '—'}
             </div>
             <button
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 handleToggle(task);
               }}
@@ -216,7 +239,12 @@ export default function DashboardPage() {
               style={{ background: task.goal?.color || 'hsl(var(--border))' }}
             />
             <div className="flex-1 min-w-0">
-              <div className={cn('text-sm font-medium truncate', task.isCompleted && 'line-through text-muted-foreground')}>
+              <div
+                className={cn(
+                  'text-sm font-medium truncate',
+                  task.isCompleted && 'line-through text-muted-foreground'
+                )}
+              >
                 {task.goal?.emoji ? `${task.goal.emoji} ` : ''}
                 {task.title}
               </div>
@@ -245,7 +273,7 @@ export default function DashboardPage() {
       <TaskDetailModal
         task={(rawTasks.find((t: any) => t.id === selectedTaskId) as any) || null}
         open={!!selectedTaskId}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setSelectedTaskId(null);
         }}
         goals={goals}
