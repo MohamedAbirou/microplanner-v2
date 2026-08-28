@@ -2,10 +2,11 @@ import { SubscriptionTier, SubscriptionTierType } from '@microplanner/database';
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
-  TooManyRequestsException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
@@ -37,7 +38,7 @@ export class PremiumService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
-    private config: ConfigService,
+    private config: ConfigService
   ) {}
 
   // ==================== TEAM WORKSPACE ====================
@@ -265,10 +266,14 @@ export class PremiumService {
     weekEnd.setHours(23, 59, 59, 999);
 
     const memberStats = await Promise.all(
-      members.map(async (m) => {
+      members.map(async m => {
         const [completed, total] = await Promise.all([
           this.prisma.task.count({
-            where: { userId: m.userId, isCompleted: true, completedAt: { gte: weekStart, lte: weekEnd } },
+            where: {
+              userId: m.userId,
+              isCompleted: true,
+              completedAt: { gte: weekStart, lte: weekEnd },
+            },
           }),
           this.prisma.task.count({
             where: { userId: m.userId, scheduledDate: { gte: weekStart, lte: weekEnd } },
@@ -283,7 +288,7 @@ export class PremiumService {
           tasksTotal: total,
           completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
         };
-      }),
+      })
     );
 
     const goals = await this.getTeamGoals(teamId, userId);
@@ -315,10 +320,8 @@ export class PremiumService {
       where: { teamId },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
-    const memberIds = members.map((m) => m.userId);
-    const nameOf = new Map(
-      members.map((m) => [m.userId, m.user?.name || m.user?.email || 'Member']),
-    );
+    const memberIds = members.map(m => m.userId);
+    const nameOf = new Map(members.map(m => [m.userId, m.user?.name || m.user?.email || 'Member']));
 
     const limit = Math.min(Math.max(take, 1), 50);
     const before = cursor ? new Date(cursor) : null;
@@ -351,11 +354,18 @@ export class PremiumService {
       }),
     ]);
 
-    type Event = { id: string; type: string; actorId: string; actorName: string; title: string | null; timestamp: Date };
+    type Event = {
+      id: string;
+      type: string;
+      actorId: string;
+      actorName: string;
+      title: string | null;
+      timestamp: Date;
+    };
     const events: Event[] = [
       ...completions
-        .filter((c) => c.completedAt)
-        .map((c) => ({
+        .filter(c => c.completedAt)
+        .map(c => ({
           id: `task-${c.id}`,
           type: 'TASK_COMPLETED',
           actorId: c.userId,
@@ -364,8 +374,8 @@ export class PremiumService {
           timestamp: c.completedAt as Date,
         })),
       ...accepts
-        .filter((p) => p.acceptedAt)
-        .map((p) => ({
+        .filter(p => p.acceptedAt)
+        .map(p => ({
           id: `plan-${p.id}`,
           type: 'PLAN_ACCEPTED',
           actorId: p.userId,
@@ -373,7 +383,7 @@ export class PremiumService {
           title: `week of ${p.weekStartDate.toISOString().slice(0, 10)}`,
           timestamp: p.acceptedAt as Date,
         })),
-      ...joins.map((m) => ({
+      ...joins.map(m => ({
         id: `join-${m.id}`,
         type: 'MEMBER_JOINED',
         actorId: m.userId,
@@ -389,7 +399,7 @@ export class PremiumService {
       events.length === limit ? events[events.length - 1].timestamp.toISOString() : null;
 
     return {
-      events: events.map((e) => ({ ...e, timestamp: e.timestamp.toISOString() })),
+      events: events.map(e => ({ ...e, timestamp: e.timestamp.toISOString() })),
       nextCursor,
     };
   }
@@ -405,7 +415,7 @@ export class PremiumService {
       orderBy: { createdAt: 'desc' },
       include: { user: { select: { name: true, email: true } } },
     });
-    return goals.map((g) => ({
+    return goals.map(g => ({
       id: g.id,
       title: g.title,
       emoji: g.emoji,
@@ -421,36 +431,24 @@ export class PremiumService {
     const goal = await this.prisma.goal.findFirst({ where: { id: goalId, userId } });
     if (!goal) throw new NotFoundException('Goal not found');
     if (teamId) {
-        const now = new Date();
-        const windowExpired = now.getTime() - key.usageWindowStart.getTime() >= 60 * 60 * 1000;
-        if (windowExpired) {
-          await this.prisma.apiKey.update({
-            where: { id: key.id },
-            data: {
-              usageCount: { increment: 1 },
-              usageWindowStart: now,
-              usageWindowCount: 1,
-              lastUsedAt: now,
-            },
-          });
-        } else {
-          const updated = await this.prisma.apiKey.updateMany({
-            where: { id: key.id, usageWindowCount: { lt: key.rateLimit } },
-            data: {
-              usageCount: { increment: 1 },
-              usageWindowCount: { increment: 1 },
-              lastUsedAt: now,
-            },
-          });
-          if (updated.count === 0) {
-            throw new TooManyRequestsException('API key rate limit exceeded');
-          }
-        }
+      const membership = await this.prisma.teamMember.findFirst({ where: { teamId, userId } });
+      if (!membership) throw new ForbiddenException('You are not a member of this team');
+    }
+    return this.prisma.goal.update({ where: { id: goalId }, data: { teamId } });
+  }
+
+  /**
+   * Update team (owner/admin only)
    */
   async updateTeam(
     teamId: string,
     userId: string,
-    updateDto: { name?: string; description?: string; maxMembers?: number; settings?: Record<string, unknown> }
+    updateDto: {
+      name?: string;
+      description?: string;
+      maxMembers?: number;
+      settings?: Record<string, unknown>;
+    }
   ): Promise<Team> {
     const membership = await this.prisma.teamMember.findFirst({
       where: { teamId, userId, role: { in: ['owner', 'admin'] } },
@@ -616,10 +614,16 @@ export class PremiumService {
     if (!Array.isArray(createDto.scopes) || createDto.scopes.length === 0) {
       throw new BadRequestException('At least one API scope is required');
     }
-    if (createDto.expiresInDays !== undefined && (!Number.isInteger(createDto.expiresInDays) || createDto.expiresInDays <= 0)) {
+    if (
+      createDto.expiresInDays !== undefined &&
+      (!Number.isInteger(createDto.expiresInDays) || createDto.expiresInDays <= 0)
+    ) {
       throw new BadRequestException('expiresInDays must be a positive integer');
     }
-    if (createDto.rateLimit !== undefined && (!Number.isInteger(createDto.rateLimit) || createDto.rateLimit <= 0)) {
+    if (
+      createDto.rateLimit !== undefined &&
+      (!Number.isInteger(createDto.rateLimit) || createDto.rateLimit <= 0)
+    ) {
       throw new BadRequestException('rateLimit must be a positive integer');
     }
 
@@ -639,7 +643,7 @@ export class PremiumService {
 
     // Validate aliases, but preserve the GraphQL enum names in storage so the
     // API-key management UI can read them back without enum serialization errors.
-    createDto.scopes.forEach((scope) => this.normalizeApiScope(scope));
+    createDto.scopes.forEach(scope => this.normalizeApiScope(scope));
     const scopes = [...new Set(createDto.scopes)];
     const apiKey = await this.prisma.apiKey.create({
       data: {
@@ -758,21 +762,40 @@ export class PremiumService {
       const hashedProvidedKey = crypto.createHash('sha256').update(rawKey).digest('hex');
       const storedHash = Buffer.from(key.key, 'hex');
       const providedHash = Buffer.from(hashedProvidedKey, 'hex');
-      const isValid = storedHash.length === providedHash.length && crypto.timingSafeEqual(storedHash, providedHash);
+      const isValid =
+        storedHash.length === providedHash.length &&
+        crypto.timingSafeEqual(storedHash, providedHash);
 
       if (isValid) {
-        // Update usage
-        await this.prisma.apiKey.update({
-          where: { id: key.id },
-          data: {
-            usageCount: { increment: 1 },
-            lastUsedAt: new Date(),
-          },
-        });
+        const now = new Date();
+        const windowExpired = now.getTime() - key.usageWindowStart.getTime() >= 60 * 60 * 1000;
+        if (windowExpired) {
+          await this.prisma.apiKey.update({
+            where: { id: key.id },
+            data: {
+              usageCount: { increment: 1 },
+              usageWindowStart: now,
+              usageWindowCount: 1,
+              lastUsedAt: now,
+            },
+          });
+        } else {
+          const updated = await this.prisma.apiKey.updateMany({
+            where: { id: key.id, usageWindowCount: { lt: key.rateLimit } },
+            data: {
+              usageCount: { increment: 1 },
+              usageWindowCount: { increment: 1 },
+              lastUsedAt: now,
+            },
+          });
+          if (updated.count === 0) {
+            throw new HttpException('API key rate limit exceeded', HttpStatus.TOO_MANY_REQUESTS);
+          }
+        }
 
         return {
           userId: key.userId,
-            scopes: (key.scopes as string[]).map((scope) => this.normalizeApiScope(scope)),
+          scopes: (key.scopes as string[]).map(scope => this.normalizeApiScope(scope)),
         };
       }
     }
