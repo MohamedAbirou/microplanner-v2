@@ -112,10 +112,9 @@ export function getBlockingTasks(taskId: string, dependencies: TaskDependency[])
   return dependencies
     .filter(
       dep =>
-        (dep.type === 'BLOCKED_BY' && dep.fromTaskId === taskId) ||
-        (dep.type === 'BLOCKS' && dep.toTaskId === taskId)
+        dep.type !== 'RELATED_TO' && dep.fromTaskId === taskId
     )
-    .map(dep => (dep.type === 'BLOCKED_BY' ? dep.toTaskId : dep.fromTaskId));
+    .map(dep => dep.toTaskId);
 }
 
 /**
@@ -125,10 +124,9 @@ export function getBlockedTasks(taskId: string, dependencies: TaskDependency[]):
   return dependencies
     .filter(
       dep =>
-        (dep.type === 'BLOCKS' && dep.fromTaskId === taskId) ||
-        (dep.type === 'BLOCKED_BY' && dep.toTaskId === taskId)
+        dep.type !== 'RELATED_TO' && dep.toTaskId === taskId
     )
-    .map(dep => (dep.type === 'BLOCKS' ? dep.toTaskId : dep.fromTaskId));
+    .map(dep => dep.fromTaskId);
 }
 
 /**

@@ -329,6 +329,8 @@ export class TasksService {
       throw new ForbiddenException('Task is already completed');
     }
 
+    await this.assertTaskCanStart(taskId, userId);
+
     this.logger.log(`Completing task ${taskId}`);
 
     const updatedTask = await this.prisma.task.update({
@@ -372,6 +374,34 @@ export class TasksService {
     });
 
     return updatedTask as any;
+  }
+
+  private async assertTaskCanStart(taskId: string, userId: string): Promise<void> {
+    const dependencies = await this.prisma.taskDependency.findMany({
+      where: {
+        OR: [
+          { type: { in: ['BLOCKED_BY', 'BLOCKS'] }, dependentTaskId: taskId },
+        ],
+        dependentTask: { userId },
+        blockingTask: { userId },
+      },
+      include: {
+        dependentTask: { select: { id: true, title: true, isCompleted: true } },
+        blockingTask: { select: { id: true, title: true, isCompleted: true } },
+      },
+    });
+
+    const blockers = dependencies
+      .map((dependency) =>
+        dependency.blockingTask,
+      )
+      .filter((blockingTask) => !blockingTask.isCompleted);
+
+    if (blockers.length > 0) {
+      throw new ForbiddenException(
+        `Cannot start task until ${blockers.map((blocker) => `"${blocker.title}"`).join(', ')} is completed`,
+      );
+    }
   }
 
   /**

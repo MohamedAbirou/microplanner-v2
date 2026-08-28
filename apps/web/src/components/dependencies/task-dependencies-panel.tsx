@@ -80,8 +80,8 @@ export function TaskDependenciesPanel({
       return;
     }
 
-    const fromTaskId = selectedType === 'BLOCKED_BY' ? task.id : task.id;
-    const toTaskId = selectedType === 'BLOCKED_BY' ? selectedTaskId : selectedTaskId;
+    const fromTaskId = selectedType === 'BLOCKS' ? selectedTaskId : task.id;
+    const toTaskId = selectedType === 'BLOCKS' ? task.id : selectedTaskId;
 
     // Validate
     const validation = validateDependency(

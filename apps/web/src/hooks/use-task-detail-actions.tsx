@@ -13,6 +13,8 @@ import {
   useStopTimer,
 } from '@/hooks/use-graphql';
 import type { DependencyType } from '@/lib/dependencies';
+import { canStartTask, mapTaskDependencies } from '@/lib/dependencies';
+import { toast } from 'sonner';
 
 /**
  * Shared wiring for the TaskDetailModal so every page (tasks/day/week/month/
@@ -93,11 +95,18 @@ export function useTaskDetailActions(tasks: any[] = [], refetch?: () => any) {
       if (current?.isCompleted) {
         await uncompleteTask({ variables: { id: taskId } });
       } else {
+        const dependencies = mapTaskDependencies(tasks);
+        if (current && !canStartTask(current, tasks, dependencies)) {
+          toast.error('Task is blocked', {
+            description: 'Complete its blocking tasks before marking it complete.',
+          });
+          return;
+        }
         await completeTask({ variables: { id: taskId } });
       }
       await afterMutation();
     },
-    [taskById, completeTask, uncompleteTask, afterMutation]
+    [taskById, tasks, completeTask, uncompleteTask, afterMutation]
   );
 
   const onAddSubtask = React.useCallback(
@@ -149,10 +158,18 @@ export function useTaskDetailActions(tasks: any[] = [], refetch?: () => any) {
 
   const onStartTimer = React.useCallback(
     async (taskId: string) => {
+      const current = taskById.get(taskId);
+      const dependencies = mapTaskDependencies(tasks);
+      if (current && !canStartTask(current, tasks, dependencies)) {
+        toast.error('Task is blocked', {
+          description: 'Complete its blocking tasks before starting the timer.',
+        });
+        return;
+      }
       await startTimer({ variables: { taskId } });
       await afterMutation();
     },
-    [startTimer, afterMutation]
+    [taskById, tasks, startTimer, afterMutation]
   );
 
   const onStopTimer = React.useCallback(

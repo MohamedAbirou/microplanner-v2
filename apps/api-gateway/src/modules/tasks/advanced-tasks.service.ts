@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   TaskDependency,
@@ -293,6 +293,8 @@ export class AdvancedTasksService {
       throw new BadRequestException('Timer is already running for this task');
     }
 
+    await this.assertTaskCanStart(dto.taskId, userId);
+
     // Stop any other running timers
     await this.prisma.task.updateMany({
       where: { userId, isTimerRunning: true },
@@ -314,6 +316,34 @@ export class AdvancedTasksService {
     this.logger.log(`Timer started for task: ${dto.taskId}`);
 
     return this.getTimeEntry(updated);
+  }
+
+  private async assertTaskCanStart(taskId: string, userId: string): Promise<void> {
+    const dependencies = await this.prisma.taskDependency.findMany({
+      where: {
+        OR: [
+          { type: { in: ['BLOCKED_BY', 'BLOCKS'] }, dependentTaskId: taskId },
+        ],
+        dependentTask: { userId },
+        blockingTask: { userId },
+      },
+      include: {
+        dependentTask: { select: { id: true, title: true, isCompleted: true } },
+        blockingTask: { select: { id: true, title: true, isCompleted: true } },
+      },
+    });
+
+    const blockers = dependencies
+      .map((dependency) =>
+        dependency.blockingTask,
+      )
+      .filter((blockingTask) => !blockingTask.isCompleted);
+
+    if (blockers.length > 0) {
+      throw new ForbiddenException(
+        `Cannot start task until ${blockers.map((blocker) => `"${blocker.title}"`).join(', ')} is completed`,
+      );
+    }
   }
 
   /**

@@ -98,7 +98,12 @@ export function CalendarTaskBlock({
         {(subtasks.length > 0 || dependencyBadges.length > 0) && (
           <div className="flex shrink-0 items-center gap-1">
             {subtasks.length > 0 && (
-              <Badge variant="secondary" className="h-4 gap-0.5 px-1 text-[9px]" title="Subtasks">
+              <Badge
+                variant="secondary"
+                className="h-4 gap-0.5 px-1 text-[9px]"
+                title={subtasks.map(subtask => `${subtask.isCompleted ? 'Done' : 'Open'}: ${subtask.title}`).join('\n')}
+                aria-label={`${completedSubtasks} of ${subtasks.length} subtasks completed`}
+              >
                 <ListTree className="h-2.5 w-2.5" />
                 {completedSubtasks}/{subtasks.length}
               </Badge>
