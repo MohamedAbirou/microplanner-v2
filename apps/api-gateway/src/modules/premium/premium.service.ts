@@ -676,7 +676,7 @@ export class PremiumService {
    */
   async getUserApiKeys(userId: string): Promise<ApiKey[]> {
     const keys = await this.prisma.apiKey.findMany({
-      where: { userId },
+      where: { userId, isActive: true },
       orderBy: { createdAt: 'desc' },
     });
 

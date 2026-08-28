@@ -34,7 +34,7 @@ const SCOPES = [
 ];
 
 export function ApiKeysManager() {
-  const { apiKeys, loading } = useApiKeys();
+  const { apiKeys, loading, refetch } = useApiKeys();
   const { createApiKey, loading: creating } = useCreateApiKey();
   const { deleteApiKey } = useDeleteApiKey();
 
@@ -46,9 +46,7 @@ export function ApiKeysManager() {
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
 
   const toggleScope = (scope: string) => {
-    setScopes((prev) =>
-      prev.includes(scope) ? prev.filter((s) => s !== scope) : [...prev, scope]
-    );
+    setScopes(prev => (prev.includes(scope) ? prev.filter(s => s !== scope) : [...prev, scope]));
   };
 
   const handleCreate = async () => {
@@ -163,7 +161,7 @@ export function ApiKeysManager() {
               <Input
                 id="key-name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 placeholder="CI automation"
                 autoFocus
               />
@@ -171,7 +169,7 @@ export function ApiKeysManager() {
             <div className="space-y-2">
               <Label>Scopes</Label>
               <div className="grid grid-cols-2 gap-2">
-                {SCOPES.map((s) => (
+                {SCOPES.map(s => (
                   <label
                     key={s.value}
                     className="flex items-center gap-2 rounded-[8px] border border-border p-2 cursor-pointer hover:bg-accent/50"
@@ -190,7 +188,10 @@ export function ApiKeysManager() {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={!name.trim() || scopes.length === 0 || creating}>
+            <Button
+              onClick={handleCreate}
+              disabled={!name.trim() || scopes.length === 0 || creating}
+            >
               {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create key
             </Button>
@@ -199,7 +200,7 @@ export function ApiKeysManager() {
       </Dialog>
 
       {/* Secret reveal (shown once) */}
-      <Dialog open={!!createdSecret} onOpenChange={(o) => !o && setCreatedSecret(null)}>
+      <Dialog open={!!createdSecret} onOpenChange={o => !o && setCreatedSecret(null)}>
         <DialogContent className="rounded-[14px]">
           <DialogHeader>
             <DialogTitle>Copy your API key</DialogTitle>
@@ -217,7 +218,12 @@ export function ApiKeysManager() {
             <code className="flex-1 rounded-[8px] bg-muted px-3 py-2 text-xs font-mono break-all">
               {createdSecret}
             </code>
-            <Button size="icon" variant="outline" className="h-9 w-9 flex-none" onClick={copySecret}>
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-9 w-9 flex-none"
+              onClick={copySecret}
+            >
               {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
@@ -229,11 +235,14 @@ export function ApiKeysManager() {
 
       <DeleteConfirmationDialog
         open={deleteId !== null}
-        onOpenChange={(o) => !o && setDeleteId(null)}
+        onOpenChange={o => !o && setDeleteId(null)}
         itemName={keyToDelete?.name || 'this key'}
         itemType="API key"
         onConfirm={async () => {
-          if (deleteId) await deleteApiKey({ variables: { id: deleteId } });
+          if (deleteId) {
+            await deleteApiKey({ variables: { id: deleteId } });
+            await refetch();
+          }
           setDeleteId(null);
         }}
       />
