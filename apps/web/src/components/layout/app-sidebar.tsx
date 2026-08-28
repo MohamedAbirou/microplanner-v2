@@ -8,6 +8,7 @@ import {
   Calendar,
   CalendarClock,
   CalendarDays,
+  BookOpen,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -51,6 +52,7 @@ const primaryNav: NavItem[] = [
 
 const secondaryNav: NavItem[] = [
   { label: 'Tasks', href: '/tasks', icon: ListTodo },
+  { label: 'API Docs', href: '/api-docs', icon: BookOpen },
   { label: 'Plan Day', href: '/plan-day', icon: Sunrise },
   { label: 'Projects', href: '/projects', icon: FolderKanban },
   { label: 'Search', href: '/search', icon: Search, hotkey: '/' },
